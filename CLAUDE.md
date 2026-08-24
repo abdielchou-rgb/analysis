@@ -101,7 +101,9 @@
 
 ## LLM 策略——单 Provider + L3 Agent 兜底
 
-- LLM 只走 DeepSeek（`.env` 仅 DEEPSEEK_API_KEY）
+- LLM 主通道走 DeepSeek（`core/deepseek_client.py` ProviderRegistry；
+  `.env` 现有 DEEPSEEK/TAVILY/OPENROUTER 多键，OpenRouter 为降级备胎——2026-08-24 审计修正：
+  原文".env 仅 DEEPSEEK_API_KEY"已与磁盘事实不符）
 - DeepSeek 不可用 → **不产出空报告/不静默失败**，输出 `needs_agent` + `llm_gap` 信号
 - Agent 兜底路径：确认 key → 恢复/更换 → 重跑管线
 - 兜底细节见 `docs/CLAUDE-architecture.md` 第 1 节

@@ -31,7 +31,7 @@ scheduler.py / main.py (入口)
        ├→ compute pipeline (DCF + 可比 + 场景 + SOTP)
        ├→ section_writer (SAC 3段式 DeepSeek 写作)
        ├→ StyleCompiler (8条确定性规则去AI化)
-       ├→ IronGate (24项质量检查，0.55阈值)
+       ├→ IronGate (78项注册检查，0.55阈值——以 pipeline/iron_gate.py 注册表为准)
        └→ export (DOCX + VisualGate + 门禁)
 ```
 
@@ -61,7 +61,7 @@ scheduler.py / main.py (入口)
 
 ## 多 Provider 支持
 
-实际代码支持多 LLM Provider（`run_direct.py` / `core/deepseek_client.py`）：
+实际代码支持多 LLM Provider（`core/deepseek_client.py` ProviderRegistry；原 `run_direct.py` 已移除）：
 - DeepSeek Direct（最高优先级）
 - 阿里云 Qwen（OpenAI 兼容接口）
 - OpenRouter（多模型网关）
@@ -72,5 +72,5 @@ scheduler.py / main.py (入口)
 
 1. 数据采集依赖外部 API（Tavily / akshare / yfinance），网络异常时降级
 2. PDF 导出依赖 fpdf2，复杂排版（图表混排、自定义字体）有限
-3. IronGate 24项检查中一部分是 heuristic 判定（非 LLM 评估）
+3. IronGate 78项注册检查中一部分是 heuristic 判定（非 LLM 评估）
 4. 版本管理目前手动，CLAUDE.md 需与 harness/pipeline_contract.py 同步
