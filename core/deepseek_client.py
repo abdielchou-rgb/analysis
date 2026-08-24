@@ -9,7 +9,7 @@ deepseek_client.py — Multi-Model Provider Layer (V2)
 - RetryWithFallback：失败时自动尝试下一个provider
 """
 
-import os, json, time, logging
+import os, json, time, logging, threading
 from pathlib import Path
 from typing import Optional, Callable
 from dataclasses import dataclass, field
@@ -226,8 +226,33 @@ _LLM_CALL_T0 = time.time()
 
 
 def _t2_latency() -> int:
-    """简单耗时计算：模块级起始时间到现在的毫秒（精度够成本审计用）。"""
+    """[DEPRECATED 2026-08-24] 返回模块加载至今的累计毫秒——语义错误，
+    成本日志已改用 requests.post 前后的 perf_counter 差值。仅为兼容保留。"""
     return int((time.time() - _LLM_CALL_T0) * 1000)
+
+
+# ── 限流（P2-audit 2026-08-24：rate_limit_rpm 字段此前定义后零引用）──
+_rate_lock = threading.Lock()
+_rate_windows: dict = {}  # provider_name -> list[float] 最近请求时间戳
+
+
+def _rate_limit_acquire(provider_name: str, rpm: int) -> None:
+    """滑动窗口限流：每 provider 每分钟最多 rpm 次请求（rpm<=0 不限）。
+
+    超限时阻塞等待窗口腾出（而非拒绝），与管线"尽量完成"的容错哲学一致。
+    """
+    if not rpm or rpm <= 0:
+        return
+    while True:
+        with _rate_lock:
+            now = time.time()
+            win = [t for t in _rate_windows.get(provider_name, []) if now - t < 60.0]
+            if len(win) < rpm:
+                win.append(now)
+                _rate_windows[provider_name] = win
+                return
+            wait_s = min(60.0 - (now - win[0]) + 0.05, 5.0)
+        time.sleep(wait_s)
 
 
 def _normalize_llm_response(data: dict) -> dict:
@@ -306,15 +331,17 @@ def call_llm(
         raise RuntimeError("No available LLM provider (all circuit-broken)")
 
     last_error = None
-    # R77（2026-08-05）：强制指定的 provider 失败后应回退到其他可用 provider，
-    # 而不是单元素列表失败即 raise。记录失败 → 若全部 provider 用尽则按优先级全量回退一轮。
-    for provider in providers:
+    # P2-audit 2026-08-24：循环变量 `provider` 遮蔽同名函数参数（str），
+    # 导致函数尾部 `if provider != "auto"` 永真 → auto 全败时重复递归全量回退。
+    # 现循环变量改名 pv，参数语义用 _requested_provider 保留。
+    _requested_provider = provider
+    for pv in providers:
         # 可调用 provider（如 AgentProvider）——不走 HTTP，直接调用
-        if hasattr(provider, "__call__") and not hasattr(provider, "base_url") or (
-                hasattr(provider, "name") and provider.name == "agent_provider"):
+        if hasattr(pv, "__call__") and not hasattr(pv, "base_url") or (
+                hasattr(pv, "name") and pv.name == "agent_provider"):
             try:
-                logger.info("[LLM] fallback 到可调用 provider: %s", provider.name)
-                return provider(
+                logger.info("[LLM] fallback 到可调用 provider: %s", pv.name)
+                return pv(
                     messages, model=model, temperature=temperature,
                     max_tokens=max_tokens, stream=stream,
                 )
@@ -323,19 +350,19 @@ def call_llm(
                 # R77（2026-08-05）：agent_provider 失败也要记录熔断，否则回退逻辑
                 # 永远走不到（providers=[agent_provider] 单元素，失败即 raise）。
                 # 记录失败后，下次 call_llm 会因 _consecutive_failures>=5 走全量回退。
-                _registry.record_failure(provider.name)
+                _registry.record_failure(pv.name)
                 logger.warning("Agent provider failed: %s", e)
                 continue
 
         # model 必须落在 provider 支持的模型列表内，否则使用 provider 首选模型
         m = model
-        if provider.models and m not in provider.models:
+        if pv.models and m not in pv.models:
             logger.info("Model %s not in provider %s models %s, using %s",
-                        m, provider.name, provider.models, provider.models[0])
-            m = provider.models[0]
+                        m, pv.name, pv.models, pv.models[0])
+            m = pv.models[0]
 
         headers = {
-            "Authorization": f"Bearer {provider.api_key}",
+            "Authorization": f"Bearer {pv.api_key}",
             "Content-Type": "application/json",
         }
         payload = {
@@ -346,13 +373,20 @@ def call_llm(
             "stream": stream,
         }
 
+        # P2-audit 2026-08-24：限流落地（rate_limit_rpm 字段此前零引用）。
+        # 并发组写作 6-8 线程同时打 API 无节流 → 429 连锁失败。
+        try:
+            _rate_limit_acquire(pv.name, getattr(pv, "rate_limit_rpm", 0) or 0)
+        except Exception:
+            pass
+
         # R53（2026-08-03 P1-4 修复）：provider 健康预检——发起完整请求前
         # 用短超时（5s）探测连通性。只有连接层失败（超时/DNS/拒绝连接）才跳过
         # provider；401/404 说明服务可达（只是端点路径不同），不跳过，继续完整请求。
         # 解决"6 组并行各等满 300s、一轮空耗 10 分钟"。
-        if hasattr(provider, "base_url"):
+        if hasattr(pv, "base_url"):
             try:
-                _probe_url = provider.base_url.replace("/v1", "").rstrip("/") + "/models"
+                _probe_url = pv.base_url.replace("/v1", "").rstrip("/") + "/models"
                 _probe_resp = requests.get(
                     _probe_url,
                     headers={"Authorization": headers["Authorization"]},
@@ -365,23 +399,24 @@ def call_llm(
                     requests.exceptions.Timeout,
                     requests.exceptions.ConnectTimeout) as _pe:
                 logger.warning("[LLM-PROBE] provider=%s 健康预检失败（跳过，避免300s空耗）: %s",
-                              provider.name, str(_pe)[:80])
-                _registry.record_failure(provider.name)
+                              pv.name, str(_pe)[:80])
+                _registry.record_failure(pv.name)
                 continue
             except Exception:
                 # 其他异常（401/404/解析等）——provider 可达，不跳过
                 pass
 
-        provider_ok = False
         for attempt in range(2):
             try:
+                _t0 = time.perf_counter()  # P2-audit 2026-08-24: 单次调用真延迟
                 resp = requests.post(
-                    f"{provider.base_url}/chat/completions",
+                    f"{pv.base_url}/chat/completions",
                     headers=headers, json=payload,
                     timeout=int(os.environ.get("LLM_HTTP_TIMEOUT", "90")),  # 2026-08-07：300→90
                 )
                 resp.raise_for_status()
-                _registry.record_success(provider.name)
+                _latency_ms = int((time.perf_counter() - _t0) * 1000)
+                _registry.record_success(pv.name)
                 _resp = _normalize_llm_response(resp.json())
                 # P3-2 成本日志（2026-08-07）：记录每次调用 token/通道/耗时，可观测性
                 try:
@@ -391,9 +426,9 @@ def call_llm(
                         module="call_llm", section_id=m,
                         prompt_tokens=_usage.get("prompt_tokens", 0),
                         completion_tokens=_usage.get("completion_tokens", 0),
-                        latency_ms=int(_t2_latency()),
+                        latency_ms=_latency_ms,
                         status="success",
-                        provider=getattr(provider, "name", "unknown"),
+                        provider=getattr(pv, "name", "unknown"),
                     )
                 except Exception as _le:
                     logger.debug("[COST-LOG] %s", str(_le)[:50])
@@ -401,20 +436,19 @@ def call_llm(
             except requests.exceptions.RequestException as e:
                 last_error = e
                 logger.warning("LLM call attempt %d/2 failed (provider=%s model=%s): %s",
-                              attempt+1, provider.name, m, e)
+                              attempt+1, pv.name, m, e)
                 if attempt < 1:
                     time.sleep(1)
-        if not provider_ok:
-            _registry.record_failure(provider.name)
+        _registry.record_failure(pv.name)
 
     # R77（2026-08-05）：强制指定的 provider 失败 → 按优先级全量回退一轮
     # （此前单元素 providers 失败即 raise；agent_provider 队列积压/DeepSeek 网络抖动
     #  都会让原本可用的 provider 得不到机会）
-    if provider and provider != "auto":
-        _fallback = [p.name for p in _active() if p.name != provider]
+    if _requested_provider and _requested_provider != "auto":
+        _fallback = [p.name for p in _active()]
         if _fallback:
             logger.warning("[LLM] 指定 provider=%s 全部失败，全量回退 %s",
-                           provider, _fallback)
+                           _requested_provider, _fallback)
             try:
                 return call_llm(messages, model=model, temperature=temperature,
                                 max_tokens=max_tokens, stream=stream,
