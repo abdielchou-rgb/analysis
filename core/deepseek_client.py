@@ -225,6 +225,45 @@ _register_default_providers(_registry)
 _LLM_CALL_T0 = time.time()
 
 
+# ── 响应缓存（P3-audit 2026-08-24 接线：llm_cache.py 此前零消费者）──
+# 门控开关 LLM_RESPONSE_CACHE（默认关——写作修订循环依赖同 prompt 不同轮
+# 的采样差异，全局开启会破坏 repair/STALL 语义；适用于批量/开发迭代场景）。
+_MEM_RESP_CACHE: dict = {}
+
+
+def _cache_key(messages: list, model: str, temperature: float, max_tokens: int) -> str:
+    import hashlib
+    raw = json.dumps({"m": messages, "model": model, "t": temperature,
+                      "mt": max_tokens}, ensure_ascii=False, sort_keys=True)
+    return "llmresp_" + hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
+def _response_cache_get(key: str):
+    try:
+        from core.compute.llm_cache import get_cache
+        c = get_cache()
+        if c is not None:
+            return c.get(key)
+    except Exception:
+        pass
+    return _MEM_RESP_CACHE.get(key)
+
+
+def _response_cache_set(key: str, value):
+    ttl = int(os.environ.get("LLM_CACHE_TTL", "86400"))
+    try:
+        from core.compute.llm_cache import get_cache
+        c = get_cache()
+        if c is not None:
+            c.set(key, value, expire=ttl)
+            return
+    except Exception:
+        pass
+    if len(_MEM_RESP_CACHE) > 256:  # 内存兜底：简单容量上限
+        _MEM_RESP_CACHE.clear()
+    _MEM_RESP_CACHE[key] = value
+
+
 def _t2_latency() -> int:
     """[DEPRECATED 2026-08-24] 返回模块加载至今的累计毫秒——语义错误，
     成本日志已改用 requests.post 前后的 perf_counter 差值。仅为兼容保留。"""
@@ -311,6 +350,17 @@ def call_llm(
     provider 指定的资源不可用时，回退到可用 provider（容错）。
     """
     import requests
+
+    # P3-audit 2026-08-24：响应缓存（LLM_RESPONSE_CACHE=1 启用）。
+    # 命中返回与成功响应同构的 dict，0 token；stream 模式不缓存。
+    if os.environ.get("LLM_RESPONSE_CACHE", "0").lower() in ("1", "true", "yes") and not stream:
+        _ck = _cache_key(messages, model, temperature, max_tokens)
+        _hit = _response_cache_get(_ck)
+        if _hit is not None:
+            logger.info("[LLM-CACHE] 命中 %s（省一次调用）", _ck[:28])
+            return _hit
+    else:
+        _ck = None
 
     # R13: 强制指定 provider（若存在且未熔断）；否则按优先级取全部可用
     _active = lambda: sorted(
@@ -432,6 +482,11 @@ def call_llm(
                     )
                 except Exception as _le:
                     logger.debug("[COST-LOG] %s", str(_le)[:50])
+                if _ck is not None:
+                    try:
+                        _response_cache_set(_ck, _resp)
+                    except Exception:
+                        pass
                 return _resp
             except requests.exceptions.RequestException as e:
                 last_error = e
