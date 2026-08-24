@@ -250,9 +250,11 @@ class AnalysisChecksMixin:
     def _load_market_anchors(self) -> dict:
         """R85（2026-08-06）：加载市场规模外部权威锚点。
 
-        优先从环境变量 ENRICH_ANCHOR_FILE 指定的 enrich JSON 读取，
-        其次尝试 data/ 目录下最近修改的 *_enrich*.json（本任务专用兜底），
-        再其次尝试 output/ 目录下 *_enrich*.json。
+        优先从环境变量 ENRICH_ANCHOR_FILE 指定的 enrich JSON 读取；
+        glob 兜底**必须标的匹配**：候选文件的顶层 asset 字段或文件名
+        需与 self.asset 匹配——P3-audit 2026-08-24 修复跨标的污染：
+        原实现按 mtime 取最近任意 *_enrich*.json，A 标的报告会被
+        B 标的（如油位传感器）的权威值误判口径冲突。
         返回 {"全球市场规模": {"unit": "亿美元", "values": {year: value}}, ...}；
         无可用锚点返回 {}（不阻断检查）。
         """
@@ -260,23 +262,39 @@ class AnalysisChecksMixin:
         cands = []
         env_path = os.environ.get("ENRICH_ANCHOR_FILE", "")
         if env_path and os.path.exists(env_path):
-            cands.append(env_path)
-        _bases = [os.getcwd()]
-        _root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        if _root not in _bases:
-            _bases.append(_root)
-        for _b in _bases:
-            for _sub in ("data", "output"):
-                _pat = os.path.join(_b, _sub, "*_enrich*.json")
-                try:
-                    _ms = sorted(glob.glob(_pat), key=os.path.getmtime, reverse=True)
-                    cands.extend(_ms[:3])
-                except Exception:
-                    pass
-        for p in cands:
+            cands.append((env_path, True))  # 显式指定 = 无条件信任
+        _asset = (getattr(self, "asset", "") or "").strip()
+        if _asset:
+            _bases = [os.getcwd()]
+            _root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            if _root not in _bases:
+                _bases.append(_root)
+            for _b in _bases:
+                for _sub in ("data", "output"):
+                    _pat = os.path.join(_b, _sub, "*_enrich*.json")
+                    try:
+                        _ms = sorted(glob.glob(_pat), key=os.path.getmtime, reverse=True)
+                        cands.extend((_p, False) for _p in _ms[:3])
+                    except Exception:
+                        pass
+
+        def _asset_match(path_or_str: str, payload_asset: str = "") -> bool:
+            """文件名或 JSON 顶层 asset 字段与当前标的双向子串匹配。"""
+            a, b = _asset, (payload_asset or "").strip()
+            if not a:
+                return False
+            hay = path_or_str.replace("\\", "/").lower()
+            if a.lower() in hay:
+                return True
+            return bool(b) and (a in b or b in a)
+
+        for p, trusted in cands:
             try:
                 with open(p, encoding="utf-8") as fh:
                     enrich = json.load(fh)
+                if not trusted and not _asset_match(os.path.basename(p),
+                                                    str(enrich.get("asset", "")) if isinstance(enrich, dict) else ""):
+                    continue  # 跨标的 enrich 文件 → 不作锚点
                 items = enrich.get("items", []) if isinstance(enrich, dict) else []
                 out = {}
                 for it in items:

@@ -159,13 +159,13 @@ class IronGate(ContentFormatChecksMixin, DataQualityChecksMixin, AnalysisChecksM
             self.report_text = ""
 
     @classmethod
-    def from_text(cls, report_text, report_type="industry_deep", style="cicc"):
+    def from_text(cls, report_text, report_type="industry_deep", style="cicc", asset: str = ""):
         import tempfile
         tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False, encoding="utf-8")
         tmp.write(report_text)
         tmp_path = tmp.name
         tmp.close()
-        gate = cls(tmp_path, report_type, style)
+        gate = cls(tmp_path, report_type, style, asset=asset)
         gate.report_text = report_text
         return gate
 

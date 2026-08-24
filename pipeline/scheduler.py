@@ -291,7 +291,8 @@ def schedule(asset: str, report_type: str = "industry_deep",
     from pipeline.iron_gate import IronGate
     md_path = result.get("md", "")
     if md_path and Path(md_path).exists():
-        gate = IronGate(md_path, report_type, style, client_questions=client_questions)
+        gate = IronGate(md_path, report_type, style, client_questions=client_questions,
+                        asset=asset)
         gate_result = gate.run_all()
         print(f"  Iron Gate: {'✓ 通过' if gate_result.passed else '✗ 阻断'} "
               f"(score={gate_result.overall_score:.2f})")

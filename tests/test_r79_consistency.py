@@ -44,14 +44,14 @@ def test_market_size_conflict_blocked():
     assert "口径" in r.details
 
 
-@pytest.mark.xfail(
-    reason="门禁误报（存量）：_check_market_size_consistency 将正文单一来源值与全局锚点库"
-           "跨年份加权均值比对——文本『中国市场规模2025年172亿元』被拿去和含 "
-           "2024/2026/2030 在内的锚点序列均值(28300亿)比，年份错配导致假冲突。"
-           "修复需在 analysis_mixin 中实现同年度锚点匹配，属行为变更，待专项处理。",
-    strict=False)
 def test_market_size_single_passes():
-    """单一市场规模应通过。"""
+    """单一市场规模应通过。
+
+    P3-audit 2026-08-24 修复验证：原 xfail 根因是锚点 glob 兜底按 mtime
+    取最近任意 enrich 文件（跨标的污染——本用例被油位传感器锚点误判）。
+    现 _load_market_anchors 要求标的匹配，无 asset 时仅做文内多值比对。
+    """
+    from pipeline.iron_gate import IronGate
     ig = IronGate.__new__(IronGate)
     ig.report_text = ("全球市场规模2025年50亿美元，中国市场规模2025年172亿元。" * 6)
     r = ig._check_market_size_consistency()

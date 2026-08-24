@@ -147,7 +147,7 @@ def run_pipeline(
     # Step 2: Iron Gate
     print("[2/5] Iron Gate 质量检查...")
     from pipeline.iron_gate import IronGate
-    gate = IronGate.from_text(report_text, report_type, style)
+    gate = IronGate.from_text(report_text, report_type, style, asset=asset)
     gate_result = gate.run_all()
     # P1-2 (audit 2026-08-01): 将 gate_result 存入 pipe_result，供 export 层复用
     # 避免 report_gate.py 重复完整 IronGate 检查（双重调用 → 单次调用）
