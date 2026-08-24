@@ -149,15 +149,20 @@ class ApiKeyLeakScanner:
 
 
 class PipelineContractChecker:
-    """验证管线合约 — 每个步骤的输出符合预期格式"""
+    """验证管线合约 — 每个步骤的真实模块可导入且导出关键符号
+
+    P0-audit 2026-08-24 修复：原实现把节点短名（"preflight"/"charts"...）
+    直接传给 importlib.import_module()，这些模块不存在 → 永久红灯。
+    现映射到真实模块 + 该模块必须暴露的关键符号（类/函数）。
+    """
 
     CONTRACTS = {
-        "preflight": {"output_keys": ["status", "checks"]},
-        "data": {"output_keys": ["financials", "sources"]},
-        "charts": {"output_keys": ["chart_paths"]},
-        "write_sections": {"output_keys": ["report_text"]},
-        "validate": {"output_keys": ["gate_result"]},
-        "export_docx": {"output_keys": ["docx_path"]},
+        "pipeline.preflight_check": ["PreflightChecker", "check"],
+        "pipeline.data_collector": ["DataCollectorV5"],
+        "pipeline.chart_pipeline": ["ChartPipeline"],
+        "pipeline.section_writer": ["SectionWriter", "write_report"],
+        "pipeline.iron_gate": ["IronGate"],
+        "export.report_gate": ["export_report", "GateBlockedError"],
     }
 
     def check_module(self, module_name: str, expected: list[str]) -> CheckResult:
@@ -194,8 +199,8 @@ def run_all() -> HarnessReport:
 
     # 4. Pipeline contracts
     pc = PipelineContractChecker()
-    for mod, expected in pc.CONTRACTS.items():
-        checks.append(pc.check_module(mod, expected["output_keys"]))
+    for mod, attrs in pc.CONTRACTS.items():
+        checks.append(pc.check_module(mod, attrs))
 
     # 5. Entry point sanity
     scheduler_py = _ROOT / "pipeline" / "scheduler.py"
@@ -211,6 +216,11 @@ def run_all() -> HarnessReport:
 
 
 if __name__ == "__main__":
+    # P0-audit 2026-08-24: Windows GBK 控制台无法编码 ✓/✗ → 强制 UTF-8 输出
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
     r = run_all()
     r.print_report()
     sys.exit(0 if r.passed else 1)

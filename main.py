@@ -101,7 +101,15 @@ def run_pipeline(
         h = harness_check()
         if not h.passed:
             h.print_report()
-            logger.warning("Harness 验证未完全通过，将尝试继续")
+            p0_failed = [c.name for c in h.checks if not c.passed and c.severity == "P0"]
+            if p0_failed:
+                # P0-audit 2026-08-24: P0 失败（语法/密钥泄漏/合约）必须阻断，
+                # 此前降级为 warning 继续——安全带从不锁死。
+                result["status"] = "error"
+                result["error"] = f"Harness P0 检查失败: {', '.join(p0_failed)}"
+                print(f"  ✗ 阻断: {result['error']}")
+                return result
+            logger.warning("Harness 验证未完全通过（仅 P1 警告），继续执行")
         else:
             print(f"  ✓ Harness: {len(h.checks)} 项检查通过 ({h.duration_ms:.0f}ms)")
     except Exception as e:
