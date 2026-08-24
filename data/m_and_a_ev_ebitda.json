@@ -1,0 +1,58 @@
+[
+  {
+    "industry": "气体传感器",
+    "case_count": 3,
+    "median_ev_ebitda": null,
+    "available_ev_ebitda_count": 0,
+    "note": "公开渠道未检索到单笔交易EV/EBITDA倍数，建议Wind/CapitalIQ补充"
+  },
+  {
+    "industry": "半导体",
+    "case_count": 4,
+    "median_ev_ebitda": null,
+    "available_ev_ebitda_count": 0,
+    "note": "公开渠道未检索到单笔交易EV/EBITDA倍数，建议Wind/CapitalIQ补充"
+  },
+  {
+    "industry": "人形机器人/自动化",
+    "case_count": 3,
+    "median_ev_ebitda": null,
+    "available_ev_ebitda_count": 0,
+    "note": "公开渠道未检索到单笔交易EV/EBITDA倍数，建议Wind/CapitalIQ补充"
+  },
+  {
+    "industry": "光伏",
+    "case_count": 3,
+    "median_ev_ebitda": null,
+    "available_ev_ebitda_count": 0,
+    "note": "公开渠道未检索到单笔交易EV/EBITDA倍数，建议Wind/CapitalIQ补充"
+  },
+  {
+    "industry": "锂电",
+    "case_count": 3,
+    "median_ev_ebitda": null,
+    "available_ev_ebitda_count": 0,
+    "note": "公开渠道未检索到单笔交易EV/EBITDA倍数，建议Wind/CapitalIQ补充"
+  },
+  {
+    "industry": "工控/自动化",
+    "case_count": 3,
+    "median_ev_ebitda": null,
+    "available_ev_ebitda_count": 0,
+    "note": "公开渠道未检索到单笔交易EV/EBITDA倍数，建议Wind/CapitalIQ补充"
+  },
+  {
+    "industry": "医疗器械",
+    "case_count": 3,
+    "median_ev_ebitda": null,
+    "available_ev_ebitda_count": 0,
+    "note": "公开渠道未检索到单笔交易EV/EBITDA倍数，建议Wind/CapitalIQ补充"
+  },
+  {
+    "industry": "消费电子",
+    "case_count": 3,
+    "median_ev_ebitda": null,
+    "available_ev_ebitda_count": 0,
+    "note": "公开渠道未检索到单笔交易EV/EBITDA倍数，建议Wind/CapitalIQ补充"
+  }
+]

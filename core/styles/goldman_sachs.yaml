@@ -1,0 +1,13 @@
+id: style_goldman_sachs
+name: Goldman Sachs Style (中文适配)
+colors: {primary: "#051C2C", accent: "#009688"}
+typography: {main_font: "SimSun", heading_font: "SimHei"}
+writing:
+  conclusion_first: true
+  min_judgment_density: 1.5
+  max_sentence_chars: 120
+  forbidden_terms: ["值得注意的是", "不可否认的是", "从某种程度上说", "需要注意的是"]
+  citation_style: footnote_numbered
+charts:
+  preferred_types: ['waterfall', 'scatter', 'bar_cluster']
+  colors: ['#051C2C', '#009688', '#4CB8E8']

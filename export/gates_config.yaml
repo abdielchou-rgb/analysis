@@ -1,0 +1,22 @@
+﻿export:
+  delete_on_fail: true
+  log_all_failures: true
+  max_retries: 3
+  raise_on_fail: true
+iron_gate:
+  enabled: true
+  hard_fail:
+  - personal_narrative
+  - section_continuity
+  - table_quality_md
+  - placeholder_charts
+  - forbidden_patterns
+  min_score: 0.55
+  require_all_hard: true
+visual_gate:
+  enabled: true
+  hard_fail:
+  - empty_document
+  - table_too_short
+  min_score: 0.45
+  require_all_hard: true

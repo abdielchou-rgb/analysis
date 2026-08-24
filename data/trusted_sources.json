@@ -1,0 +1,28 @@
+{
+  "_meta": {
+    "description": "可信源清单（R82）——Agent 下载/联网白名单域",
+    "note": "命中可信源的 URL 自动放行，未知域自动拒绝（或需确认）"
+  },
+  "trusted_domains": [
+    "pypi.org",
+    "files.pythonhosted.org",
+    "github.com",
+    "raw.githubusercontent.com",
+    "pypi.python.org",
+    "akshare.com",
+    "eastmoney.com",
+    "baostock.com",
+    "sina.com.cn",
+    "tencent.com",
+    "gitee.com"
+  ],
+  "trusted_commands": [
+    "python scripts/run_reports.py",
+    "python scripts/scheduler.py",
+    "python pipeline/scheduler.py",
+    "python scripts/agent_llm_responder.py watch",
+    "python -m pytest",
+    "pip install",
+    "pip3 install"
+  ]
+}

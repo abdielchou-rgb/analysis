@@ -1,0 +1,47 @@
+{
+  "_meta": {
+    "description": "R78 Phase4.4 行业×维度权重矩阵（数据驱动 planner 的初代基础）",
+    "note": "权重 1-10，供 analyst_planner 在数据充足时按行业侧重维度；FP5 演化后可回写实测校准",
+    "created": "2026-08-05"
+  },
+  "半导体": {
+    "geopolitical_risk": 9, "technology": 9, "industry_chain": 8, "supply_demand": 8,
+    "competitive": 7, "market_size": 6, "capital_market": 6, "policy": 5
+  },
+  "传感器": {
+    "technology": 8, "industry_chain": 8, "market_size": 7, "competitive": 7,
+    "supply_demand": 6, "profit_pool": 6, "capital_market": 5, "policy": 4
+  },
+  "人形机器人": {
+    "technology": 10, "market_size": 8, "industry_chain": 8, "competitive": 7,
+    "capital_market": 6, "supply_demand": 5, "policy": 6
+  },
+  "光伏": {
+    "supply_demand": 9, "policy": 8, "competitive": 7, "industry_chain": 7,
+    "technology": 6, "capital_market": 5, "market_size": 5
+  },
+  "锂电": {
+    "supply_demand": 9, "industry_chain": 8, "competitive": 7, "technology": 6,
+    "market_size": 6, "capital_market": 5, "policy": 4
+  },
+  "医药": {
+    "policy": 8, "technology": 8, "market_size": 7, "competitive": 6,
+    "industry_chain": 6, "capital_market": 5, "esg_materiality": 4
+  },
+  "工控自动化": {
+    "supply_demand": 8, "technology": 7, "industry_chain": 7, "competitive": 6,
+    "profit_pool": 6, "market_size": 5, "capital_market": 4
+  },
+  "汽车零部件": {
+    "supply_demand": 8, "industry_chain": 7, "competitive": 7, "technology": 6,
+    "market_size": 6, "profit_pool": 5, "capital_market": 4
+  },
+  "消费电子": {
+    "supply_demand": 7, "technology": 7, "competitive": 6, "market_size": 6,
+    "industry_chain": 6, "capital_market": 5
+  },
+  "智慧物流": {
+    "market_size": 8, "technology": 7, "industry_chain": 7, "competitive": 6,
+    "profit_pool": 6, "supply_demand": 5, "capital_market": 4
+  }
+}

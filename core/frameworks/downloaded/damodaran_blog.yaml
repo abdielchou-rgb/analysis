@@ -1,0 +1,22 @@
+# Damodaran Musings on Markets
+# Source: aswathdamodaran.blogspot.com
+# Downloaded: 2026-07-30
+
+id: damodaran_blog
+name: "Damodaran's Musings on Markets"
+source: "aswathdamodaran.blogspot.com"
+sac_target: "valuation_assessment"
+priority: 2
+
+key_concepts:
+  - "Value = Story + Numbers: combine narrative with valuation"
+  - "DCF is the only intrinsic valuation approach — everything else is relative"
+  - "Garbage in, garbage out: quality of inputs determines quality of output"
+  - "Uncertainty vs Risk: measure uncertainty with probability distributions"
+  - "Biggest valuation mistakes come from hidden assumptions"
+  - "Check your implied growth rate against the overall market"
+  - "Growth creates value only if ROIC > Cost of Capital"
+  - "Always do sensitivity analysis on your key drivers"
+  - "There is no single right number — use a range"
+
+core_method: "Narrative -> DCF Inputs -> Sensitivity -> Range -> Decision"

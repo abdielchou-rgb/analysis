@@ -1,0 +1,369 @@
+id: sac_listed_company
+name: 上市公司深度分析 - 因果链框架(V3-圆桌融合版)
+applies_to:
+- listed_company
+logic_chain:
+- step: 决策门判断【新增】
+  description: 先判断公司是否值得深度分析 - 存在核心分歧? 分歧有商业模式支撑? 估值有吸引力? 至少2/3 GO才继续
+  maps_to:
+  - decision_gate
+- step: 核心分歧锁定
+  description: 市场一致预期 vs 我们的判断--分歧在哪、为什么有分歧.【增强】多模型分歧校验--用至少3种思维模型审视分歧方向
+  maps_to:
+  - core_disagreement
+- step: 商业模式验证
+  description: 分歧的根源是否在商业模式层面--利润驱动力、护城河、杠杆结构.【增强】经营杠杆/财务杠杆拆解,护城河四类型结构化评估
+  maps_to:
+  - business_model
+- step: 财务证据检验
+  description: 财务数据是否支持我们的分歧方向--营收/利润/ROE趋势.底部-up财务驱动法与顶部-down TAM法的交叉验证,两者收敛/分歧及其含义.【增强】杜邦三层拆解(ROE=利润率×周转率×杠杆率)
+  maps_to:
+  - financial_analysis
+- step: 竞争位置确认
+  description: 竞争格局是否支撑我们的判断--壁垒/替代/份额变化.【增强】格林沃德三维竞争优势判断(供应优势/需求优势/规模经济),反馈回路分析
+  maps_to:
+  - competitive_position
+- step: 增长可持续性
+  description: 分歧驱动的增长因素是否可持续--量/价/结构拆分.TAM约束下的增长上限验证:市场空间是否足够支撑增长假设
+  maps_to:
+  - growth_drivers
+- step: 治理检验
+  description: 管理层是否有动力和能力执行分歧方向的策略
+  maps_to:
+  - governance_esg
+- step: 估值映射
+  description: 当前价格隐含什么预期--我们的判断如何改变这个预期.包含:DCF估值(含失败概率调整和国家风险溢价)、可比估值、敏感性分析、交叉验证(TAM法与财务驱动法收敛/分歧).【增强】戴维斯双击/双杀分析(估值×盈利双因子),凯利公式赔率计算
+  maps_to:
+  - valuation_assessment
+- step: 催化剂与跟踪
+  description: 什么事件会触发市场重新定价--时间窗口
+  maps_to:
+  - catalyst
+- step: 证伪与风险
+  description: 什么情况下我们错了--可观察的证伪条件.均值回归判断--当前估值/利润率是否偏离历史均值
+  maps_to:
+  - falsification
+- step: 资金面与会计穿透【新增】
+  description: 资金面:北向/公募/两融/股东增减持; 会计穿透:收入确认/资本化/减值/表外负债
+  maps_to:
+  - capital_flow
+  - accounting_penetration
+pre_workflow:
+- step: 分歧锁定
+  description: 市场共识 vs 我们的判断--分歧的核心变量是什么
+- step: 反方构建
+  description: 先确定 bear case 再确定 bull case--反确认偏误
+- step: 因果链映射
+  description: 从核心分歧出发,沿 logic_chain 逐层推演,确保每一步都有证据支撑
+writing_rhythm:
+  name: 上市公司写作节奏指南(V3)
+  description: 上市公司报告的旗帜逻辑--从分歧锁定到证伪条件的完整闭环
+  flow_diagram: 核心分歧(Bold Call) -> 商业模式验证(含护城河/杠杆) -> 财务证据(含杜邦) -> 竞争位置(含格林沃德/反馈)
+    -> 增长驱动 -> 治理检验 -> 估值映射(含双击/赔率) -> 催化剂 -> 证伪条件(含均值回归)
+  principles:
+  - '【V3新增】决策门先行: 先判断是否值得深入(3个决策门至少2个GO)'
+  - 第一页必须同时包含Bold Call和分歧定位(市场认为X,我们认为Y)
+  - 旗帜逻辑:分歧 -> 商业模式验证 -> 财务证据 -> 竞争位置 -> 增长可持续 -> 治理 -> 估值 -> 催化剂 -> 证伪
+  - 核心分歧锁定(Step 1)是全篇的锚点--后续每章都要回扣分歧
+  - 财务证据检验(Step 3)必须包含10层拆解中的至少3层(收入桥+毛利桥+ROE拆解),并包含杜邦三层拆解
+  - 【新增】护城河分析(Step 2)必须评估至少3种护城河类型(品牌/转换成本/网络效应/成本优势)
+  - 【新增】多思维模型校验:在核心分歧章节用至少3种模型校验分歧方向
+  - 证伪与风险(Step 9)必须包含可观察的证伪条件:如果XX发生,我们的判断就错了.并判断均值回归风险
+  - 全文字数分配:Step 1-2占15%, Step 3-5占40%, Step 6-7占25%, Step 8-9占20%
+  - '【V3新增】So What三层链: 每个板块必须回答 - 数据说明什么? 对投资者意味着什么? 具体怎么做?'
+  - '【V3新增】Bold Call必须包含: 方向+时间窗口(季度级)+触发变量+证伪条件'
+  - '【V3新增】会计穿透分析: 收入确认政策/资本化vs费用化/减值测试假设'
+  - '【V3新增】Track Record: 报告开篇必须显示分析师对该行业的预测准确率'
+required_dimensions:
+- id: core_disagreement
+  question: 市场共识 vs 我们的判断--分歧的核心变量.【增强】用多思维模型校验分歧方向
+  evidence_min: 2
+  counter_evidence: true
+  position: page_2
+  sub_questions:
+  - '分歧方向: 我们看多还是看空?'
+  - '分歧幅度: 量化分歧(如EPS预期差%)'
+  - '分歧时间窗口: 3/6/12个月'
+  - '分歧证伪条件: 什么情况下我们错了?'
+- id: business_model
+  question: 商业模式本质--利润驱动力、护城河类型与可持续性、杠杆结构.【增强】护城河四类型结构化评估,经营杠杆/财务杠杆拆解
+  evidence_min: 2
+  sub_questions:
+  - 护城河类型评估(品牌/转换成本/网络效应/成本优势)
+  - 护城河强度(强/中/弱)和持久性(持久/可维持/不确定)
+  - 经营杠杆系数(固定成本/变动成本结构)
+  - 财务杠杆系数(负债水平)
+  - 杜邦驱动类型(高利润型/高周转型/高杠杆型/均衡型)
+- id: financial_analysis
+  question: 财务表现--营收/利润/毛利率/ROE 的趋势与驱动因素.【增强】杜邦三层拆解,底部-up vs 顶部-down交叉验证
+  evidence_min: 3
+  required_elements:
+  - 营收(含底部-up和顶部-down双路径)
+  - 利润
+  - 毛利率
+  - ROE杜邦拆解
+- id: competitive_position
+  question: 竞争格局--份额变化、进入壁垒、替代风险、反馈回路.【增强】格林沃德三维竞争优势,正/负反馈回路
+  evidence_min: 2
+  counter_evidence: true
+  sub_questions:
+  - 市场份额变化趋势
+  - 进入壁垒高度
+  - 替代品威胁
+  - 格林沃德三维:供应优势/需求优势/规模经济
+  - 正反馈回路(网络效应/飞轮效应)
+  - 负反馈回路(竞争加剧/价格战)
+- id: peer_benchmarking
+  question: 行业对标分析：与同行在关键指标上的系统对比
+  evidence_min: 3
+  counter_evidence: true
+  required_elements:
+  - 对标公司列表（至少3家同行）
+  - 关键财务指标对比表（营收/利润/ROE/增长率）
+  - 估值对比（PE/PB/PS/EV/EBITDA）
+  - 竞争地位矩阵
+  sub_questions:
+  - 主要竞争对手是谁？各自市场份额如何？
+  - 目标公司在各关键指标上的排位？
+  - 估值溢价/折价的原因是什么？
+  - 竞争地位的可持续性如何？
+- id: growth_drivers
+  question: 增长驱动--量/价/结构拆分、可持续性判断
+  evidence_min: 2
+- id: governance_esg
+  question: 治理结构、ROIC/WACC、关联交易、ESG
+  evidence_min: 1
+- id: valuation_assessment
+  question: 估值--当前价格隐含预期、估值锚、反方情景.【增强】戴维斯双击/双杀分析,赔率计算
+  evidence_min: 2
+  counter_evidence: true
+  sub_questions:
+  - DCF估值(含失败概率和国家风险调整)
+  - 可比公司估值
+  - 敏感性分析
+  - TAM vs 财务驱动法交叉验证
+  - 戴维斯双击/双杀判断(EPS方向×PE方向)
+  - 赔率评估(潜在涨幅/跌幅比)
+  - 均值回归风险(当前估值vs历史均值)
+- id: management_quality
+  question: 管理层质量评估：经验、持股、过往业绩、治理结构
+  evidence_min: 3
+  counter_evidence: true
+  required_elements:
+  - 核心管理层履历与行业经验
+  - 管理层持股比例与增减持记录
+  - 过往战略决策准确性（并购/投资/转型）
+  - 股权结构集中度与治理风险
+  - 管理层激励机制的合理性
+  sub_questions:
+  - 核心管理层是否有10+年行业经验？
+  - 管理层持股是否在5%以上？是否有近期减持？
+  - 过去3年重大战略决策的结果如何？
+  - 公司治理结构是否存在风险点？
+  - 管理层薪酬是否与股东利益一致？
+- id: falsification
+  question: 证伪条件--哪些可观察变化会推翻判断？至少3条.【增强】均值回归判断.【R76 Phase 5.4】系统失效状态(Sustained Failure Mode)： 什么系统性宏观状态会推翻整体判断? 与macro_ctx联动
+  evidence_min: 2
+  counter_evidence: true
+  sub_questions:
+  - 证伪条件(至少3条可观察变化)
+  - 均值回归判断(当前估值/利润率vs历史均值)
+  - 系统失效状态(Sustained Failure Mode): 什么系统性宏观状态会推翻整体判断?
+- id: catalyst
+  question: 催化剂--3-6-12个月的事件驱动因素
+  evidence_min: 1
+- id: decision_gate
+  question: '决策门判断: 3个决策门中有几个GO? 是否值得深度分析?'
+  evidence_min: 1
+  position: page_1
+- id: capital_flow
+  question: '资金面: 北向/公募/两融/大股东增减持/解禁日历'
+  evidence_min: 2
+- id: accounting_penetration
+  question: '会计穿透: 收入确认政策/资本化vs费用化/减值测试假设/表外负债/关联交易'
+  evidence_min: 2
+  sub_questions:
+  - 收入确认政策(时点vs时段/总额vs净额)
+  - 研发资本化率与行业对比
+  - 商誉减值测试关键假设
+  - 关联交易定价公允性
+  - 表外负债与或有负债
+- id: global_peer_comparison
+  question: '全球估值锚定: 与全球同类公司在估值倍数/利润率/增速上的系统对比, 建立全球估值坐标系'
+  evidence_min: 2
+  counter_evidence: true
+  sub_questions:
+  - 全球3-5家可比公司及估值(PE/PB/PS)
+  - 公司与全球同行的估值差及原因
+  - 全球估值区间的中位数/分位数
+  - 估值差是否隐含错误定价或基本面差异
+- id: overseas_revenue
+  question: '海外收入结构: 海外收入占比/区域分布/增长趋势, 及汇率变动对业绩的影响'
+  evidence_min: 1
+  counter_evidence: true
+  sub_questions:
+  - 海外收入占总收入比例及趋势
+  - 主要海外区域(北美/欧洲/东南亚等)分布
+  - 海外业务增速 vs 国内增速
+  - 汇率波动对营收/利润的敏感性
+- id: geopolitical_exposure
+  question: '地缘与跨境风险: 中美科技博弈/出口管制/关税/供应链脱钩对公司的影响'
+  evidence_min: 1
+  counter_evidence: true
+  sub_questions:
+  - 出口管制/实体清单/关税直接冲击
+  - 供应链对海外依赖度
+  - 地缘风险对海外收入/估值的影响
+  - 应对措施与去风险化进展
+- id: core_hypothesis
+  question: '【R57 MBB假设驱动】可证伪核心假设--"如果我们是对的，应观察到X；若X未发生，假设就错"。开头给单句可证伪假设+先行指标+失效触发线'
+  evidence_min: 2
+  counter_evidence: true
+  sub_questions:
+  - 单句可证伪假设（公司核心逻辑）
+  - 先行指标（假设成立应观察到的信号）
+  - 失效触发线（什么数据出现=假设错）
+- id: industry_consolidation
+  question: '【R57投行并购视角】行业整合与公司地位: 公司所在行业是否在整合、公司是整合者还是被整合者、并购估值倍数、ROIC vs WACC资本配置效率'
+  evidence_min: 1
+  counter_evidence: true
+  sub_questions:
+  - 行业集中度趋势(公司份额上升/下降)
+  - 公司是整合者(资本实力)还是被整合者(现金流弱)
+  - 并购案例与估值倍数
+  - ROIC vs WACC 判断资本配置
+- id: esg_materiality
+  question: '【R57四大/国际投行ESG】ESG实质性风险/机遇: 公司所在行业最实质ESG议题(SASB/TCFD), 治理风险, ESG对估值影响'
+  evidence_min: 1
+  counter_evidence: true
+  sub_questions:
+  - 行业最实质ESG议题
+  - 公司ESG表现 vs 同业
+  - 治理风险(关联交易/股权/合规)
+  - ESG对估值影响(折价/溢价)
+evidence_requirements:
+  min_sources: 6
+  primary_source_min: 2
+  counter_evidence_required: true
+forbidden_patterns:
+- SAC
+- 11维
+- 8阶
+- 9阶
+- 范式路由
+- 研究方法论
+- AI生成
+- AI辅助
+- 本报告由系统生成
+- 模型生成
+chart_config:
+  min_charts: 10
+  min_tables: 4
+  charts:
+  - id: decision_gate
+    num: 1
+    type: bar
+    caption: 投资决策门
+    source: 公司财报/计算
+  - id: consensus_vs_deviation
+    num: 2
+    type: bar_line
+    caption: 市场共识与预期差
+    source: 公司财报/Wind
+  - id: revenue_structure
+    num: 3
+    type: bar
+    caption: 收入结构分析
+    source: 公司财报
+  - id: business_segments
+    num: 4
+    type: pie
+    caption: 业务分部构成
+    source: 公司财报
+  - id: financial_trends
+    num: 5
+    type: dual_axis
+    caption: 营收与净利趋势
+    source: 公司财报
+  - id: profit_margin
+    num: 6
+    type: bar_line
+    caption: 利润率分析
+    source: 公司财报
+  - id: cash_flow
+    num: 7
+    type: bar
+    caption: 现金流结构
+    source: 公司财报
+  - id: balance_sheet
+    num: 8
+    type: bar
+    caption: 资产负债结构
+    source: 公司财报
+  - id: competitive_landscape
+    num: 9
+    type: bar_cluster
+    caption: 竞争格局对比
+    source: Wind/同业
+  - id: market_position
+    num: 10
+    type: pie
+    caption: 市场份额
+    source: Wind/同业
+  - id: moat_analysis
+    num: 11
+    type: radar
+    caption: 护城河雷达
+    source: 计算
+  - id: valuation_peers
+    num: 12
+    type: scatter
+    caption: 同业估值散点
+    source: Wind
+  - id: peer_comparison
+    num: 13
+    type: bar_cluster
+    caption: 同业关键指标对比
+    source: Wind
+  - id: growth_drivers
+    num: 14
+    type: line
+    caption: 增长驱动因素
+    source: 公司财报
+  - id: industry_chain
+    num: 15
+    type: waterfall
+    caption: 产业链价值分布
+    source: Wind/研究
+  - id: governance_esg
+    num: 16
+    type: radar
+    caption: 治理与ESG评分
+    source: 公开数据
+  - id: management_quality
+    num: 17
+    type: bar
+    caption: 管理层质量评估
+    source: 公开数据
+  - id: valuation_history
+    num: 18
+    type: line
+    caption: 估值历史分位
+    source: Wind
+  - id: dcf_sensitivity
+    num: 19
+    type: bar
+    caption: DCF敏感性分析
+    source: 计算
+  - id: capital_flow
+    num: 20
+    type: bar
+    caption: 资金流向
+    source: 行情数据
+  - id: catalyst_timeline
+    num: 21
+    type: line
+    caption: 催化剂时间线
+    source: 公司公告/新闻
+
+

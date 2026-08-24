@@ -1,0 +1,22 @@
+{
+  "asset": "油位传感器",
+  "generated_by": "agent",
+  "generated_at": "2026-08-07",
+  "version": "v087_corrected",
+  "correction_note": "R87(2026-08-07) 基于 Marvis AI幻觉自查报告 修正 enrich v086 幻觉：TDK垄断→爱知制钢/VAC主导；2019防渗62%→2015水十条+东部近100%；华虹主业物位/液位→矿山物联网(需验证)；KROHNE纳入竞争但不属前五；每项加 source_level(verified/unverified/corrected)",
+  "items": [
+    {"type": "fig_data", "key": "fig_revenue_trend", "data": {"2024": 46, "2025": 50, "2026": 54.5, "2030": 65}, "source": "油位v8行业报告 全球市场规模亿美元 (A)", "confidence": 0.85, "unit": "亿美元", "source_level": "verified"},
+    {"type": "fig_data", "key": "fig_market_size_china", "data": {"2024": 166, "2025": 172}, "source": "油位v8行业报告 中国市场规模亿元 (A)", "confidence": 0.85, "unit": "亿元人民币", "source_level": "verified"},
+    {"type": "fig_data", "key": "fig_global_leaders", "data": {"VEGA": "德国，雷达/导波雷达液位领先", "Siemens": "德国，过程仪表综合巨头", "E+H": "瑞士，物位/液位高端", "Emerson": "美国，油气储运", "Yokogawa": "日本，炼化过程控制", "KROHNE": "德国，雷达物位计全球TOP5-6，SIL2认证"}, "source": "R87修正：KROHNE纳入竞争观察但非全球前五(前五=VEGA/Siemens/E+H/Emerson/Yokogawa)", "confidence": 0.75, "source_level": "corrected"},
+    {"type": "text", "key": "company_intro", "value": "柯力传感(603662)：称重传感器龙头，2025营收15.58亿(+20.4%)，归母3.41亿(+30.73%)，毛利率44.83%，净利率25.11%，海外收入3.07亿占比19.7%，海外毛利率56.58%。'传感器森林'平台化，六维力2026年12万只目标，水质毛利率68.7%。2025年9月拟1.22亿增持华虹科技至96%。", "source": "柯力执行报告20260805 + 新浪财经研报 (A)", "confidence": 0.9, "source_level": "verified"},
+    {"type": "text", "key": "jiutong_intro", "value": "久通物联(深圳)：2006年成立，智慧物流AIoT，中东石油/大宗集装箱定位锁，箱联全球SaaS，覆盖80+国家海关/税务/物流客户。2022年获柯力亿元投资。油位业务年约1000只×300元=30万。", "source": "久通物联PDF提取2023-03 (A)", "confidence": 0.85, "source_level": "verified"},
+    {"type": "text", "key": "huahong_intro", "value": "华虹科技：柯力控股子公司(拟增持至96%)，1.22亿元收购45%股权(2025-09)。R87修正：外部公开资料显示华虹科技(830824)主业为矿山物联网，无公开油位传感器产线记录——'油位产线/物位液位主营'存疑，需尽调验证。", "source": "证券时报2025-09 (A) + R87外部检索修正", "confidence": 0.6, "source_level": "corrected"},
+    {"type": "text", "key": "competition_truth", "value": "竞争真相(R69审计+R87修正)：底座14家玩家仅覆盖2家(14%)。必补级7家：托肯恒山(中石化核心供应商，Dover体系)、KROHNE(雷达物位计全球TOP5-6)、富仁高科(国标制定者GB/T9081-2023，400+专利)、GVR中国(Veeder-Root中国实体，Vontier体系)、优必得、永邦、河南英高。品牌映射断裂：Tokheim/Veeder-Root品牌出现但中国实体遗漏。集团归属错误：Veeder-Root误归Fortive/Dover，实为Vontier。国际五巨头(VEGA/Siemens/E+H/Emerson/Yokogawa)占全球物位/液位仪表约65%份额。", "source": "油位v8行业报告 + R69审计 (A) + R87修正", "confidence": 0.8, "source_level": "corrected"},
+    {"type": "text", "key": "tech_route", "value": "技术路线(R87修正)：磁致伸缩(±0.5mm，中高端，国产主流±1-2mm)，雷达式(高端，国际主导)，静压式(低成本本土)，电容式(低端)。核心卡点：磁致伸缩波导丝被日本爱知制钢、德国VAC主导(非TDK)，国产化率2025年约25-30%。中游制造净利率8-12%，上游材料毛利50-65%，售后运维毛利55-70%。", "source": "油位v8行业报告 + R87外部检索修正(爱知制钢/VAC主导波导丝)", "confidence": 0.7, "source_level": "corrected"},
+    {"type": "text", "key": "policy_chain", "value": "政策(R87修正)：2015年国务院《水污染防治行动计划》(水十条)要求2017年底前完成双层罐改造，各省延期至2020年前后收官；东部执行率接近100%，全国约5-8%未完成，2026H2末班车高峰。全国约10万座加油站，液位仪单台3000-8000元，替换空间50-100亿。危化品储罐SIS改造2026-2027释放43-52亿(安全仪表需求占比25-30%)。美国EPA 2005对标：第2-3年替换高峰。", "source": "R87修正：2015水十条替代2019防渗改造；SIS市场改43-52亿口径", "confidence": 0.7, "source_level": "corrected"},
+    {"type": "text", "key": "keli_strategy", "value": "柯力困境：营收增速快于利润增速，内生增长质量待验证，估值溢价依赖物联网+机器人叙事，商誉并购风险。优势：净利率25.11% vs 中游8-12%，产能利用率约80-90%(内部评估E)，多物理量平台化(水质68.7%验证)，海外高毛利56.58%。", "source": "柯力执行报告20260805 (A) + R87产能利用率降级为E", "confidence": 0.8, "source_level": "corrected"},
+    {"type": "text", "key": "production_decision", "value": "生产主体三选(R87修正)：A柯力总部自制(技术栈不匹配称重vs磁致伸缩，认证12-18月，投产线)——不推荐；B外协代工(利润薄8-12%，小批量无代工厂接)——验证用；C华虹生产(以华虹为资本平台，但主业矿山物联网需新建/整合油位产能+另行取得IATF16949)——推荐但认证需另取。推荐C为主+B验证+A远期自研磁致伸缩丝。", "source": "R87修正：华虹主业矿山物联网，油位产能需新建，认证需另取", "confidence": 0.7, "source_level": "corrected"},
+    {"type": "text", "key": "financial_forecast", "value": "财务测算：2026年500-1000万(华虹并表+外协验证)，2027年2000-4000万(政策替换+国产替代)，2028年5000万-1亿(国产替代+出海)。占柯力营收3%-6%。投入：华虹增持1.22亿(股权投资非沉没)+运营投入上限2500万。", "source": "内部测算 (E) + R87运营投入口径", "confidence": 0.7, "source_level": "unverified"},
+    {"type": "text", "key": "global_overseas", "value": "全球视角：海外机会在中东/东南亚油气设施+危化品安全管理升级。柯力海外毛利率56.58%高于国内，久通80+国家渠道可激活。全球对标：柯力 vs VEGA/Siemens 差距在高精度+防爆认证，机会在中端加油站。", "source": "油位v8行业报告 + 久通PDF (A/E)", "confidence": 0.8, "source_level": "verified"}
+  ]
+}

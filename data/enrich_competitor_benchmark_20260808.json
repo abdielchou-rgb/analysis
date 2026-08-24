@@ -1,0 +1,41 @@
+{
+  "fig_competitor_benchmark": {
+    "title": "油位/液位传感器竞争对手量化对标（2026-08 补采）",
+    "source": "中国工控网2025物/液位仪表市场报告 + 168report/国产替代新闻交叉验证",
+    "source_level": "verified",
+    "global_top_players": [
+      {"name": "E+H（恩德斯豪斯）", "origin": "瑞士", "segment": "高端过程仪表", "strength": "SIL/防爆认证全、过程行业全覆盖", "china_presence": "强，中国区重点布局", "mid_market": "投入不足，聚焦石化/制药大项目"},
+      {"name": "VEGA", "origin": "德国", "segment": "雷达/物位高端", "strength": "雷达物位全球领先", "china_presence": "强", "mid_market": "大项目导向"},
+      {"name": "Emerson", "origin": "美国", "segment": "过程仪表平台", "strength": "Rosemount+流量/物位全平台", "china_presence": "强", "mid_market": "聚焦大流程行业"},
+      {"name": "Siemens", "origin": "德国", "segment": "工业自动化平台", "strength": "SITRANS 物位产品线", "china_presence": "强", "mid_market": "项目型"},
+      {"name": "Yokogawa", "origin": "日本", "segment": "过程控制", "strength": "日本/石化客户深", "china_presence": "中", "mid_market": "聚焦石化"},
+      {"name": "Krohne", "origin": "德国", "segment": "流量+物位", "strength": "物位产品线完整", "china_presence": "中", "mid_market": "部分细分有布局"}
+    ],
+    "china_local_players": [
+      {"name": "凡宜科技", "segment": "液位仪表", "note": "工控网榜单国产头部"},
+      {"name": "青岛澳邦", "segment": "物位仪表", "note": "工控网榜单国产"},
+      {"name": "古大仪表", "segment": "物位仪表", "note": "工控网榜单国产"},
+      {"name": "武汉利又德", "segment": "磁致伸缩液位", "note": "2024-2025 攻克全国产磁致伸缩液位传感器，打破国外垄断（波导丝国产化）"},
+      {"name": "博尔森", "segment": "磁致伸缩位移/液位", "note": "纯国产化方案供应商"}
+    ],
+    "mid_market_opportunity": {
+      "segments": ["加油站ATG", "罐式集装箱监测", "危化品运输监测"],
+      "logic": "外资聚焦石化/制药大项目（投入产出比高），本土小厂缺防爆/计量认证，中端合规刚需细分出现空白",
+      "quantification_gap": "各细分市场规模需进一步测算（ATG/罐箱/危化品运输）",
+      "threat": "雷达物位计在罐箱等场景存在替代可能，需评估"
+    },
+    "upstream_waveguide": {
+      "material": "磁致伸缩波导丝",
+      "foreign_suppliers": ["日本爱知制钢（Aichi Steel）", "德国VAC"],
+      "china_progress": "武汉利又德/博尔森已实现国产突破，波导丝国产化不再是绝对卡脖子",
+      "implication": "v2.3 '波导丝被TDK/爱知制钢垄断'判断需修正——国产替代已出现，自研可行性与时间表可上调",
+      "risk_redline": "国产波导丝良率/一致性需验证，仍保留涨价/断供红线但威胁度下调"
+    },
+    "alternative_technology": {
+      "radar": "雷达物位计在罐箱/危化品场景有替代趋势，高端市场主力",
+      "optical": "光学液位（光电/光纤）在特定场景",
+      "ultrasonic": "超声液位低成本场景",
+      "implication": "磁致伸缩在罐箱监测的定位需与雷达物位计差异化（精度/防爆/成本），避免被高端替代"
+    }
+  }
+}

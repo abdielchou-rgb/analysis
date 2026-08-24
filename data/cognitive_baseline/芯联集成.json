@@ -1,0 +1,1498 @@
+{
+  "version": "V51.3",
+  "code": "芯联集成",
+  "name": "",
+  "last_updated": "2026-07-29T01:32:06.430153",
+  "key_variables": {},
+  "active_hypotheses": [],
+  "prediction_history": [
+    {
+      "id": "a9964dd99d7a",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-27T22:31:13.738039",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "d4d3f2487cd8",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T17:04:51.128638",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "ef70add3560a",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T17:05:52.275998",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "a76a8421d4a0",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T17:07:01.313359",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "aa9606cfcc33",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T17:08:11.002284",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "19a540c621ce",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T17:09:25.668315",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "18404d7f9da6",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T17:11:58.122857",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "88f9a82afdf4",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T17:13:03.570396",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "1fe793214bd0",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T17:14:13.702529",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "1a3bd66ef35f",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T17:15:15.544828",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "2beff43988de",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T17:15:22.922066",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "da85e1f6ace7",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T17:16:17.121278",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "32aeb6f39880",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T17:16:36.647383",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "54fe0d2deaa7",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T17:17:25.279542",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "419c77f55cf2",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T17:17:51.005247",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "8b63c7b21405",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T17:18:39.765212",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "06dc7fdb1098",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T17:19:08.292579",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "97530939b194",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T17:20:01.150028",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "197480e1cc61",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T17:20:24.116104",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "215d79fe2903",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T17:21:21.101194",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "59f3c09b2afa",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T17:22:31.239284",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "119f68cfe11e",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T17:54:59.590777",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "e4b3f2f69aed",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T17:56:39.236487",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "282f4c4b8839",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T17:58:23.962841",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "baa23666901d",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T17:59:39.457597",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "ebc6917b8928",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T18:01:21.378601",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "cb5d143efb6d",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T19:18:26.575388",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "1706a4e6ce25",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T19:20:21.785379",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "74f3dd259388",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T19:22:57.622857",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "edcd07d8fc8f",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T19:25:08.064785",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "587d6d80aae7",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T19:27:13.137005",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "e6a1473dd63a",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T19:31:23.869304",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "013b8149de18",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T19:33:40.744778",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "4fea44f4ca9e",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T19:36:08.634575",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "659c0a9334f8",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T19:38:24.227853",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "9b03519a717e",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T19:40:41.990519",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "57a73c4d562b",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T19:47:11.318515",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "8eb9f6879f76",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T19:49:08.556934",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "0bae712eaf9d",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T19:51:22.708656",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "7c16a9c656a8",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T19:53:40.678417",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "b1bf2dbfc030",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T19:55:45.415149",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "5af011ba2b70",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T20:07:35.530317",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "763455dc786e",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T20:09:54.038452",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "2856c0034d52",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T20:12:20.526155",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "e4bc0102a41c",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T20:14:36.774705",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "56ce0fabf5f5",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T20:16:36.657538",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "e3e7a92e0c34",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T20:34:10.993404",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "ced27dbded6b",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T20:36:10.362544",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "0175012f6cab",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T20:38:26.154743",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "e08aef212c27",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T20:40:14.563844",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "92caa286a5eb",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T20:42:30.862819",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "41f7a54efef1",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T20:45:52.179735",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "29d48ab2d0da",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T20:48:18.247644",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "11850320c4ec",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T20:50:21.398009",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "9cdf1a4930d0",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T20:52:18.659968",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "aad5e14fc1c7",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T20:54:20.867216",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "bc0ae2e62c12",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T21:00:35.222556",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "351b78f6d021",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T21:02:35.508886",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "4c7c813d9080",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T21:04:42.641650",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "012976c66b39",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T21:06:49.128852",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "70234364e2b2",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T21:08:46.618898",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "19c44601a45f",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T21:15:13.956807",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "f82f5cec7215",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T21:17:14.361154",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "fa8ee7fa2bae",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T21:19:10.198311",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "9bbf9abba053",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T21:21:04.996071",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "95ecd1ce1fd9",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T21:23:07.796508",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "d4f89530f492",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T21:28:11.687134",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "5794eb9c84ab",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T21:29:55.283440",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "67ee2a452414",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T21:32:02.580307",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "8353903b0858",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T21:34:05.117500",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "cb71872a3b38",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T21:36:11.996021",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "a7eec87a268c",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T22:19:25.229649",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "9360b9460bb2",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T22:21:34.150130",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "ecb2f81aac5a",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T22:23:39.007574",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "2d1835bca7aa",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T22:26:05.570247",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "72bd952682f9",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-28T22:27:54.360959",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "8fd7a3579ec4",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-29T00:22:20.231854",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "2c49243b40b0",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-29T00:24:32.932354",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "98aeccc07cae",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-29T00:25:37.557588",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "3e909d67019d",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-29T00:26:41.405951",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "6e2b3f21636e",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-29T00:27:35.503413",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "0fd4e12006c7",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-29T00:28:28.391509",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "01665505607a",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-29T00:29:34.074415",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "c3dec356275d",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-29T00:30:27.397980",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "1ab0534dd38a",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-29T00:31:43.500052",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "1cc9887291a4",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-29T00:31:55.363002",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "b09377163ad6",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-29T00:34:03.066526",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "43ab703e2f4b",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-29T00:34:19.676694",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "8ce28e378da2",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-29T00:36:13.000021",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "5d3169e0cf21",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-29T00:38:25.021471",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "a3fd5b4a2eca",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-29T00:40:32.893223",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "b410583a72ba",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-29T00:43:56.129955",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "3f02593d1d39",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-29T00:45:50.903754",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "62118aa0b25c",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-29T00:48:41.139888",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "26a0d726206d",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-29T00:50:42.768492",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "2423f90cfc07",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-29T00:52:30.163421",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "bc8991e8d5a4",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-29T01:10:16.559447",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "8bd9e5b4ccba",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-29T01:12:16.401243",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "b21ad7124515",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-29T01:14:34.961575",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "0297b43f771f",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-29T01:16:33.791484",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "b23c5b27e579",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-29T01:18:28.566638",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "b7c2e99c2e18",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-29T01:23:42.770543",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "293ab70091dc",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-29T01:25:36.844209",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "df97f5ee9432",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-29T01:27:56.353439",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "ca2a22d74c6f",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-29T01:30:06.640241",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    },
+    {
+      "id": "2dfe88424403",
+      "type": "directional",
+      "text": "Report listed_company for 芯联集成 completed",
+      "time_window": "6m",
+      "created_at": "2026-07-29T01:32:06.428618",
+      "verified_at_6m": null,
+      "mid_term_result": null,
+      "verified_at_12m": null,
+      "final_result": null,
+      "metadata": {
+        "report_type": "listed_company"
+      }
+    }
+  ],
+  "data_freshness": {},
+  "known_patterns": [],
+  "report_history": [],
+  "cognitive_summary": ""
+}

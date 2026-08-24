@@ -1,0 +1,341 @@
+{
+  "version": "v54",
+  "generated_at": "2026-07-26T02:41:25.563531",
+  "total_ppts_scanned": 23,
+  "institutions_with_data": 7,
+  "institutions": {
+    "gs": {
+      "files_analyzed": [
+        "492_goldman_10-3.pptx",
+        "Goldman-Sachs-Presentation.pptx"
+      ],
+      "charts_analyzed": 1,
+      "palette": [
+        "1F396C",
+        "7399C5",
+        "7B7DA7",
+        "D7D9E3",
+        "FFFFFF",
+        "339966",
+        "F4891F",
+        "D9D9D9",
+        "F1F1F1",
+        "68A1BE",
+        "A6A6A6",
+        "000000",
+        "BEBEBE",
+        "959595",
+        "528199"
+      ],
+      "top_colors_used": [
+        "1F396C",
+        "7399C5",
+        "7B7DA7",
+        "D7D9E3",
+        "FFFFFF",
+        "339966",
+        "F4891F",
+        "D9D9D9",
+        "F1F1F1",
+        "68A1BE"
+      ],
+      "font_families": [
+        "Arial",
+        "Wingdings"
+      ],
+      "font_sizes_used": [],
+      "chart_types": {
+        "COLUMN_CLUSTERED (51)": 1
+      },
+      "data_label_ratio": 0.0,
+      "legend_ratio": 1.0
+    },
+    "ms": {
+      "files_analyzed": [
+        "J.P.Morgan2024.pptx",
+        "JP Morgan 原版PPT.pptx",
+        "JP-Morgan-Chase-info-and-Tips.pptx"
+      ],
+      "charts_analyzed": 1,
+      "palette": [
+        "FFFFFF",
+        "007994",
+        "482880",
+        "565A5D",
+        "024A7E",
+        "004680",
+        "00477B",
+        "A8A8A5",
+        "008297",
+        "389CD8"
+      ],
+      "top_colors_used": [
+        "FFFFFF",
+        "007994",
+        "482880",
+        "565A5D",
+        "024A7E",
+        "004680",
+        "00477B",
+        "A8A8A5",
+        "008297",
+        "389CD8"
+      ],
+      "font_families": [
+        "+mj-lt",
+        "+mn-lt",
+        "Arial",
+        "JPM AM Pro Light",
+        "JPM AM Pro Medium"
+      ],
+      "font_sizes_used": [],
+      "chart_types": {
+        "BAR_CLUSTERED (57)": 1
+      },
+      "data_label_ratio": 0.0,
+      "legend_ratio": 0.0
+    },
+    "pwc": {
+      "files_analyzed": [
+        "pwc1.pptx",
+        "pwc2.pptx",
+        "普华永道咨询PPT模板.pptx"
+      ],
+      "charts_analyzed": 0,
+      "palette": [
+        "A31E1E",
+        "EB8C00",
+        "FFFFFF",
+        "968C6D",
+        "EAE8E2",
+        "000000",
+        "3366FF",
+        "00FF00",
+        "FFFF99",
+        "99CCFF",
+        "808080",
+        "9999FF",
+        "DDDDDD",
+        "CCFFFF",
+        "66CCFF"
+      ],
+      "top_colors_used": [
+        "A31E1E",
+        "EB8C00",
+        "FFFFFF",
+        "968C6D",
+        "EAE8E2",
+        "000000",
+        "3366FF",
+        "00FF00",
+        "FFFF99",
+        "99CCFF"
+      ],
+      "font_families": [
+        "+mj-lt",
+        "Georgia",
+        "Arial",
+        "Times New Roman",
+        "Verdana"
+      ],
+      "font_sizes_used": [],
+      "chart_types": {},
+      "data_label_ratio": 0.0,
+      "legend_ratio": 0.0
+    },
+    "accenture": {
+      "files_analyzed": [
+        "埃森哲PPT模板.pptx"
+      ],
+      "charts_analyzed": 6,
+      "palette": [
+        "83C2E5",
+        "006699",
+        "FFFFFF",
+        "000000",
+        "C0C0C0"
+      ],
+      "top_colors_used": [
+        "83C2E5",
+        "006699",
+        "FFFFFF",
+        "000000",
+        "C0C0C0"
+      ],
+      "font_families": [
+        "Arial"
+      ],
+      "font_sizes_used": [],
+      "chart_types": {
+        "COLUMN_CLUSTERED (51)": 1,
+        "COLUMN_STACKED_100 (53)": 1,
+        "XY_SCATTER (-4169)": 1,
+        "BUBBLE (15)": 1,
+        "PIE (5)": 1,
+        "null": 1
+      },
+      "data_label_ratio": 0.0,
+      "legend_ratio": 0.0
+    },
+    "ey": {
+      "files_analyzed": [
+        "安永EYPresentationforUniversitiesFY15final.pptx",
+        "安永PPT AnnualAccountingandAuditingUpdate.pptx",
+        "安永咨询图表PPT模板.pptx"
+      ],
+      "charts_analyzed": 0,
+      "palette": [
+        "414042",
+        "F0F0F0",
+        "808080",
+        "FFFFFF",
+        "C0C0C0",
+        "646464",
+        "F2F2F2",
+        "000000",
+        "7D7D7D",
+        "FFE600",
+        "F04C3E",
+        "333333",
+        "FFD200",
+        "CCCCCC"
+      ],
+      "top_colors_used": [
+        "414042",
+        "F0F0F0",
+        "808080",
+        "FFFFFF",
+        "C0C0C0",
+        "646464",
+        "F2F2F2",
+        "000000",
+        "7D7D7D",
+        "FFE600"
+      ],
+      "font_families": [
+        "Arial",
+        "EYInterstate",
+        "EYInterstate Light",
+        "+mj-lt"
+      ],
+      "font_sizes_used": [],
+      "chart_types": {},
+      "data_label_ratio": 0.0,
+      "legend_ratio": 0.0
+    },
+    "bain": {
+      "files_analyzed": [
+        "贝恩模板.pptx"
+      ],
+      "charts_analyzed": 0,
+      "palette": [
+        "DDDDDD",
+        "777777",
+        "FFFFFF",
+        "FCD64D",
+        "000000",
+        "009900",
+        "333333",
+        "B2B2B2",
+        "006393",
+        "0091BF",
+        "CC0000",
+        "CC6666",
+        "595FAA",
+        "D7A154",
+        "61A48D"
+      ],
+      "top_colors_used": [
+        "DDDDDD",
+        "777777",
+        "FFFFFF",
+        "FCD64D",
+        "000000",
+        "009900",
+        "333333",
+        "B2B2B2",
+        "006393",
+        "0091BF"
+      ],
+      "font_families": [
+        "+mn-lt",
+        "Verdana"
+      ],
+      "font_sizes_used": [],
+      "chart_types": {},
+      "data_label_ratio": 0.0,
+      "legend_ratio": 0.0
+    },
+    "mck": {
+      "files_analyzed": [
+        "麦肯锡PPT图表模板2.pptx"
+      ],
+      "charts_analyzed": 0,
+      "palette": [
+        "FF0000",
+        "808080",
+        "F4EFDC",
+        "E6DDB0",
+        "4D4D4D",
+        "DADADA",
+        "C0C0C0",
+        "EAEAEA",
+        "00B0F0",
+        "FF9900",
+        "66CEF5",
+        "F1F1F1",
+        "FFFFFF",
+        "B2B2B2",
+        "C1D3FF"
+      ],
+      "top_colors_used": [
+        "FF0000",
+        "808080",
+        "F4EFDC",
+        "E6DDB0",
+        "4D4D4D",
+        "DADADA",
+        "C0C0C0",
+        "EAEAEA",
+        "00B0F0",
+        "FF9900"
+      ],
+      "font_families": [
+        "+mj-lt",
+        "+mn-lt",
+        "Arial",
+        "Arial Black",
+        "Century Gothic"
+      ],
+      "font_sizes_used": [],
+      "chart_types": {},
+      "data_label_ratio": 0.0,
+      "legend_ratio": 0.0
+    }
+  },
+  "all_files": [
+    "20200617-future-of-tech-economy.pptx",
+    "492_goldman_10-3.pptx",
+    "Goldman-Sachs-Presentation.pptx",
+    "J.P.Morgan2024.pptx",
+    "JP Morgan 原版PPT.pptx",
+    "JP-Morgan-Chase-info-and-Tips.pptx",
+    "mi-late-cycle-investing-en.pptx",
+    "pwc1.pptx",
+    "pwc2.pptx",
+    "咨询公司ppt图表模板.pptx",
+    "埃森哲PPT模板.pptx",
+    "安永EYPresentationforUniversitiesFY15final.pptx",
+    "安永PPT AnnualAccountingandAuditingUpdate.pptx",
+    "安永咨询图表PPT模板.pptx",
+    "普华永道咨询PPT模板.pptx",
+    "空白模板working-remotely-virtual-collaboration.pptx",
+    "贝恩模板.pptx",
+    "赠品 中国地图.pptx",
+    "赠品basic-customizable-consulting-toolkit.pptx",
+    "赠品business-major-for-college-international-business-management.pptx",
+    "赠品contrasted-grayscale-business-plan.pptx",
+    "赠品innovate-business-plan.pptx",
+    "麦肯锡PPT图表模板2.pptx"
+  ]
+}

@@ -1,0 +1,607 @@
+{
+  "enabled": true,
+  "model": "qwen3:14b",
+  "count": 100,
+  "insights": [
+    {
+      "file": "2026-07-24_华福证券_医药行业26Q2基金持仓分析：Q2公募基金整体和全基医药重仓持仓环比回落.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-24_国金证券_医药产业研究深度：谁将是创新药中2025年的三星、美光和SK海力士.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-24_国元证券_厄尔尼诺如何影响资产价格：气候风险传导、历史复盘与2026年展望.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-24_国金证券_数说公募纯债与固收+基金2026年二季报：纯债基金规模回升，固收+极致增配科技.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-24_国金证券_长鑫科技（688825）：冉冉升起的中国DRAM龙头，充分受益存储高景气周期.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-24_西南证券_2026H1疫苗行业跟踪报告（附批签发）.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-25_国盛证券_伟仕佳杰（00856）：亚太分销领军，“AI+云”算力新基建延伸价值边界.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-26_东吴证券_宏观深度报告：搭建Hermes架构的证券分析师“超级助理”-如何用AI自动写研报？(1).pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-25_中国银河_德科立（688205）：公司深度报告：Scale-Across重构DCI，相干模块显著受益.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-26_东吴证券_宏观深度报告：搭建Hermes架构的证券分析师“超级助理”-如何用AI自动写研报？.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-26_开源证券_中矿资源（002738）：公司深度报告：资源禀赋深厚，多金属布局打开成长空间.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-26_东吴证券_金字火腿（002515）：探索第二产业，拥抱光模块.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-27_东吴证券_宏观深度报告：创业板历轮牛市复盘-历史比较与当前阶段判断.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-27_东吴证券_保险Ⅱ行业深度报告：中国人身险银保渠道系列报告一-国内市场三十年演进历程复盘.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-26_开源证券_北交所策略专题报告：北交所高估值出清+回购潮+改革加速，高性价比底部配置窗口开启.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-27_东吴证券_玻璃基板专题报告：材料变革与封装工艺升级共振，产业化临界点将近.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-27_东吴证券_铝产业链深度报告：国内周期收敛叠加海外成本上移，股息回报成为核心定价锚.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-27_东吴证券_汽车行业深度报告：AI系列深度01期-从数字AI通用底座到物理AI真实世界闭环.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-27_国金证券_康众医疗（688607）：公司深度研究：X光平板探测行业领军者，快速成长为AI医疗“小巨人”.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-27_国金证券_资金跟踪系列之五十五：两融与北上继续流出，股票ETF延续回流.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-27_中国银河_“六张网”的政策逻辑与投资主线：强基织网，稳中育新.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-27_平安证券_T细胞衔接器TCE：从血液瘤走向实体瘤自免，技术演进与跨国出海迎来价值共振.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-27_开源证券_综合行业深度报告：全球需求与技术共振，中国牙科从“替代”走向“定义”.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-27_太平洋_房地产专题报告：城市更新推动高质量发展.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-28_东吴证券_策略深度报告：十大未来产业系列之六-具身智能.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-28_东吴证券_食品饮料行业深度报告：原奶周期深度-供需重构迎新机.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-28_东吴证券_2026年光伏中期策略报告：产业持续磨底，供给侧静待优化.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-28_国金证券_量化掘基系列之四十七：产业、业绩与资金三维共振，把握科创医药底部布局机遇.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-28_开源证券_平煤股份（601666）：公司深度报告：中南焦煤龙头优势突出，量价修复开启成长空间.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-28_国海证券_AI光互联黄金赛道：光模块设备行业深度研究-CPO重构测试体系，国产测试设备性能比肩全球龙头.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-29_东吴证券_AI服务器电容研究系列：芯片侧供电升级，MLCC量价弹性先行.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-29_东吴证券_具身智能系列01：本体厂商资本化加速，通用机器人产业链进入验证期.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-28_民银国际_荣昌生物（09995）：自免+肿瘤双布局，全球拓展成效渐显.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": "{\n "
+    },
+    {
+      "file": "2026-07-29_东吴证券_策略深度报告：苏州智造2030系列（新材料篇）-前沿材料新动能.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-29_华福证券_兖矿能源（600188）：煤炭主业稳健扩张，煤化工与新能源打开成长空间.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-29_东吴证券_有色金属行业深度报告：AI金属乘风破浪（二）-钨&稀土，配额限制下的供需错配.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-29_华金证券_A股下半年策略展望：蓄势待发.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-29_国海证券_计算机行业深度报告：AI算力“卖水人”专题系列（10）-高速互联协议与硬件，从“配套件”到“第二算力”.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-29_华福证券_科技牛市中的回撤与修复.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-30_东方证券_锌行业深度报告：供给刚性锚定价格底线，流动性预期打开向上空间.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-30_华安证券_颐海国际（01579）：港股公司专题：扬帆味海，B端新程.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-30_东吴证券_酒店行业框架：复盘行业和龙头发展历程，供需匹配或重启上行周期.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-30_头豹研究院_2026年中国Token经济产业研究：Token成为新信息单位，谁将掌握AI时代的产业控制点？.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-30_山西证券_卫龙美味（09985）：辣条龙头持续迭代，品类创新带动增长.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-30_华福证券_激光行业深度系列报告：AI重构需求边界，产业跃迁正当时.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "MS_Key_Themes_2024.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "GSAM_New_Horizons_EM_China_2025.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "2026-07-30_西南证券_2026年下半年可转债策略：科技反弹仍待时机，周期左侧布局渐近.pdf",
+      "category": "券商报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "Bain_Global_PE_Report_2025.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "Bain_Global_MA_Report_2025.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "BCG_Global_Wealth_Report_2024_CN.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "BCG_AI_Maturity_Matrix_2024.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "BCG_Global_Asset_Management_2025_CN.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "Deloitte_Human_Capital_Trends_2025.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "Deloitte_Tech_Fast_50_2024_AU.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "EY_Energy_Transition_Consumer_2024.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "EY_Global_IPO_Trends_Q3_2025.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "human-capital-trends-from-workday-lens.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "KPMG_Automotive_Executive_Survey_2025.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "KPMG_CEO_Outlook_TMT_2024.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "PwC_Global_Digital_Procurement_Survey_2024.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "尚水智能.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "海康机器人_招股说明书.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "云迹科技_招股说明书.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "先为达生物招股说明书.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "华健未来_港交所招股说明书.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "地平线机器人招股说明书.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "如祺出行招股说明书.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "文远知行.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "小马智行.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "新思考电机.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "星源材质_招股说明书.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "海清智元_港交所招股说明书.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "纳力新材料.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "蜜雪冰城.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "黑芝麻智能.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "宇树科技.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "思必驰_科创板招股说明书.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "宇树科技_盖章.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "环动科技_招股说明书.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "长鑫科技.pdf",
+      "category": "深度报告",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "UBS--油市基础知识入门.pdf",
+      "category": "行业框架",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "UBS--石油化工行业研究入门工具书.pdf",
+      "category": "行业框架",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "UBS--采矿和钢铁业入门全书.pdf",
+      "category": "行业框架",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "业研究方法和思路（潘建平）.pdf",
+      "category": "行业框架",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "兴业全球基金管理公司-证券投资分析基本框架.pdf",
+      "category": "行业框架",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "传媒业1.pdf",
+      "category": "行业框架",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "互联网行业.pdf",
+      "category": "行业框架",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "传媒业2.pdf",
+      "category": "行业框架",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "农业行业分析方法--中金.pdf",
+      "category": "行业框架",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "保险业.pdf",
+      "category": "行业框架",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "化工行业.pdf",
+      "category": "行业框架",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "地产业.pdf",
+      "category": "行业框架",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "医药业.pdf",
+      "category": "行业框架",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "建材业.pdf",
+      "category": "行业框架",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "有色金属行业.pdf",
+      "category": "行业框架",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "旅游业.pdf",
+      "category": "行业框架",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "机械行业.pdf",
+      "category": "行业框架",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "港口业.pdf",
+      "category": "行业框架",
+      "ok": true,
+      "insight": ""
+    },
+    {
+      "file": "汽车业.pdf",
+      "category": "行业框架",
+      "ok": true,
+      "insight": ""
+    }
+  ]
+}

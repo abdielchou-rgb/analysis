@@ -1,0 +1,102 @@
+# Economic Moat Framework
+# Pat Dorsey / Morningstar
+
+id: moat_analysis
+name: "经济护城河分析框架"
+author: "Pat Dorsey / Morningstar"
+source: "The Five Rules for Successful Stock Investing (2004)"
+
+core_thesis: >
+  可持续竞争优势（经济护城河）是公司长期超额回报的核心来源。
+  护城河有五种类型：无形资产、转换成本、网络效应、成本优势、有效规模。
+  护城河的宽度和持久性决定了公司能维持超额利润多久。
+
+logic_chain:
+  - step: "护城河类型诊断"
+    description: "识别公司拥有哪种/哪些护城河"
+    dimensions:
+      intangible_assets:
+        name: "无形资产"
+        indicators: ["品牌溢价", "专利保护", "监管牌照"]
+        strength: "强/中/弱"
+      switching_costs:
+        name: "转换成本"
+        indicators: ["客户粘性", "定制化程度", "迁移成本"]
+        strength: "强/中/弱"
+      network_effects:
+        name: "网络效应"
+        indicators: ["用户规模", "双边网络", "数据网络"]
+        strength: "强/中/弱"
+      cost_advantage:
+        name: "成本优势"
+        indicators: ["规模经济", "区位优势", "流程优势"]
+        strength: "强/中/弱"
+      efficient_scale:
+        name: "有效规模"
+        indicators: ["市场容量有限", "进入成本高", "在位者定价权"]
+        strength: "强/中/弱"
+    output: "moat_type, moat_strength, moat_width"
+
+  - step: "护城河量化验证"
+    description: "用财务指标验证护城河是否存在"
+    metrics:
+      - "ROIC持续高于WACC（5年以上）"
+      - "自由现金流/销售收入 >= 5%"
+      - "净利润率 >= 15%"
+      - "ROE >= 15%"
+    output: "moat_confirmed, financial_evidence"
+
+  - step: "护城河侵蚀风险评估"
+    description: "识别可能导致护城河消失的因素"
+    risks:
+      - "技术颠覆"
+      - "监管变化"
+      - "竞争加剧"
+      - "客户议价能力提升"
+    counter_evidence: true
+    output: "erosion_risks, erosion_timeline"
+
+  - step: "安全边际计算"
+    description: "用DCF估算内在价值，要求安全边际"
+    method: "DCF → 内在价值 → 安全边际 = (内在价值 - 市价) / 内在价值"
+    threshold: "安全边际 >= 20-30%"
+    output: "intrinsic_value, margin_of_safety"
+
+analytical_dimensions:
+  moat_id:
+    question: "公司有什么护城河？宽度和持久性如何？"
+    sub_questions:
+      - "护城河来自哪里？"
+      - "护城河能维持多久（5-10-20年）？"
+    evidence_min: 3
+    counter_evidence: true
+
+  financial_validation:
+    question: "财务数据是否支持护城河存在？"
+    metrics:
+      - "ROIC vs WACC趋势"
+      - "FCF/Sales比率历史"
+      - "利润率稳定性"
+    evidence_min: 2
+
+  erosion_monitor:
+    question: "护城河是否在变窄？"
+    sub_questions:
+      - "竞争对手在追赶吗？"
+      - "技术变革威胁护城河吗？"
+    evidence_min: 1
+
+key_metrics:
+  - "ROIC / WACC spread"
+  - "FCF / Sales ratio"
+  - "Net margin stability"
+  - "Revenue persistence"
+  - "Market share trend"
+
+uncertainty_handling:
+  method: "margin_of_safety + scenario_analysis"
+  bear_case: "假设ROIC回归至WACC水平时的估值"
+
+counter_argument:
+  required: true
+  method: "假设护城河正在变窄的情况下的估值"

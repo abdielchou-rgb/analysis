@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+# R78（2026-08-05 P0-3）：修正非标准 build-backend，标准 setuptools
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "2hao-analyst"
+version = "0.1.0"
+description = "二号分析师 — AI驱动的深度研究报告生成引擎"
+requires-python = ">=3.10"
+dependencies = [
+    "python-docx>=1.1.0",
+    "python-pptx>=0.6.21",
+    "matplotlib>=3.7.0",
+    "numpy>=1.24.0",
+    "pandas>=2.0.0",
+    "PyYAML>=6.0",
+    "requests>=2.31.0",
+    "openpyxl>=3.1.2",
+    "Pillow>=10.0.0",
+    "fpdf2>=2.7.0",
+    "akshare>=1.14.0",
+    "openai>=1.0.0",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "W", "I", "N", "UP", "S"]
+ignore = ["E501", "N802"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short"

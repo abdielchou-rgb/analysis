@@ -1,0 +1,73 @@
+# Cycle Thinking & Second-Level Thinking Framework
+# Howard Marks
+
+id: cycle_thinking
+name: "周期思维与第二层思维框架"
+author: "Howard Marks"
+source: "The Most Important Thing (2011)"
+url: "https://www.howardmarks.com"
+
+core_thesis: >
+  投资业绩超越平均的唯一方法是拥有与众不同的正确观点（第二层思维）。
+  理解市场所处的周期位置——贪婪与恐惧、乐观与悲观、高估与低估的钟摆位置——
+  是做出高质量投资判断的基础。
+
+logic_chain:
+  - step: "识别当前周期位置"
+    description: "判断市场处于周期的什么阶段——复苏/扩张/顶峰/衰退/底部"
+    dimensions: ["估值水平", "投资者情绪", "资金流向", "宏观经济周期"]
+    tools: ["valuation_percentile", "sentiment_indicators", "fund_flow_analysis"]
+    output: "cycle_position, cycle_confidence"
+
+  - step: "第二层思维构建"
+    description: "不满足于表面结论——找到别人看不到的第二层含义"
+    method: "第一层('这是家好公司') → 第二层('但市场已经定价过高，预期过于乐观')"
+    output: "second_level_view, consensus_misreading"
+
+  - step: "风险评估"
+    description: "区分好的风险（价格已反映）和坏的风险（价格未反映）"
+    sub_questions:
+      - "市场定价中反映了多少风险？"
+      - "哪些风险被忽略了？"
+    evidence_min: 2
+    output: "priced_risks, unpriced_risks"
+
+  - step: "钟摆定位与行动"
+    description: "根据钟摆位置决定进攻还是防守"
+    rules:
+      - "极度悲观时进攻（别人恐惧时贪婪）"
+      - "极度乐观时防守（别人贪婪时恐惧）"
+      - "中间位置保持均衡"
+    output: "action_stance, conviction_level"
+
+analytical_dimensions:
+  cycle_position:
+    question: "当前市场处于周期的什么位置？"
+    sub_questions:
+      - "估值处于历史什么分位？"
+      - "投资者情绪指数如何？"
+    evidence_min: 2
+    counter_evidence: true
+
+  second_level:
+    question: "市场共识可能错在哪里？"
+    sub_questions:
+      - "表面上看是什么情况？"
+      - "更深层次的结构性变化是什么？"
+    evidence_min: 2
+
+  risk_analysis:
+    question: "好的风险和坏的风险分别是什么？"
+    sub_questions:
+      - "哪些风险已经被定价？"
+      - "哪些风险被忽视？"
+    evidence_min: 1
+
+key_principles:
+  - "第一层思维说'这是家好公司，买'；第二层思维说'这是家好公司，但每个人都觉得它是好公司，所以估值过高了'"
+  - "风险不是波动性——风险是永久损失的可能性"
+  - "最重要的不是买什么，而是什么时候买"
+
+counter_argument:
+  required: true
+  method: "识别自己的认知偏差——是否因为近期表现而过度乐观或悲观"

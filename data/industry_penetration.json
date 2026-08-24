@@ -1,0 +1,1910 @@
+[
+  {
+    "industry": "传感器",
+    "segment": "汽车(单车传感器价值量)",
+    "penetration_pct": null,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "智能驾驶L2+渗透率42.6%(2025E)，单车传感器价值量800-1200元较L1提升2-3倍",
+    "source": "ICV Tank/中汽数据；中汽协/乘联会(2025E)"
+  },
+  {
+    "industry": "传感器",
+    "segment": "工业自动化",
+    "penetration_pct": null,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "工业4.0/国产替代，离散制造>流程制造，产线传感器密度显著提升",
+    "source": "工信部工业互联网行动计划；VDMA（无统一渗透率口径，采用装机密度替代）"
+  },
+  {
+    "industry": "气体传感器",
+    "segment": "工业安全(化工/煤矿/冶金)",
+    "penetration_pct": 65.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "存量替换(电化学→红外)；Mordor口径覆盖率达82.5%",
+    "source": "MIR睿工业/中国环境监测总站；Mordor Intelligence(2024)"
+  },
+  {
+    "industry": "气体传感器",
+    "segment": "汽车电子(电池热失控监测)",
+    "penetration_pct": 9.0,
+    "as_of": "2025",
+    "life_cycle": "导入期末",
+    "growth_curve": "S曲线加速(GB 38031-2025强制，2026年起标配)",
+    "source": "GB 38031-2025；IDC/车厂调研综合估算"
+  },
+  {
+    "industry": "气体传感器",
+    "segment": "智慧医疗(呼吸机/麻醉机)",
+    "penetration_pct": 10.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "医疗设备国产化+高端替换；MarketsandMarkets口径覆盖率91%",
+    "source": "MarketsandMarkets, Medical Gas Sensors(2024)"
+  },
+  {
+    "industry": "气体传感器",
+    "segment": "消费电子(室内空气质量/燃气报警)",
+    "penetration_pct": 5.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "家用燃气报警器强制安装政策驱动加速；奥维云网口径渗透率47.2%",
+    "source": "应急管理部《家用燃气报警器安装使用规范》；奥维云网/前瞻(2024)"
+  },
+  {
+    "industry": "新能源车",
+    "segment": "中国乘用车NEV渗透率",
+    "penetration_pct": 50.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "S曲线加速",
+    "source": "https://www.caam.org.cn/"
+  },
+  {
+    "industry": "新能源车",
+    "segment": "全球乘用车NEV渗透率",
+    "penetration_pct": 22.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "S曲线初段",
+    "source": "https://www.iea.org/"
+  },
+  {
+    "industry": "新能源车",
+    "segment": "中国10万以下车型NEV渗透率",
+    "penetration_pct": 75.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "接近饱和",
+    "source": "https://www.caam.org.cn/"
+  },
+  {
+    "industry": "新能源车",
+    "segment": "中国10-20万车型NEV渗透率",
+    "penetration_pct": 55.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "快速爬升",
+    "source": "https://www.caam.org.cn/"
+  },
+  {
+    "industry": "新能源车",
+    "segment": "L2+高阶辅助驾驶渗透率",
+    "penetration_pct": 40.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "快速爬升",
+    "source": "https://www.caam.org.cn/"
+  },
+  {
+    "industry": "新能源车",
+    "segment": "L3自动驾驶渗透率",
+    "penetration_pct": 2.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "起步",
+    "source": "https://www.caam.org.cn/"
+  },
+  {
+    "industry": "新能源车",
+    "segment": "纯电动BEV占比",
+    "penetration_pct": 62.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "加速",
+    "source": "https://www.caam.org.cn/"
+  },
+  {
+    "industry": "新能源车",
+    "segment": "商用车NEV渗透率",
+    "penetration_pct": 17.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "初期加速",
+    "source": "https://www.caam.org.cn/"
+  },
+  {
+    "industry": "充电桩",
+    "segment": "中国车桩比",
+    "penetration_pct": 40.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "2.5:1→2:1",
+    "source": "https://www.evpartner.com/"
+  },
+  {
+    "industry": "充电桩",
+    "segment": "高速服务区充电覆盖率",
+    "penetration_pct": 98.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "接近饱和",
+    "source": "https://www.evpartner.com/"
+  },
+  {
+    "industry": "充电桩",
+    "segment": "快充桩(≥60kW)占比",
+    "penetration_pct": 50.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "快速爬升",
+    "source": "https://www.evpartner.com/"
+  },
+  {
+    "industry": "动力电池",
+    "segment": "CTP/刀片电池渗透率",
+    "penetration_pct": 60.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "快速爬升",
+    "source": "https://www.gg-lb.com/"
+  },
+  {
+    "industry": "动力电池",
+    "segment": "磷酸铁锂装机占比",
+    "penetration_pct": 65.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "稳定",
+    "source": "https://www.gg-lb.com/"
+  },
+  {
+    "industry": "动力电池",
+    "segment": "SiC电控渗透率",
+    "penetration_pct": 30.0,
+    "as_of": "2025",
+    "life_cycle": "导入/成长期",
+    "growth_curve": "加速",
+    "source": "https://www.gg-lb.com/"
+  },
+  {
+    "industry": "动力电池",
+    "segment": "硅基负极渗透率",
+    "penetration_pct": 8.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "起步",
+    "source": "https://www.gg-lb.com/"
+  },
+  {
+    "industry": "动力电池",
+    "segment": "IGBT国产自给率",
+    "penetration_pct": 65.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "快速爬升",
+    "source": "https://www.gg-lb.com/"
+  },
+  {
+    "industry": "光伏",
+    "segment": "N型电池渗透率",
+    "penetration_pct": 75.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "P型淘汰中",
+    "source": "https://www.chinapv.org.cn/"
+  },
+  {
+    "industry": "光伏",
+    "segment": "TOPCon电池市场份额",
+    "penetration_pct": 55.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "主流",
+    "source": "https://www.chinapv.org.cn/"
+  },
+  {
+    "industry": "光伏",
+    "segment": "HJT渗透率",
+    "penetration_pct": 12.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "待突破",
+    "source": "https://www.chinapv.org.cn/"
+  },
+  {
+    "industry": "光伏",
+    "segment": "0BB无主栅渗透率",
+    "penetration_pct": 40.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "标配化",
+    "source": "https://www.chinapv.org.cn/"
+  },
+  {
+    "industry": "光伏",
+    "segment": "中国光伏发电量占比",
+    "penetration_pct": 10.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "快速爬升",
+    "source": "https://www.nea.gov.cn/"
+  },
+  {
+    "industry": "风电",
+    "segment": "碳纤维叶片渗透率",
+    "penetration_pct": 30.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "快速爬升",
+    "source": "https://www.cwea.org.cn/"
+  },
+  {
+    "industry": "风电",
+    "segment": "中国风电发电量占比",
+    "penetration_pct": 9.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "稳定增长",
+    "source": "https://www.nea.gov.cn/"
+  },
+  {
+    "industry": "风电",
+    "segment": "中国海上风电渗透率",
+    "penetration_pct": 15.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "加速",
+    "source": "https://www.cwea.org.cn/"
+  },
+  {
+    "industry": "储能",
+    "segment": "中国新型储能累计装机",
+    "penetration_pct": 40.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "指数增长",
+    "source": "https://www.cnesa.org/"
+  },
+  {
+    "industry": "储能",
+    "segment": "风光配储比例",
+    "penetration_pct": 15.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "政策强制",
+    "source": "https://www.nea.gov.cn/"
+  },
+  {
+    "industry": "电力",
+    "segment": "非化石能源消费占比",
+    "penetration_pct": 20.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "稳步提升",
+    "source": "https://www.nea.gov.cn/"
+  },
+  {
+    "industry": "电力",
+    "segment": "可再生能源发电增量占比",
+    "penetration_pct": 50.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "主导增量",
+    "source": "https://www.nea.gov.cn/"
+  },
+  {
+    "industry": "核电",
+    "segment": "核电发电量占比",
+    "penetration_pct": 5.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "稳步增长",
+    "source": "https://www.nea.gov.cn/"
+  },
+  {
+    "industry": "半导体",
+    "segment": "中国半导体整体国产化率",
+    "penetration_pct": 32.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "快速爬升",
+    "source": "https://www.csia.net.cn/"
+  },
+  {
+    "industry": "半导体",
+    "segment": "中国芯片自给率",
+    "penetration_pct": 37.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "爬升",
+    "source": "https://www.semi.org/"
+  },
+  {
+    "industry": "半导体",
+    "segment": "g线/i线光刻胶国产化率",
+    "penetration_pct": 45.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "稳定",
+    "source": "https://www.csia.net.cn/"
+  },
+  {
+    "industry": "半导体",
+    "segment": "KrF光刻胶国产化率",
+    "penetration_pct": 17.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "放量",
+    "source": "https://www.csia.net.cn/"
+  },
+  {
+    "industry": "半导体",
+    "segment": "ArF光刻胶国产化率",
+    "penetration_pct": 6.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "突破中",
+    "source": "https://www.csia.net.cn/"
+  },
+  {
+    "industry": "半导体",
+    "segment": "中国晶圆代工全球份额",
+    "penetration_pct": 13.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "成熟制程扩产",
+    "source": "https://www.trendforce.com/"
+  },
+  {
+    "industry": "半导体",
+    "segment": "中国先进封装渗透率",
+    "penetration_pct": 42.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "追赶全球",
+    "source": "https://www.yolegroup.com/"
+  },
+  {
+    "industry": "半导体",
+    "segment": "全球先进封装渗透率",
+    "penetration_pct": 57.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "AI驱动",
+    "source": "https://www.yolegroup.com/"
+  },
+  {
+    "industry": "半导体",
+    "segment": "中国成熟制程(≥28nm)全球份额",
+    "penetration_pct": 33.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "快速爬升",
+    "source": "https://www.trendforce.com/"
+  },
+  {
+    "industry": "半导体",
+    "segment": "中国半导体设备国产化率",
+    "penetration_pct": 25.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "加速替代",
+    "source": "https://www.csia.net.cn/"
+  },
+  {
+    "industry": "半导体",
+    "segment": "刻蚀设备国产化率",
+    "penetration_pct": 30.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "加速",
+    "source": "https://www.csia.net.cn/"
+  },
+  {
+    "industry": "半导体",
+    "segment": "12英寸硅片国产化率",
+    "penetration_pct": 35.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "突破中",
+    "source": "https://www.csia.net.cn/"
+  },
+  {
+    "industry": "面板",
+    "segment": "LCD全球产能中国占比",
+    "penetration_pct": 67.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "主导",
+    "source": "https://www.omdia.com/"
+  },
+  {
+    "industry": "面板",
+    "segment": "OLED全球产能中国占比",
+    "penetration_pct": 50.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "跃升第一",
+    "source": "https://www.dscc.com/"
+  },
+  {
+    "industry": "面板",
+    "segment": "OLED手机面板渗透率",
+    "penetration_pct": 65.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "接近饱和",
+    "source": "https://www.dscc.com/"
+  },
+  {
+    "industry": "面板",
+    "segment": "MiniLED电视面板渗透率",
+    "penetration_pct": 15.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "快速爬升",
+    "source": "https://www.omdia.com/"
+  },
+  {
+    "industry": "面板",
+    "segment": "折叠屏手机全球出货量",
+    "penetration_pct": 5.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "加速",
+    "source": "https://www.dscc.com/"
+  },
+  {
+    "industry": "面板",
+    "segment": "偏光片国产化率",
+    "penetration_pct": 55.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "快速爬升",
+    "source": "https://www.dscc.com/"
+  },
+  {
+    "industry": "面板",
+    "segment": "G8.5+玻璃基板国产化率",
+    "penetration_pct": 28.0,
+    "as_of": "2025",
+    "life_cycle": "导入/成长期",
+    "growth_curve": "突破中",
+    "source": "https://www.dscc.com/"
+  },
+  {
+    "industry": "白酒",
+    "segment": "高端白酒(800元+)市占率",
+    "penetration_pct": 33.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "集中度提升",
+    "source": "https://www.chinabgao.com/"
+  },
+  {
+    "industry": "白酒",
+    "segment": "次高端白酒(300-800元)市占率",
+    "penetration_pct": 20.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "快速扩容",
+    "source": "https://www.chinabgao.com/"
+  },
+  {
+    "industry": "白酒",
+    "segment": "茅台直营占比",
+    "penetration_pct": 50.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "快速提升",
+    "source": "https://www.moutaichina.com/"
+  },
+  {
+    "industry": "家电",
+    "segment": "中国家电智能化渗透率",
+    "penetration_pct": 50.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "加速",
+    "source": "https://www.cheaa.com/"
+  },
+  {
+    "industry": "家电",
+    "segment": "扫地机器人家庭渗透率",
+    "penetration_pct": 12.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "缓步提升",
+    "source": "https://www.cheaa.com/"
+  },
+  {
+    "industry": "家电",
+    "segment": "空调变频渗透率",
+    "penetration_pct": 90.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "接近饱和",
+    "source": "https://www.cheaa.com/"
+  },
+  {
+    "industry": "医疗器械",
+    "segment": "医学影像设备国产化率",
+    "penetration_pct": 35.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "加速替代",
+    "source": "https://www.cmef.org.cn/"
+  },
+  {
+    "industry": "创新药",
+    "segment": "创新药占药品市场比重",
+    "penetration_pct": 25.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "快速提升",
+    "source": "https://www.pharmcube.com/"
+  },
+  {
+    "industry": "医药",
+    "segment": "DTP药房处方药占比",
+    "penetration_pct": 15.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "快速爬升",
+    "source": "https://www.pharmcube.com/"
+  },
+  {
+    "industry": "医美",
+    "segment": "中国医美渗透率(每千人)",
+    "penetration_pct": 4.5,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "追赶韩国(9)",
+    "source": "https://www.sohu.com/a/i-medical"
+  },
+  {
+    "industry": "银行",
+    "segment": "手机银行用户渗透率",
+    "penetration_pct": 85.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "接近饱和",
+    "source": "https://www.pbc.gov.cn/"
+  },
+  {
+    "industry": "保险",
+    "segment": "中国保险深度(GDP占比)",
+    "penetration_pct": 4.2,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "低于全球7%",
+    "source": "https://www.cbirc.gov.cn/"
+  },
+  {
+    "industry": "券商",
+    "segment": "A股机构投资者持股占比",
+    "penetration_pct": 25.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "缓慢提升",
+    "source": "https://www.csrc.gov.cn/"
+  },
+  {
+    "industry": "云计算",
+    "segment": "中国云计算渗透率(企业上云)",
+    "penetration_pct": 45.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "加速",
+    "source": "https://www.caict.ac.cn/"
+  },
+  {
+    "industry": "人工智能",
+    "segment": "AI企业采用率(中国)",
+    "penetration_pct": 25.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "大模型驱动",
+    "source": "https://www.caict.ac.cn/"
+  },
+  {
+    "industry": "人工智能",
+    "segment": "AI代码辅助工具开发者渗透率",
+    "penetration_pct": 45.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "快速爬升",
+    "source": "https://github.blog/"
+  },
+  {
+    "industry": "5G",
+    "segment": "中国5G用户渗透率",
+    "penetration_pct": 55.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "接近饱和",
+    "source": "https://www.miit.gov.cn/"
+  },
+  {
+    "industry": "工业互联网",
+    "segment": "规上工业企业上云率",
+    "penetration_pct": 40.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "加速",
+    "source": "https://www.miit.gov.cn/"
+  },
+  {
+    "industry": "游戏",
+    "segment": "手游占中国游戏市场比例",
+    "penetration_pct": 75.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "稳定",
+    "source": "https://www.cgigc.com.cn/"
+  },
+  {
+    "industry": "电商",
+    "segment": "实物电商占社零比重",
+    "penetration_pct": 30.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "稳定增长",
+    "source": "https://www.stats.gov.cn/"
+  },
+  {
+    "industry": "工程机械",
+    "segment": "挖掘机电动化率",
+    "penetration_pct": 5.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "起步",
+    "source": "https://www.ccm-1.com/"
+  },
+  {
+    "industry": "工程机械",
+    "segment": "国产品牌挖掘机市占率",
+    "penetration_pct": 75.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "主导",
+    "source": "https://www.ccm-1.com/"
+  },
+  {
+    "industry": "军工",
+    "segment": "高端碳纤维国产化率",
+    "penetration_pct": 75.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "加速",
+    "source": "https://www.81.cn/"
+  },
+  {
+    "industry": "军工",
+    "segment": "国产FPGA军用占比",
+    "penetration_pct": 50.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "加速",
+    "source": "https://www.81.cn/"
+  },
+  {
+    "industry": "机器人",
+    "segment": "中国工业机器人密度(台/万人)",
+    "penetration_pct": 392.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "全球前列",
+    "source": "https://www.ifr.org/"
+  },
+  {
+    "industry": "3D打印",
+    "segment": "3D打印航空航天应用渗透率",
+    "penetration_pct": 20.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "加速",
+    "source": "https://wohlersassociates.com/"
+  },
+  {
+    "industry": "钢铁",
+    "segment": "电炉钢占比",
+    "penetration_pct": 12.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "碳减排驱动",
+    "source": "https://www.chinaisa.org.cn/"
+  },
+  {
+    "industry": "有色",
+    "segment": "再生铝占铝产量比",
+    "penetration_pct": 22.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "稳步提升",
+    "source": "https://www.chinania.org.cn/"
+  },
+  {
+    "industry": "稀土永磁",
+    "segment": "钕铁硼永磁国产全球占比",
+    "penetration_pct": 90.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "绝对主导",
+    "source": "https://www.cre.net/"
+  },
+  {
+    "industry": "化工",
+    "segment": "高端聚烯烃国产化率",
+    "penetration_pct": 45.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "加速",
+    "source": "https://www.cpcif.org.cn/"
+  },
+  {
+    "industry": "造纸",
+    "segment": "废纸浆回收利用率",
+    "penetration_pct": 75.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "高位",
+    "source": "https://www.chinappi.org/"
+  },
+  {
+    "industry": "物流",
+    "segment": "快递智能分拣普及率",
+    "penetration_pct": 80.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "接近饱和",
+    "source": "https://www.spb.gov.cn/"
+  },
+  {
+    "industry": "房地产",
+    "segment": "精装修新房占比",
+    "penetration_pct": 40.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "政策驱动",
+    "source": "https://www.crei.cn/"
+  },
+  {
+    "industry": "家具",
+    "segment": "定制家居渗透率",
+    "penetration_pct": 35.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "稳定增长",
+    "source": "https://www.cnfa.com.cn/"
+  },
+  {
+    "industry": "水泥",
+    "segment": "新型干法水泥占比",
+    "penetration_pct": 98.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "基本完成",
+    "source": "https://www.ccement.com/"
+  },
+  {
+    "industry": "石油天然气",
+    "segment": "天然气一次能源消费占比",
+    "penetration_pct": 10.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "稳步提升",
+    "source": "https://www.nea.gov.cn/"
+  },
+  {
+    "industry": "纺织服装",
+    "segment": "运动鞋服占服装消费比",
+    "penetration_pct": 18.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "稳步增长",
+    "source": "https://www.cnga.org.cn/"
+  },
+  {
+    "industry": "宠物",
+    "segment": "中国城镇养宠家庭渗透率",
+    "penetration_pct": 22.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "追赶日本40%",
+    "source": "https://www.petfair.com/"
+  },
+  {
+    "industry": "餐饮",
+    "segment": "连锁化率",
+    "penetration_pct": 25.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "追赶美国50%",
+    "source": "https://www.chinahotel.org.cn/"
+  },
+  {
+    "industry": "免税",
+    "segment": "离岛免税占中国免税市场比",
+    "penetration_pct": 75.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "主导",
+    "source": "https://www.mofcom.gov.cn/"
+  },
+  {
+    "industry": "教育",
+    "segment": "在线教育用户渗透率",
+    "penetration_pct": 45.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "稳定",
+    "source": "https://www.moe.gov.cn/"
+  },
+  {
+    "industry": "影视",
+    "segment": "在线视频付费渗透率",
+    "penetration_pct": 35.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "缓慢增长",
+    "source": "https://www.entgroup.cn/"
+  },
+  {
+    "industry": "人工智能",
+    "segment": "中国AI服务器渗透率",
+    "penetration_pct": 30.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "大模型驱动",
+    "source": "https://www.idc.com/"
+  },
+  {
+    "industry": "人工智能",
+    "segment": "大模型API调用企业覆盖率",
+    "penetration_pct": 18.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "快速爬升",
+    "source": "https://www.caict.ac.cn/"
+  },
+  {
+    "industry": "人工智能",
+    "segment": "AI制药管线占比",
+    "penetration_pct": 8.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "起步",
+    "source": "https://www.deeppharma.tech/"
+  },
+  {
+    "industry": "数据中心",
+    "segment": "液冷服务器渗透率",
+    "penetration_pct": 25.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "能效驱动",
+    "source": "https://www.idc.com/"
+  },
+  {
+    "industry": "数据中心",
+    "segment": "中国算力规模占全球比",
+    "penetration_pct": 33.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "持续增长",
+    "source": "https://www.caict.ac.cn/"
+  },
+  {
+    "industry": "服务器",
+    "segment": "国产CPU服务器占比",
+    "penetration_pct": 30.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "信创驱动",
+    "source": "https://www.idc.com/"
+  },
+  {
+    "industry": "创新药",
+    "segment": "ADC药物占全球肿瘤管线比",
+    "penetration_pct": 15.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "黄金赛道",
+    "source": "https://www.clinicaltrials.gov/"
+  },
+  {
+    "industry": "创新药",
+    "segment": "细胞/基因治疗上市数",
+    "penetration_pct": 2.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "零星突破",
+    "source": "https://www.fda.gov/"
+  },
+  {
+    "industry": "医药",
+    "segment": "中药配方颗粒市占率",
+    "penetration_pct": 10.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "快速扩容",
+    "source": "https://www.nmpa.gov.cn/"
+  },
+  {
+    "industry": "医疗器械",
+    "segment": "国产CT市场占比",
+    "penetration_pct": 32.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "加速替代",
+    "source": "https://www.cmef.org.cn/"
+  },
+  {
+    "industry": "医疗器械",
+    "segment": "国产MRI市场占比",
+    "penetration_pct": 25.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "加速",
+    "source": "https://www.cmef.org.cn/"
+  },
+  {
+    "industry": "口腔",
+    "segment": "中国种植牙渗透率(每万人)",
+    "penetration_pct": 28.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "集采放量",
+    "source": "https://www.nhc.gov.cn/"
+  },
+  {
+    "industry": "眼科",
+    "segment": "近视手术ICL渗透率",
+    "penetration_pct": 15.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "稳步提升",
+    "source": "https://www.aierchina.com/"
+  },
+  {
+    "industry": "基因检测",
+    "segment": "NIPT无创产前渗透率",
+    "penetration_pct": 40.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "接近饱和",
+    "source": "https://www.bgidx.cn/"
+  },
+  {
+    "industry": "疫苗",
+    "segment": "HPV疫苗接种率(中国适龄)",
+    "penetration_pct": 8.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "加速推广",
+    "source": "https://www.chinacdc.cn/"
+  },
+  {
+    "industry": "银行",
+    "segment": "金融科技银行投入占比",
+    "penetration_pct": 12.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "逐年提升",
+    "source": "https://www.cbirc.gov.cn/"
+  },
+  {
+    "industry": "银行",
+    "segment": "数字人民币覆盖面",
+    "penetration_pct": 25.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "试点推广",
+    "source": "https://www.pbc.gov.cn/"
+  },
+  {
+    "industry": "保险",
+    "segment": "互联网保险保费占比",
+    "penetration_pct": 10.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "稳定增长",
+    "source": "https://www.cbirc.gov.cn/"
+  },
+  {
+    "industry": "券商",
+    "segment": "量化交易A股成交占比",
+    "penetration_pct": 25.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "增长中",
+    "source": "https://www.csrc.gov.cn/"
+  },
+  {
+    "industry": "券商",
+    "segment": "ETF基金A股市值占比",
+    "penetration_pct": 12.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "快速扩容",
+    "source": "https://www.sse.com.cn/"
+  },
+  {
+    "industry": "支付",
+    "segment": "移动支付渗透率(线下)",
+    "penetration_pct": 92.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "基本饱和",
+    "source": "https://www.pbc.gov.cn/"
+  },
+  {
+    "industry": "食品饮料",
+    "segment": "预制菜餐饮渗透率",
+    "penetration_pct": 15.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "快速爬升",
+    "source": "https://www.cnfia.cn/"
+  },
+  {
+    "industry": "食品饮料",
+    "segment": "低温鲜奶占乳制品比",
+    "penetration_pct": 18.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "消费升级",
+    "source": "https://www.dairyinfo.gc.ca/"
+  },
+  {
+    "industry": "零售",
+    "segment": "即时零售生鲜电商渗透率",
+    "penetration_pct": 18.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "快速爬升",
+    "source": "https://www.100ec.cn/"
+  },
+  {
+    "industry": "零售",
+    "segment": "折扣店/会员店零售占比",
+    "penetration_pct": 5.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "快速爬升",
+    "source": "https://www.chinaretailing.org/"
+  },
+  {
+    "industry": "服装",
+    "segment": "国潮/国货品牌服装占比",
+    "penetration_pct": 30.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "文化自信",
+    "source": "https://www.cnga.org.cn/"
+  },
+  {
+    "industry": "茶饮",
+    "segment": "现制茶饮现磨咖啡卷到率",
+    "penetration_pct": 60.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "资本驱动",
+    "source": "https://www.meituan.com/research"
+  },
+  {
+    "industry": "茶饮",
+    "segment": "新茶饮三线以下城市渗透率",
+    "penetration_pct": 35.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "下沉市场",
+    "source": "https://www.meituan.com/research"
+  },
+  {
+    "industry": "餐饮",
+    "segment": "外卖占餐饮收入比",
+    "penetration_pct": 25.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "高位稳定",
+    "source": "https://www.meituan.com/research"
+  },
+  {
+    "industry": "汽车",
+    "segment": "中国品牌乘用车市占率",
+    "penetration_pct": 55.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "历史新高",
+    "source": "https://www.caam.org.cn/"
+  },
+  {
+    "industry": "汽车",
+    "segment": "自动挡变速箱渗透率",
+    "penetration_pct": 95.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "接近100%",
+    "source": "https://www.caam.org.cn/"
+  },
+  {
+    "industry": "汽车零部件",
+    "segment": "空气悬架渗透率",
+    "penetration_pct": 15.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "新能源标配化",
+    "source": "https://www.caam.org.cn/"
+  },
+  {
+    "industry": "船舶",
+    "segment": "中国造船完工全球占比",
+    "penetration_pct": 50.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "全球第一",
+    "source": "https://www.cansi.org.cn/"
+  },
+  {
+    "industry": "船舶",
+    "segment": "LNG船中国建造份额",
+    "penetration_pct": 30.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "快速追赶韩国",
+    "source": "https://www.cansi.org.cn/"
+  },
+  {
+    "industry": "轨道交通",
+    "segment": "高铁全国铁路客运占比",
+    "penetration_pct": 80.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "主导",
+    "source": "https://www.china-railway.com.cn/"
+  },
+  {
+    "industry": "轨道交通",
+    "segment": "城轨运营里程全球占比",
+    "penetration_pct": 35.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "全球第一",
+    "source": "https://www.camet.org.cn/"
+  },
+  {
+    "industry": "环保",
+    "segment": "城市污水处理率",
+    "penetration_pct": 98.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "接近100%",
+    "source": "https://www.mee.gov.cn/"
+  },
+  {
+    "industry": "环保",
+    "segment": "生活垃圾焚烧处理占比",
+    "penetration_pct": 65.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "填埋→焚烧",
+    "source": "https://www.mee.gov.cn/"
+  },
+  {
+    "industry": "核电",
+    "segment": "第四代核电装机占比",
+    "penetration_pct": 3.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "首堆示范",
+    "source": "https://www.nea.gov.cn/"
+  },
+  {
+    "industry": "机器人",
+    "segment": "协作机器人占工业机器人比",
+    "penetration_pct": 12.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "快速增长",
+    "source": "https://www.ifr.org/"
+  },
+  {
+    "industry": "机器人",
+    "segment": "国产工业机器人市占率",
+    "penetration_pct": 45.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "加速",
+    "source": "https://www.gg-ii.com/"
+  },
+  {
+    "industry": "3D打印",
+    "segment": "金属3D打印占3D打印比",
+    "penetration_pct": 35.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "航空航天驱",
+    "source": "https://wohlersassociates.com/"
+  },
+  {
+    "industry": "化工",
+    "segment": "可降解塑料替代率",
+    "penetration_pct": 5.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "禁塑令驱动",
+    "source": "https://www.cpcif.org.cn/"
+  },
+  {
+    "industry": "化工",
+    "segment": "化肥农药零增长政策下有机肥占比",
+    "penetration_pct": 25.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "政策驱动",
+    "source": "https://www.moa.gov.cn/"
+  },
+  {
+    "industry": "有色",
+    "segment": "锂电池回收再生率",
+    "penetration_pct": 30.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "退役潮将至",
+    "source": "https://www.cbcu.com.cn/"
+  },
+  {
+    "industry": "有色",
+    "segment": "铜箔极薄化(≤6μm)占比",
+    "penetration_pct": 60.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "4.5μm跟进",
+    "source": "https://www.cbcu.com.cn/"
+  },
+  {
+    "industry": "稀土永磁",
+    "segment": "烧结钕铁硼占稀土永磁比",
+    "penetration_pct": 90.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "主导",
+    "source": "https://www.cre.net/"
+  },
+  {
+    "industry": "钢铁",
+    "segment": "汽车用高强钢渗透率",
+    "penetration_pct": 50.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "轻量化",
+    "source": "https://www.worldautosteel.org/"
+  },
+  {
+    "industry": "煤炭",
+    "segment": "智能化采煤工作面渗透率",
+    "penetration_pct": 35.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "安全效率",
+    "source": "https://www.coalchina.org.cn/"
+  },
+  {
+    "industry": "水泥",
+    "segment": "装配式建筑预制构件渗透率",
+    "penetration_pct": 30.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "双碳驱动",
+    "source": "https://www.ccement.com/"
+  },
+  {
+    "industry": "通信",
+    "segment": "5G基站全球占比",
+    "penetration_pct": 60.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "全球第一",
+    "source": "https://www.miit.gov.cn/"
+  },
+  {
+    "industry": "通信",
+    "segment": "光通信800G光模块渗透率",
+    "penetration_pct": 15.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "AI驱动",
+    "source": "https://www.lightcounting.com/"
+  },
+  {
+    "industry": "消费电子",
+    "segment": "折叠屏手机占高端比",
+    "penetration_pct": 12.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "快速增长",
+    "source": "https://www.counterpointresearch.com/"
+  },
+  {
+    "industry": "消费电子",
+    "segment": "TWS耳机手机渗透率",
+    "penetration_pct": 30.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "稳定",
+    "source": "https://www.counterpointresearch.com/"
+  },
+  {
+    "industry": "游戏",
+    "segment": "出海收入占中国游戏比",
+    "penetration_pct": 35.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "稳定增长",
+    "source": "https://www.cgigc.com.cn/"
+  },
+  {
+    "industry": "影视传媒",
+    "segment": "微短剧市场规模占影视比",
+    "penetration_pct": 15.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "爆发",
+    "source": "https://www.entgroup.cn/"
+  },
+  {
+    "industry": "广告",
+    "segment": "短视频信息流广告占比",
+    "penetration_pct": 55.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "主导",
+    "source": "https://www.questmobile.com.cn/"
+  },
+  {
+    "industry": "教育",
+    "segment": "AI+教育产品渗透率",
+    "penetration_pct": 15.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "加速渗透",
+    "source": "https://www.moe.gov.cn/"
+  },
+  {
+    "industry": "石油天然气",
+    "segment": "页岩气占天然气产量比",
+    "penetration_pct": 15.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "稳步增长",
+    "source": "https://www.nea.gov.cn/"
+  },
+  {
+    "industry": "光伏",
+    "segment": "钙钛矿叠层电池渗透率",
+    "penetration_pct": 1.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "实验室",
+    "source": "https://www.chinapv.org.cn/"
+  },
+  {
+    "industry": "风电",
+    "segment": "叶片回收再利用率",
+    "penetration_pct": 20.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "退役潮",
+    "source": "https://www.cwea.org.cn/"
+  },
+  {
+    "industry": "储能",
+    "segment": "液流电池占新型储能比",
+    "penetration_pct": 5.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "长时储能",
+    "source": "https://www.cnesa.org/"
+  },
+  {
+    "industry": "储能",
+    "segment": "钠离子电池储能占比",
+    "penetration_pct": 3.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "锂钠互补",
+    "source": "https://www.cnesa.org/"
+  },
+  {
+    "industry": "氢能",
+    "segment": "绿氢占氢气产量比",
+    "penetration_pct": 3.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "政策示范",
+    "source": "https://www.hydrogenfuelcellinfo.com/"
+  },
+  {
+    "industry": "物流",
+    "segment": "无人配送车渗透率(快递)",
+    "penetration_pct": 3.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "试点推广",
+    "source": "https://www.spb.gov.cn/"
+  },
+  {
+    "industry": "物流",
+    "segment": "跨境物流电商件占比",
+    "penetration_pct": 30.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "出海红利",
+    "source": "https://www.spb.gov.cn/"
+  },
+  {
+    "industry": "房地产",
+    "segment": "物业管理覆盖率",
+    "penetration_pct": 65.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "稳步提升",
+    "source": "https://www.crei.cn/"
+  },
+  {
+    "industry": "旅游",
+    "segment": "在线旅游预订渗透率",
+    "penetration_pct": 65.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "OTA主导",
+    "source": "https://www.ctrip.com/"
+  },
+  {
+    "industry": "旅游",
+    "segment": "研学旅游市场渗透率",
+    "penetration_pct": 8.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "政策驱动",
+    "source": "https://www.mct.gov.cn/"
+  },
+  {
+    "industry": "家具",
+    "segment": "智能家居渗透率(中国)",
+    "penetration_pct": 16.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "缓慢增长",
+    "source": "https://www.idc.com/"
+  },
+  {
+    "industry": "纺织服装",
+    "segment": "可持续面料使用率",
+    "penetration_pct": 12.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "ESG驱动",
+    "source": "https://www.fashionforgood.com/"
+  },
+  {
+    "industry": "造纸",
+    "segment": "特种纸占纸品产量比",
+    "penetration_pct": 15.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "包装升级",
+    "source": "https://www.chinappi.org/"
+  },
+  {
+    "industry": "宠物",
+    "segment": "宠物保险渗透率",
+    "penetration_pct": 2.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "起步",
+    "source": "https://www.cbirc.gov.cn/"
+  },
+  {
+    "industry": "免税",
+    "segment": "市内免税店销售额占比",
+    "penetration_pct": 8.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "政策放开",
+    "source": "https://www.mofcom.gov.cn/"
+  },
+  {
+    "industry": "区块链",
+    "segment": "企业区块链采纳率",
+    "penetration_pct": 18.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "政企场景",
+    "source": "https://www.gartner.com/"
+  },
+  {
+    "industry": "工业互联网",
+    "segment": "工业App数量(万)",
+    "penetration_pct": 50.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "翻倍增长",
+    "source": "https://www.miit.gov.cn/"
+  },
+  {
+    "industry": "网络安全",
+    "segment": "零信任架构企业部署率",
+    "penetration_pct": 20.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "等保2.0驱动",
+    "source": "https://www.secrss.com/"
+  },
+  {
+    "industry": "网络安全",
+    "segment": "数据安全合规企业渗透率",
+    "penetration_pct": 40.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "个保法驱动",
+    "source": "https://www.secrss.com/"
+  },
+  {
+    "industry": "云计算",
+    "segment": "SaaS企业软件占比",
+    "penetration_pct": 30.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "追赶美国70%",
+    "source": "https://www.caict.ac.cn/"
+  },
+  {
+    "industry": "半导体",
+    "segment": "第三代半导体SiC衬底国产率",
+    "penetration_pct": 35.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "加速",
+    "source": "https://www.csia.net.cn/"
+  },
+  {
+    "industry": "建材",
+    "segment": "绿色建材应用比例",
+    "penetration_pct": 40.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "双碳政策",
+    "source": "https://www.cbmf.org/"
+  },
+  {
+    "industry": "航空航天",
+    "segment": "商业航天火箭发射占比",
+    "penetration_pct": 30.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "爆发式增长",
+    "source": "https://www.cnsa.gov.cn/"
+  },
+  {
+    "industry": "航天",
+    "segment": "低轨卫星互联网用户数",
+    "penetration_pct": 0.5,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "首发试验",
+    "source": "https://www.cnsa.gov.cn/"
+  },
+  {
+    "industry": "核能",
+    "segment": "核电在建规模全球占比",
+    "penetration_pct": 33.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "全球在建最多",
+    "source": "https://www.iaea.org/"
+  },
+  {
+    "industry": "电力",
+    "segment": "特高压跨区输电占比",
+    "penetration_pct": 25.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "西电东送",
+    "source": "https://www.sgcc.com.cn/"
+  },
+  {
+    "industry": "装饰装修",
+    "segment": "装配式装修渗透率",
+    "penetration_pct": 15.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "政策驱动",
+    "source": "https://www.mohurd.gov.cn/"
+  },
+  {
+    "industry": "环保",
+    "segment": "碳交易覆盖排放占比",
+    "penetration_pct": 40.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "扩容扩围",
+    "source": "https://www.mee.gov.cn/"
+  },
+  {
+    "industry": "能源",
+    "segment": "分布式光伏占新增装机比",
+    "penetration_pct": 45.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "快速增长",
+    "source": "https://www.nea.gov.cn/"
+  },
+  {
+    "industry": "汽车",
+    "segment": "线控底盘渗透率",
+    "penetration_pct": 25.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "智能化升级",
+    "source": "https://www.caam.org.cn/"
+  },
+  {
+    "industry": "新能源车",
+    "segment": "800V高压平台渗透率",
+    "penetration_pct": 20.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "快充需求",
+    "source": "https://www.caam.org.cn/"
+  },
+  {
+    "industry": "公路",
+    "segment": "ETC使用率(高速)",
+    "penetration_pct": 90.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "基本完成",
+    "source": "https://www.mot.gov.cn/"
+  },
+  {
+    "industry": "港口",
+    "segment": "自动化码头占比",
+    "penetration_pct": 8.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "稳步推进",
+    "source": "https://www.mot.gov.cn/"
+  },
+  {
+    "industry": "电子烟",
+    "segment": "电子烟占烟草市场比",
+    "penetration_pct": 2.5,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "监管趋严",
+    "source": "https://www.tobacco.gov.cn/"
+  },
+  {
+    "industry": "智能穿戴",
+    "segment": "智能手表渗透率",
+    "penetration_pct": 18.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "健康功能驱动",
+    "source": "https://www.idc.com/"
+  },
+  {
+    "industry": "基因编辑",
+    "segment": "CRISPR临床试验中国占比",
+    "penetration_pct": 35.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "全球领先",
+    "source": "https://www.clinicaltrials.gov/"
+  },
+  {
+    "industry": "脑机接口",
+    "segment": "脑机接口临床研究",
+    "penetration_pct": 0.1,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "极早期",
+    "source": "https://www.neuralink.com/"
+  },
+  {
+    "industry": "量子计算",
+    "segment": "量子计算商业化",
+    "penetration_pct": 0.01,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "极早期",
+    "source": "https://www.ibm.com/quantum"
+  },
+  {
+    "industry": "新能源车",
+    "segment": "新能源重卡渗透率",
+    "penetration_pct": 12.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "政策驱动",
+    "source": "https://www.caam.org.cn/"
+  },
+  {
+    "industry": "光伏",
+    "segment": "BIPV光伏建筑一体化渗透率",
+    "penetration_pct": 8.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "稳步增长",
+    "source": "https://www.chinapv.org.cn/"
+  },
+  {
+    "industry": "风电",
+    "segment": "分散式风电占新增装机比",
+    "penetration_pct": 10.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "千乡万村",
+    "source": "https://www.cwea.org.cn/"
+  },
+  {
+    "industry": "锂电",
+    "segment": "固态电池量产渗透率",
+    "penetration_pct": 1.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "半固态先行",
+    "source": "https://www.gg-lb.com/"
+  },
+  {
+    "industry": "半导体",
+    "segment": "Chiplet先进封装渗透率",
+    "penetration_pct": 20.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "AI/HPC驱动",
+    "source": "https://www.yolegroup.com/"
+  },
+  {
+    "industry": "白酒",
+    "segment": "酱香型白酒市占率",
+    "penetration_pct": 35.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "茅台引领",
+    "source": "https://www.chinabgao.com/"
+  },
+  {
+    "industry": "创新药",
+    "segment": "中国企业License-out占比",
+    "penetration_pct": 15.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "快速崛起",
+    "source": "https://www.pharmcube.com/"
+  },
+  {
+    "industry": "云计算",
+    "segment": "国产云服务市场份额",
+    "penetration_pct": 78.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "主导",
+    "source": "https://www.idc.com/"
+  },
+  {
+    "industry": "人工智能",
+    "segment": "AI大模型开源率",
+    "penetration_pct": 50.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "百模大战",
+    "source": "https://huggingface.co/"
+  },
+  {
+    "industry": "钢铁",
+    "segment": "超低排放改造完成率",
+    "penetration_pct": 80.0,
+    "as_of": "2025",
+    "life_cycle": "成熟期",
+    "growth_curve": "环保约束",
+    "source": "https://www.chinaisa.org.cn/"
+  },
+  {
+    "industry": "化工",
+    "segment": "化工园区入园率",
+    "penetration_pct": 65.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "集约化",
+    "source": "https://www.cpcif.org.cn/"
+  },
+  {
+    "industry": "物流",
+    "segment": "自动化立体仓库渗透率",
+    "penetration_pct": 20.0,
+    "as_of": "2025",
+    "life_cycle": "成长期",
+    "growth_curve": "智能化升级",
+    "source": "https://www.spb.gov.cn/"
+  },
+  {
+    "industry": "房地产",
+    "segment": "长租公寓占住房租赁比",
+    "penetration_pct": 8.0,
+    "as_of": "2025",
+    "life_cycle": "导入期",
+    "growth_curve": "政策推动",
+    "source": "https://www.mohurd.gov.cn/"
+  },
+  {
+    "industry": "液位传感器/物位传感器",
+    "segment": "燃油车油箱液位传感器配置率",
+    "penetration_pct": 98.0,
+    "as_of": "2023",
+    "life_cycle": "成熟期",
+    "growth_curve": "燃油车基本标配，随新能源替代缓慢回落",
+    "source": "乘联会行业分析推断(无公开权威统计，行业常识级，C级)"
+  },
+  {
+    "industry": "液位传感器/物位传感器",
+    "segment": "加油站地下储罐液位监测/防渗改造",
+    "penetration_pct": 85.0,
+    "as_of": "2023",
+    "life_cycle": "成长期(政策驱动)",
+    "growth_curve": "水十条要求2025年完成20万地下油罐防渗改造，磁致伸缩液位仪渗透快速上升",
+    "source": "国务院水十条(2015)/生态环境部加油站防渗改造要求（公开完成率无权威统计，基于政策进度推断，C级）"
+  },
+  {
+    "industry": "液位传感器/物位传感器",
+    "segment": "油罐车液位监测/防溢流",
+    "penetration_pct": 100.0,
+    "as_of": "2023",
+    "life_cycle": "成熟期",
+    "growth_curve": "危化品运输强制配置防溢流探头(GB 7258/危化品运输法规)，存量刚需",
+    "source": "GB 7258-2017《机动车运行安全技术条件》及危化品运输监管要求（强制标准，A级）"
+  },
+  {
+    "industry": "液位传感器/物位传感器",
+    "segment": "大型工业储罐SIS液位计配置",
+    "penetration_pct": 80.0,
+    "as_of": "2023",
+    "life_cycle": "成熟期",
+    "growth_curve": "GB/T 21109安全仪表系统要求高液位联锁，大型石化企业基本全覆盖，中小企业偏低",
+    "source": "GB/T 21109-2007《过程工业领域安全仪表系统的功能安全》（标准要求，实际执行率估算，B级）"
+  },
+  {
+    "industry": "液位传感器/物位传感器",
+    "segment": "智慧水务水库液位监测",
+    "penetration_pct": 60.0,
+    "as_of": "2023",
+    "life_cycle": "成长期",
+    "growth_curve": "智慧水利十四五规划推动，试点城市较高、全国平均为估算",
+    "source": "水利部《智慧水利建设十四五规划》及行业报告（估算，C级）"
+  },
+  {
+    "industry": "液位传感器/物位传感器",
+    "segment": "工业储罐液位计技术路线-雷达占比",
+    "penetration_pct": 45.0,
+    "as_of": "2023",
+    "life_cycle": "成熟期",
+    "growth_curve": "雷达液位计逐步替代浮子/超声波成为工业储罐主流",
+    "source": "McIlvaine《2023年全球液位计市场报告》（付费报告，数据未公开验证，C级）"
+  }
+]

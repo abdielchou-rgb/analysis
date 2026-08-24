@@ -1,0 +1,85 @@
+{
+  "gold_report_profile": {
+    "avg_chars": 23904,
+    "avg_sections": 5,
+    "median_pages": 23,
+    "judgment_density": {
+      "per_1000_chars": 3.0,
+      "median": 2.6,
+      "chars_per_judgment": 389,
+      "p10": 1.1,
+      "p90": 5.2,
+      "note": "金牌报告平均每1000字约3个明确判断，中位每389字一个判断"
+    },
+    "data_density": {
+      "per_1000_chars": 16.5,
+      "median": 13.3,
+      "chars_per_data": 75,
+      "p10": 5.0,
+      "p90": 30.8,
+      "note": "金牌报告平均每1000字约16.5个数据点，中位每75字一个数据点"
+    },
+    "structure_elements": {
+      "rating": "97% 有评级/投资建议(买入/增持/中性/减持)",
+      "risk": "97% 有风险提示",
+      "so_what": "96% 有投资建议/配置结论(So What)",
+      "valuation": "86% 有估值(PE/PB/PS/DCF)",
+      "chain": "76% 有产业链分析",
+      "forecast": "47% 有盈利预测(归母净利/EPS)",
+      "moat": "44% 有壁垒/护城河分析",
+      "benchmark": "38% 有可比公司/对标",
+      "scenario": "34% 有情景/敏感性分析",
+      "target_price": "15% 有明确目标价",
+      "catalyst": "10% 有催化剂"
+    }
+  },
+  "quality_dimensions": {
+    "judgment_density": "判断密度：金牌平均3.0判断/千字（中位2.6），普通1.8/千字。金牌每389字一个明确判断(我们认为/预计/判断/有望)，判断密度是金牌与普通报告最显著差距(1.7x)。",
+    "data_density": "数据密度：金牌平均16.5数据点/千字（中位13.3），普通9.5/千字。金牌每75字一个数据点(同比/环比/市场规模/估值倍数)，数据支撑密度是第二显著差距(1.7x)。",
+    "structure_completeness": "结构完备：金牌评级/风险/SoWhat三要素覆盖97%/97%/96%，普通仅88%/88%/90%。金牌标配=评级+风险提示+投资结论+估值+产业链。",
+    "judgment_data_link": "判断-数据耦合：金牌报告判断句几乎都带数据锚点(『我们预计2023-2025归母净利122/137/152亿，对应EPS 0.43/0.48/0.53元，给予增持评级』)。判断必须可被数据证伪/支撑，而非空泛表态。",
+    "counter_consensus": "反共识/预期差：金牌含超预期/低于预期/预期差/拐点信号的占比高(judgment_signals中'超预期'912次/1873篇)，普通报告多为共识复述。",
+    "forecast_quantification": "前瞻量化：金牌47%含盈利预测(EPS/归母净利具体数字+年份)，投资建议锚定在具体财务预测上而非模糊看好。",
+    "risk_balancing": "风险对称：金牌97%有风险提示且风险与评级并存(风险提示是结构要素而非装饰)，普通报告风险提示覆盖88%。",
+    "sources_traceability": "数据可溯源：金牌数据均带来源(国家统计局/公司公告/Wind一致预期)，支持数据勾稽与Gate来源校验。"
+  },
+  "gate_reference": {
+    "min_judgments": 22,
+    "min_judgment_density": 1.2,
+    "min_data_points": 75,
+    "min_data_density": 5.0,
+    "min_chars": 10420,
+    "must_have_sections": [
+      "rating",
+      "risk",
+      "so_what",
+      "valuation"
+    ],
+    "must_have_coverage": 0.86,
+    "recommended_sections": [
+      "chain",
+      "forecast"
+    ],
+    "max_chars_per_judgment": 823,
+    "target_profile": {
+      "chars": 21000,
+      "sections": 5,
+      "judgment_density": 2.6,
+      "data_density": 13.3,
+      "chars_per_judgment": 389,
+      "chars_per_data": 75
+    }
+  },
+  "_meta": {
+    "source": "data/methodology_knowledge_base.json backtest_gold(1873)/backtest_baseline(71) + 知识库/04-回测基线库 原始文档全文解析",
+    "n_samples": 1873,
+    "n_baseline": 71,
+    "date": "2026-08-03",
+    "method": "正则解析1873篇金牌报告全文(去页眉页脚/纯图表页)，统计篇幅/章节/判断词(我们认为/预计/判断等19词)/数据点(数字+单位)，与回测基线库(1阶段)对比；抽样深读50篇代表性摘要验证判断范式",
+    "caveats": [
+      "章节数基于正文'数字+标题'型标题计数，OCR噪声致p10=0，中位4-5可靠",
+      "判断密度词表为规则匹配(含'预计'等词频计数的重复计)，绝对值偏宽松，Gate阈值取p10保守值",
+      "金牌库含宏观点评(短篇)与深度报告(长篇)两类，篇幅分布宽(9.7k-40k字)，中位数更代表典型金牌报告"
+    ]
+  }
+}

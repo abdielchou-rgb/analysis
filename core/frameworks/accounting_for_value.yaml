@@ -1,0 +1,65 @@
+# Accounting for Value Framework
+# Stephen Penman — 会计数据到企业价值的映射
+
+id: accounting_for_value
+name: "会计驱动价值框架"
+author: "Stephen Penman"
+source: "Accounting for Value (2011)"
+
+core_thesis: >
+  会计数据不是历史的垃圾，是价值的锚点。真正的投资机会藏在
+  会计数据与市场价格之间的偏离中。理解会计信息如何映射到价值，
+  是识别错误定价的基础。核心方法：用会计数据做估值，而不是用估值调整会计数据。
+
+logic_chain:
+  - step: "会计质量诊断"
+    description: "检查收入确认、资本化政策、减值、表外负债等会计操纵信号"
+    tools: ["quality_of_earnings", "benchmarking"]
+    output: "accounting_quality_score, red_flags"
+
+  - step: "账面价值重置"
+    description: "将账面价值调整至公允价值——识别隐藏资产和虚增资产"
+    output: "adjusted_book_value, hidden_assets"
+
+  - step: "剩余收益估值"
+    description: "RIV模型：价值 = 账面价值 + 预期剩余收益的现值"
+    tools: ["residual_income_model"]
+    output: "riv_valuation, implied_growth"
+
+  - step: "会计→价格偏离分析"
+    description: "市场价格偏离会计锚点的程度和方向——是机会还是陷阱？"
+    output: "mispricing_ratio, opportunity_type"
+
+analytical_dimensions:
+  accounting_quality:
+    question: "公司的会计质量如何？是否存在盈余操纵信号？"
+    sub_questions:
+      - "收入确认政策是否激进？"
+      - "资本化与费用化的边界是否合理？"
+      - "商誉和无形资产是否存在减值风险？"
+    evidence_min: 2
+
+  book_value_integrity:
+    question: "调整后的账面价值是多少？隐藏或虚增了什么？"
+    sub_questions:
+      - "无形资产和商誉的真实价值？"
+      - "表外负债和或有负债？"
+    evidence_min: 2
+
+  residual_income:
+    question: "剩余收益估值给出什么结论？与市场价格的关系？"
+    sub_questions:
+      - "RIV模型估值与当前股价的偏离度？"
+      - "隐含的永续增长假设是否合理？"
+    counter_evidence: true
+    evidence_min: 2
+
+key_metrics:
+  - "accounting_quality_score"
+  - "adjusted_pb_ratio"
+  - "riv_valuation"
+  - "mispricing_signal"
+
+counter_argument:
+  required: true
+  method: "会计质量的判断本身存在主观性；RIV模型对终值假设敏感"

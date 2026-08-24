@@ -1,0 +1,87 @@
+{
+  "report": "油位传感器_行业调研与承接久通生产可行性报告",
+  "version": "v3.1",
+  "created": "2026-08-08",
+  "lineage": [
+    {
+      "data_point": "全球油位传感器市场 46亿美元(2024)→65亿美元(2030)",
+      "value": "46→65亿美元, CAGR≈5%",
+      "source": "Frost & Sullivan《全球液位传感器市场研究报告》",
+      "level": "verified",
+      "intent": "市场规模",
+      "date_added": "2026-08-07"
+    },
+    {
+      "data_point": "中国油位/水位广义口径 166亿(2024)→172亿(2025)",
+      "value": "166→172亿元",
+      "source": "中国仪器仪表行业协会统计口径",
+      "level": "verified",
+      "intent": "市场规模",
+      "date_added": "2026-08-07"
+    },
+    {
+      "data_point": "中国第三方可竞争市场 40-50亿元",
+      "value": "40-50亿元",
+      "source": "行业测算（从166亿扣除水位监测/外资大项目/增量）",
+      "level": "estimate",
+      "intent": "市场规模",
+      "date_added": "2026-08-08"
+    },
+    {
+      "data_point": "罐箱油品运输监测 6-9亿美元(全球油位15%)",
+      "value": "6-9亿美元, 增速10-15%",
+      "source": "ITCO统计 + 行业多方交叉验证",
+      "level": "verified",
+      "intent": "目标细分",
+      "date_added": "2026-08-07"
+    },
+    {
+      "data_point": "久通物联 年销1000只油位传感器 单价300元",
+      "value": "年收入约30万元",
+      "source": "合作方自述，待久通835897.OC财报验证",
+      "level": "unverified",
+      "intent": "代工线",
+      "date_added": "2026-08-08"
+    },
+    {
+      "data_point": "久通物联 注册资本1436.5万 陈遵炎控股26.5%",
+      "value": "835897.OC 新三板挂牌",
+      "source": "天眼查工商信息",
+      "level": "verified",
+      "intent": "合作方尽调",
+      "date_added": "2026-08-08"
+    },
+    {
+      "data_point": "中高端磁致伸缩液位仪 单价5000元/台",
+      "value": "价格带3000-8000, 取4500-6500中位5000",
+      "source": "行业价格带调研",
+      "level": "estimate",
+      "intent": "中高端线",
+      "date_added": "2026-08-08"
+    },
+    {
+      "data_point": "外资五巨头占全球份额65%",
+      "value": "E+H/VEGA/Emerson/Siemens/Yokogawa",
+      "source": "中国工控网2025物/液位仪表市场报告",
+      "level": "verified",
+      "intent": "竞争格局",
+      "date_added": "2026-08-08"
+    },
+    {
+      "data_point": "波导丝国产化率 25-30%",
+      "value": "爱知制钢/VAC主导，武汉利又德/博尔森突破",
+      "source": "行业供应链调研 + 公开专利分析",
+      "level": "estimate",
+      "intent": "上游",
+      "date_added": "2026-08-08"
+    },
+    {
+      "data_point": "经营期NPV +3116万元 IRR 57%",
+      "value": "WACC 9.5%, 三情景加权NPV约3200万",
+      "source": "contract_manufacturing 财务模型",
+      "level": "computed",
+      "intent": "投入产出",
+      "date_added": "2026-08-08"
+    }
+  ]
+}

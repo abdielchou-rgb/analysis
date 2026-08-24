@@ -1,0 +1,97 @@
+# Value Driver Framework (DCF)
+# McKinsey (Koller, Goedhart, Wessels)
+
+id: value_driver
+name: "价值驱动因子DCF框架"
+author: "McKinsey & Company"
+source: "Valuation: Measuring and Managing the Value of Companies (7th ed, 2020)"
+
+core_thesis: >
+  企业价值的核心驱动因子只有两个：ROIC相对于WACC的差值，和增长率。
+  估值不是预测，而是理解价值创造的逻辑。三张报表的联动是DCF的基础。
+  价值创造的根源是ROIC > WACC。
+
+logic_chain:
+  - step: "历史绩效分析"
+    description: "拆解历史ROIC、增长率和自由现金流的驱动因子"
+    dimensions:
+      - "收入增长拆解（量×价×结构）"
+      - "利润率拆解（毛利率→营业利润率→净利润率）"
+      - "投入资本回报率拆解（ROIC = NOPAT / 投入资本）"
+      - "自由现金流拆解（FCF = NOPAT - 再投资）"
+    evidence_min: 3
+    output: "historical_roic, historical_growth, fcf_trend"
+
+  - step: "价值驱动因子预测"
+    description: "构建价值驱动因子的前瞻假设"
+    components:
+      revenue:
+        drivers: ["市场规模×份额", "价格趋势", "产品结构变化"]
+        evidence_min: 2
+      margins:
+        drivers: ["竞争格局", "规模效应", "成本结构变化"]
+        evidence_min: 2
+      reinvestment:
+        drivers: ["资本支出/折旧比", "营运资本效率"]
+        evidence_min: 1
+    output: "forecast_roic, forecast_growth, forecast_fcf"
+
+  - step: "WACC估算"
+    description: "计算加权平均资本成本"
+    components:
+      - "股权成本（CAPM: 无风险利率+Beta×股权风险溢价）"
+      - "债务成本（税后）"
+      - "资本结构（D/E比率）"
+    output: "wacc, cost_of_equity, cost_of_debt"
+
+  - step: "估值计算与诊断"
+    description: "执行DCF估值并进行诊断分析"
+    components:
+      - "企业价值 = 明确预测期FCF现值 + 终值现值"
+      - "终值 = 稳态FCF / (WACC - g)"
+      - "敏感性分析（营收增速×利润率矩阵）"
+    diagnostics:
+      - "终值占比是否过高（>80%需要质疑）"
+      - "ROIC是否持续显著高于WACC（需要护城河验证）"
+      - "隐含增长假设是否合理"
+    output: "enterprise_value, equity_value, sensitivity_matrix"
+
+  - step: "经济利润验证"
+    description: "用经济利润视角交叉验证DCF结果"
+    method: "经济利润 = (ROIC - WACC) × 投入资本"
+    output: "economic_profit_stream, value_creation_analysis"
+
+analytical_dimensions:
+  historical_performance:
+    question: "公司历史上如何创造价值？"
+    sub_questions:
+      - "ROIC趋势：上升/稳定/下降？"
+      - "增长质量：有机增长还是并购驱动？"
+    evidence_min: 3
+
+  value_drivers:
+    question: "未来价值驱动因子的合理假设是什么？"
+    sub_questions:
+      - "收入增长的关键假设是什么？置信度？"
+      - "利润率改善的空间在哪里？"
+    evidence_min: 3
+
+  valuation_consistency:
+    question: "估值是否自洽？"
+    sub_questions:
+      - "终值占比是否合理？"
+      - "隐含增长假设是否与行业增速匹配？"
+      - "估值结果与可比公司对照是否合理？"
+    evidence_min: 2
+
+key_metrics:
+  - "ROIC / WACC spread"
+  - "FCF / NOPAT reinvestment rate"
+  - "Terminal value / EV ratio"
+  - "Revenue CAGR vs TAM growth"
+  - "Implied multiples vs peers"
+
+uncertainty_handling:
+  method: "sensitivity_matrix + scenario_analysis"
+  key_drivers: ["revenue_growth", "operating_margin", "wacc", "terminal_growth"]
+  output: "valuation_range"

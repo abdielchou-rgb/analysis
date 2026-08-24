@@ -1,0 +1,49 @@
+{
+  "generated": "2026-08-01T03:49:42",
+  "total_scanned": 11,
+  "国际投行": {
+    "count": 2,
+    "avg_chars": 43679.5,
+    "avg_judgment_density": 0.0,
+    "avg_counter_density": 0.0,
+    "avg_experience_refs": 0.0,
+    "avg_uncertainty": 0.0,
+    "avg_data_quality": 0.0
+  },
+  "战略咨询": {
+    "count": 3,
+    "avg_chars": 27736.333333333332,
+    "avg_judgment_density": 0.0,
+    "avg_counter_density": 0.0,
+    "avg_experience_refs": 0.0,
+    "avg_uncertainty": 0.0,
+    "avg_data_quality": 0.0
+  },
+  "四大会计": {
+    "count": 3,
+    "avg_chars": 20875.0,
+    "avg_judgment_density": 0.0,
+    "avg_counter_density": 0.0,
+    "avg_experience_refs": 0.0,
+    "avg_uncertainty": 0.0,
+    "avg_data_quality": 0.0
+  },
+  "券商报告": {
+    "count": 3,
+    "avg_chars": 6530.0,
+    "avg_judgment_density": 5.496666666666667,
+    "avg_counter_density": 0.24,
+    "avg_experience_refs": 0.3333333333333333,
+    "avg_uncertainty": 0.0,
+    "avg_data_quality": 0.0
+  },
+  "all": {
+    "avg_chars": 8983.71212121212,
+    "avg_judgment_density": 0.49969696969696975,
+    "avg_counter_density": 0.021818181818181816,
+    "avg_experience_refs": 0.0303030303030303,
+    "avg_uncertainty": 0.0,
+    "avg_data_quality": 0.0,
+    "count": 11
+  }
+}

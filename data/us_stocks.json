@@ -1,0 +1,195 @@
+{
+  "stocks": [
+    {
+      "ticker": "AAPL",
+      "market_cap_b": 4.9,
+      "revenue_b": 466.82,
+      "eps": 8.74,
+      "source": "https://finance.yahoo.com/quote/AAPL/key-statistics"
+    },
+    {
+      "ticker": "MSFT",
+      "market_cap_b": null,
+      "revenue_b": 388839.0,
+      "eps": 19.59,
+      "source": "https://markets.businessinsider.com/stocks/msft-stock"
+    },
+    {
+      "ticker": "GOOGL",
+      "market_cap_b": null,
+      "revenue_b": 7.0,
+      "eps": 7.0,
+      "source": "https://www.marketbeat.com/stocks/NASDAQ/GOOGL/earnings"
+    },
+    {
+      "ticker": "NVDA",
+      "market_cap_b": 2011.0,
+      "revenue_b": 2011.0,
+      "eps": null,
+      "source": "https://www.macrotrends.net/stocks/charts/NVDA/nvidia/stock-price-history"
+    },
+    {
+      "ticker": "META",
+      "market_cap_b": null,
+      "revenue_b": 56311.0,
+      "eps": 1.0,
+      "source": "https://stocktitan.net/news/META/meta-reports-first-quarter-2026-q8s4s20oh4ah.html"
+    },
+    {
+      "ticker": "TSLA",
+      "market_cap_b": null,
+      "revenue_b": 16182.0,
+      "eps": null,
+      "source": "https://www.sec.gov/Archives/edgar/data/1318605/000162828025018911/tsla-20250331.htm"
+    },
+    {
+      "ticker": "AVGO",
+      "market_cap_b": null,
+      "revenue_b": 22.187,
+      "eps": null,
+      "source": "https://www.openbookanalytics.com/news/insights/broadcom-inc-avgo-stock-analysis-2026-earnings-ai-chip-growth-and-balance-sheet-fundamentals"
+    },
+    {
+      "ticker": "JPM",
+      "market_cap_b": null,
+      "revenue_b": 50.5,
+      "eps": 5.49,
+      "source": "https://www.perplexity.ai/finance/JPM/earnings?eventId=415950"
+    },
+    {
+      "ticker": "V",
+      "market_cap_b": null,
+      "revenue_b": 11.2,
+      "eps": 36.0,
+      "source": "https://www.stocktitan.net/sec-filings/V/8-k-visa-inc-reports-material-event-e5b890a6c4d8.html"
+    },
+    {
+      "ticker": "UNH",
+      "market_cap_b": null,
+      "revenue_b": 2.0,
+      "eps": null,
+      "source": "https://www.tikr.com/blog/unitedhealth-group-q1-2026-earnings-eps-beats-recovery-ahead-of-plan"
+    },
+    {
+      "ticker": "WMT",
+      "market_cap_b": null,
+      "revenue_b": 177.4,
+      "eps": 0.88,
+      "source": "https://simplywall.st/stocks/us/consumer-retailing/nasdaq-wmt/walmart"
+    },
+    {
+      "ticker": "LLY",
+      "market_cap_b": null,
+      "revenue_b": 19.8,
+      "eps": 8.27,
+      "source": "https://www.marketbeat.com/stocks/NYSE/LLY/financials"
+    },
+    {
+      "ticker": "XOM",
+      "market_cap_b": 650.6,
+      "revenue_b": 116.0,
+      "eps": 3.48,
+      "source": "https://stockstory.org/us/stocks/nyse/xom/news/earnings/exxonmobil-nysexom-exceeds-q2-cy2026-expectations"
+    },
+    {
+      "ticker": "MA",
+      "market_cap_b": null,
+      "revenue_b": 2.0,
+      "eps": 2.0,
+      "source": "https://www.youtube.com/watch?v=Offv_z4afz8"
+    },
+    {
+      "ticker": "PG",
+      "market_cap_b": null,
+      "revenue_b": 22.4,
+      "eps": 2.0,
+      "source": "https://simplywall.st/stocks/us/household/nyse-pg/procter-gamble/past"
+    },
+    {
+      "ticker": "JNJ",
+      "market_cap_b": null,
+      "revenue_b": 10.0,
+      "eps": 10.0,
+      "source": "https://www.marketbeat.com/stocks/NYSE/JNJ/earnings"
+    },
+    {
+      "ticker": "HD",
+      "market_cap_b": null,
+      "revenue_b": null,
+      "eps": 3.56,
+      "source": "https://vestedfinance.com/us-stocks/hd/home-depot-inc-the-share-price"
+    },
+    {
+      "ticker": "COST",
+      "market_cap_b": null,
+      "revenue_b": null,
+      "eps": null,
+      "source": "https://www.stocktitan.net/sec-filings/COST/10-q-costco-wholesale-corp-new-quarterly-earnings-report-870650effa34.html"
+    },
+    {
+      "ticker": "ABBV",
+      "market_cap_b": 458.24,
+      "revenue_b": 62.82,
+      "eps": 2.03,
+      "source": "https://stockanalysis.com/stocks/abbv"
+    },
+    {
+      "ticker": "BAC",
+      "market_cap_b": null,
+      "revenue_b": 15.0,
+      "eps": 1.13,
+      "source": "https://www.perplexity.ai/finance/BAC/earnings"
+    },
+    {
+      "ticker": "ORCL",
+      "market_cap_b": 28.15,
+      "revenue_b": 67.4,
+      "eps": 27.0,
+      "source": "https://tickeron.com/blogs/oracle-orcl-delivers-record-67-4-billion-revenue-in-fy2026-with-strong-cloud-momentum-14098"
+    },
+    {
+      "ticker": "CRM",
+      "market_cap_b": null,
+      "revenue_b": 10.3,
+      "eps": 2.2,
+      "source": "https://simplywall.st/stocks/us/software/nyse-crm/salesforce"
+    },
+    {
+      "ticker": "PEP",
+      "market_cap_b": null,
+      "revenue_b": 10.0,
+      "eps": 10.0,
+      "source": "https://www.marketbeat.com/stocks/NASDAQ/PEP/earnings"
+    },
+    {
+      "ticker": "AMD",
+      "market_cap_b": null,
+      "revenue_b": 10.3,
+      "eps": null,
+      "source": "https://www.stocktitan.net/news/AMD/amd-reports-first-quarter-2026-financial-bu7e2cbxpd14.html"
+    },
+    {
+      "ticker": "INTC",
+      "market_cap_b": null,
+      "revenue_b": 16.13,
+      "eps": 0.42,
+      "source": "https://247wallst.com/companies/intc/earnings"
+    },
+    {
+      "ticker": "QCOM",
+      "market_cap_b": 171.68,
+      "revenue_b": 2022.0,
+      "eps": 2022.0,
+      "source": "https://www.fool.com/quote/nasdaq/qcom"
+    },
+    {
+      "ticker": "TXN",
+      "market_cap_b": null,
+      "revenue_b": 5.46,
+      "eps": 2.17,
+      "source": "https://simplywall.st/stocks/us/semiconductors/nasdaq-txn/texas-instruments/past"
+    }
+  ],
+  "source": "tavily",
+  "note": "yfinance被限流降级Tavily"
+}

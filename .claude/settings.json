@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(python3:*)",
+      "Bash(pip:*)",
+      "Bash(pip3:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(grep:*)",
+      "Bash(echo:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)",
+      "Bash(chmod:*)",
+      "Read(D:/2hao-analyst/data/*)",
+      "Read(D:/2hao-analyst/output/*)",
+      "Read(D:/2hao-analyst/docs/*)",
+      "Write(D:/2hao-analyst/output/*)",
+      "Write(D:/2hao-analyst/data/*)",
+      "Edit(D:/2hao-analyst/output/*)",
+      "Edit(D:/2hao-analyst/data/*)"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Bash(curl:*)",
+      "Bash(wget:*)",
+      "Bash(eval:*)",
+      "Bash(sudo:*)",
+      "Bash(shutdown:*)",
+      "Bash(reboot:*)"
+    ]
+  }
+}

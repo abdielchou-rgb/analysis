@@ -1,0 +1,419 @@
+{
+  "气体传感器": {
+    "global_tam_2025": {
+      "value": 45.0,
+      "unit": "亿美元",
+      "source": "MarketsandMarkets (2025, 系统/模块级口径)；Yole 器件级口径约22亿美元",
+      "note": "主口径45亿美元为含模组与系统的广义口径；Yole狭义器件级约22亿美元，两者差异源于定义边界（是否含后端模组集成）。"
+    },
+    "china_tam_2025": {
+      "value": 12.0,
+      "unit": "亿美元",
+      "source": "中商产业研究院/前瞻产业研究院 (2025)",
+      "note": "约84亿人民币（器件出厂口径）；另有115亿人民币的国产市场采购口径（含集成模块），两口径并存已标注。"
+    },
+    "segments": {
+      "工业安全与环保监测": {
+        "global": 12.0,
+        "china": 3.5,
+        "growth_cagr": 6.5,
+        "unit": "亿美元",
+        "note": "基于总盘按场景拆分估算"
+      },
+      "汽车电子(热失控监测)": {
+        "global": 11.0,
+        "china": 3.0,
+        "growth_cagr": 12.0,
+        "unit": "亿美元",
+        "note": "GB 38031-2025 强制驱动，成长期"
+      },
+      "消费电子与智能家居": {
+        "global": 10.0,
+        "china": 2.5,
+        "growth_cagr": 8.0,
+        "unit": "亿美元",
+        "note": "家用燃气报警器政策驱动"
+      },
+      "医疗健康": {
+        "global": 8.0,
+        "china": 2.0,
+        "growth_cagr": 7.0,
+        "unit": "亿美元",
+        "note": "呼吸机/麻醉机国产化"
+      }
+    },
+    "source": "WebSearch 交叉验证 Yole/MarketsandMarkets/Mordor/前瞻/中商/华经",
+    "confidence": "B"
+  },
+  "半导体": {
+    "global_tam_2025": {
+      "value": 6500.0,
+      "unit": "亿美元",
+      "source": "Gartner/SEMI"
+    },
+    "china_tam_2025": {
+      "value": 2300.0,
+      "unit": "亿美元"
+    },
+    "segments": {
+      "晶圆制造": {
+        "global": 1500.0,
+        "china": 450.0,
+        "growth_cagr": 12.5,
+        "unit": "亿美元"
+      },
+      "半导体设备": {
+        "global": 1200.0,
+        "china": 400.0,
+        "growth_cagr": 8.0,
+        "unit": "亿美元"
+      },
+      "存储芯片": {
+        "global": 1600.0,
+        "china": 300.0,
+        "growth_cagr": 15.0,
+        "unit": "亿美元"
+      },
+      "芯片设计(Fabless)": {
+        "global": 2200.0,
+        "china": 1150.0,
+        "growth_cagr": 10.0,
+        "unit": "亿美元"
+      }
+    },
+    "source": "ai_search: Gartner/SEMI",
+    "confidence": "E"
+  },
+  "人形机器人": {
+    "global_tam_2025": {
+      "value": 10.0,
+      "unit": "亿美元(7-13区间中值)",
+      "source": "ai_search 第一批检索"
+    },
+    "china_tam_2025": {
+      "value": 30.0,
+      "unit": "亿人民币(20-40区间中值)"
+    },
+    "segments": {
+      "整机": {
+        "global": null,
+        "china": null,
+        "growth_cagr": null,
+        "unit": "",
+        "note": "量产前夜，规模未稳定"
+      },
+      "核心零部件(减速器/伺服/传感器)": {
+        "global": null,
+        "china": null,
+        "growth_cagr": null,
+        "unit": "",
+        "note": "依赖工业机器人供应链，规模待统计"
+      },
+      "软件与AI(具身智能)": {
+        "global": null,
+        "china": null,
+        "growth_cagr": null,
+        "unit": "",
+        "note": "早期，商业模式未成型"
+      }
+    },
+    "source": "ai_search: 人形机器人行业早期（细分规模unavailable）",
+    "confidence": "E"
+  },
+  "光伏": {
+    "global_tam_2025": {
+      "value": 4500.0,
+      "unit": "亿美元",
+      "source": "Wood Mackenzie/IEA PVPS"
+    },
+    "china_tam_2025": {
+      "value": 1800.0,
+      "unit": "亿美元"
+    },
+    "segments": {
+      "光伏组件": {
+        "global": 280.0,
+        "china": 140.0,
+        "growth_cagr": 12.5,
+        "unit": "亿美元"
+      },
+      "逆变器": {
+        "global": 75.0,
+        "china": 35.0,
+        "growth_cagr": 8.0,
+        "unit": "亿美元"
+      },
+      "硅料与硅片": {
+        "global": 120.0,
+        "china": 85.0,
+        "growth_cagr": 10.0,
+        "unit": "亿美元"
+      },
+      "电站开发与运营": {
+        "global": 2200.0,
+        "china": 900.0,
+        "growth_cagr": 6.5,
+        "unit": "亿美元"
+      }
+    },
+    "source": "ai_search: Wood Mackenzie/IEA PVPS/集邦",
+    "confidence": "E"
+  },
+  "锂电": {
+    "global_tam_2025": {
+      "value": 1350.0,
+      "unit": "亿美元(1200-1500区间中值)",
+      "source": "BNEF"
+    },
+    "china_tam_2025": {
+      "value": 8500.0,
+      "unit": "亿人民币(8000-9000区间中值)"
+    },
+    "segments": {
+      "动力电池(EV)": {
+        "global": 945.0,
+        "china": 6375.0,
+        "growth_cagr": 17.5,
+        "unit": "亿美元/亿人民币(占比70%/75%)"
+      },
+      "储能电池(ESS)": {
+        "global": 202.5,
+        "china": 1700.0,
+        "growth_cagr": 35.0,
+        "unit": "亿美元/亿人民币(占比15%/20%)"
+      },
+      "锂电关键材料": {
+        "global": 202.5,
+        "china": 425.0,
+        "growth_cagr": 12.5,
+        "unit": "亿美元/亿人民币(占比15%/5%)"
+      }
+    },
+    "source": "ai_search: BNEF/GGII/中信",
+    "confidence": "E"
+  },
+  "工控自动化": {
+    "global_tam_2025": {
+      "value": 2750.0,
+      "unit": "亿美元(2500-3000区间中值)",
+      "source": "Global Market Insights"
+    },
+    "china_tam_2025": {
+      "value": 3750.0,
+      "unit": "亿人民币(3500-4000区间中值)"
+    },
+    "segments": {
+      "PLC": {
+        "global": null,
+        "china": null,
+        "growth_cagr": null,
+        "unit": "",
+        "note": "细分数据需购买付费报告"
+      },
+      "伺服系统": {
+        "global": null,
+        "china": null,
+        "growth_cagr": null,
+        "unit": "",
+        "note": "细分数据需购买付费报告"
+      },
+      "DCS": {
+        "global": null,
+        "china": null,
+        "growth_cagr": null,
+        "unit": "",
+        "note": "细分数据需购买付费报告"
+      },
+      "低压变频器": {
+        "global": null,
+        "china": null,
+        "growth_cagr": null,
+        "unit": "",
+        "note": "细分数据需购买付费报告"
+      }
+    },
+    "source": "ai_search: Global Market Insights/MIR睿工业（细分unavailable）",
+    "confidence": "E"
+  },
+  "医疗器械": {
+    "global_tam_2025": {
+      "value": 5950.0,
+      "unit": "亿美元",
+      "source": "Frost&Sullivan/Evaluate MedTech"
+    },
+    "china_tam_2025": {
+      "value": 12000.0,
+      "unit": "亿人民币(1.2万亿)"
+    },
+    "segments": {
+      "体外诊断(IVD)": {
+        "global": 1200.0,
+        "china": 2000.0,
+        "growth_cagr": 6.5,
+        "unit": "亿美元/亿人民币"
+      },
+      "医学影像": {
+        "global": 850.0,
+        "china": 1500.0,
+        "growth_cagr": 5.0,
+        "unit": "亿美元/亿人民币"
+      },
+      "心血管": {
+        "global": 780.0,
+        "china": 1200.0,
+        "growth_cagr": 7.2,
+        "unit": "亿美元/亿人民币"
+      },
+      "高值耗材/骨科": {
+        "global": 700.0,
+        "china": 1000.0,
+        "growth_cagr": 4.5,
+        "unit": "亿美元/亿人民币"
+      }
+    },
+    "source": "ai_search: Frost&Sullivan/中商产业研究院",
+    "confidence": "E"
+  },
+  "消费电子": {
+    "global_tam_2025": {
+      "value": 11000.0,
+      "unit": "亿美元(1.1万亿)",
+      "source": "Statista/IDC 估算"
+    },
+    "china_tam_2025": {
+      "value": 3500.0,
+      "unit": "亿美元"
+    },
+    "segments": {
+      "智能手机": {
+        "global": null,
+        "china": null,
+        "growth_cagr": null,
+        "unit": "",
+        "note": "精确值在IDC/Counterpoint付费报告"
+      },
+      "PC(含平板)": {
+        "global": null,
+        "china": null,
+        "growth_cagr": -2.0,
+        "unit": "",
+        "note": "存量换机周期，微幅负增长"
+      },
+      "可穿戴设备": {
+        "global": null,
+        "china": null,
+        "growth_cagr": 8.0,
+        "unit": "",
+        "note": "TWS/手表，健康需求驱动"
+      },
+      "智能家居/AIoT": {
+        "global": null,
+        "china": null,
+        "growth_cagr": 12.0,
+        "unit": "",
+        "note": "生态链扩张快，单价低"
+      }
+    },
+    "source": "ai_search: Statista/IDC（精确USD规模在付费报告）",
+    "confidence": "E"
+  },
+  "传感器(大行业)": {
+    "global_tam_2025": {
+      "value": 2700.0,
+      "unit": "亿美元",
+      "source": "Statista/赛迪顾问 (2025, 全品类传感器)",
+      "note": "主流来源区间 2000-3000 亿美元；2700 为中高位综合值。"
+    },
+    "china_tam_2025": {
+      "value": 4500.0,
+      "unit": "亿人民币",
+      "source": "中国信通院/赛迪顾问 (2025)",
+      "note": "中国为全球最大传感器消费市场，约占全球 25%-30%。"
+    },
+    "segments": {
+      "MEMS传感器": {
+        "global": 220.0,
+        "china": 400.0,
+        "growth_cagr": 8.0,
+        "unit": "亿美元/亿人民币",
+        "note": "global: Yole MEMS Status 2025；china: 估算（约全球26%）"
+      },
+      "图像传感器(CIS)": {
+        "global": 290.0,
+        "china": 600.0,
+        "growth_cagr": 5.0,
+        "unit": "亿美元/亿人民币",
+        "note": "global: Sony IR/群智咨询；china: 估算（约全球30%）"
+      },
+      "压力/温度/流量传感器": {
+        "global": 235.0,
+        "china": 350.0,
+        "growth_cagr": 7.0,
+        "unit": "亿美元/亿人民币",
+        "note": "global: MarketsandMarkets 压力150+温度85；china: 估算"
+      },
+      "气体传感器": {
+        "global": 45.0,
+        "china": 90.0,
+        "growth_cagr": 10.0,
+        "unit": "亿美元/亿人民币",
+        "note": "与气体传感器条目主口径一致"
+      }
+    },
+    "source": "WebSearch 交叉验证 Yole/Statista/MarketsandMarkets/赛迪顾问/信通院",
+    "confidence": "B"
+  },
+  "液位传感器/物位传感器": {
+    "global_tam_2025": {
+      "value": 50.0,
+      "unit": "亿美元",
+      "source": "FutureMarketReport 2024(65亿美元,CAGR 7.1%) / MarketInsightsResearch 2024(45亿美元,CAGR 5.3%)",
+      "note": "两口径差异源于定义边界：65亿美元含变送器与系统集成口径，45亿美元为传感器器件级口径；50为中位综合值。"
+    },
+    "china_tam_2025": {
+      "value": 172.0,
+      "unit": "亿人民币",
+      "source": "智研咨询/同花顺财经 (2024, 液位变送器行业口径)",
+      "note": "中国液位变送器市场2024年约172亿元，含传感器+变送器整机；器件级口径估计更低，无权威拆分。"
+    },
+    "segments": {
+      "汽车燃油油量/油位传感器": {
+        "global": 33.9,
+        "china": null,
+        "growth_cagr": 2.7,
+        "unit": "亿美元",
+        "note": "BusinessGrowthReports(2026全球33.88亿美元,CAGR 2.7%,2035年43亿美元)；2025年全球产量超1.48亿个，浮子式电阻占出货58%，亚太占44%；另一来源InfinitiDataResearch(2033年21.5亿美元,CAGR 8.13%)口径偏器件级。"
+      },
+      "加油站储罐液位监测(磁致伸缩液位仪)": {
+        "global": null,
+        "china": null,
+        "growth_cagr": null,
+        "unit": "",
+        "note": "中国加油站约12万座，磁致伸缩液位仪渗透率随双层罐改造快速提升（水十条2025年20万地下油罐防渗改造完成），细分规模无权威公开统计。"
+      },
+      "油罐车液位监测/防溢流": {
+        "global": null,
+        "china": null,
+        "growth_cagr": null,
+        "unit": "",
+        "note": "危化品运输强制配置防溢流探头，属政策刚需存量市场；无权威规模统计。"
+      },
+      "工业储罐/石化罐区油量监测": {
+        "global": null,
+        "china": null,
+        "growth_cagr": null,
+        "unit": "",
+        "note": "雷达液位计在工业储罐液位计中占比约45%（McIlvaine 2023，C级），SIS安全仪表系统强制配置高液位开关；细分规模无权威公开统计。"
+      },
+      "船舶油舱液位监测": {
+        "global": null,
+        "china": null,
+        "growth_cagr": null,
+        "unit": "",
+        "note": "船舶油舱/压载水舱液位测量，属细分存量场景，无权威规模统计。"
+      }
+    },
+    "source": "WebSearch 交叉验证 FutureMarketReport/MarketInsightsResearch/智研咨询/同花顺财经/BusinessGrowthReports/McIlvaine",
+    "confidence": "C"
+  }
+}

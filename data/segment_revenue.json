@@ -1,0 +1,7898 @@
+{
+ "000001": {
+  "segments": [
+   {
+    "name": "零售金融业务",
+    "revenue": 61626000000.0,
+    "pct": 46.88,
+    "growth": null
+   },
+   {
+    "name": "批发金融业务",
+    "revenue": 57959000000.0,
+    "pct": 44.09,
+    "growth": null
+   },
+   {
+    "name": "其他业务",
+    "revenue": 11857000000.0,
+    "pct": 9.02,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000002": {
+  "segments": [
+   {
+    "name": "房地产开发及相关资产经营业务",
+    "revenue": 190651153500.0,
+    "pct": 81.67,
+    "growth": null
+   },
+   {
+    "name": "物业服务",
+    "revenue": 35524514200.0,
+    "pct": 15.22,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 7257101231.01,
+    "pct": 3.11,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000100": {
+  "segments": [
+   {
+    "name": "半导体显示业务",
+    "revenue": 120720415020.0,
+    "pct": 65.59,
+    "growth": null
+   },
+   {
+    "name": "分销业务",
+    "revenue": 34649079784.0,
+    "pct": 18.82,
+    "growth": null
+   },
+   {
+    "name": "新能源光伏及半导体材料业务",
+    "revenue": 29050247640.0,
+    "pct": 15.78,
+    "growth": null
+   },
+   {
+    "name": "其他及抵销",
+    "revenue": -356351888.0,
+    "pct": -0.19,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000063": {
+  "segments": [
+   {
+    "name": "计算机、通信和其他电子设备制造业",
+    "revenue": 133895500000.0,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000157": {
+  "segments": [
+   {
+    "name": "工程机械",
+    "revenue": 48118195043.05,
+    "pct": 92.34,
+    "growth": null
+   },
+   {
+    "name": "农业机械",
+    "revenue": 3541574564.93,
+    "pct": 6.8,
+    "growth": null
+   },
+   {
+    "name": "金融服务",
+    "revenue": 447359565.93,
+    "pct": 0.86,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000166": {
+  "segments": [
+   {
+    "name": "机构服务及交易",
+    "revenue": 10479843951.13,
+    "pct": 43.2,
+    "growth": null
+   },
+   {
+    "name": "个人金融",
+    "revenue": 9416974510.83,
+    "pct": 38.82,
+    "growth": null
+   },
+   {
+    "name": "企业金融",
+    "revenue": 3129581240.08,
+    "pct": 12.9,
+    "growth": null
+   },
+   {
+    "name": "其中:投资银行",
+    "revenue": 1583680773.31,
+    "pct": 6.53,
+    "growth": null
+   },
+   {
+    "name": "其中:本金投资",
+    "revenue": 1545900466.77,
+    "pct": 6.37,
+    "growth": null
+   },
+   {
+    "name": "投资管理",
+    "revenue": 1229673482.02,
+    "pct": 5.07,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000301": {
+  "segments": [
+   {
+    "name": "石化及化工新材料",
+    "revenue": 99471958660.57,
+    "pct": 79.21,
+    "growth": null
+   },
+   {
+    "name": "化纤",
+    "revenue": 23957344277.38,
+    "pct": 19.08,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 2158017389.12,
+    "pct": 1.72,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000333": {
+  "segments": [
+   {
+    "name": "制造业",
+    "revenue": 409272424000.0,
+    "pct": 89.66,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 47179307000.0,
+    "pct": 10.34,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000338": {
+  "segments": [
+   {
+    "name": "交通运输设备制造业",
+    "revenue": 173779279754.4,
+    "pct": 74.97,
+    "growth": null
+   },
+   {
+    "name": "专用设备制造业",
+    "revenue": 55696452129.48,
+    "pct": 24.03,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 2333549222.94,
+    "pct": 1.01,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000408": {
+  "segments": [
+   {
+    "name": "制造业",
+    "revenue": 3541594842.82,
+    "pct": 99.02,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 35157763.15,
+    "pct": 0.98,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000425": {
+  "segments": [
+   {
+    "name": "工程机械行业",
+    "revenue": 100822903512.12,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000538": {
+  "segments": [
+   {
+    "name": "药品流通",
+    "revenue": 22948312735.31,
+    "pct": 55.72,
+    "growth": null
+   },
+   {
+    "name": "药品销售",
+    "revenue": 8152695248.96,
+    "pct": 19.79,
+    "growth": null
+   },
+   {
+    "name": "健康日化",
+    "revenue": 6820194325.71,
+    "pct": 16.56,
+    "growth": null
+   },
+   {
+    "name": "中药资源",
+    "revenue": 2203656020.79,
+    "pct": 5.35,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 1062140759.54,
+    "pct": 2.58,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000568": {
+  "segments": [
+   {
+    "name": "酒类销售",
+    "revenue": 25731010647.32,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000596": {
+  "segments": [
+   {
+    "name": "制造业",
+    "revenue": 18831982591.24,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000617": {
+  "segments": [
+   {
+    "name": "商业银行",
+    "revenue": 15064729612.41,
+    "pct": 44.57,
+    "growth": null
+   },
+   {
+    "name": "财务公司",
+    "revenue": 13577628826.72,
+    "pct": 40.17,
+    "growth": null
+   },
+   {
+    "name": "金融租赁",
+    "revenue": 2902417151.8,
+    "pct": 8.59,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 1914880351.95,
+    "pct": 5.67,
+    "growth": null
+   },
+   {
+    "name": "信托业务",
+    "revenue": 337190734.57,
+    "pct": 1.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000625": {
+  "segments": [
+   {
+    "name": "汽车",
+    "revenue": 163999803875.87,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000630": {
+  "segments": [
+   {
+    "name": "非贸易收入",
+    "revenue": 171867143976.46,
+    "pct": 99.5,
+    "growth": null
+   },
+   {
+    "name": "贸易收入",
+    "revenue": 858747985.46,
+    "pct": 0.5,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000651": {
+  "segments": [
+   {
+    "name": "制造业",
+    "revenue": 153781972343.46,
+    "pct": 90.22,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 16665086190.11,
+    "pct": 9.78,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000657": {
+  "segments": [
+   {
+    "name": "有色金属采掘及加工",
+    "revenue": 17276984514.44,
+    "pct": 97.95,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 361526433.93,
+    "pct": 2.05,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000708": {
+  "segments": [
+   {
+    "name": "特钢行业",
+    "revenue": 107373484700.24,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000725": {
+  "segments": [
+   {
+    "name": "显示器件业务",
+    "revenue": 166417015418.0,
+    "pct": 81.34,
+    "growth": null
+   },
+   {
+    "name": "物联网创新业务",
+    "revenue": 38949236781.0,
+    "pct": 19.04,
+    "growth": null
+   },
+   {
+    "name": "MLED业务",
+    "revenue": 9316052632.0,
+    "pct": 4.55,
+    "growth": null
+   },
+   {
+    "name": "智慧医工业务",
+    "revenue": 1902021967.0,
+    "pct": 0.93,
+    "growth": null
+   },
+   {
+    "name": "传感业务",
+    "revenue": 587444558.0,
+    "pct": 0.29,
+    "growth": null
+   },
+   {
+    "name": "其他及抵销",
+    "revenue": -12581548468.0,
+    "pct": -6.15,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000768": {
+  "segments": [
+   {
+    "name": "航空制造业",
+    "revenue": 40548006514.56,
+    "pct": 98.86,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 465718992.11,
+    "pct": 1.14,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000776": {
+  "segments": [
+   {
+    "name": "财富管理业务",
+    "revenue": 14068546632.77,
+    "pct": 39.64,
+    "growth": null
+   },
+   {
+    "name": "交易及机构业务",
+    "revenue": 11169347179.91,
+    "pct": 31.47,
+    "growth": null
+   },
+   {
+    "name": "投资管理业务",
+    "revenue": 9243994334.09,
+    "pct": 26.04,
+    "growth": null
+   },
+   {
+    "name": "投资银行业务",
+    "revenue": 896381361.25,
+    "pct": 2.53,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 114513537.18,
+    "pct": 0.32,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000792": {
+  "segments": [
+   {
+    "name": "制造业",
+    "revenue": 15273497557.28,
+    "pct": 98.53,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 214684539.86,
+    "pct": 1.39,
+    "growth": null
+   },
+   {
+    "name": "贸易",
+    "revenue": 13061684.92,
+    "pct": 0.08,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000807": {
+  "segments": [
+   {
+    "name": "有色金属冶炼行业",
+    "revenue": 34104891613.8,
+    "pct": 56.8,
+    "growth": null
+   },
+   {
+    "name": "铝材加工行业",
+    "revenue": 25222786803.53,
+    "pct": 42.01,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 715257341.6,
+    "pct": 1.19,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000858": {
+  "segments": [
+   {
+    "name": "制造业",
+    "revenue": 40528509770.23,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000895": {
+  "segments": [
+   {
+    "name": "屠宰行业",
+    "revenue": 6653802000.0,
+    "pct": 45.58,
+    "growth": null
+   },
+   {
+    "name": "肉制品行业",
+    "revenue": 6390838000.0,
+    "pct": 43.78,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 2959856100.0,
+    "pct": 20.28,
+    "growth": null
+   },
+   {
+    "name": "分部间相互抵减",
+    "revenue": -1406112300.0,
+    "pct": -9.63,
+    "growth": null
+   }
+  ],
+  "period": "2026-03-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000938": {
+  "segments": [
+   {
+    "name": "信息技术业",
+    "revenue": 96748339344.03,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000963": {
+  "segments": [
+   {
+    "name": "商业",
+    "revenue": 30488317937.32,
+    "pct": 69.91,
+    "growth": null
+   },
+   {
+    "name": "制造业",
+    "revenue": 14555729410.16,
+    "pct": 33.38,
+    "growth": null
+   },
+   {
+    "name": "医美",
+    "revenue": 1398876363.89,
+    "pct": 3.21,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 404199978.89,
+    "pct": 0.93,
+    "growth": null
+   },
+   {
+    "name": "分部间抵销",
+    "revenue": -3235113799.24,
+    "pct": -7.42,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000975": {
+  "segments": [
+   {
+    "name": "金属商品贸易",
+    "revenue": 9978561359.82,
+    "pct": 58.36,
+    "growth": null
+   },
+   {
+    "name": "有色金属矿采选业",
+    "revenue": 7111536762.53,
+    "pct": 41.59,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 8506876.96,
+    "pct": 0.05,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000988": {
+  "segments": [
+   {
+    "name": "计算机、通信和其他电子设备制造",
+    "revenue": 9732734399.84,
+    "pct": 67.8,
+    "growth": null
+   },
+   {
+    "name": "传感器及感知材料制造",
+    "revenue": 4490798957.32,
+    "pct": 31.28,
+    "growth": null
+   },
+   {
+    "name": "租赁及其他",
+    "revenue": 131227151.02,
+    "pct": 0.91,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000977": {
+  "segments": [
+   {
+    "name": "电子行业",
+    "revenue": 164781997700.0,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "000999": {
+  "segments": [
+   {
+    "name": "医药行业",
+    "revenue": 27204604393.63,
+    "pct": 86.08,
+    "growth": null
+   },
+   {
+    "name": "药品、器械批发与零售",
+    "revenue": 3897400044.37,
+    "pct": 12.33,
+    "growth": null
+   },
+   {
+    "name": "包装印刷",
+    "revenue": 500573176.08,
+    "pct": 1.58,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "001280": {
+  "segments": [
+   {
+    "name": "有色金属矿采选业",
+    "revenue": 19648094716.44,
+    "pct": 98.76,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 245937677.35,
+    "pct": 1.24,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "001965": {
+  "segments": [
+   {
+    "name": "投资运营板块",
+    "revenue": 10370338098.36,
+    "pct": 77.62,
+    "growth": null
+   },
+   {
+    "name": "交通科技板块",
+    "revenue": 2016219188.44,
+    "pct": 15.09,
+    "growth": null
+   },
+   {
+    "name": "智能交通板块",
+    "revenue": 621914572.23,
+    "pct": 4.65,
+    "growth": null
+   },
+   {
+    "name": "交通生态板块",
+    "revenue": 352010064.52,
+    "pct": 2.63,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "001391": {
+  "segments": [
+   {
+    "name": "航空物流业",
+    "revenue": 22878076481.0,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "001979": {
+  "segments": [
+   {
+    "name": "开发业务",
+    "revenue": 130829345000.0,
+    "pct": 84.55,
+    "growth": null
+   },
+   {
+    "name": "物业服务",
+    "revenue": 16725812700.0,
+    "pct": 10.81,
+    "growth": null
+   },
+   {
+    "name": "资产运营",
+    "revenue": 7172819300.0,
+    "pct": 4.64,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002001": {
+  "segments": [
+   {
+    "name": "医药化工",
+    "revenue": 20037146404.03,
+    "pct": 90.05,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 2214215476.55,
+    "pct": 9.95,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002027": {
+  "segments": [
+   {
+    "name": "楼宇媒体及其他",
+    "revenue": 12119550226.15,
+    "pct": 94.99,
+    "growth": null
+   },
+   {
+    "name": "其中:楼宇媒体及其他-日用消费品",
+    "revenue": 6035737490.81,
+    "pct": 47.31,
+    "growth": null
+   },
+   {
+    "name": "其中:楼宇媒体及其他-互联网",
+    "revenue": 3208446595.6,
+    "pct": 25.15,
+    "growth": null
+   },
+   {
+    "name": "其中:楼宇媒体及其他-娱乐及休闲",
+    "revenue": 685048086.85,
+    "pct": 5.37,
+    "growth": null
+   },
+   {
+    "name": "影院媒体",
+    "revenue": 639146316.01,
+    "pct": 5.01,
+    "growth": null
+   },
+   {
+    "name": "其中:楼宇媒体及其他-交通",
+    "revenue": 633799884.4,
+    "pct": 4.97,
+    "growth": null
+   },
+   {
+    "name": "其中:楼宇媒体及其他-商业及服务",
+    "revenue": 447713691.16,
+    "pct": 3.51,
+    "growth": null
+   },
+   {
+    "name": "其中:楼宇媒体及其他-杂类",
+    "revenue": 391911519.54,
+    "pct": 3.07,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002028": {
+  "segments": [
+   {
+    "name": "开关类业务",
+    "revenue": 8935235840.3,
+    "pct": 41.48,
+    "growth": null
+   },
+   {
+    "name": "变压器类业务",
+    "revenue": 4633384382.4,
+    "pct": 21.51,
+    "growth": null
+   },
+   {
+    "name": "保护及自动化类业务",
+    "revenue": 2542240986.82,
+    "pct": 11.8,
+    "growth": null
+   },
+   {
+    "name": "EPC类业务",
+    "revenue": 2332317023.16,
+    "pct": 10.83,
+    "growth": null
+   },
+   {
+    "name": "储能系统及元件类业务",
+    "revenue": 1531165144.3,
+    "pct": 7.11,
+    "growth": null
+   },
+   {
+    "name": "电力电子类业务",
+    "revenue": 1525380833.85,
+    "pct": 7.08,
+    "growth": null
+   },
+   {
+    "name": "租赁业务",
+    "revenue": 39307194.5,
+    "pct": 0.18,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002050": {
+  "segments": [
+   {
+    "name": "通用设备制造业",
+    "revenue": 31011744510.27,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002049": {
+  "segments": [
+   {
+    "name": "集成电路",
+    "revenue": 5759149646.86,
+    "pct": 93.71,
+    "growth": null
+   },
+   {
+    "name": "电子元器件",
+    "revenue": 320293475.31,
+    "pct": 5.21,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 66379941.1,
+    "pct": 1.08,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002074": {
+  "segments": [
+   {
+    "name": "动力电池系统",
+    "revenue": 34074009140.08,
+    "pct": 75.6,
+    "growth": null
+   },
+   {
+    "name": "储能电池系统",
+    "revenue": 9066118458.62,
+    "pct": 20.12,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 1507450638.92,
+    "pct": 3.34,
+    "growth": null
+   },
+   {
+    "name": "输配电产品",
+    "revenue": 422883585.25,
+    "pct": 0.94,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002142": {
+  "segments": [
+   {
+    "name": "公司业务",
+    "revenue": 30330000000.0,
+    "pct": 42.14,
+    "growth": null
+   },
+   {
+    "name": "资金业务",
+    "revenue": 20654000000.0,
+    "pct": 28.7,
+    "growth": null
+   },
+   {
+    "name": "个人业务",
+    "revenue": 20509000000.0,
+    "pct": 28.5,
+    "growth": null
+   },
+   {
+    "name": "其他业务",
+    "revenue": 476000000.0,
+    "pct": 0.66,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002202": {
+  "segments": [
+   {
+    "name": "风电行业",
+    "revenue": 71614657016.02,
+    "pct": 98.07,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 1408820721.25,
+    "pct": 1.93,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002179": {
+  "segments": [
+   {
+    "name": "连接器行业",
+    "revenue": 21072795567.36,
+    "pct": 98.54,
+    "growth": null
+   },
+   {
+    "name": "其他行业",
+    "revenue": 313263872.77,
+    "pct": 1.46,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002230": {
+  "segments": [
+   {
+    "name": "软件和信息技术服务业",
+    "revenue": 26688286195.26,
+    "pct": 98.46,
+    "growth": null
+   },
+   {
+    "name": "教育教学",
+    "revenue": 346907592.86,
+    "pct": 1.28,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 70196759.54,
+    "pct": 0.26,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002236": {
+  "segments": [
+   {
+    "name": "智慧物联行业",
+    "revenue": 32743783343.8,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002241": {
+  "segments": [
+   {
+    "name": "电子元器件",
+    "revenue": 94724744409.34,
+    "pct": 98.11,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 1825425205.92,
+    "pct": 1.89,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002304": {
+  "segments": [
+   {
+    "name": "酒类行业",
+    "revenue": 18776326260.92,
+    "pct": 97.74,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 434731352.13,
+    "pct": 2.26,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002352": {
+  "segments": [
+   {
+    "name": "物流及货运代理",
+    "revenue": 301499641000.0,
+    "pct": 97.82,
+    "growth": null
+   },
+   {
+    "name": "其他非物流业务",
+    "revenue": 6727006000.0,
+    "pct": 2.18,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002311": {
+  "segments": [
+   {
+    "name": "饲料行业",
+    "revenue": 110509308067.35,
+    "pct": 86.02,
+    "growth": null
+   },
+   {
+    "name": "养殖行业",
+    "revenue": 17958922847.61,
+    "pct": 13.98,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002353": {
+  "segments": [
+   {
+    "name": "油气行业",
+    "revenue": 15266764543.74,
+    "pct": 94.11,
+    "growth": null
+   },
+   {
+    "name": "新能源及再生行业",
+    "revenue": 956223570.02,
+    "pct": 5.89,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002371": {
+  "segments": [
+   {
+    "name": "电子工艺装备",
+    "revenue": 36731219888.81,
+    "pct": 93.34,
+    "growth": null
+   },
+   {
+    "name": "电子元器件",
+    "revenue": 2579277891.07,
+    "pct": 6.55,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 42614639.9,
+    "pct": 0.11,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002384": {
+  "segments": [
+   {
+    "name": "计算机、通信和其他电子",
+    "revenue": 39643732616.04,
+    "pct": 98.8,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 481126223.48,
+    "pct": 1.2,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002415": {
+  "segments": [
+   {
+    "name": "智能物联产品及服务",
+    "revenue": 46822537847.07,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2026-06-30",
+  "source": "eastmoney emweb 直连"
+ },
+ "002422": {
+  "segments": [
+   {
+    "name": "医药制造",
+    "revenue": 16351333090.0,
+    "pct": 88.32,
+    "growth": null
+   },
+   {
+    "name": "研发项目",
+    "revenue": 1513060754.0,
+    "pct": 8.17,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 648525063.0,
+    "pct": 3.5,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002460": {
+  "segments": [
+   {
+    "name": "基础化学材料",
+    "revenue": 12876403595.23,
+    "pct": 55.79,
+    "growth": null
+   },
+   {
+    "name": "锂电池、电芯",
+    "revenue": 8233894620.39,
+    "pct": 35.67,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 1971434530.7,
+    "pct": 8.54,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002463": {
+  "segments": [
+   {
+    "name": "产品销售收入(印制电路板业务)",
+    "revenue": 18143308261.0,
+    "pct": 95.77,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 798147594.0,
+    "pct": 4.21,
+    "growth": null
+   },
+   {
+    "name": "房屋销售收入",
+    "revenue": 3418974.0,
+    "pct": 0.02,
+    "growth": null
+   },
+   {
+    "name": "物业费收入",
+    "revenue": 345756.0,
+    "pct": 0.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002466": {
+  "segments": [
+   {
+    "name": "化学原料及化学制品制造业",
+    "revenue": 5696809013.84,
+    "pct": 55.06,
+    "growth": null
+   },
+   {
+    "name": "采选冶炼行业",
+    "revenue": 4629178809.04,
+    "pct": 44.74,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 20376740.39,
+    "pct": 0.2,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002475": {
+  "segments": [
+   {
+    "name": "消费电子",
+    "revenue": 264265914303.66,
+    "pct": 79.52,
+    "growth": null
+   },
+   {
+    "name": "汽车电子",
+    "revenue": 39255371878.9,
+    "pct": 11.81,
+    "growth": null
+   },
+   {
+    "name": "通讯及数据中心",
+    "revenue": 24567610128.22,
+    "pct": 7.39,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 4255546832.61,
+    "pct": 1.28,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002493": {
+  "segments": [
+   {
+    "name": "石化行业",
+    "revenue": 255500488442.92,
+    "pct": 82.79,
+    "growth": null
+   },
+   {
+    "name": "贸易及其他",
+    "revenue": 29727305646.5,
+    "pct": 9.63,
+    "growth": null
+   },
+   {
+    "name": "聚酯化纤行业",
+    "revenue": 23394524139.61,
+    "pct": 7.58,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002532": {
+  "segments": [
+   {
+    "name": "铝行业",
+    "revenue": 29502154897.93,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002594": {
+  "segments": [
+   {
+    "name": "交通运输设备及电气制造业",
+    "revenue": 648645636000.0,
+    "pct": 80.68,
+    "growth": null
+   },
+   {
+    "name": "日用电子器件制造业",
+    "revenue": 155236528000.0,
+    "pct": 19.31,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 82794000.0,
+    "pct": 0.01,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002558": {
+  "segments": [
+   {
+    "name": "游戏相关业务收入",
+    "revenue": 5036181981.85,
+    "pct": 99.78,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 11205140.35,
+    "pct": 0.22,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002602": {
+  "segments": [
+   {
+    "name": "软件服务业",
+    "revenue": 36236517052.11,
+    "pct": 95.62,
+    "growth": null
+   },
+   {
+    "name": "汽车零部件",
+    "revenue": 1622655483.57,
+    "pct": 4.28,
+    "growth": null
+   },
+   {
+    "name": "人工智能云数据",
+    "revenue": 34712364.48,
+    "pct": 0.09,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 4431550.24,
+    "pct": 0.01,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002600": {
+  "segments": [
+   {
+    "name": "AI终端",
+    "revenue": 44793217674.36,
+    "pct": 87.1,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 3681347648.92,
+    "pct": 7.16,
+    "growth": null
+   },
+   {
+    "name": "汽车及低空经济",
+    "revenue": 2954379030.66,
+    "pct": 5.74,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002625": {
+  "segments": [
+   {
+    "name": "超材料行业",
+    "revenue": 2035421201.61,
+    "pct": 99.5,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 10299314.31,
+    "pct": 0.5,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002648": {
+  "segments": [
+   {
+    "name": "化学品及新材料行业",
+    "revenue": 40368819926.09,
+    "pct": 87.63,
+    "growth": null
+   },
+   {
+    "name": "其他业务",
+    "revenue": 5699066206.09,
+    "pct": 12.37,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002709": {
+  "segments": [
+   {
+    "name": "精细化工行业",
+    "revenue": 16649892556.28,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002714": {
+  "segments": [
+   {
+    "name": "养殖业务",
+    "revenue": 140207176872.34,
+    "pct": 97.27,
+    "growth": null
+   },
+   {
+    "name": "屠宰、肉食业务",
+    "revenue": 45227649162.89,
+    "pct": 31.38,
+    "growth": null
+   },
+   {
+    "name": "贸易业务",
+    "revenue": 3341834835.4,
+    "pct": 2.32,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 1146881403.06,
+    "pct": 0.8,
+    "growth": null
+   },
+   {
+    "name": "减:养殖与屠宰、肉食之间销售抵消",
+    "revenue": -45778576902.01,
+    "pct": -31.76,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002736": {
+  "segments": [
+   {
+    "name": "财富管理与机构业务",
+    "revenue": 12419591671.9,
+    "pct": 51.44,
+    "growth": null
+   },
+   {
+    "name": "投资与交易",
+    "revenue": 10517665190.08,
+    "pct": 43.56,
+    "growth": null
+   },
+   {
+    "name": "投资银行",
+    "revenue": 961462529.69,
+    "pct": 3.98,
+    "growth": null
+   },
+   {
+    "name": "资产管理",
+    "revenue": 660523509.82,
+    "pct": 2.74,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": -415946268.58,
+    "pct": -1.72,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002837": {
+  "segments": [
+   {
+    "name": "精密温控节能产品",
+    "revenue": 6067759091.55,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002916": {
+  "segments": [
+   {
+    "name": "电子电路",
+    "revenue": 22327851507.7,
+    "pct": 94.42,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 1319125581.28,
+    "pct": 5.58,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002920": {
+  "segments": [
+   {
+    "name": "汽车电子",
+    "revenue": 32557178348.37,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "002938": {
+  "segments": [
+   {
+    "name": "印制电路板",
+    "revenue": 38842549642.22,
+    "pct": 99.22,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 304459750.05,
+    "pct": 0.78,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "003816": {
+  "segments": [
+   {
+    "name": "电力",
+    "revenue": 61757114200.0,
+    "pct": 81.59,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 13939444800.0,
+    "pct": 18.41,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "300015": {
+  "segments": [
+   {
+    "name": "医疗行业",
+    "revenue": 22281026432.28,
+    "pct": 99.68,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 71578292.59,
+    "pct": 0.32,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "300014": {
+  "segments": [
+   {
+    "name": "境内",
+    "revenue": 15758215800.0,
+    "pct": 76.2,
+    "growth": null
+   },
+   {
+    "name": "境外",
+    "revenue": 4921652400.0,
+    "pct": 23.8,
+    "growth": null
+   }
+  ],
+  "period": "2026-03-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "300033": {
+  "segments": [
+   {
+    "name": "互联网金融信息服务",
+    "revenue": 6028985966.48,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "300059": {
+  "segments": [
+   {
+    "name": "证券业",
+    "revenue": 12535471036.46,
+    "pct": 78.02,
+    "growth": null
+   },
+   {
+    "name": "信息技术服务业",
+    "revenue": 3527509133.65,
+    "pct": 21.95,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 4760869.4,
+    "pct": 0.03,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "300122": {
+  "segments": [
+   {
+    "name": "生物制品",
+    "revenue": 8868018878.71,
+    "pct": 98.99,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 90416506.25,
+    "pct": 1.01,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "300124": {
+  "segments": [
+   {
+    "name": "智能制造",
+    "revenue": 24040421242.73,
+    "pct": 53.3,
+    "growth": null
+   },
+   {
+    "name": "新能源汽车",
+    "revenue": 20322581832.31,
+    "pct": 45.06,
+    "growth": null
+   },
+   {
+    "name": "其他主营业务",
+    "revenue": 741841125.09,
+    "pct": 1.64,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "300251": {
+  "segments": [
+   {
+    "name": "传媒",
+    "revenue": 4039915135.02,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "300274": {
+  "segments": [
+   {
+    "name": "光伏行业",
+    "revenue": 44550226210.35,
+    "pct": 49.95,
+    "growth": null
+   },
+   {
+    "name": "储能行业",
+    "revenue": 37286578546.48,
+    "pct": 41.81,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 7347552568.94,
+    "pct": 8.24,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "300308": {
+  "segments": [
+   {
+    "name": "光通信收发模块",
+    "revenue": 37456518745.9,
+    "pct": 97.95,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 783416894.77,
+    "pct": 2.05,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "300316": {
+  "segments": [
+   {
+    "name": "制造业收入",
+    "revenue": 10937734964.67,
+    "pct": 96.3,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 419752138.26,
+    "pct": 3.7,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "300394": {
+  "segments": [
+   {
+    "name": "光互连元器件",
+    "revenue": 5082331376.5,
+    "pct": 98.43,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 81101094.66,
+    "pct": 1.57,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "300413": {
+  "segments": [
+   {
+    "name": "芒果TV互联网视频业务",
+    "revenue": 10126134425.58,
+    "pct": 73.31,
+    "growth": null
+   },
+   {
+    "name": "内容电商",
+    "revenue": 2240103210.12,
+    "pct": 16.22,
+    "growth": null
+   },
+   {
+    "name": "新媒体互动娱乐内容制作与运营",
+    "revenue": 1399283788.02,
+    "pct": 10.13,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 47958881.69,
+    "pct": 0.35,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "300408": {
+  "segments": [
+   {
+    "name": "工业",
+    "revenue": 9007153894.11,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "300418": {
+  "segments": [
+   {
+    "name": "互联网行业",
+    "revenue": 8142823750.72,
+    "pct": 99.33,
+    "growth": null
+   },
+   {
+    "name": "其他行业",
+    "revenue": 55318897.05,
+    "pct": 0.67,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "300433": {
+  "segments": [
+   {
+    "name": "电子元器件制造业",
+    "revenue": 74409731699.21,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "300450": {
+  "segments": [
+   {
+    "name": "设备制造",
+    "revenue": 14443080424.36,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "300442": {
+  "segments": [
+   {
+    "name": "软件与信息技术服务业",
+    "revenue": 5673679683.8,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "300476": {
+  "segments": [
+   {
+    "name": "PCB制造",
+    "revenue": 18083689287.38,
+    "pct": 93.74,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 1208624169.98,
+    "pct": 6.26,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "300498": {
+  "segments": [
+   {
+    "name": "养殖行业",
+    "revenue": 101658019413.52,
+    "pct": 97.91,
+    "growth": null
+   },
+   {
+    "name": "动保行业",
+    "revenue": 771960168.05,
+    "pct": 0.74,
+    "growth": null
+   },
+   {
+    "name": "工程及设备制造业",
+    "revenue": 688899670.06,
+    "pct": 0.66,
+    "growth": null
+   },
+   {
+    "name": "肉制品加工",
+    "revenue": 644998118.79,
+    "pct": 0.62,
+    "growth": null
+   },
+   {
+    "name": "其他行业",
+    "revenue": 60605941.65,
+    "pct": 0.06,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "300502": {
+  "segments": [
+   {
+    "name": "光通信行业",
+    "revenue": 24841854840.22,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "300628": {
+  "segments": [
+   {
+    "name": "通信行业",
+    "revenue": 6033175769.11,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "300661": {
+  "segments": [
+   {
+    "name": "集成电路行业",
+    "revenue": 3898054583.68,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "300750": {
+  "segments": [
+   {
+    "name": "电气机械及器材制造业",
+    "revenue": 276916580000.0,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2026-06-30",
+  "source": "eastmoney emweb 直连"
+ },
+ "300760": {
+  "segments": [
+   {
+    "name": "医疗器械行业",
+    "revenue": 33172047312.0,
+    "pct": 99.67,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 110112092.0,
+    "pct": 0.33,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "300803": {
+  "segments": [
+   {
+    "name": "互联网金融服务",
+    "revenue": 1539127096.0,
+    "pct": 71.71,
+    "growth": null
+   },
+   {
+    "name": "证券服务",
+    "revenue": 606707537.0,
+    "pct": 28.27,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 341905.0,
+    "pct": 0.02,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "300832": {
+  "segments": [
+   {
+    "name": "体外诊断",
+    "revenue": 4570681065.47,
+    "pct": 99.87,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 6078417.64,
+    "pct": 0.13,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "300896": {
+  "segments": [
+   {
+    "name": "医疗器械行业",
+    "revenue": 2429459358.7,
+    "pct": 99.06,
+    "growth": null
+   },
+   {
+    "name": "其他行业",
+    "revenue": 23157802.74,
+    "pct": 0.94,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "300866": {
+  "segments": [
+   {
+    "name": "消费电子业",
+    "revenue": 30514403376.92,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "301165": {
+  "segments": [
+   {
+    "name": "ICT",
+    "revenue": 14316257889.6,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "300999": {
+  "segments": [
+   {
+    "name": "农副食品加工业",
+    "revenue": 245125575000.0,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "301236": {
+  "segments": [
+   {
+    "name": "高科技与制造",
+    "revenue": 11693134110.6,
+    "pct": 33.32,
+    "growth": null
+   },
+   {
+    "name": "通讯设备",
+    "revenue": 9561577544.33,
+    "pct": 27.25,
+    "growth": null
+   },
+   {
+    "name": "互联网与运营商",
+    "revenue": 7484288340.57,
+    "pct": 21.33,
+    "growth": null
+   },
+   {
+    "name": "金融科技",
+    "revenue": 3359414249.18,
+    "pct": 9.57,
+    "growth": null
+   },
+   {
+    "name": "其它",
+    "revenue": 2972091958.67,
+    "pct": 8.47,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 19392177.31,
+    "pct": 0.06,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "301269": {
+  "segments": [
+   {
+    "name": "集成电路行业",
+    "revenue": 1324976566.63,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "301308": {
+  "segments": [
+   {
+    "name": "存储行业",
+    "revenue": 22765629382.74,
+    "pct": 100.0,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 540607.81,
+    "pct": 0.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600000": {
+  "segments": [
+   {
+    "name": "总行",
+    "revenue": 56629000000.0,
+    "pct": 32.55,
+    "growth": null
+   },
+   {
+    "name": "长三角地区",
+    "revenue": 43995000000.0,
+    "pct": 25.29,
+    "growth": null
+   },
+   {
+    "name": "境外及附属机构",
+    "revenue": 16492000000.0,
+    "pct": 9.48,
+    "growth": null
+   },
+   {
+    "name": "环渤海地区",
+    "revenue": 15800000000.0,
+    "pct": 9.08,
+    "growth": null
+   },
+   {
+    "name": "珠三角及海西地区",
+    "revenue": 13122000000.0,
+    "pct": 7.54,
+    "growth": null
+   },
+   {
+    "name": "中部地区",
+    "revenue": 12101000000.0,
+    "pct": 6.96,
+    "growth": null
+   },
+   {
+    "name": "西部地区",
+    "revenue": 11642000000.0,
+    "pct": 6.69,
+    "growth": null
+   },
+   {
+    "name": "东北地区",
+    "revenue": 4196000000.0,
+    "pct": 2.41,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "302132": {
+  "segments": [
+   {
+    "name": "航空制造业",
+    "revenue": 73551376777.21,
+    "pct": 97.6,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 1807581224.65,
+    "pct": 2.4,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600009": {
+  "segments": [
+   {
+    "name": "航空及相关服务收入",
+    "revenue": 12553779623.49,
+    "pct": 94.06,
+    "growth": null
+   },
+   {
+    "name": "其他收入",
+    "revenue": 792412540.63,
+    "pct": 5.94,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600011": {
+  "segments": [
+   {
+    "name": "电力及热力",
+    "revenue": 220961342675.0,
+    "pct": 96.37,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 8003495484.0,
+    "pct": 3.49,
+    "growth": null
+   },
+   {
+    "name": "港口服务",
+    "revenue": 218140695.0,
+    "pct": 0.1,
+    "growth": null
+   },
+   {
+    "name": "运输服务",
+    "revenue": 105079101.0,
+    "pct": 0.05,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600010": {
+  "segments": [
+   {
+    "name": "冶炼行业",
+    "revenue": 66357524000.64,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600015": {
+  "segments": [
+   {
+    "name": "京津冀地区",
+    "revenue": 38059000000.0,
+    "pct": 41.41,
+    "growth": null
+   },
+   {
+    "name": "长三角地区",
+    "revenue": 19888000000.0,
+    "pct": 21.64,
+    "growth": null
+   },
+   {
+    "name": "中东部地区",
+    "revenue": 9716000000.0,
+    "pct": 10.57,
+    "growth": null
+   },
+   {
+    "name": "附属机构",
+    "revenue": 9437000000.0,
+    "pct": 10.27,
+    "growth": null
+   },
+   {
+    "name": "西部地区",
+    "revenue": 8300000000.0,
+    "pct": 9.03,
+    "growth": null
+   },
+   {
+    "name": "粤港澳大湾区",
+    "revenue": 6501000000.0,
+    "pct": 7.07,
+    "growth": null
+   },
+   {
+    "name": "东北地区",
+    "revenue": 690000000.0,
+    "pct": 0.75,
+    "growth": null
+   },
+   {
+    "name": "分部间抵销",
+    "revenue": -677000000.0,
+    "pct": -0.74,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600016": {
+  "segments": [
+   {
+    "name": "对公业务",
+    "revenue": 68634000000.0,
+    "pct": 48.04,
+    "growth": null
+   },
+   {
+    "name": "零售业务",
+    "revenue": 56623000000.0,
+    "pct": 39.63,
+    "growth": null
+   },
+   {
+    "name": "其他业务",
+    "revenue": 17608000000.0,
+    "pct": 12.32,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600019": {
+  "segments": [
+   {
+    "name": "加工配送",
+    "revenue": 271223000000.0,
+    "pct": 85.42,
+    "growth": null
+   },
+   {
+    "name": "钢铁制造",
+    "revenue": 237165000000.0,
+    "pct": 74.7,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 22271000000.0,
+    "pct": 7.01,
+    "growth": null
+   },
+   {
+    "name": "分部间抵消",
+    "revenue": -213151000000.0,
+    "pct": -67.13,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600018": {
+  "segments": [
+   {
+    "name": "集装箱板块",
+    "revenue": 17335387241.7,
+    "pct": 43.76,
+    "growth": null
+   },
+   {
+    "name": "港口物流板块",
+    "revenue": 14434866466.79,
+    "pct": 36.44,
+    "growth": null
+   },
+   {
+    "name": "港口服务板块",
+    "revenue": 7245370144.71,
+    "pct": 18.29,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 1858834784.17,
+    "pct": 4.69,
+    "growth": null
+   },
+   {
+    "name": "散杂货板块",
+    "revenue": 1634605977.53,
+    "pct": 4.13,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 1251236810.12,
+    "pct": 3.16,
+    "growth": null
+   },
+   {
+    "name": "减:抵减",
+    "revenue": -4148804073.49,
+    "pct": -10.47,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600023": {
+  "segments": [
+   {
+    "name": "电力、热力生产及供应",
+    "revenue": 72870145425.91,
+    "pct": 91.6,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 4314504035.33,
+    "pct": 5.42,
+    "growth": null
+   },
+   {
+    "name": "光伏制造",
+    "revenue": 2369281843.31,
+    "pct": 2.98,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600025": {
+  "segments": [
+   {
+    "name": "电力销售",
+    "revenue": 5690831900.0,
+    "pct": 98.75,
+    "growth": null
+   },
+   {
+    "name": "其他业务",
+    "revenue": 71990700.0,
+    "pct": 1.25,
+    "growth": null
+   }
+  ],
+  "period": "2026-03-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600026": {
+  "segments": [
+   {
+    "name": "水上运输业",
+    "revenue": 23770745000.0,
+    "pct": 99.49,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 121515127.82,
+    "pct": 0.51,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600027": {
+  "segments": [
+   {
+    "name": "售电",
+    "revenue": 111807428000.0,
+    "pct": 88.73,
+    "growth": null
+   },
+   {
+    "name": "售热",
+    "revenue": 12458141000.0,
+    "pct": 9.89,
+    "growth": null
+   },
+   {
+    "name": "其他主营业务",
+    "revenue": 957175000.0,
+    "pct": 0.76,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 789847000.0,
+    "pct": 0.63,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600028": {
+  "segments": [
+   {
+    "name": "营销及分销",
+    "revenue": 1505275000000.0,
+    "pct": 54.08,
+    "growth": null
+   },
+   {
+    "name": "炼油",
+    "revenue": 1328509000000.0,
+    "pct": 47.73,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 1315600000000.0,
+    "pct": 47.26,
+    "growth": null
+   },
+   {
+    "name": "化工",
+    "revenue": 464108000000.0,
+    "pct": 16.67,
+    "growth": null
+   },
+   {
+    "name": "勘探及开发",
+    "revenue": 285992000000.0,
+    "pct": 10.27,
+    "growth": null
+   },
+   {
+    "name": "抵销分部间销售",
+    "revenue": -2115901000000.0,
+    "pct": -76.01,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600029": {
+  "segments": [
+   {
+    "name": "航空营运业务分部",
+    "revenue": 180648000000.0,
+    "pct": 99.12,
+    "growth": null
+   },
+   {
+    "name": "其他业务分部",
+    "revenue": 9726000000.0,
+    "pct": 5.34,
+    "growth": null
+   },
+   {
+    "name": "分部间抵销",
+    "revenue": -8118000000.0,
+    "pct": -4.45,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600030": {
+  "segments": [
+   {
+    "name": "证券投资业务",
+    "revenue": 27605377070.99,
+    "pct": 36.88,
+    "growth": null
+   },
+   {
+    "name": "经纪业务",
+    "revenue": 20787402940.51,
+    "pct": 27.77,
+    "growth": null
+   },
+   {
+    "name": "资产管理业务",
+    "revenue": 14294329181.83,
+    "pct": 19.1,
+    "growth": null
+   },
+   {
+    "name": "其他业务",
+    "revenue": 6112041838.12,
+    "pct": 8.17,
+    "growth": null
+   },
+   {
+    "name": "证券承销业务",
+    "revenue": 6055217321.4,
+    "pct": 8.09,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600031": {
+  "segments": [
+   {
+    "name": "工程机械行业",
+    "revenue": 87269985000.0,
+    "pct": 97.8,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 1961038000.0,
+    "pct": 2.2,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600039": {
+  "segments": [
+   {
+    "name": "工程施工",
+    "revenue": 105172982119.76,
+    "pct": 91.37,
+    "growth": null
+   },
+   {
+    "name": "贸易",
+    "revenue": 6280283157.14,
+    "pct": 5.46,
+    "growth": null
+   },
+   {
+    "name": "公路投资运营",
+    "revenue": 2758777079.6,
+    "pct": 2.4,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 595616547.1,
+    "pct": 0.52,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 303753925.14,
+    "pct": 0.26,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600036": {
+  "segments": [
+   {
+    "name": "零售金融业务",
+    "revenue": 191017000000.0,
+    "pct": 56.59,
+    "growth": null
+   },
+   {
+    "name": "批发金融业务",
+    "revenue": 138073000000.0,
+    "pct": 40.91,
+    "growth": null
+   },
+   {
+    "name": "其他业务",
+    "revenue": 8442000000.0,
+    "pct": 2.5,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600050": {
+  "segments": [
+   {
+    "name": "电信业",
+    "revenue": 392223000000.0,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600048": {
+  "segments": [
+   {
+    "name": "房地产销售",
+    "revenue": 283927177400.0,
+    "pct": 92.14,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 23505156300.0,
+    "pct": 7.63,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 711855824.46,
+    "pct": 0.23,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600061": {
+  "segments": [
+   {
+    "name": "证券行业",
+    "revenue": 10331527923.96,
+    "pct": 76.28,
+    "growth": null
+   },
+   {
+    "name": "基金行业",
+    "revenue": 1306345263.54,
+    "pct": 9.64,
+    "growth": null
+   },
+   {
+    "name": "其他主营业务",
+    "revenue": 1041009673.64,
+    "pct": 7.69,
+    "growth": null
+   },
+   {
+    "name": "信托行业",
+    "revenue": 865367285.18,
+    "pct": 6.39,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600066": {
+  "segments": [
+   {
+    "name": "工业",
+    "revenue": 36228764300.0,
+    "pct": 87.45,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 4915989539.46,
+    "pct": 11.87,
+    "growth": null
+   },
+   {
+    "name": "其他主营业务",
+    "revenue": 281420142.879997,
+    "pct": 0.68,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600085": {
+  "segments": [
+   {
+    "name": "医药工业主营业务",
+    "revenue": 10717829700.0,
+    "pct": 62.11,
+    "growth": null
+   },
+   {
+    "name": "医药商业主营业务",
+    "revenue": 10477753800.0,
+    "pct": 60.72,
+    "growth": null
+   },
+   {
+    "name": "其他行业主营业务",
+    "revenue": 114052600.0,
+    "pct": 0.66,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 98442018.61,
+    "pct": 0.57,
+    "growth": null
+   },
+   {
+    "name": "行业间抵消",
+    "revenue": -4151893000.0,
+    "pct": -24.06,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600089": {
+  "segments": [
+   {
+    "name": "电气设备产品",
+    "revenue": 26759648200.0,
+    "pct": 27.52,
+    "growth": null
+   },
+   {
+    "name": "煤炭产品",
+    "revenue": 16965660800.0,
+    "pct": 17.45,
+    "growth": null
+   },
+   {
+    "name": "电线电缆产品",
+    "revenue": 15568910400.0,
+    "pct": 16.01,
+    "growth": null
+   },
+   {
+    "name": "新能源产品及工程",
+    "revenue": 13555356100.0,
+    "pct": 13.94,
+    "growth": null
+   },
+   {
+    "name": "发电业务",
+    "revenue": 7183333500.0,
+    "pct": 7.39,
+    "growth": null
+   },
+   {
+    "name": "铝电子新材料、铝及合金制品",
+    "revenue": 6302534000.0,
+    "pct": 6.48,
+    "growth": null
+   },
+   {
+    "name": "输变电成套工程",
+    "revenue": 4924909600.0,
+    "pct": 5.07,
+    "growth": null
+   },
+   {
+    "name": "黄金",
+    "revenue": 2469136700.0,
+    "pct": 2.54,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600104": {
+  "segments": [
+   {
+    "name": "汽车制造业",
+    "revenue": 646152101889.3,
+    "pct": 98.46,
+    "growth": null
+   },
+   {
+    "name": "金融业",
+    "revenue": 10091710191.88,
+    "pct": 1.54,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600111": {
+  "segments": [
+   {
+    "name": "工业",
+    "revenue": 33087212435.11,
+    "pct": 77.74,
+    "growth": null
+   },
+   {
+    "name": "商业",
+    "revenue": 7794208427.98,
+    "pct": 18.31,
+    "growth": null
+   },
+   {
+    "name": "环保板块",
+    "revenue": 1469594740.7,
+    "pct": 3.45,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 212067629.55,
+    "pct": 0.5,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600115": {
+  "segments": [
+   {
+    "name": "航空营运业务",
+    "revenue": 137114000000.0,
+    "pct": 97.98,
+    "growth": null
+   },
+   {
+    "name": "其他主营业务",
+    "revenue": 2827000000.0,
+    "pct": 2.02,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600118": {
+  "segments": [
+   {
+    "name": "宇航制造及卫星应用",
+    "revenue": 6046899200.0,
+    "pct": 99.08,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 56045710.95,
+    "pct": 0.92,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600150": {
+  "segments": [
+   {
+    "name": "工业",
+    "revenue": 148067743900.0,
+    "pct": 97.43,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 2082046053.01,
+    "pct": 1.37,
+    "growth": null
+   },
+   {
+    "name": "其他行业",
+    "revenue": 1723258900.0,
+    "pct": 1.13,
+    "growth": null
+   },
+   {
+    "name": "服务业",
+    "revenue": 104942400.0,
+    "pct": 0.07,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600160": {
+  "segments": [
+   {
+    "name": "化工行业",
+    "revenue": 23857639771.64,
+    "pct": 88.39,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 3133227216.92,
+    "pct": 11.61,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600176": {
+  "segments": [
+   {
+    "name": "玻璃纤维纱及制品",
+    "revenue": 3867156300.0,
+    "pct": 74.77,
+    "growth": null
+   },
+   {
+    "name": "其中:内销",
+    "revenue": 2267305500.0,
+    "pct": 43.84,
+    "growth": null
+   },
+   {
+    "name": "其中:出口",
+    "revenue": 1599850800.0,
+    "pct": 30.93,
+    "growth": null
+   },
+   {
+    "name": "电子纱及电子布",
+    "revenue": 1256676900.0,
+    "pct": 24.3,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 48301100.0,
+    "pct": 0.93,
+    "growth": null
+   }
+  ],
+  "period": "2026-03-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600183": {
+  "segments": [
+   {
+    "name": "覆铜板和粘结片",
+    "revenue": 17774100611.83,
+    "pct": 62.52,
+    "growth": null
+   },
+   {
+    "name": "印制线路板",
+    "revenue": 9144009119.0,
+    "pct": 32.16,
+    "growth": null
+   },
+   {
+    "name": "废弃资源综合利用",
+    "revenue": 855482445.46,
+    "pct": 3.01,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 563706072.09,
+    "pct": 1.98,
+    "growth": null
+   },
+   {
+    "name": "房地产",
+    "revenue": 93840211.06,
+    "pct": 0.33,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600188": {
+  "segments": [
+   {
+    "name": "煤炭业务",
+    "revenue": 88666000000.0,
+    "pct": 61.18,
+    "growth": null
+   },
+   {
+    "name": "其中:煤炭业务-自产煤业务",
+    "revenue": 84755000000.0,
+    "pct": 58.48,
+    "growth": null
+   },
+   {
+    "name": "煤化工业务",
+    "revenue": 24293000000.0,
+    "pct": 16.76,
+    "growth": null
+   },
+   {
+    "name": "物流运输",
+    "revenue": 15083000000.0,
+    "pct": 10.41,
+    "growth": null
+   },
+   {
+    "name": "其他主营业务",
+    "revenue": 11591859000.0,
+    "pct": 8.0,
+    "growth": null
+   },
+   {
+    "name": "其中:煤炭业务-贸易煤业务",
+    "revenue": 3911000000.0,
+    "pct": 2.7,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 2989000000.0,
+    "pct": 2.06,
+    "growth": null
+   },
+   {
+    "name": "电力业务",
+    "revenue": 2310000000.0,
+    "pct": 1.59,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600196": {
+  "segments": [
+   {
+    "name": "制药",
+    "revenue": 29833285776.14,
+    "pct": 71.61,
+    "growth": null
+   },
+   {
+    "name": "医疗健康服务",
+    "revenue": 7372613007.61,
+    "pct": 17.7,
+    "growth": null
+   },
+   {
+    "name": "医疗器械与医学诊断",
+    "revenue": 4320614671.89,
+    "pct": 10.37,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 135099292.51,
+    "pct": 0.32,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600219": {
+  "segments": [
+   {
+    "name": "铝制品行业",
+    "revenue": 34081611325.06,
+    "pct": 98.45,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 366683253.68,
+    "pct": 1.06,
+    "growth": null
+   },
+   {
+    "name": "天然气销售行业",
+    "revenue": 119022250.71,
+    "pct": 0.34,
+    "growth": null
+   },
+   {
+    "name": "电力行业",
+    "revenue": 52542077.51,
+    "pct": 0.15,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600221": {
+  "segments": [
+   {
+    "name": "客运及其他",
+    "revenue": 60219702000.0,
+    "pct": 87.95,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 5019466000.0,
+    "pct": 7.33,
+    "growth": null
+   },
+   {
+    "name": "航空货运及逾重行李",
+    "revenue": 3231747000.0,
+    "pct": 4.72,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600233": {
+  "segments": [
+   {
+    "name": "快递行业",
+    "revenue": 69593374300.0,
+    "pct": 92.45,
+    "growth": null
+   },
+   {
+    "name": "货代行业",
+    "revenue": 2284419700.0,
+    "pct": 3.03,
+    "growth": null
+   },
+   {
+    "name": "航空业务",
+    "revenue": 1760769800.0,
+    "pct": 2.34,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 939909153.47,
+    "pct": 1.25,
+    "growth": null
+   },
+   {
+    "name": "其他行业",
+    "revenue": 698374400.0,
+    "pct": 0.93,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600276": {
+  "segments": [
+   {
+    "name": "医药制造业",
+    "revenue": 28013448347.68,
+    "pct": 88.57,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 3615967846.15,
+    "pct": 11.43,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600309": {
+  "segments": [
+   {
+    "name": "化工行业",
+    "revenue": 201109817784.79,
+    "pct": 98.95,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 1272694217.12,
+    "pct": 0.63,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 852061812.51,
+    "pct": 0.42,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600346": {
+  "segments": [
+   {
+    "name": "石油化工行业",
+    "revenue": 191482690200.0,
+    "pct": 95.27,
+    "growth": null
+   },
+   {
+    "name": "其他行业",
+    "revenue": 7187048700.0,
+    "pct": 3.58,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 2316296596.98,
+    "pct": 1.15,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600362": {
+  "segments": [
+   {
+    "name": "工业及其他非贸易收入",
+    "revenue": 396560878411.0,
+    "pct": 72.81,
+    "growth": null
+   },
+   {
+    "name": "贸易收入",
+    "revenue": 145218713196.0,
+    "pct": 26.66,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 2843892453.0,
+    "pct": 0.52,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600372": {
+  "segments": [
+   {
+    "name": "飞机制造业",
+    "revenue": 18875247423.11,
+    "pct": 77.96,
+    "growth": null
+   },
+   {
+    "name": "汽车制造业",
+    "revenue": 3188315641.68,
+    "pct": 13.17,
+    "growth": null
+   },
+   {
+    "name": "其他主营业务",
+    "revenue": 1913397744.88,
+    "pct": 7.9,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 234999574.51,
+    "pct": 0.97,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600406": {
+  "segments": [
+   {
+    "name": "电工电气装备制造业",
+    "revenue": 66156250303.69,
+    "pct": 99.89,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 72712919.52,
+    "pct": 0.11,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600415": {
+  "segments": [
+   {
+    "name": "商品销售",
+    "revenue": 9984021500.0,
+    "pct": 50.1,
+    "growth": null
+   },
+   {
+    "name": "市场经营",
+    "revenue": 5255112200.0,
+    "pct": 26.37,
+    "growth": null
+   },
+   {
+    "name": "数贸配套销售",
+    "revenue": 1950258200.0,
+    "pct": 9.79,
+    "growth": null
+   },
+   {
+    "name": "贸易服务",
+    "revenue": 1528194300.0,
+    "pct": 7.67,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 666637828.51,
+    "pct": 3.35,
+    "growth": null
+   },
+   {
+    "name": "配套服务",
+    "revenue": 543028700.0,
+    "pct": 2.73,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600426": {
+  "segments": [
+   {
+    "name": "化工",
+    "revenue": 23147278645.59,
+    "pct": 74.74,
+    "growth": null
+   },
+   {
+    "name": "化肥",
+    "revenue": 7305674635.46,
+    "pct": 23.59,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 369108071.17,
+    "pct": 1.19,
+    "growth": null
+   },
+   {
+    "name": "热电",
+    "revenue": 146814594.9,
+    "pct": 0.47,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600438": {
+  "segments": [
+   {
+    "name": "光伏业务",
+    "revenue": 54138155120.72,
+    "pct": 64.35,
+    "growth": null
+   },
+   {
+    "name": "农牧业务",
+    "revenue": 29258809444.75,
+    "pct": 34.78,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 731317137.67,
+    "pct": 0.87,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600436": {
+  "segments": [
+   {
+    "name": "医药行业",
+    "revenue": 8196605300.0,
+    "pct": 91.06,
+    "growth": null
+   },
+   {
+    "name": "其中:医药行业-医药制造业",
+    "revenue": 4441368300.0,
+    "pct": 49.34,
+    "growth": null
+   },
+   {
+    "name": "其中:医药行业-医药流通业",
+    "revenue": 3755237000.0,
+    "pct": 41.72,
+    "growth": null
+   },
+   {
+    "name": "化妆品业",
+    "revenue": 566784300.0,
+    "pct": 6.3,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 205752600.0,
+    "pct": 2.29,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 32269603.36,
+    "pct": 0.36,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600482": {
+  "segments": [
+   {
+    "name": "制造业",
+    "revenue": 57258059880.38,
+    "pct": 99.06,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 541903287.73,
+    "pct": 0.94,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600489": {
+  "segments": [
+   {
+    "name": "冶炼",
+    "revenue": 70823428501.4,
+    "pct": 89.57,
+    "growth": null
+   },
+   {
+    "name": "矿山",
+    "revenue": 20250135067.8,
+    "pct": 25.61,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 324900018.57,
+    "pct": 0.41,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 107631429.76,
+    "pct": 0.14,
+    "growth": null
+   },
+   {
+    "name": "抵消",
+    "revenue": -12431437968.93,
+    "pct": -15.72,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600460": {
+  "segments": [
+   {
+    "name": "电子元器件",
+    "revenue": 12556945746.52,
+    "pct": 96.21,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 494628013.32,
+    "pct": 3.79,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600515": {
+  "segments": [
+   {
+    "name": "机场业务",
+    "revenue": 1807414973.31,
+    "pct": 40.89,
+    "growth": null
+   },
+   {
+    "name": "房地产业务",
+    "revenue": 1152763590.81,
+    "pct": 26.08,
+    "growth": null
+   },
+   {
+    "name": "物业管理业务",
+    "revenue": 689956933.74,
+    "pct": 15.61,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 576610661.67,
+    "pct": 13.05,
+    "growth": null
+   },
+   {
+    "name": "免税与商业业务",
+    "revenue": 193357436.64,
+    "pct": 4.37,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600519": {
+  "segments": [
+   {
+    "name": "酒类",
+    "revenue": 168774585187.65,
+    "pct": 99.96,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 63517327.14,
+    "pct": 0.04,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600522": {
+  "segments": [
+   {
+    "name": "制造业",
+    "revenue": 51793201273.97,
+    "pct": 98.65,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 434549043.7,
+    "pct": 0.83,
+    "growth": null
+   },
+   {
+    "name": "光伏发电",
+    "revenue": 272107175.67,
+    "pct": 0.52,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600547": {
+  "segments": [
+   {
+    "name": "黄金行业",
+    "revenue": 93936792546.01,
+    "pct": 90.07,
+    "growth": null
+   },
+   {
+    "name": "其中:外购金",
+    "revenue": 43193097874.88,
+    "pct": 41.42,
+    "growth": null
+   },
+   {
+    "name": "其他行业",
+    "revenue": 10187527335.17,
+    "pct": 9.77,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 163071701.94,
+    "pct": 0.16,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600549": {
+  "segments": [
+   {
+    "name": "电池材料",
+    "revenue": 19813474264.43,
+    "pct": 42.83,
+    "growth": null
+   },
+   {
+    "name": "钨钼等有色金属",
+    "revenue": 19632101618.5,
+    "pct": 42.43,
+    "growth": null
+   },
+   {
+    "name": "稀土业务",
+    "revenue": 6001912809.65,
+    "pct": 12.97,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 773676404.94,
+    "pct": 1.67,
+    "growth": null
+   },
+   {
+    "name": "房地产及配套管理",
+    "revenue": 43417590.62,
+    "pct": 0.09,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600570": {
+  "segments": [
+   {
+    "name": "财富科技服务",
+    "revenue": 1319797009.61,
+    "pct": 22.82,
+    "growth": null
+   },
+   {
+    "name": "运营与机构科技服务",
+    "revenue": 1265878693.12,
+    "pct": 21.89,
+    "growth": null
+   },
+   {
+    "name": "资管科技服务",
+    "revenue": 1257308549.55,
+    "pct": 21.74,
+    "growth": null
+   },
+   {
+    "name": "企金、保险核心与金融基础设施科技服务",
+    "revenue": 540096737.13,
+    "pct": 9.34,
+    "growth": null
+   },
+   {
+    "name": "创新业务",
+    "revenue": 490401050.23,
+    "pct": 8.48,
+    "growth": null
+   },
+   {
+    "name": "数据服务业务",
+    "revenue": 352134997.79,
+    "pct": 6.09,
+    "growth": null
+   },
+   {
+    "name": "风险与平台科技服务",
+    "revenue": 336293127.8,
+    "pct": 5.82,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 217657215.1,
+    "pct": 3.76,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600584": {
+  "segments": [
+   {
+    "name": "电子元器件",
+    "revenue": 38714188000.05,
+    "pct": 99.6,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 157160331.18,
+    "pct": 0.4,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600585": {
+  "segments": [
+   {
+    "name": "建材行业(自产品销售)",
+    "revenue": 68377778000.0,
+    "pct": 82.85,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 13112726168.0,
+    "pct": 15.89,
+    "growth": null
+   },
+   {
+    "name": "建材行业(贸易业务)",
+    "revenue": 1041547000.0,
+    "pct": 1.26,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600588": {
+  "segments": [
+   {
+    "name": "云与软件业务",
+    "revenue": 9004679367.0,
+    "pct": 98.07,
+    "growth": null
+   },
+   {
+    "name": "其他主营业务",
+    "revenue": 177016991.0,
+    "pct": 1.93,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600600": {
+  "segments": [
+   {
+    "name": "啤酒",
+    "revenue": 31829668000.0,
+    "pct": 98.02,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 643825318.0,
+    "pct": 1.98,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600660": {
+  "segments": [
+   {
+    "name": "汽车玻璃",
+    "revenue": 41889226037.0,
+    "pct": 91.49,
+    "growth": null
+   },
+   {
+    "name": "浮法玻璃",
+    "revenue": 6479743917.0,
+    "pct": 14.15,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 4735633472.0,
+    "pct": 10.34,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 690018469.0,
+    "pct": 1.51,
+    "growth": null
+   },
+   {
+    "name": "减:集团内部抵销",
+    "revenue": -8007186332.0,
+    "pct": -17.49,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600674": {
+  "segments": [
+   {
+    "name": "电力",
+    "revenue": 301031600.0,
+    "pct": 91.45,
+    "growth": null
+   },
+   {
+    "name": "硬件产品",
+    "revenue": 8874500.0,
+    "pct": 2.7,
+    "growth": null
+   },
+   {
+    "name": "软件产品",
+    "revenue": 8263600.0,
+    "pct": 2.51,
+    "growth": null
+   },
+   {
+    "name": "服务",
+    "revenue": 7386800.0,
+    "pct": 2.24,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 3619500.0,
+    "pct": 1.1,
+    "growth": null
+   }
+  ],
+  "period": "2026-03-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600690": {
+  "segments": [
+   {
+    "name": "电冰箱",
+    "revenue": 84165111116.09,
+    "pct": 27.84,
+    "growth": null
+   },
+   {
+    "name": "洗衣机",
+    "revenue": 64984973167.46,
+    "pct": 21.49,
+    "growth": null
+   },
+   {
+    "name": "空调",
+    "revenue": 53741784684.04,
+    "pct": 17.77,
+    "growth": null
+   },
+   {
+    "name": "厨电",
+    "revenue": 41322769277.57,
+    "pct": 13.67,
+    "growth": null
+   },
+   {
+    "name": "装备部品及渠道综合服务",
+    "revenue": 38892634649.73,
+    "pct": 12.86,
+    "growth": null
+   },
+   {
+    "name": "水家电",
+    "revenue": 17474406595.05,
+    "pct": 5.78,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 1765104428.36,
+    "pct": 0.58,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600741": {
+  "segments": [
+   {
+    "name": "零部件业务",
+    "revenue": 176376902288.64,
+    "pct": 95.86,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 7621998225.02,
+    "pct": 4.14,
+    "growth": null
+   },
+   {
+    "name": "其中:材料销售等",
+    "revenue": 6200948746.69,
+    "pct": 3.37,
+    "growth": null
+   },
+   {
+    "name": "其中:其他",
+    "revenue": 1421049478.33,
+    "pct": 0.77,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600760": {
+  "segments": [
+   {
+    "name": "航空制造业",
+    "revenue": 44378496600.08,
+    "pct": 99.38,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 235883495.83,
+    "pct": 0.53,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 41404162.95,
+    "pct": 0.09,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600803": {
+  "segments": [
+   {
+    "name": "天然气零售",
+    "revenue": 67553990000.0,
+    "pct": 51.39,
+    "growth": null
+   },
+   {
+    "name": "天然气批发",
+    "revenue": 28536620000.0,
+    "pct": 21.71,
+    "growth": null
+   },
+   {
+    "name": "泛能业务",
+    "revenue": 13393930000.0,
+    "pct": 10.19,
+    "growth": null
+   },
+   {
+    "name": "平台交易气",
+    "revenue": 9923280000.0,
+    "pct": 7.55,
+    "growth": null
+   },
+   {
+    "name": "智家业务",
+    "revenue": 4719670000.0,
+    "pct": 3.59,
+    "growth": null
+   },
+   {
+    "name": "工程建造与安装",
+    "revenue": 4323030000.0,
+    "pct": 3.29,
+    "growth": null
+   },
+   {
+    "name": "能源生产",
+    "revenue": 1969350000.0,
+    "pct": 1.5,
+    "growth": null
+   },
+   {
+    "name": "基础设施运营",
+    "revenue": 591330000.0,
+    "pct": 0.45,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600795": {
+  "segments": [
+   {
+    "name": "火力发电行业",
+    "revenue": 141719255575.34,
+    "pct": 83.24,
+    "growth": null
+   },
+   {
+    "name": "新能源发电行业",
+    "revenue": 14685484120.03,
+    "pct": 8.63,
+    "growth": null
+   },
+   {
+    "name": "水力发电行业",
+    "revenue": 11507540214.58,
+    "pct": 6.76,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 2396573159.81,
+    "pct": 1.41,
+    "growth": null
+   },
+   {
+    "name": "其他行业",
+    "revenue": 30220916.79,
+    "pct": 0.02,
+    "growth": null
+   },
+   {
+    "name": "减:内部抵消数",
+    "revenue": -95079852.85,
+    "pct": -0.06,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600809": {
+  "segments": [
+   {
+    "name": "食品制造业",
+    "revenue": 38592734473.12,
+    "pct": 99.68,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 125523184.62,
+    "pct": 0.32,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600845": {
+  "segments": [
+   {
+    "name": "软件开发及工程服务",
+    "revenue": 7163930796.8,
+    "pct": 65.3,
+    "growth": null
+   },
+   {
+    "name": "服务外包",
+    "revenue": 3765353956.54,
+    "pct": 34.32,
+    "growth": null
+   },
+   {
+    "name": "系统集成",
+    "revenue": 28161780.41,
+    "pct": 0.26,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 14109588.24,
+    "pct": 0.13,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600886": {
+  "segments": [
+   {
+    "name": "电力",
+    "revenue": 48770170900.0,
+    "pct": 91.99,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 3800941800.0,
+    "pct": 7.17,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 443322248.03,
+    "pct": 0.84,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600875": {
+  "segments": [
+   {
+    "name": "发电设备制造行业",
+    "revenue": 78615277400.0,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600887": {
+  "segments": [
+   {
+    "name": "液体乳及乳制品制造业",
+    "revenue": 113013613394.45,
+    "pct": 97.73,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 1531679442.94,
+    "pct": 1.32,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 1090938412.66,
+    "pct": 0.94,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600893": {
+  "segments": [
+   {
+    "name": "制造业",
+    "revenue": 45505572604.32,
+    "pct": 98.22,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 672707859.84,
+    "pct": 1.45,
+    "growth": null
+   },
+   {
+    "name": "非航空服务业",
+    "revenue": 153215207.24,
+    "pct": 0.33,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600900": {
+  "segments": [
+   {
+    "name": "境内水电行业",
+    "revenue": 15378187800.0,
+    "pct": 84.91,
+    "growth": null
+   },
+   {
+    "name": "其他行业",
+    "revenue": 2674639900.0,
+    "pct": 14.77,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 58713100.0,
+    "pct": 0.32,
+    "growth": null
+   },
+   {
+    "name": "其中:其他",
+    "revenue": 58713100.0,
+    "pct": 0.32,
+    "growth": null
+   }
+  ],
+  "period": "2026-03-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600905": {
+  "segments": [
+   {
+    "name": "风力发电",
+    "revenue": 18836602342.51,
+    "pct": 66.33,
+    "growth": null
+   },
+   {
+    "name": "太阳能发电",
+    "revenue": 8818674230.02,
+    "pct": 31.05,
+    "growth": null
+   },
+   {
+    "name": "其他主营业务",
+    "revenue": 487243428.500004,
+    "pct": 1.72,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 256900250.53,
+    "pct": 0.9,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600918": {
+  "segments": [
+   {
+    "name": "财富管理业务",
+    "revenue": 4552352747.26,
+    "pct": 39.96,
+    "growth": null
+   },
+   {
+    "name": "资产管理业务",
+    "revenue": 2554998160.16,
+    "pct": 22.43,
+    "growth": null
+   },
+   {
+    "name": "投资业务",
+    "revenue": 1527963403.97,
+    "pct": 13.41,
+    "growth": null
+   },
+   {
+    "name": "信用业务",
+    "revenue": 1240704183.19,
+    "pct": 10.89,
+    "growth": null
+   },
+   {
+    "name": "期货业务",
+    "revenue": 692042081.41,
+    "pct": 6.07,
+    "growth": null
+   },
+   {
+    "name": "投资银行业务",
+    "revenue": 504684329.56,
+    "pct": 4.43,
+    "growth": null
+   },
+   {
+    "name": "其他业务",
+    "revenue": 481630597.75,
+    "pct": 4.23,
+    "growth": null
+   },
+   {
+    "name": "国际业务",
+    "revenue": -161817829.1,
+    "pct": -1.42,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600919": {
+  "segments": [
+   {
+    "name": "公司金融业务",
+    "revenue": 44813236000.0,
+    "pct": 50.96,
+    "growth": null
+   },
+   {
+    "name": "个人金融业务",
+    "revenue": 26572483000.0,
+    "pct": 30.22,
+    "growth": null
+   },
+   {
+    "name": "资金业务",
+    "revenue": 15900765000.0,
+    "pct": 18.08,
+    "growth": null
+   },
+   {
+    "name": "其他业务",
+    "revenue": 655883000.0,
+    "pct": 0.75,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600926": {
+  "segments": [
+   {
+    "name": "公司业务",
+    "revenue": 21142115000.0,
+    "pct": 54.49,
+    "growth": null
+   },
+   {
+    "name": "零售业务",
+    "revenue": 7005554000.0,
+    "pct": 18.06,
+    "growth": null
+   },
+   {
+    "name": "资金业务",
+    "revenue": 6632875000.0,
+    "pct": 17.1,
+    "growth": null
+   },
+   {
+    "name": "小企业业务",
+    "revenue": 3931442000.0,
+    "pct": 10.13,
+    "growth": null
+   },
+   {
+    "name": "其他业务",
+    "revenue": 86625000.0,
+    "pct": 0.22,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600930": {
+  "segments": [
+   {
+    "name": "风电",
+    "revenue": 22482929768.0,
+    "pct": 57.68,
+    "growth": null
+   },
+   {
+    "name": "光伏",
+    "revenue": 15058424682.0,
+    "pct": 38.63,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 921324831.0,
+    "pct": 2.36,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 517709467.0,
+    "pct": 1.33,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600938": {
+  "segments": [
+   {
+    "name": "勘探及生产",
+    "revenue": 344197000000.0,
+    "pct": 86.43,
+    "growth": null
+   },
+   {
+    "name": "贸易业务",
+    "revenue": 53838000000.0,
+    "pct": 13.52,
+    "growth": null
+   },
+   {
+    "name": "公司",
+    "revenue": 1612000000.0,
+    "pct": 0.4,
+    "growth": null
+   },
+   {
+    "name": "抵销",
+    "revenue": -1427000000.0,
+    "pct": -0.36,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600941": {
+  "segments": [
+   {
+    "name": "无线上网业务",
+    "revenue": 369092000000.0,
+    "pct": 35.15,
+    "growth": null
+   },
+   {
+    "name": "应用及信息服务",
+    "revenue": 258761000000.0,
+    "pct": 24.64,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 154657000000.0,
+    "pct": 14.73,
+    "growth": null
+   },
+   {
+    "name": "其他主营业务",
+    "revenue": 154657000000.0,
+    "pct": 14.73,
+    "growth": null
+   },
+   {
+    "name": "有线宽带业务",
+    "revenue": 141569000000.0,
+    "pct": 13.48,
+    "growth": null
+   },
+   {
+    "name": "语音业务",
+    "revenue": 66633000000.0,
+    "pct": 6.34,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 29873000000.0,
+    "pct": 2.84,
+    "growth": null
+   },
+   {
+    "name": "短彩信业务",
+    "revenue": 29602000000.0,
+    "pct": 2.82,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600958": {
+  "segments": [
+   {
+    "name": "财富及资产管理",
+    "revenue": 6989283021.65,
+    "pct": 45.51,
+    "growth": null
+   },
+   {
+    "name": "机构及销售交易",
+    "revenue": 5275639022.11,
+    "pct": 34.35,
+    "growth": null
+   },
+   {
+    "name": "国际及其他业务",
+    "revenue": 1949732821.48,
+    "pct": 12.7,
+    "growth": null
+   },
+   {
+    "name": "投行及另类投资",
+    "revenue": 1604873749.42,
+    "pct": 10.45,
+    "growth": null
+   },
+   {
+    "name": "抵销",
+    "revenue": -461338285.87,
+    "pct": -3.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600989": {
+  "segments": [
+   {
+    "name": "化工行业",
+    "revenue": 40325583936.72,
+    "pct": 83.95,
+    "growth": null
+   },
+   {
+    "name": "焦化行业",
+    "revenue": 7493599857.85,
+    "pct": 15.6,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 218409342.21,
+    "pct": 0.45,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601006": {
+  "segments": [
+   {
+    "name": "铁路运输",
+    "revenue": 76409490504.0,
+    "pct": 98.41,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 1235321878.0,
+    "pct": 1.59,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "600999": {
+  "segments": [
+   {
+    "name": "财富管理和机构业务",
+    "revenue": 13824608073.04,
+    "pct": 55.36,
+    "growth": null
+   },
+   {
+    "name": "投资及交易",
+    "revenue": 6939622432.91,
+    "pct": 27.79,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 2221536496.92,
+    "pct": 8.9,
+    "growth": null
+   },
+   {
+    "name": "投资银行",
+    "revenue": 1031492990.49,
+    "pct": 4.13,
+    "growth": null
+   },
+   {
+    "name": "投资管理",
+    "revenue": 954472138.62,
+    "pct": 3.82,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601009": {
+  "segments": [
+   {
+    "name": "公司银行业务",
+    "revenue": 24538964000.0,
+    "pct": 44.18,
+    "growth": null
+   },
+   {
+    "name": "个人银行业务",
+    "revenue": 16713838000.0,
+    "pct": 30.09,
+    "growth": null
+   },
+   {
+    "name": "资金业务",
+    "revenue": 14068234000.0,
+    "pct": 25.33,
+    "growth": null
+   },
+   {
+    "name": "其他业务",
+    "revenue": 220880000.0,
+    "pct": 0.4,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601012": {
+  "segments": [
+   {
+    "name": "光伏行业",
+    "revenue": 70347049950.42,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601018": {
+  "segments": [
+   {
+    "name": "集装箱装卸及相关业务",
+    "revenue": 3131280400.0,
+    "pct": 38.23,
+    "growth": null
+   },
+   {
+    "name": "综合物流及其他业务",
+    "revenue": 2718205800.0,
+    "pct": 33.19,
+    "growth": null
+   },
+   {
+    "name": "贸易销售业务",
+    "revenue": 885180900.0,
+    "pct": 10.81,
+    "growth": null
+   },
+   {
+    "name": "其他货物装卸及相关业务",
+    "revenue": 603675100.0,
+    "pct": 7.37,
+    "growth": null
+   },
+   {
+    "name": "铁矿石装卸及相关业务",
+    "revenue": 603387400.0,
+    "pct": 7.37,
+    "growth": null
+   },
+   {
+    "name": "原油装卸及相关业务",
+    "revenue": 195912100.0,
+    "pct": 2.39,
+    "growth": null
+   },
+   {
+    "name": "其他主营业务",
+    "revenue": 53183300.0,
+    "pct": 0.65,
+    "growth": null
+   }
+  ],
+  "period": "2026-03-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601021": {
+  "segments": [
+   {
+    "name": "航空运输业",
+    "revenue": 21095612635.0,
+    "pct": 98.3,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 363918794.0,
+    "pct": 1.7,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601058": {
+  "segments": [
+   {
+    "name": "轮胎及橡胶制品",
+    "revenue": 36403390314.91,
+    "pct": 98.94,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 389043642.21,
+    "pct": 1.06,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601059": {
+  "segments": [
+   {
+    "name": "证券及期货经纪业务",
+    "revenue": 1039074611.62,
+    "pct": 42.67,
+    "growth": null
+   },
+   {
+    "name": "证券自营业务",
+    "revenue": 891806904.88,
+    "pct": 36.62,
+    "growth": null
+   },
+   {
+    "name": "资产管理业务",
+    "revenue": 316979421.3,
+    "pct": 13.02,
+    "growth": null
+   },
+   {
+    "name": "其他业务",
+    "revenue": 149587890.17,
+    "pct": 6.14,
+    "growth": null
+   },
+   {
+    "name": "投资银行业务",
+    "revenue": 37554359.51,
+    "pct": 1.54,
+    "growth": null
+   }
+  ],
+  "period": "2026-06-30",
+  "source": "eastmoney emweb 直连"
+ },
+ "601066": {
+  "segments": [
+   {
+    "name": "交易及机构客户服务",
+    "revenue": 9724393298.36,
+    "pct": 41.7,
+    "growth": null
+   },
+   {
+    "name": "财富管理业务",
+    "revenue": 8220833414.63,
+    "pct": 35.25,
+    "growth": null
+   },
+   {
+    "name": "投资银行业务",
+    "revenue": 3132174861.65,
+    "pct": 13.43,
+    "growth": null
+   },
+   {
+    "name": "资产管理业务",
+    "revenue": 1428258632.05,
+    "pct": 6.12,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 816054254.04,
+    "pct": 3.5,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601077": {
+  "segments": [
+   {
+    "name": "零售银行业务",
+    "revenue": 12155335000.0,
+    "pct": 42.43,
+    "growth": null
+   },
+   {
+    "name": "公司银行业务",
+    "revenue": 9358175000.0,
+    "pct": 32.67,
+    "growth": null
+   },
+   {
+    "name": "金融市场业务",
+    "revenue": 7031565000.0,
+    "pct": 24.54,
+    "growth": null
+   },
+   {
+    "name": "未分配项目",
+    "revenue": 103218000.0,
+    "pct": 0.36,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601088": {
+  "segments": [
+   {
+    "name": "煤炭收入",
+    "revenue": 178342000000.0,
+    "pct": 60.47,
+    "growth": null
+   },
+   {
+    "name": "发电收入",
+    "revenue": 82708000000.0,
+    "pct": 28.04,
+    "growth": null
+   },
+   {
+    "name": "运输收入",
+    "revenue": 15102000000.0,
+    "pct": 5.12,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 13677000000.0,
+    "pct": 4.64,
+    "growth": null
+   },
+   {
+    "name": "煤化工收入",
+    "revenue": 5087000000.0,
+    "pct": 1.72,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601100": {
+  "segments": [
+   {
+    "name": "机械装备制造",
+    "revenue": 10856465864.95,
+    "pct": 99.23,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 84562994.03,
+    "pct": 0.77,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601111": {
+  "segments": [
+   {
+    "name": "航空营运",
+    "revenue": 164924922000.0,
+    "pct": 96.17,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 6164396000.0,
+    "pct": 3.59,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601117": {
+  "segments": [
+   {
+    "name": "工程业务",
+    "revenue": 178133294988.5,
+    "pct": 94.0,
+    "growth": null
+   },
+   {
+    "name": "实业业务",
+    "revenue": 9753561349.29,
+    "pct": 5.15,
+    "growth": null
+   },
+   {
+    "name": "现代服务业",
+    "revenue": 1613973436.96,
+    "pct": 0.85,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601136": {
+  "segments": [
+   {
+    "name": "投资类业务",
+    "revenue": 1554440867.45,
+    "pct": 61.48,
+    "growth": null
+   },
+   {
+    "name": "财富管理类业务",
+    "revenue": 496604035.76,
+    "pct": 19.64,
+    "growth": null
+   },
+   {
+    "name": "资产管理类业务",
+    "revenue": 476869479.14,
+    "pct": 18.86,
+    "growth": null
+   },
+   {
+    "name": "投资银行类业务",
+    "revenue": 188652415.77,
+    "pct": 7.46,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": -188166000.45,
+    "pct": -7.44,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601127": {
+  "segments": [
+   {
+    "name": "汽车行业",
+    "revenue": 159618307782.58,
+    "pct": 96.71,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 5435328856.55,
+    "pct": 3.29,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601138": {
+  "segments": [
+   {
+    "name": "云计算",
+    "revenue": 602678703000.0,
+    "pct": 66.75,
+    "growth": null
+   },
+   {
+    "name": "通信及移动网络设备",
+    "revenue": 297851348000.0,
+    "pct": 32.99,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 1663186000.0,
+    "pct": 0.18,
+    "growth": null
+   },
+   {
+    "name": "工业互联网",
+    "revenue": 693951000.0,
+    "pct": 0.08,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601166": {
+  "segments": [
+   {
+    "name": "总行",
+    "revenue": 72758000000.0,
+    "pct": 34.2,
+    "growth": null
+   },
+   {
+    "name": "长三角地区",
+    "revenue": 33090000000.0,
+    "pct": 15.55,
+    "growth": null
+   },
+   {
+    "name": "珠三角及海西地区",
+    "revenue": 24363000000.0,
+    "pct": 11.45,
+    "growth": null
+   },
+   {
+    "name": "环渤海地区",
+    "revenue": 20734000000.0,
+    "pct": 9.75,
+    "growth": null
+   },
+   {
+    "name": "附属机构",
+    "revenue": 20170000000.0,
+    "pct": 9.48,
+    "growth": null
+   },
+   {
+    "name": "中部地区",
+    "revenue": 17100000000.0,
+    "pct": 8.04,
+    "growth": null
+   },
+   {
+    "name": "西部地区",
+    "revenue": 16989000000.0,
+    "pct": 7.99,
+    "growth": null
+   },
+   {
+    "name": "境外",
+    "revenue": 4336000000.0,
+    "pct": 2.04,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601169": {
+  "segments": [
+   {
+    "name": "公司银行业务",
+    "revenue": 32662000000.0,
+    "pct": 48.01,
+    "growth": null
+   },
+   {
+    "name": "个人银行业务",
+    "revenue": 21794000000.0,
+    "pct": 32.03,
+    "growth": null
+   },
+   {
+    "name": "资金业务",
+    "revenue": 12980000000.0,
+    "pct": 19.08,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 600000000.0,
+    "pct": 0.88,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601186": {
+  "segments": [
+   {
+    "name": "工程承包业务",
+    "revenue": 906680984000.0,
+    "pct": 88.05,
+    "growth": null
+   },
+   {
+    "name": "物资物流及其他业务",
+    "revenue": 74630550000.0,
+    "pct": 7.25,
+    "growth": null
+   },
+   {
+    "name": "房地产开发业务",
+    "revenue": 66563673000.0,
+    "pct": 6.46,
+    "growth": null
+   },
+   {
+    "name": "工业制造业务",
+    "revenue": 24430792000.0,
+    "pct": 2.37,
+    "growth": null
+   },
+   {
+    "name": "规划设计咨询业务",
+    "revenue": 16916327000.0,
+    "pct": 1.64,
+    "growth": null
+   },
+   {
+    "name": "分部间抵销",
+    "revenue": -59437866000.0,
+    "pct": -5.77,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601225": {
+  "segments": [
+   {
+    "name": "煤炭采掘业",
+    "revenue": 138803441000.0,
+    "pct": 87.75,
+    "growth": null
+   },
+   {
+    "name": "电力",
+    "revenue": 15545284500.0,
+    "pct": 9.83,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 3549703800.0,
+    "pct": 2.24,
+    "growth": null
+   },
+   {
+    "name": "铁路运输业",
+    "revenue": 280090300.0,
+    "pct": 0.18,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601211": {
+  "segments": [
+   {
+    "name": "财富管理",
+    "revenue": 24949618551.0,
+    "pct": 39.54,
+    "growth": null
+   },
+   {
+    "name": "机构及交易",
+    "revenue": 19594461418.0,
+    "pct": 31.05,
+    "growth": null
+   },
+   {
+    "name": "投资管理",
+    "revenue": 7615891734.0,
+    "pct": 12.07,
+    "growth": null
+   },
+   {
+    "name": "融资租赁",
+    "revenue": 5490588613.0,
+    "pct": 8.7,
+    "growth": null
+   },
+   {
+    "name": "投资银行",
+    "revenue": 4746946908.0,
+    "pct": 7.52,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 709933730.0,
+    "pct": 1.12,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601238": {
+  "segments": [
+   {
+    "name": "整车制造业",
+    "revenue": 69010000000.0,
+    "pct": 71.48,
+    "growth": null
+   },
+   {
+    "name": "商贸服务",
+    "revenue": 18670000000.0,
+    "pct": 19.34,
+    "growth": null
+   },
+   {
+    "name": "金融及其他",
+    "revenue": 5061000000.0,
+    "pct": 5.24,
+    "growth": null
+   },
+   {
+    "name": "零部件制造业",
+    "revenue": 3801000000.0,
+    "pct": 3.94,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601229": {
+  "segments": [
+   {
+    "name": "批发金融业务",
+    "revenue": 42460424000.0,
+    "pct": 77.54,
+    "growth": null
+   },
+   {
+    "name": "零售金融业务",
+    "revenue": 12123829000.0,
+    "pct": 22.14,
+    "growth": null
+   },
+   {
+    "name": "其他业务",
+    "revenue": 176766000.0,
+    "pct": 0.32,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601288": {
+  "segments": [
+   {
+    "name": "个人银行业务",
+    "revenue": 383297000000.0,
+    "pct": 52.85,
+    "growth": null
+   },
+   {
+    "name": "公司银行业务",
+    "revenue": 263574000000.0,
+    "pct": 36.34,
+    "growth": null
+   },
+   {
+    "name": "资金运营业务",
+    "revenue": 52055000000.0,
+    "pct": 7.18,
+    "growth": null
+   },
+   {
+    "name": "其他业务",
+    "revenue": 26380000000.0,
+    "pct": 3.64,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601318": {
+  "segments": [
+   {
+    "name": "寿险及健康险",
+    "revenue": 502171000000.0,
+    "pct": 47.8,
+    "growth": null
+   },
+   {
+    "name": "财产保险",
+    "revenue": 353272000000.0,
+    "pct": 33.63,
+    "growth": null
+   },
+   {
+    "name": "银行",
+    "revenue": 131442000000.0,
+    "pct": 12.51,
+    "growth": null
+   },
+   {
+    "name": "资产管理",
+    "revenue": 51346000000.0,
+    "pct": 4.89,
+    "growth": null
+   },
+   {
+    "name": "金融赋能",
+    "revenue": 49358000000.0,
+    "pct": 4.7,
+    "growth": null
+   },
+   {
+    "name": "其他业务及合并抵销",
+    "revenue": -37083000000.0,
+    "pct": -3.53,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601319": {
+  "segments": [
+   {
+    "name": "财产保险",
+    "revenue": 558112000000.0,
+    "pct": 83.42,
+    "growth": null
+   },
+   {
+    "name": "人寿保险",
+    "revenue": 67456000000.0,
+    "pct": 10.08,
+    "growth": null
+   },
+   {
+    "name": "健康保险",
+    "revenue": 37882000000.0,
+    "pct": 5.66,
+    "growth": null
+   },
+   {
+    "name": "总部及其他",
+    "revenue": 26277000000.0,
+    "pct": 3.93,
+    "growth": null
+   },
+   {
+    "name": "资产管理",
+    "revenue": 3072000000.0,
+    "pct": 0.46,
+    "growth": null
+   },
+   {
+    "name": "抵销金额",
+    "revenue": -23755000000.0,
+    "pct": -3.55,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601328": {
+  "segments": [
+   {
+    "name": "公司金融业务",
+    "revenue": 132749000000.0,
+    "pct": 50.08,
+    "growth": null
+   },
+   {
+    "name": "个人金融业务",
+    "revenue": 96724000000.0,
+    "pct": 36.49,
+    "growth": null
+   },
+   {
+    "name": "资金业务",
+    "revenue": 34377000000.0,
+    "pct": 12.97,
+    "growth": null
+   },
+   {
+    "name": "其他业务",
+    "revenue": 1221000000.0,
+    "pct": 0.46,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601336": {
+  "segments": [
+   {
+    "name": "传统型保险",
+    "revenue": 89285000000.0,
+    "pct": 56.6,
+    "growth": null
+   },
+   {
+    "name": "分红型保险",
+    "revenue": 61642000000.0,
+    "pct": 39.08,
+    "growth": null
+   },
+   {
+    "name": "其他业务",
+    "revenue": 7882000000.0,
+    "pct": 5.0,
+    "growth": null
+   },
+   {
+    "name": "抵销",
+    "revenue": -1064000000.0,
+    "pct": -0.67,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601377": {
+  "segments": [
+   {
+    "name": "证券及期货经纪业务",
+    "revenue": 3778121232.32,
+    "pct": 31.91,
+    "growth": null
+   },
+   {
+    "name": "自营投资业务",
+    "revenue": 3214439163.81,
+    "pct": 27.15,
+    "growth": null
+   },
+   {
+    "name": "资产管理业务",
+    "revenue": 3194081219.87,
+    "pct": 26.97,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 1693770600.66,
+    "pct": 14.3,
+    "growth": null
+   },
+   {
+    "name": "机构服务业务",
+    "revenue": 1576958865.02,
+    "pct": 13.32,
+    "growth": null
+   },
+   {
+    "name": "海外业务",
+    "revenue": 477059687.66,
+    "pct": 4.03,
+    "growth": null
+   },
+   {
+    "name": "分部间抵销",
+    "revenue": -2093046595.13,
+    "pct": -17.68,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601360": {
+  "segments": [
+   {
+    "name": "互联网广告及服务",
+    "revenue": 4393844000.0,
+    "pct": 50.55,
+    "growth": null
+   },
+   {
+    "name": "互联网增值服务",
+    "revenue": 1950182000.0,
+    "pct": 22.44,
+    "growth": null
+   },
+   {
+    "name": "其他主营业务",
+    "revenue": 1445997000.0,
+    "pct": 16.63,
+    "growth": null
+   },
+   {
+    "name": "其中:互联网增值服务--其他",
+    "revenue": 1135918000.0,
+    "pct": 13.07,
+    "growth": null
+   },
+   {
+    "name": "其中:互联网增值服务--游戏",
+    "revenue": 814264000.0,
+    "pct": 9.37,
+    "growth": null
+   },
+   {
+    "name": "智能硬件",
+    "revenue": 797821000.0,
+    "pct": 9.18,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 104720000.0,
+    "pct": 1.2,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601390": {
+  "segments": [
+   {
+    "name": "基础设施建设",
+    "revenue": 202452000000.0,
+    "pct": 85.89,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 17625000000.0,
+    "pct": 7.48,
+    "growth": null
+   },
+   {
+    "name": "装备制造",
+    "revenue": 6711000000.0,
+    "pct": 2.85,
+    "growth": null
+   },
+   {
+    "name": "房地产开发",
+    "revenue": 5201000000.0,
+    "pct": 2.21,
+    "growth": null
+   },
+   {
+    "name": "设计咨询",
+    "revenue": 3721000000.0,
+    "pct": 1.58,
+    "growth": null
+   }
+  ],
+  "period": "2026-03-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601398": {
+  "segments": [
+   {
+    "name": "公司金融业务",
+    "revenue": 410676000000.0,
+    "pct": 48.99,
+    "growth": null
+   },
+   {
+    "name": "个人金融业务",
+    "revenue": 327739000000.0,
+    "pct": 39.1,
+    "growth": null
+   },
+   {
+    "name": "资金业务",
+    "revenue": 93990000000.0,
+    "pct": 11.21,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 5865000000.0,
+    "pct": 0.7,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601456": {
+  "segments": [
+   {
+    "name": "经纪及财富管理业务",
+    "revenue": 2753406164.45,
+    "pct": 35.88,
+    "growth": null
+   },
+   {
+    "name": "证券投资业务",
+    "revenue": 2084354191.18,
+    "pct": 27.16,
+    "growth": null
+   },
+   {
+    "name": "投资银行业务",
+    "revenue": 923428302.48,
+    "pct": 12.03,
+    "growth": null
+   },
+   {
+    "name": "资产管理及投资业务",
+    "revenue": 742483329.49,
+    "pct": 9.68,
+    "growth": null
+   },
+   {
+    "name": "信用交易业务",
+    "revenue": 677571958.95,
+    "pct": 8.83,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 558764876.3,
+    "pct": 7.28,
+    "growth": null
+   },
+   {
+    "name": "分部间相互抵减",
+    "revenue": -66612538.92,
+    "pct": -0.87,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601600": {
+  "segments": [
+   {
+    "name": "铝行业",
+    "revenue": 232942866000.0,
+    "pct": 96.61,
+    "growth": null
+   },
+   {
+    "name": "能源行业",
+    "revenue": 8182351000.0,
+    "pct": 3.39,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601601": {
+  "segments": [
+   {
+    "name": "人寿及健康保险",
+    "revenue": 215598000000.0,
+    "pct": 49.55,
+    "growth": null
+   },
+   {
+    "name": "财产保险",
+    "revenue": 210117000000.0,
+    "pct": 48.29,
+    "growth": null
+   },
+   {
+    "name": "资产管理",
+    "revenue": 4846000000.0,
+    "pct": 1.11,
+    "growth": null
+   },
+   {
+    "name": "其他及抵销",
+    "revenue": 4595000000.0,
+    "pct": 1.06,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601607": {
+  "segments": [
+   {
+    "name": "分销",
+    "revenue": 258828144233.01,
+    "pct": 91.27,
+    "growth": null
+   },
+   {
+    "name": "工业",
+    "revenue": 24522097522.47,
+    "pct": 8.65,
+    "growth": null
+   },
+   {
+    "name": "零售",
+    "revenue": 8665522175.11,
+    "pct": 3.06,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 1027159530.0,
+    "pct": 0.36,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 282184624.87,
+    "pct": 0.1,
+    "growth": null
+   },
+   {
+    "name": "抵消",
+    "revenue": -9745507522.48,
+    "pct": -3.44,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601628": {
+  "segments": [
+   {
+    "name": "寿险业务",
+    "revenue": 505546000000.0,
+    "pct": 82.11,
+    "growth": null
+   },
+   {
+    "name": "健康险业务与意外险业务",
+    "revenue": 94169000000.0,
+    "pct": 15.3,
+    "growth": null
+   },
+   {
+    "name": "其他业务",
+    "revenue": 15963000000.0,
+    "pct": 2.59,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601618": {
+  "segments": [
+   {
+    "name": "工程承包",
+    "revenue": 405364066000.0,
+    "pct": 89.02,
+    "growth": null
+   },
+   {
+    "name": "特色业务",
+    "revenue": 29397544000.0,
+    "pct": 6.46,
+    "growth": null
+   },
+   {
+    "name": "终止经营业务",
+    "revenue": 20618810000.0,
+    "pct": 4.53,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601633": {
+  "segments": [
+   {
+    "name": "汽车行业",
+    "revenue": 219956296311.57,
+    "pct": 98.71,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 2867942204.68,
+    "pct": 1.29,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601668": {
+  "segments": [
+   {
+    "name": "房屋建筑工程",
+    "revenue": 1234205792000.0,
+    "pct": 59.28,
+    "growth": null
+   },
+   {
+    "name": "基础设施建设与投资",
+    "revenue": 543179718000.0,
+    "pct": 26.09,
+    "growth": null
+   },
+   {
+    "name": "房地产开发与投资",
+    "revenue": 284393567000.0,
+    "pct": 13.66,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 40155113000.0,
+    "pct": 1.93,
+    "growth": null
+   },
+   {
+    "name": "勘察设计",
+    "revenue": 10171215000.0,
+    "pct": 0.49,
+    "growth": null
+   },
+   {
+    "name": "分部间抵销",
+    "revenue": -29963594000.0,
+    "pct": -1.44,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601658": {
+  "segments": [
+   {
+    "name": "个人银行业务",
+    "revenue": 232854000000.0,
+    "pct": 65.46,
+    "growth": null
+   },
+   {
+    "name": "公司银行业务",
+    "revenue": 80090000000.0,
+    "pct": 22.51,
+    "growth": null
+   },
+   {
+    "name": "资金业务",
+    "revenue": 42520000000.0,
+    "pct": 11.95,
+    "growth": null
+   },
+   {
+    "name": "其他业务",
+    "revenue": 264000000.0,
+    "pct": 0.07,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601669": {
+  "segments": [
+   {
+    "name": "工程承包与勘测设计",
+    "revenue": 590502643400.0,
+    "pct": 90.21,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 27469697900.0,
+    "pct": 4.2,
+    "growth": null
+   },
+   {
+    "name": "电力投资与运营",
+    "revenue": 25469550400.0,
+    "pct": 3.89,
+    "growth": null
+   },
+   {
+    "name": "新能源",
+    "revenue": 11172023500.0,
+    "pct": 1.71,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601688": {
+  "segments": [
+   {
+    "name": "财富管理业务",
+    "revenue": 15863592900.0,
+    "pct": 44.3,
+    "growth": null
+   },
+   {
+    "name": "机构服务业务",
+    "revenue": 6933487400.0,
+    "pct": 19.36,
+    "growth": null
+   },
+   {
+    "name": "国际业务",
+    "revenue": 5918433300.0,
+    "pct": 16.53,
+    "growth": null
+   },
+   {
+    "name": "投资管理业务",
+    "revenue": 3958949600.0,
+    "pct": 11.06,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 3135457100.0,
+    "pct": 8.76,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601689": {
+  "segments": [
+   {
+    "name": "汽车零部件",
+    "revenue": 27524056756.31,
+    "pct": 93.05,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 2057401918.96,
+    "pct": 6.96,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601698": {
+  "segments": [
+   {
+    "name": "广播电视和卫星传输服务",
+    "revenue": 2644781700.0,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601728": {
+  "segments": [
+   {
+    "name": "电信业",
+    "revenue": 523924731368.75,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601727": {
+  "segments": [
+   {
+    "name": "能源装备",
+    "revenue": 75024000000.0,
+    "pct": 56.09,
+    "growth": null
+   },
+   {
+    "name": "工业装备",
+    "revenue": 38074000000.0,
+    "pct": 28.47,
+    "growth": null
+   },
+   {
+    "name": "集成服务",
+    "revenue": 20649000000.0,
+    "pct": 15.44,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601766": {
+  "segments": [
+   {
+    "name": "轨道交通装备及其延伸产业",
+    "revenue": 273063098000.0,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601788": {
+  "segments": [
+   {
+    "name": "财富管理",
+    "revenue": 5962219815.42,
+    "pct": 54.94,
+    "growth": null
+   },
+   {
+    "name": "投资交易",
+    "revenue": 1291133870.76,
+    "pct": 11.9,
+    "growth": null
+   },
+   {
+    "name": "资产管理",
+    "revenue": 1175910163.27,
+    "pct": 10.84,
+    "growth": null
+   },
+   {
+    "name": "机构客户",
+    "revenue": 1102432967.06,
+    "pct": 10.16,
+    "growth": null
+   },
+   {
+    "name": "企业融资",
+    "revenue": 883739105.92,
+    "pct": 8.14,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 841643958.06,
+    "pct": 7.76,
+    "growth": null
+   },
+   {
+    "name": "股权投资",
+    "revenue": -136666578.78,
+    "pct": -1.26,
+    "growth": null
+   },
+   {
+    "name": "分部间抵销",
+    "revenue": -268591500.64,
+    "pct": -2.48,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601800": {
+  "segments": [
+   {
+    "name": "基建建设业务",
+    "revenue": 649025386560.0,
+    "pct": 88.77,
+    "growth": null
+   },
+   {
+    "name": "疏浚工程业务",
+    "revenue": 54175521012.0,
+    "pct": 7.41,
+    "growth": null
+   },
+   {
+    "name": "基建设计业务",
+    "revenue": 36416548599.0,
+    "pct": 4.98,
+    "growth": null
+   },
+   {
+    "name": "其他业务",
+    "revenue": 24278176387.0,
+    "pct": 3.32,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 5709925434.0,
+    "pct": 0.78,
+    "growth": null
+   },
+   {
+    "name": "抵消",
+    "revenue": -38496806649.0,
+    "pct": -5.27,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601818": {
+  "segments": [
+   {
+    "name": "零售银行业务",
+    "revenue": 50442000000.0,
+    "pct": 39.93,
+    "growth": null
+   },
+   {
+    "name": "公司银行业务",
+    "revenue": 49729000000.0,
+    "pct": 39.37,
+    "growth": null
+   },
+   {
+    "name": "金融市场业务",
+    "revenue": 26072000000.0,
+    "pct": 20.64,
+    "growth": null
+   },
+   {
+    "name": "其他业务",
+    "revenue": 68000000.0,
+    "pct": 0.05,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601816": {
+  "segments": [
+   {
+    "name": "铁路运输",
+    "revenue": 42752753796.6,
+    "pct": 99.28,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 309287690.38,
+    "pct": 0.72,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601825": {
+  "segments": [
+   {
+    "name": "公司银行业务",
+    "revenue": 11986391000.0,
+    "pct": 46.33,
+    "growth": null
+   },
+   {
+    "name": "个人银行业务",
+    "revenue": 10423203000.0,
+    "pct": 40.29,
+    "growth": null
+   },
+   {
+    "name": "金融市场业务",
+    "revenue": 6044530000.0,
+    "pct": 23.36,
+    "growth": null
+   },
+   {
+    "name": "其他业务",
+    "revenue": -2583635000.0,
+    "pct": -9.99,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601838": {
+  "segments": [
+   {
+    "name": "公司银行业务",
+    "revenue": 14034681000.0,
+    "pct": 59.46,
+    "growth": null
+   },
+   {
+    "name": "个人银行业务",
+    "revenue": 5591381000.0,
+    "pct": 23.69,
+    "growth": null
+   },
+   {
+    "name": "资金营运业务",
+    "revenue": 3915602000.0,
+    "pct": 16.59,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 44939000.0,
+    "pct": 0.19,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601857": {
+  "segments": [
+   {
+    "name": "销售",
+    "revenue": 2327528000000.0,
+    "pct": 81.26,
+    "growth": null
+   },
+   {
+    "name": "炼油化工和新材料",
+    "revenue": 1072723000000.0,
+    "pct": 37.45,
+    "growth": null
+   },
+   {
+    "name": "油气和新能源",
+    "revenue": 799980000000.0,
+    "pct": 27.93,
+    "growth": null
+   },
+   {
+    "name": "天然气销售",
+    "revenue": 613334000000.0,
+    "pct": 21.41,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 63514000000.0,
+    "pct": 2.22,
+    "growth": null
+   },
+   {
+    "name": "总部及其他",
+    "revenue": 1046000000.0,
+    "pct": 0.04,
+    "growth": null
+   },
+   {
+    "name": "分部间抵销数",
+    "revenue": -2013656000000.0,
+    "pct": -70.3,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601868": {
+  "segments": [
+   {
+    "name": "工程建设业务",
+    "revenue": 389018116000.0,
+    "pct": 85.89,
+    "growth": null
+   },
+   {
+    "name": "其中:工程建设业务-新能源及综合智慧能源",
+    "revenue": 132965485000.0,
+    "pct": 29.36,
+    "growth": null
+   },
+   {
+    "name": "投资运营业务",
+    "revenue": 38751684000.0,
+    "pct": 8.56,
+    "growth": null
+   },
+   {
+    "name": "工业制造",
+    "revenue": 34263663000.0,
+    "pct": 7.56,
+    "growth": null
+   },
+   {
+    "name": "勘测设计及咨询业务",
+    "revenue": 22048764000.0,
+    "pct": 4.87,
+    "growth": null
+   },
+   {
+    "name": "其中:投资运营业务-城市开发运营(房地产",
+    "revenue": 17318381000.0,
+    "pct": 3.82,
+    "growth": null
+   },
+   {
+    "name": "其中:工业制造-民爆",
+    "revenue": 9768896000.0,
+    "pct": 2.16,
+    "growth": null
+   },
+   {
+    "name": "其中:工业制造-建材",
+    "revenue": 7301877000.0,
+    "pct": 1.61,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601872": {
+  "segments": [
+   {
+    "name": "油轮运输",
+    "revenue": 10289276515.57,
+    "pct": 36.52,
+    "growth": null
+   },
+   {
+    "name": "散货船运输",
+    "revenue": 8769388393.77,
+    "pct": 31.12,
+    "growth": null
+   },
+   {
+    "name": "集装箱运输",
+    "revenue": 6149215176.25,
+    "pct": 21.82,
+    "growth": null
+   },
+   {
+    "name": "滚装船运输",
+    "revenue": 1690427764.64,
+    "pct": 6.0,
+    "growth": null
+   },
+   {
+    "name": "其他主营业务",
+    "revenue": 1126864223.11,
+    "pct": 4.0,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 97089963.34,
+    "pct": 0.34,
+    "growth": null
+   },
+   {
+    "name": "LNG运输",
+    "revenue": 54949095.27,
+    "pct": 0.19,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601877": {
+  "segments": [
+   {
+    "name": "光伏业务",
+    "revenue": 36274454800.0,
+    "pct": 61.33,
+    "growth": null
+   },
+   {
+    "name": "低压电器",
+    "revenue": 21918678100.0,
+    "pct": 37.06,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 951715100.0,
+    "pct": 1.61,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601878": {
+  "segments": [
+   {
+    "name": "证券经纪业务(含信用交易业务)",
+    "revenue": 1603701500.0,
+    "pct": 67.98,
+    "growth": null
+   },
+   {
+    "name": "投资业务(含自营业务)",
+    "revenue": 350624200.0,
+    "pct": 14.86,
+    "growth": null
+   },
+   {
+    "name": "投资银行业务",
+    "revenue": 260284800.0,
+    "pct": 11.03,
+    "growth": null
+   },
+   {
+    "name": "期货业务",
+    "revenue": 233704600.0,
+    "pct": 9.91,
+    "growth": null
+   },
+   {
+    "name": "资产管理业务",
+    "revenue": 78659500.0,
+    "pct": 3.33,
+    "growth": null
+   },
+   {
+    "name": "抵销",
+    "revenue": -13941500.0,
+    "pct": -0.59,
+    "growth": null
+   },
+   {
+    "name": "总部后台及其他",
+    "revenue": -154007400.0,
+    "pct": -6.53,
+    "growth": null
+   }
+  ],
+  "period": "2026-03-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601881": {
+  "segments": [
+   {
+    "name": "财富管理业务",
+    "revenue": 13471647340.02,
+    "pct": 47.6,
+    "growth": null
+   },
+   {
+    "name": "投资交易业务",
+    "revenue": 7026017998.15,
+    "pct": 24.82,
+    "growth": null
+   },
+   {
+    "name": "母子公司一体化业务",
+    "revenue": 2766500400.22,
+    "pct": 9.77,
+    "growth": null
+   },
+   {
+    "name": "国际业务",
+    "revenue": 2568513564.51,
+    "pct": 9.08,
+    "growth": null
+   },
+   {
+    "name": "机构业务",
+    "revenue": 1714321579.93,
+    "pct": 6.06,
+    "growth": null
+   },
+   {
+    "name": "投资银行业务",
+    "revenue": 585113645.92,
+    "pct": 2.07,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 170137195.72,
+    "pct": 0.6,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601888": {
+  "segments": [
+   {
+    "name": "商品销售业",
+    "revenue": 52552697083.91,
+    "pct": 97.88,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 1140882117.61,
+    "pct": 2.12,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601899": {
+  "segments": [
+   {
+    "name": "其他",
+    "revenue": 35930009100.0,
+    "pct": 36.48,
+    "growth": null
+   },
+   {
+    "name": "矿山产金",
+    "revenue": 23431484700.0,
+    "pct": 23.79,
+    "growth": null
+   },
+   {
+    "name": "冶炼产铜",
+    "revenue": 15783704400.0,
+    "pct": 16.02,
+    "growth": null
+   },
+   {
+    "name": "矿山产铜精矿",
+    "revenue": 13892970200.0,
+    "pct": 14.1,
+    "growth": null
+   },
+   {
+    "name": "矿山产电解铜",
+    "revenue": 2568428700.0,
+    "pct": 2.61,
+    "growth": null
+   },
+   {
+    "name": "矿山产电积铜",
+    "revenue": 2165059700.0,
+    "pct": 2.2,
+    "growth": null
+   },
+   {
+    "name": "冶炼产锌",
+    "revenue": 1861011200.0,
+    "pct": 1.89,
+    "growth": null
+   },
+   {
+    "name": "矿山产银",
+    "revenue": 1585306000.0,
+    "pct": 1.61,
+    "growth": null
+   }
+  ],
+  "period": "2026-03-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601898": {
+  "segments": [
+   {
+    "name": "煤炭业务",
+    "revenue": 119864920000.0,
+    "pct": 80.96,
+    "growth": null
+   },
+   {
+    "name": "煤化工业务",
+    "revenue": 18521253000.0,
+    "pct": 12.51,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 9920742000.0,
+    "pct": 6.7,
+    "growth": null
+   },
+   {
+    "name": "煤矿装备业务",
+    "revenue": 9116221000.0,
+    "pct": 6.16,
+    "growth": null
+   },
+   {
+    "name": "金融业务",
+    "revenue": 2207172000.0,
+    "pct": 1.49,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 935714000.0,
+    "pct": 0.63,
+    "growth": null
+   },
+   {
+    "name": "其中:租赁收入",
+    "revenue": 348511000.0,
+    "pct": 0.24,
+    "growth": null
+   },
+   {
+    "name": "其中:其他",
+    "revenue": 341125000.0,
+    "pct": 0.23,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601901": {
+  "segments": [
+   {
+    "name": "财富管理",
+    "revenue": 2389173600.0,
+    "pct": 70.27,
+    "growth": null
+   },
+   {
+    "name": "投资交易",
+    "revenue": 762463200.0,
+    "pct": 22.43,
+    "growth": null
+   },
+   {
+    "name": "资产管理",
+    "revenue": 124070300.0,
+    "pct": 3.65,
+    "growth": null
+   },
+   {
+    "name": "总部及其他",
+    "revenue": 74587300.0,
+    "pct": 2.19,
+    "growth": null
+   },
+   {
+    "name": "投资银行",
+    "revenue": 49596300.0,
+    "pct": 1.46,
+    "growth": null
+   }
+  ],
+  "period": "2026-03-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601916": {
+  "segments": [
+   {
+    "name": "公司银行业务",
+    "revenue": 35181000000.0,
+    "pct": 56.28,
+    "growth": null
+   },
+   {
+    "name": "资金业务",
+    "revenue": 12996000000.0,
+    "pct": 20.79,
+    "growth": null
+   },
+   {
+    "name": "零售银行业务",
+    "revenue": 10343000000.0,
+    "pct": 16.55,
+    "growth": null
+   },
+   {
+    "name": "其他业务",
+    "revenue": 3994000000.0,
+    "pct": 6.39,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601919": {
+  "segments": [
+   {
+    "name": "集装箱航运业务",
+    "revenue": 210731494147.06,
+    "pct": 96.0,
+    "growth": null
+   },
+   {
+    "name": "码头业务",
+    "revenue": 12041307540.8,
+    "pct": 5.49,
+    "growth": null
+   },
+   {
+    "name": "公司内各业务部间相互抵销",
+    "revenue": -3268996465.16,
+    "pct": -1.49,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601939": {
+  "segments": [
+   {
+    "name": "个人金融业务",
+    "revenue": 358418000000.0,
+    "pct": 47.1,
+    "growth": null
+   },
+   {
+    "name": "公司金融业务",
+    "revenue": 229635000000.0,
+    "pct": 30.17,
+    "growth": null
+   },
+   {
+    "name": "资金资管业务",
+    "revenue": 144507000000.0,
+    "pct": 18.99,
+    "growth": null
+   },
+   {
+    "name": "其他业务",
+    "revenue": 28489000000.0,
+    "pct": 3.74,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601985": {
+  "segments": [
+   {
+    "name": "电力行业",
+    "revenue": 79621922281.62,
+    "pct": 97.01,
+    "growth": null
+   },
+   {
+    "name": "其他主营业务",
+    "revenue": 2029955311.34,
+    "pct": 2.47,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 423617651.99,
+    "pct": 0.52,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601988": {
+  "segments": [
+   {
+    "name": "个人金融业务",
+    "revenue": 259878000000.0,
+    "pct": 39.48,
+    "growth": null
+   },
+   {
+    "name": "公司金融业务",
+    "revenue": 243929000000.0,
+    "pct": 37.05,
+    "growth": null
+   },
+   {
+    "name": "资金业务",
+    "revenue": 88652000000.0,
+    "pct": 13.47,
+    "growth": null
+   },
+   {
+    "name": "保险业务",
+    "revenue": 32220000000.0,
+    "pct": 4.89,
+    "growth": null
+   },
+   {
+    "name": "其他业务",
+    "revenue": 28954000000.0,
+    "pct": 4.4,
+    "growth": null
+   },
+   {
+    "name": "投资银行业务",
+    "revenue": 9494000000.0,
+    "pct": 1.44,
+    "growth": null
+   },
+   {
+    "name": "抵销",
+    "revenue": -4817000000.0,
+    "pct": -0.73,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601995": {
+  "segments": [
+   {
+    "name": "财富管理",
+    "revenue": 9488997962.0,
+    "pct": 33.32,
+    "growth": null
+   },
+   {
+    "name": "股票业务",
+    "revenue": 7345210975.0,
+    "pct": 25.79,
+    "growth": null
+   },
+   {
+    "name": "投资银行",
+    "revenue": 4596594072.0,
+    "pct": 16.14,
+    "growth": null
+   },
+   {
+    "name": "固定收益",
+    "revenue": 3077125990.0,
+    "pct": 10.8,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 1633450602.0,
+    "pct": 5.74,
+    "growth": null
+   },
+   {
+    "name": "资产管理",
+    "revenue": 1275204326.0,
+    "pct": 4.48,
+    "growth": null
+   },
+   {
+    "name": "私募股权",
+    "revenue": 1064489915.0,
+    "pct": 3.74,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "601998": {
+  "segments": [
+   {
+    "name": "公司银行业务",
+    "revenue": 98829000000.0,
+    "pct": 46.51,
+    "growth": null
+   },
+   {
+    "name": "零售银行业务",
+    "revenue": 79367000000.0,
+    "pct": 37.35,
+    "growth": null
+   },
+   {
+    "name": "金融市场业务",
+    "revenue": 33691000000.0,
+    "pct": 15.86,
+    "growth": null
+   },
+   {
+    "name": "其他业务及未分配项目",
+    "revenue": 588000000.0,
+    "pct": 0.28,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "603019": {
+  "segments": [
+   {
+    "name": "公共事业",
+    "revenue": 7713220855.36,
+    "pct": 51.55,
+    "growth": null
+   },
+   {
+    "name": "企业",
+    "revenue": 7236692096.78,
+    "pct": 48.36,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 13731404.81,
+    "pct": 0.09,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "603259": {
+  "segments": [
+   {
+    "name": "化学业务(WuXiChemistry)",
+    "revenue": 36465846900.0,
+    "pct": 80.22,
+    "growth": null
+   },
+   {
+    "name": "测试业务(WuXiTesting)",
+    "revenue": 4041701000.0,
+    "pct": 8.89,
+    "growth": null
+   },
+   {
+    "name": "生物学业务(WuXiBiology)",
+    "revenue": 2677175000.0,
+    "pct": 5.89,
+    "growth": null
+   },
+   {
+    "name": "终止经营业务",
+    "revenue": 2035342000.0,
+    "pct": 4.48,
+    "growth": null
+   },
+   {
+    "name": "其他业务(Others)",
+    "revenue": 236100800.0,
+    "pct": 0.52,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "603260": {
+  "segments": [
+   {
+    "name": "化工行业",
+    "revenue": 9574637442.97,
+    "pct": 46.71,
+    "growth": null
+   },
+   {
+    "name": "非金属冶炼",
+    "revenue": 9076993906.77,
+    "pct": 44.28,
+    "growth": null
+   },
+   {
+    "name": "其他主营业务",
+    "revenue": 1592471923.22,
+    "pct": 7.77,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 254442214.98,
+    "pct": 1.24,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "603288": {
+  "segments": [
+   {
+    "name": "食品制造业",
+    "revenue": 27399314472.02,
+    "pct": 94.89,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 1474065994.74,
+    "pct": 5.11,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "603296": {
+  "segments": [
+   {
+    "name": "移动终端业务",
+    "revenue": 80209937920.0,
+    "pct": 46.79,
+    "growth": null
+   },
+   {
+    "name": "计算及数据业务",
+    "revenue": 75475017254.41,
+    "pct": 44.02,
+    "growth": null
+   },
+   {
+    "name": "AIOT业务",
+    "revenue": 7884923489.34,
+    "pct": 4.6,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 4383261336.63,
+    "pct": 2.56,
+    "growth": null
+   },
+   {
+    "name": "创新业务",
+    "revenue": 3483786673.02,
+    "pct": 2.03,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "603369": {
+  "segments": [
+   {
+    "name": "白酒",
+    "revenue": 10007451273.75,
+    "pct": 98.3,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 168969287.75,
+    "pct": 1.66,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 4277719.77,
+    "pct": 0.04,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "603392": {
+  "segments": [
+   {
+    "name": "诊断试剂",
+    "revenue": 1308565889.76,
+    "pct": 71.94,
+    "growth": null
+   },
+   {
+    "name": "疫苗",
+    "revenue": 457052000.9,
+    "pct": 25.13,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 53349567.21,
+    "pct": 2.93,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "603501": {
+  "segments": [
+   {
+    "name": "半导体设计销售",
+    "revenue": 23800023132.11,
+    "pct": 82.48,
+    "growth": null
+   },
+   {
+    "name": "半导体代理销售",
+    "revenue": 4904807744.19,
+    "pct": 17.0,
+    "growth": null
+   },
+   {
+    "name": "半导体设计服务",
+    "revenue": 109758335.97,
+    "pct": 0.38,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 40216305.21,
+    "pct": 0.14,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "603799": {
+  "segments": [
+   {
+    "name": "新能源电池材料及原料",
+    "revenue": 39656458057.33,
+    "pct": 48.95,
+    "growth": null
+   },
+   {
+    "name": "有色金属",
+    "revenue": 31341443893.45,
+    "pct": 38.68,
+    "growth": null
+   },
+   {
+    "name": "贸易及其他",
+    "revenue": 8840631256.73,
+    "pct": 10.91,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 1180140862.17,
+    "pct": 1.46,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "603893": {
+  "segments": [
+   {
+    "name": "集成电路",
+    "revenue": 4401377081.32,
+    "pct": 99.98,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 713806.92,
+    "pct": 0.02,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "603986": {
+  "segments": [
+   {
+    "name": "集成电路产品",
+    "revenue": 9202257978.92,
+    "pct": 99.99,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 1205145.66,
+    "pct": 0.01,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "603993": {
+  "segments": [
+   {
+    "name": "矿产贸易",
+    "revenue": 180079235246.16,
+    "pct": 87.13,
+    "growth": null
+   },
+   {
+    "name": "矿山采掘及加工",
+    "revenue": 77712960889.02,
+    "pct": 37.6,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 240639891.8,
+    "pct": 0.12,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 760832.05,
+    "pct": 0.0,
+    "growth": null
+   },
+   {
+    "name": "内部交易抵销",
+    "revenue": -51349947808.6,
+    "pct": -24.84,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "605117": {
+  "segments": [
+   {
+    "name": "新能源行业",
+    "revenue": 10180522048.26,
+    "pct": 83.28,
+    "growth": null
+   },
+   {
+    "name": "环境电器行业",
+    "revenue": 2005295845.01,
+    "pct": 16.4,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 37925569.27,
+    "pct": 0.31,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "605499": {
+  "segments": [
+   {
+    "name": "能量饮料",
+    "revenue": 8936615605.76,
+    "pct": 71.82,
+    "growth": null
+   },
+   {
+    "name": "电解质饮料",
+    "revenue": 1671554035.63,
+    "pct": 13.43,
+    "growth": null
+   },
+   {
+    "name": "茶饮料",
+    "revenue": 1058279043.7,
+    "pct": 8.51,
+    "growth": null
+   },
+   {
+    "name": "其他饮料",
+    "revenue": 759123541.23,
+    "pct": 6.1,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 17464328.97,
+    "pct": 0.14,
+    "growth": null
+   }
+  ],
+  "period": "2026-06-30",
+  "source": "eastmoney emweb 直连"
+ },
+ "688008": {
+  "segments": [
+   {
+    "name": "集成电路产品",
+    "revenue": 5446759600.0,
+    "pct": 99.82,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 9557187.23,
+    "pct": 0.18,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "688012": {
+  "segments": [
+   {
+    "name": "半导体设备收入",
+    "revenue": 12384638268.11,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "688009": {
+  "segments": [
+   {
+    "name": "轨道交通控制系统",
+    "revenue": 31906694437.52,
+    "pct": 92.34,
+    "growth": null
+   },
+   {
+    "name": "其中:轨道交通控制系统-设计集成",
+    "revenue": 14011133901.57,
+    "pct": 40.55,
+    "growth": null
+   },
+   {
+    "name": "其中:轨道交通控制系统-系统交付服务",
+    "revenue": 11010962393.29,
+    "pct": 31.87,
+    "growth": null
+   },
+   {
+    "name": "其中:轨道交通控制系统-设备制造",
+    "revenue": 6884598142.66,
+    "pct": 19.92,
+    "growth": null
+   },
+   {
+    "name": "工程总承包",
+    "revenue": 2351454586.54,
+    "pct": 6.81,
+    "growth": null
+   },
+   {
+    "name": "其他",
+    "revenue": 294643521.36,
+    "pct": 0.85,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "688036": {
+  "segments": [
+   {
+    "name": "计算机、通信和其他电子设备制造",
+    "revenue": 64525854464.87,
+    "pct": 98.38,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 1065381542.29,
+    "pct": 1.62,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "688041": {
+  "segments": [
+   {
+    "name": "集成电路产品",
+    "revenue": 14361846484.49,
+    "pct": 99.9,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 15042992.46,
+    "pct": 0.1,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "688047": {
+  "segments": [
+   {
+    "name": "集成电路",
+    "revenue": 635320600.0,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "688072": {
+  "segments": [
+   {
+    "name": "半导体设备行业",
+    "revenue": 6295533874.95,
+    "pct": 96.57,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 222653464.27,
+    "pct": 3.42,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "688082": {
+  "segments": [
+   {
+    "name": "半导体设备",
+    "revenue": 6503650324.04,
+    "pct": 95.84,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 282519923.72,
+    "pct": 4.16,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "688111": {
+  "segments": [
+   {
+    "name": "软件",
+    "revenue": 5926704478.63,
+    "pct": 99.97,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 2040194.43,
+    "pct": 0.03,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "688126": {
+  "segments": [
+   {
+    "name": "半导体硅片",
+    "revenue": 3679186300.0,
+    "pct": 99.01,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 36843808.0,
+    "pct": 0.99,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "688183": {
+  "segments": [
+   {
+    "name": "电子元器件",
+    "revenue": 9145355887.13,
+    "pct": 96.33,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 348407952.05,
+    "pct": 3.67,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "688223": {
+  "segments": [
+   {
+    "name": "光伏行业",
+    "revenue": 63593422724.27,
+    "pct": 97.1,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 1898446336.0,
+    "pct": 2.9,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "688256": {
+  "segments": [
+   {
+    "name": "集成电路行业",
+    "revenue": 6497196198.68,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "688271": {
+  "segments": [
+   {
+    "name": "医疗器械行业",
+    "revenue": 13152331220.92,
+    "pct": 95.3,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 647920443.03,
+    "pct": 4.7,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "688303": {
+  "segments": [
+   {
+    "name": "光伏行业",
+    "revenue": 4838526100.0,
+    "pct": 100.0,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "688396": {
+  "segments": [
+   {
+    "name": "集成电路",
+    "revenue": 10820661197.14,
+    "pct": 97.89,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 233130810.34,
+    "pct": 2.11,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "688472": {
+  "segments": [
+   {
+    "name": "光伏行业",
+    "revenue": 38777968087.7,
+    "pct": 96.33,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 1477767771.54,
+    "pct": 3.67,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "688506": {
+  "segments": [
+   {
+    "name": "化药制剂",
+    "revenue": 74238200.0,
+    "pct": 78.49,
+    "growth": null
+   },
+   {
+    "name": "中成药制剂",
+    "revenue": 17742900.0,
+    "pct": 18.76,
+    "growth": null
+   },
+   {
+    "name": "其他主营业务",
+    "revenue": 2605700.0,
+    "pct": 2.75,
+    "growth": null
+   }
+  ],
+  "period": "2026-03-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "688981": {
+  "segments": [
+   {
+    "name": "集成电路行业",
+    "revenue": 66580241000.0,
+    "pct": 98.9,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 742951000.0,
+    "pct": 1.1,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ },
+ "688521": {
+  "segments": [
+   {
+    "name": "集成电路",
+    "revenue": 3148403200.0,
+    "pct": 99.87,
+    "growth": null
+   },
+   {
+    "name": "其他(补充)",
+    "revenue": 4041515.13,
+    "pct": 0.13,
+    "growth": null
+   }
+  ],
+  "period": "2025-12-31",
+  "source": "eastmoney emweb 直连"
+ }
+}

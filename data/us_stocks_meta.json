@@ -1,0 +1,92 @@
+{
+  "AAPL": {
+    "error": "Too Many Requests. Rate limited. Try after a while."
+  },
+  "MSFT": {
+    "error": "Too Many Requests. Rate limited. Try after a while."
+  },
+  "NVDA": {
+    "error": "Too Many Requests. Rate limited. Try after a while."
+  },
+  "GOOGL": {
+    "error": "Too Many Requests. Rate limited. Try after a while."
+  },
+  "AMZN": {
+    "error": "Too Many Requests. Rate limited. Try after a while."
+  },
+  "META": {
+    "error": "Too Many Requests. Rate limited. Try after a while."
+  },
+  "TSLA": {
+    "error": "Too Many Requests. Rate limited. Try after a while."
+  },
+  "AVGO": {
+    "error": "Too Many Requests. Rate limited. Try after a while."
+  },
+  "ORCL": {
+    "error": "Too Many Requests. Rate limited. Try after a while."
+  },
+  "AMD": {
+    "error": "Too Many Requests. Rate limited. Try after a while."
+  },
+  "INTC": {
+    "error": "Too Many Requests. Rate limited. Try after a while."
+  },
+  "QCOM": {
+    "error": "Too Many Requests. Rate limited. Try after a while."
+  },
+  "ASML": {
+    "error": "Too Many Requests. Rate limited. Try after a while."
+  },
+  "AMAT": {
+    "error": "Too Many Requests. Rate limited. Try after a while."
+  },
+  "LRCX": {
+    "error": "Too Many Requests. Rate limited. Try after a while."
+  },
+  "JPM": {
+    "error": "Too Many Requests. Rate limited. Try after a while."
+  },
+  "BAC": {
+    "error": "Too Many Requests. Rate limited. Try after a while."
+  },
+  "WMT": {
+    "error": "Too Many Requests. Rate limited. Try after a while."
+  },
+  "KO": {
+    "error": "Too Many Requests. Rate limited. Try after a while."
+  },
+  "PEP": {
+    "error": "Too Many Requests. Rate limited. Try after a while."
+  },
+  "JNJ": {
+    "error": "Too Many Requests. Rate limited. Try after a while."
+  },
+  "PFE": {
+    "error": "Too Many Requests. Rate limited. Try after a while."
+  },
+  "LLY": {
+    "error": "Too Many Requests. Rate limited. Try after a while."
+  },
+  "MRK": {
+    "error": "Too Many Requests. Rate limited. Try after a while."
+  },
+  "XOM": {
+    "error": "Too Many Requests. Rate limited. Try after a while."
+  },
+  "CVX": {
+    "error": "Too Many Requests. Rate limited. Try after a while."
+  },
+  "CAT": {
+    "error": "Too Many Requests. Rate limited. Try after a while."
+  },
+  "BA": {
+    "error": "Too Many Requests. Rate limited. Try after a while."
+  },
+  "DIS": {
+    "error": "Too Many Requests. Rate limited. Try after a while."
+  },
+  "NFLX": {
+    "error": "Too Many Requests. Rate limited. Try after a while."
+  }
+}

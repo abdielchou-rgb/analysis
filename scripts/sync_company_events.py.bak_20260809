@@ -1,0 +1,452 @@
+#!/usr/bin/env python3
+"""P0-⑤ 公司事件数据同步 — 财报/分红/增减持/公告 入 company_events.db
+
+用法:
+    python scripts/sync_company_events.py --all            # 全量更新
+    python scripts/sync_company_events.py --ticker 600519  # 仅指定股票
+
+数据来源: akshare
+数据库: data/company_events.db
+
+表结构:
+  - earnings:    ticker, report_date, revenue, net_profit, yoy_growth, source
+  - dividends:   ticker, ex_date, dividend_per_share, payout_ratio, source
+  - share_changes: ticker, change_date, shareholder, change_type, shares, source
+  - announcements: ticker, pub_date, title, category, source
+
+FP2 零编造: 所有数据来自 akshare 接口
+"""
+
+import argparse
+import sqlite3
+import sys
+from datetime import datetime, timedelta
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+
+DB_PATH = ROOT / "data" / "company_events.db"
+
+
+def ensure_db():
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.executescript("""
+        CREATE TABLE IF NOT EXISTS earnings (
+            ticker TEXT,
+            report_date TEXT,
+            report_type TEXT,
+            revenue REAL,
+            net_profit REAL,
+            yoy_revenue_growth REAL,
+            yoy_profit_growth REAL,
+            source TEXT DEFAULT 'akshare',
+            updated_at TEXT,
+            PRIMARY KEY (ticker, report_date, report_type)
+        );
+        CREATE TABLE IF NOT EXISTS dividends (
+            ticker TEXT,
+            ex_date TEXT,
+            dividend_per_share REAL,
+            payout_ratio REAL,
+            plan_date TEXT,
+            source TEXT DEFAULT 'akshare',
+            updated_at TEXT,
+            PRIMARY KEY (ticker, ex_date)
+        );
+        CREATE TABLE IF NOT EXISTS share_changes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ticker TEXT,
+            change_date TEXT,
+            shareholder TEXT,
+            change_type TEXT,
+            change_shares REAL,
+            change_ratio REAL,
+            source TEXT DEFAULT 'akshare',
+            updated_at TEXT
+        );
+        CREATE TABLE IF NOT EXISTS announcements (
+            ticker TEXT,
+            pub_date TEXT,
+            title TEXT,
+            category TEXT,
+            source TEXT DEFAULT 'akshare',
+            updated_at TEXT,
+            PRIMARY KEY (ticker, pub_date, title)
+        );
+        CREATE INDEX IF NOT EXISTS idx_earnings_ticker ON earnings(ticker);
+        CREATE INDEX IF NOT EXISTS idx_dividends_ticker ON dividends(ticker);
+        CREATE INDEX IF NOT EXISTS idx_share_changes_ticker ON share_changes(ticker);
+        CREATE INDEX IF NOT EXISTS idx_announcements_ticker ON announcements(ticker);
+    """)
+    conn.commit()
+    return conn
+
+
+# ──────────────────────────── 财报 ────────────────────────────
+
+
+def sync_earnings(conn: sqlite3.Connection, ticker: str = None):
+    """同步财报数据（利润表接口，含有效性校验）。"""
+    try:
+        import akshare as ak
+
+        count = 0
+        skipped = 0
+        now = datetime.now().isoformat()
+
+        # 若指定 ticker，同步单只；否则同步沪深300成分股
+        tickers = [ticker] if ticker else _get_hs300_tickers()
+
+        for tk in tickers[:50]:  # 限制批量数量
+            try:
+                # 利润表接口：含 营业总收入/净利润 列
+                df = ak.stock_financial_report_sina(stock=f"sh{tk}" if tk.startswith("6") else f"sz{tk}", symbol="利润表")
+                if df is None or df.empty:
+                    continue
+                # 取最新4个季度
+                for _, row in df.head(4).iterrows():
+                    try:
+                        report_date = str(row.get("报告日", "") or row.get("日期", ""))
+                        revenue = row.get("营业总收入")
+                        net_profit = row.get("净利润")
+                        # FP2 有效性校验：关键字段非空、数值非 0 占位
+                        if not tk or not report_date:
+                            skipped += 1
+                            print(f"[SKIP] {tk} 日期为空")
+                            continue
+                        try:
+                            revenue_f = float(revenue) if revenue is not None and revenue == revenue else None
+                        except (TypeError, ValueError):
+                            revenue_f = None
+                        try:
+                            net_profit_f = float(net_profit) if net_profit is not None and net_profit == net_profit else None
+                        except (TypeError, ValueError):
+                            net_profit_f = None
+                        # 营收和净利润至少一项真实值（非 None 且非 0 占位）
+                        has_real = (revenue_f is not None and revenue_f != 0) or (net_profit_f is not None and net_profit_f != 0)
+                        if not has_real:
+                            skipped += 1
+                            print(f"[SKIP] {tk} {report_date} 营收/净利润全空或为0占位")
+                            continue
+                        conn.execute(
+                            "INSERT OR REPLACE INTO earnings(ticker, report_date, report_type, revenue, net_profit, yoy_revenue_growth, yoy_profit_growth, source, updated_at) VALUES(?,?,?,?,?,?,?,?,?)",
+                            (
+                                tk,
+                                report_date,
+                                "quarterly",
+                                revenue_f,
+                                net_profit_f,
+                                None, None,
+                                "akshare", now,
+                            ),
+                        )
+                        count += 1
+                    except Exception:
+                        continue
+            except Exception:
+                continue
+        conn.commit()
+        # 清理空壳残留（历史脏数据）
+        cleaned = conn.execute("DELETE FROM earnings WHERE (revenue=0 OR revenue IS NULL) AND (net_profit=0 OR net_profit IS NULL)").rowcount
+        conn.commit()
+        print(f"[财报] 同步 {count} 条记录（跳过 {skipped} 条无效，清理 {cleaned} 条空壳）")
+        return count
+    except ImportError:
+        print("[财报] akshare 未安装")
+        return 0
+    except Exception as e:
+        print(f"[财报] 错误: {e}")
+        return 0
+
+
+# ──────────────────────────── 分红 ────────────────────────────
+
+
+def sync_dividends(conn: sqlite3.Connection, ticker: str = None):
+    """同步分红数据（逐 ticker 查询，含有效性校验）。"""
+    try:
+        import akshare as ak
+
+        count = 0
+        skipped = 0
+        now = datetime.now().isoformat()
+
+        tickers = [ticker] if ticker else _get_hs300_tickers()
+
+        for tk in tickers[:50]:  # 限制批量数量
+            try:
+                df = ak.stock_dividend_cninfo(symbol=tk)
+                if df is None or df.empty:
+                    continue
+                for _, row in df.iterrows():
+                    try:
+                        ex_date = str(row.get("除权日", "") or row.get("股权登记日", "") or "")
+                        # 派息比例 = 每10股派息（元）
+                        div_raw = row.get("派息比例")
+                        try:
+                            div_f = float(div_raw) if div_raw is not None and div_raw == div_raw else None
+                        except (TypeError, ValueError):
+                            div_f = None
+                        # 除权日为空时用股权登记日，两者都空则跳过（含 pandas NaT/nan）
+                        if not ex_date or ex_date in ("None", "NaT", "nan"):
+                            skipped += 1
+                            print(f"[SKIP] {tk} 分红日期无效: '{ex_date}'")
+                            continue
+                        if div_f is None or div_f == 0:
+                            skipped += 1
+                            print(f"[SKIP] {tk} {ex_date} 派息为0或空")
+                            continue
+                        # 统一换算为每股派息
+                        div_ps = round(div_f / 10.0, 4)
+                        conn.execute(
+                            "INSERT OR REPLACE INTO dividends(ticker, ex_date, dividend_per_share, plan_date, source, updated_at) VALUES(?,?,?,?,?,?)",
+                            (tk, ex_date, div_ps, str(row.get("实施方案公告日期", "") or ""), "akshare", now),
+                        )
+                        count += 1
+                    except Exception:
+                        continue
+            except Exception as e:
+                print(f"[分红] {tk} 查询失败: {e}")
+                continue
+        conn.commit()
+        print(f"[分红] 同步 {count} 条记录（跳过 {skipped} 条无效）")
+        return count
+    except ImportError:
+        print("[分红] akshare 未安装")
+        return 0
+    except Exception as e:
+        print(f"[分红] 错误: {e}")
+        return 0
+
+
+# ──────────────────────────── 股东增减持 ────────────────────────────
+
+
+def _parse_ths_qty(text) -> float:
+    """解析同花顺变动数量文本，如 '减持280.00万' → -2800000.0、'增持267.64万' → 2676400.0"""
+    import re
+    if not text:
+        return None
+    s = str(text).strip()
+    sign = -1 if s.startswith("减持") else 1
+    s2 = re.sub(r"^(增持|减持)", "", s).strip()
+    m = re.match(r"^([\d.]+)\s*(万|亿)?$", s2)
+    if not m:
+        return None
+    v = float(m.group(1))
+    unit = m.group(2)
+    if unit == "万":
+        v *= 10000
+    elif unit == "亿":
+        v *= 100000000
+    return sign * v
+
+
+def sync_share_changes(conn: sqlite3.Connection, ticker: str = None):
+    """同步大股东增减持（SSE/SZSE，列名映射 + 5 次退避重试）。"""
+    try:
+        import akshare as ak
+
+        count = 0
+        skipped = 0
+        now = datetime.now().isoformat()
+
+        from time import sleep
+
+        # 列名映射表：接口 → (ticker列, 日期列, 股东列, 类型列, 数量列, 比例列)
+        col_map = {
+            "stock_share_hold_change_sse": ("公司代码", "变动日期", "姓名", "变动原因", "变动数", None),
+            "stock_share_hold_change_szse": ("证券代码", "变动起始日期", "股东名称", "变动方向", "变动股数", None),
+        }
+
+        for api_name, api_fn in [("stock_share_hold_change_sse", ak.stock_share_hold_change_sse),
+                                  ("stock_share_hold_change_szse", ak.stock_share_hold_change_szse)]:
+            tk_col, dt_col, sh_col, ty_col, num_col, ratio_col = col_map[api_name]
+            for retry in range(5):  # 深交所限流：5 次退避 3s
+                try:
+                    dfs = api_fn()
+                    if dfs is None or dfs.empty:
+                        break
+                    actual_cols = set(dfs.columns)
+                    # 若映射列不存在，打印实际列名并跳过
+                    if tk_col not in actual_cols or dt_col not in actual_cols:
+                        print(f"[增減持] {api_name} 实际列名不匹配，实际: {list(dfs.columns)}")
+                        break
+                    for _, row in dfs.iterrows():
+                        try:
+                            tk = str(row.get(tk_col, "")).strip()
+                            if ticker and tk != ticker:
+                                continue
+                            change_date = str(row.get(dt_col, "") or "")
+                            shareholder = str(row.get(sh_col, "") or "")
+                            change_type = str(row.get(ty_col, "") or "")
+                            num_raw = row.get(num_col)
+                            try:
+                                num_f = float(num_raw) if num_raw is not None and num_raw == num_raw else None
+                            except (TypeError, ValueError):
+                                num_f = None
+                            # FP2 有效性校验：ticker 6位、日期非空、数量非 0 占位
+                            if not tk or len(tk) != 6 or not tk.isdigit():
+                                skipped += 1
+                                print(f"[SKIP] {api_name} ticker无效: '{tk}'")
+                                continue
+                            if not change_date:
+                                skipped += 1
+                                print(f"[SKIP] {api_name} {tk} 变动日期为空")
+                                continue
+                            if num_f is None or num_f == 0:
+                                skipped += 1
+                                print(f"[SKIP] {api_name} {tk} 变动数量为0或空")
+                                continue
+                            conn.execute(
+                                "INSERT OR IGNORE INTO share_changes(ticker, change_date, shareholder, change_type, change_shares, change_ratio, source, updated_at) VALUES(?,?,?,?,?,?,?,?)",
+                                (
+                                    tk,
+                                    change_date,
+                                    shareholder,
+                                    change_type,
+                                    num_f,
+                                    float(ratio_col) if ratio_col and row.get(ratio_col) else None,
+                                    f"akshare_{api_name}", now,
+                                ),
+                            )
+                            count += 1
+                        except Exception:
+                            continue
+                    break  # success, exit retry loop
+                except Exception as e:
+                    if retry < 4:
+                        print(f"[增減持] {api_name} retry {retry+1}: {e}")
+                        sleep(3)
+                    else:
+                        print(f"[增減持] {api_name} 放弃: {e}")
+                        break
+
+        # SZSE 全市场接口断连时的补充源：同花顺逐 ticker 查询（覆盖深市）
+        try:
+            ths_tickers = [ticker] if ticker else _get_hs300_tickers()
+            for tk in ths_tickers[:50]:
+                try:
+                    df = ak.stock_shareholder_change_ths(symbol=tk)
+                    if df is None or df.empty:
+                        continue
+                    for _, row in df.iterrows():
+                        try:
+                            change_date = str(row.get("公告日期", "") or "")
+                            shareholder = str(row.get("变动股东", "") or "")
+                            change_type = str(row.get("变动途径", "") or "")
+                            num_f = _parse_ths_qty(row.get("变动数量"))
+                            if not tk or len(tk) != 6 or not tk.isdigit() or not change_date or num_f is None or num_f == 0:
+                                skipped += 1
+                                print(f"[SKIP] ths {tk} 无效记录")
+                                continue
+                            conn.execute(
+                                "INSERT OR IGNORE INTO share_changes(ticker, change_date, shareholder, change_type, change_shares, change_ratio, source, updated_at) VALUES(?,?,?,?,?,?,?,?)",
+                                (tk, change_date, shareholder, change_type, num_f, None, "akshare_ths", now),
+                            )
+                            count += 1
+                        except Exception:
+                            continue
+                except Exception as e:
+                    print(f"[增減持] ths {tk} 查询失败: {e}")
+                    continue
+        except Exception as e:
+            print(f"[增減持] ths 补充源失败: {e}")
+
+        conn.commit()
+        # 清理空壳残留
+        cleaned = conn.execute("DELETE FROM share_changes WHERE ticker='' OR ticker IS NULL OR change_shares=0 OR change_shares IS NULL").rowcount
+        conn.commit()
+        print(f"[增減持] 同步 {count} 条记录（跳过 {skipped} 条无效，清理 {cleaned} 条空壳）")
+        return count
+    except ImportError:
+        print("[增減持] akshare 未安装")
+        return 0
+    except Exception as e:
+        print(f"[增減持] 错误: {e}")
+        return 0
+
+
+# ──────────────────────────── 公告 ────────────────────────────
+
+
+def sync_announcements(conn: sqlite3.Connection, ticker: str = None, days: int = 30):
+    """同步公司公告。"""
+    try:
+        import akshare as ak
+
+        count = 0
+        now = datetime.now().isoformat()
+
+        if ticker:
+            try:
+                df = ak.stock_notice_report(symbol="sh" + ticker if ticker.startswith("6") else "sz" + ticker)
+                if df is not None and not df.empty:
+                    for _, row in df.head(50).iterrows():
+                        try:
+                            conn.execute(
+                                "INSERT OR REPLACE INTO announcements(ticker, pub_date, title, category, source, updated_at) VALUES(?,?,?,?,?,?)",
+                                (ticker, str(row.get("公告日期", "")), str(row.get("公告标题", "")), str(row.get("分类", ""))[:50], "akshare", now),
+                            )
+                            count += 1
+                        except Exception:
+                            continue
+            except Exception:
+                pass
+
+        conn.commit()
+        print(f"[公告] 同步 {count} 条记录")
+        return count
+    except ImportError:
+        print("[公告] akshare 未安装")
+        return 0
+    except Exception as e:
+        print(f"[公告] 错误: {e}")
+        return 0
+
+
+# ──────────────────────────── 工具函数 ────────────────────────────
+
+
+def _get_hs300_tickers() -> list:
+    """获取沪深300成分股代码。"""
+    try:
+        import akshare as ak
+        df = ak.index_stock_cons_csindex(symbol="000300")
+        if df is not None and not df.empty:
+            return [str(c).zfill(6) for c in df["成分券代码"].tolist()[:50]]
+    except Exception:
+        pass
+    # 兜底：常见蓝筹
+    return ["600519", "000858", "601318", "600036", "000333", "300750", "600900", "601398", "600276", "000001"]
+
+
+def main():
+    parser = argparse.ArgumentParser(description="公司事件数据同步")
+    parser.add_argument("--all", action="store_true", help="全量更新（沪深300成分股）")
+    parser.add_argument("--ticker", help="指定股票代码")
+    parser.add_argument("--days", type=int, default=30, help="公告回溯天数")
+    args = parser.parse_args()
+
+    if not args.all and not args.ticker:
+        parser.print_help()
+        return 1
+
+    conn = ensure_db()
+    total = 0
+
+    total += sync_earnings(conn, args.ticker)
+    total += sync_dividends(conn, args.ticker)
+    total += sync_share_changes(conn, args.ticker)
+    total += sync_announcements(conn, args.ticker, args.days)
+
+    conn.close()
+    print(f"\n[完成] 总计同步 {total} 条记录 → {DB_PATH}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

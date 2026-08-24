@@ -1,0 +1,36 @@
+# Core dependencies
+python-docx>=1.1.0
+python-pptx>=0.6.21
+matplotlib>=3.7.0
+numpy>=1.24.0
+pandas>=2.0.0
+PyYAML>=6.0
+requests>=2.31.0
+openpyxl>=3.1.2
+Pillow>=10.0.0
+fpdf2>=2.7.0
+
+# Data acquisition
+akshare>=1.14.0
+tavily-python>=0.5.0
+
+# 本地数据层（离线兜底，批量稳定）
+baostock>=0.8.9
+
+# LLM API
+openai>=1.0.0
+
+# Web scraping (optional, needed for data_collector)
+crawl4ai>=0.4.0
+playwright>=1.40.0
+
+# Office automation
+python-pptx>=0.6.21
+
+# Testing
+pytest>=7.0.0
+pytest-cov>=4.0.0
+
+# Development
+ruff>=0.9.0
+pre-commit>=3.0.0

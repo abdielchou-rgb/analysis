@@ -1,0 +1,3577 @@
+"""
+2号分析师 Iron Gate — 不可绕过的最终校验闸门
+
+职责:
+- Agent完成写作循环后，必须提交给Iron Gate做最终校验
+- 校验不通过 → 返回详细失败报告 → Agent必须回到写作循环
+- 校验通过 → 输出最终报告（md/docx）
+"""
+import sys, os, re, json, logging
+from pathlib import Path
+from core.knowledge_injector import KnowledgeInjector
+from dataclasses import dataclass, field, asdict
+import time as _time_module
+
+_ROOT = Path(__file__).resolve().parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
+from core.sacs import SACLoader
+from core.fp_scorer import score_report as fp_score_report
+
+logger = logging.getLogger("2hao.iron_gate")
+
+# ═══════════════════════════════════════════════════════════════
+# P0-4（2026-08-01 审计）：Gate KPI 元评估 — GateMetricsTracker
+# 记录每次检查的 pass/fail、耗时、检查项名称；
+# 支持导出 JSON 指标（各检查项通过率、误放率等）。
+# ═══════════════════════════════════════════════════════════════
+
+@dataclass
+class GateMetricsRecord:
+    check_name: str
+    passed: bool
+    score: float
+    elapsed_sec: float
+    severity: str = "error"
+    details: str = ""
+
+class GateMetricsTracker:
+    """Iron Gate 性能元评估追踪器。
+
+    在 run_all 的每个检查项前后记录耗时和结果，
+    支持 to_json() 导出结构化指标（用于 calibrate、ablation）。
+    """
+
+    def __init__(self):
+        self.records: list[GateMetricsRecord] = []
+
+    def record(self, check_name: str, passed: bool, score: float,
+               elapsed_sec: float, severity: str = "error", details: str = ""):
+        self.records.append(GateMetricsRecord(
+            check_name=check_name, passed=passed, score=score,
+            elapsed_sec=elapsed_sec, severity=severity, details=details,
+        ))
+
+    def stats(self) -> dict:
+        """计算汇总指标：各检查项通过率、耗时分布、平均分"""
+        if not self.records:
+            return {"error": "no records"}
+        total = len(self.records)
+        passed = sum(1 for r in self.records if r.passed)
+        hard_blocks = sum(1 for r in self.records if r.severity == "error" and not r.passed)
+        avg_score = sum(r.score for r in self.records) / max(total, 1)
+        total_elapsed = sum(r.elapsed_sec for r in self.records)
+        per_check = {}
+        for r in self.records:
+            key = r.check_name
+            if key not in per_check:
+                per_check[key] = {"pass": 0, "fail": 0, "total_sec": 0.0, "count": 0, "scores": []}
+            per_check[key]["pass" if r.passed else "fail"] += 1
+            per_check[key]["total_sec"] += r.elapsed_sec
+            per_check[key]["count"] += 1
+            per_check[key]["scores"].append(r.score)
+        check_summary = {}
+        for k, v in per_check.items():
+            check_summary[k] = {
+                "pass_rate": round(v["pass"] / max(v["count"], 1), 3),
+                "avg_score": round(sum(v["scores"]) / max(len(v["scores"]), 1), 3),
+                "avg_elapsed_sec": round(v["total_sec"] / max(v["count"], 1), 4),
+                "count": v["count"],
+            }
+        return {
+            "overall": {
+                "pass_rate": round(passed / max(total, 1), 3),
+                "hard_blocks": hard_blocks,
+                "avg_score": round(avg_score, 3),
+                "total_elapsed_sec": round(total_elapsed, 4),
+                "total_checks": total,
+            },
+            "per_check": check_summary,
+        }
+
+    def to_json(self, filepath: str = None) -> str:
+        data = {"metrics": self.stats(), "records": [asdict(r) for r in self.records]}
+        json_str = json.dumps(data, ensure_ascii=False, indent=2)
+        if filepath:
+            Path(filepath).write_text(json_str, encoding="utf-8")
+        return json_str
+
+    def __len__(self):
+        return len(self.records)
+
+@dataclass
+class GateCheckResult:
+    name: str
+    passed: bool
+    score: float = 0.0
+    details: str = ""
+    severity: str = "error"
+
+@dataclass
+class GateReport:
+    passed: bool = False
+    overall_score: float = 0.0
+    checks: list = field(default_factory=list)
+    failures: list = field(default_factory=list)
+    suggestions: list = field(default_factory=list)
+
+    @property
+    def hard_fail_errors(self):
+        """Return checks matching hard_fail names that did not pass"""
+        hard_names = ["personal_narrative", "section_continuity", "table_quality_md",
+                      "placeholder_charts", "forbidden_patterns", "bold_call", "so_what_chain",
+                      "cross_section_consistency"]
+        return [c for c in self.checks if c.name in hard_names and not c.passed]
+
+    def to_dict(self):
+        return {"passed": self.passed, "overall_score": self.overall_score,
+                "checks": [asdict(c) for c in self.checks],
+                "failures": self.failures, "suggestions": self.suggestions}
+
+    def to_text(self):
+        lines = ["=" * 60, "Iron Gate 校验报告", "=" * 60,
+                 "状态: %s" % ("PASS" if self.passed else "FAIL"),
+                 "综合评分: %.2f/1.00" % self.overall_score]
+        for c in self.checks:
+            icon = "+" if c.passed else "-"
+            lines.append("  [%s] %s: %.2f - %s" % (icon, c.name, c.score, c.details[:80]))
+        if self.failures:
+            lines.extend(["", "失败项:", *["  - %s" % f[:80] for f in self.failures[:10]]])
+        return "\n".join(lines)
+
+class IronGate:
+    def __init__(self, report_path: str, report_type: str = "industry_deep", style: str = "cicc",
+                 degradation_level: int = 0, asset: str = ""):
+        self.report_path = Path(report_path)
+        self.report_type = report_type
+        self.style = style
+        self.degradation_level = degradation_level
+        # 修复（2026-08-01 IronGate 第 2 轮）：绑定资产名，data_dict_refs 校验
+        # 按 <asset>_data_dict.json 精确加载，杜绝"兜底取最新文件"导致的跨资产串标。
+        self.asset = asset
+        self.sac_id = asset or ""
+        # L1 视觉降级时，placeholder 图表是预期内的（FP7b），不作为硬阻断
+        self._allow_placeholder_degradation = degradation_level >= 1
+        # Pillar 3: Load calibrated thresholds
+        self._thresholds = self._load_thresholds()
+        self._calibrated = bool(self._thresholds)
+        self.report_text = ""
+        sac = SACLoader(report_type)
+        self.sac = sac
+        # 修复（2026-08-01 审计）：min_charts 从 SAC chart_config 读取（单一事实源），
+        # 不再硬编码。原硬编码 {industry:5, listed:10, unlisted:4, earnings:4} 远低于
+        # SAC 标准（12/12/8/4）和 STANDARDS.md 基线，是又一次标准降级。
+        try:
+            _cc = sac.get_chart_config()
+            self.min_charts = int(_cc.get("min_charts", 5))
+            self.min_tables = int(_cc.get("min_tables", 2))
+        except Exception:
+            # SAC 缺配置时按 STANDARDS 基线兜底（不应发生，get_chart_config 已 fail-fast）
+            _base = {"industry_deep": 12, "listed_company": 12,
+                     "unlisted_company": 8, "earnings_notes": 4}
+            self.min_charts = _base.get(report_type, 5)
+            self.min_tables = {"industry_deep": 4, "listed_company": 4,
+                               "unlisted_company": 3, "earnings_notes": 2}.get(report_type, 2)
+        # R56/FP5：min_chars 按回测基线库金牌 p10 校准（methodology_backtest_deep.json）
+        # 金牌报告 p10 = 10420 字；listed/unlisted 对齐投行深度标准。
+        self.min_chars = {"industry_deep": 10420, "listed_company": 10420,
+                          "unlisted_company": 6000, "earnings_notes": 4000}.get(report_type, 8000)
+        self._load_report()
+
+    def _load_report(self):
+        if self.report_path.exists():
+            self.report_text = self.report_path.read_text(encoding="utf-8")
+        else:
+            self.report_text = ""
+
+    @classmethod
+    def from_text(cls, report_text, report_type="industry_deep", style="cicc"):
+        import tempfile
+        tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False, encoding="utf-8")
+        tmp.write(report_text)
+        tmp_path = tmp.name
+        tmp.close()
+        gate = cls(tmp_path, report_type, style)
+        gate.report_text = report_text
+        return gate
+
+    def _load_thresholds(self):
+        """Load calibrated thresholds from file"""
+        import os, json
+        base = os.path.dirname(__file__)
+        for p in [os.path.join(base, "..", "benchmark", "calibrated_thresholds.json"),
+                  os.path.join(base, "..", "data", "calibrated_thresholds.json")]:
+            resolved = os.path.abspath(p)
+            if os.path.isfile(resolved):
+                try:
+                    with open(resolved) as f:
+                        return json.load(f)
+                except Exception:
+                    pass
+        return {}
+    
+    def _get_threshold(self, check_name, default=0.7):
+        """Get calibrated threshold for a check"""
+        if self._calibrated and check_name in self._thresholds:
+            return self._thresholds[check_name]
+        return default
+    
+    def check(self, text):
+        self.report_text = text
+        return self.run_all()
+
+    def _check_placeholder_charts(self) -> GateCheckResult:
+        """Detect placeholder charts (stub images with placeholder text or tiny file size)"""
+        import re
+        import os
+        placeholder_alts = len(re.findall(r'!\[(?:数据获取中|待补充|placeholder|图例|图表描述|暂无数据|未生成)\]', self.report_text))
+        all_charts = re.findall(r'!\[.*?\]\((.*?)\)', self.report_text)
+        small_charts = 0
+        for cp in all_charts:
+            cp = cp.strip()
+            if cp.startswith('http'):
+                continue
+            try:
+                fsize = os.path.getsize(cp)
+                if fsize < 30000:
+                    small_charts += 1
+            except Exception:
+                pass
+        total_flags = placeholder_alts + small_charts
+        # 图表是报告灵魂：非降级模式下 placeholder 一律不通过；
+        # L1 视觉降级（FP7b）时 placeholder 为预期内的降级交付，不硬阻断但计分扣减
+        if self._allow_placeholder_degradation:
+            passed = True
+            score = 0.3 if total_flags > 0 else 1.0
+            severity = 'warning'
+        else:
+            passed = total_flags == 0
+            score = 0.0 if total_flags > 0 else 1.0
+            severity = 'error'
+        det = 'Placeholder alts: %d, Small charts: %d' % (placeholder_alts, small_charts)
+        if passed and total_flags == 0:
+            det = 'All charts are real'
+        return GateCheckResult(name='placeholder_charts', passed=passed, score=score, details=det, severity=severity)
+
+    def _check_markdown_artifacts(self):
+        """Check for residual markdown syntax in report."""
+        import re
+        text = self.report_text
+        issues = []
+        # # 标题与 ** 加粗 / * 斜体是 MD 报告的合法结构（StyleCompiler 产物），不算残留
+        # 只拦截真正的残留：代码块围栏、多余的水平分隔符
+        # R41（2026-08-02）：豁免 frontmatter——AIGC 水印 YAML 头（--- 开头的
+        # metadata 块）是合规标记，不是残留分隔符。跳过首个 --- 到第二个 --- 之间。
+        _text = text
+        _fm_match = re.match(r'^---\s*\n.*?\n---\s*\n', text, re.S)
+        if _fm_match:
+            _text = text[_fm_match.end():]
+        # Check for --- separators (more than 1 is likely residual)
+        hr = re.findall(r'^---+$', _text, re.MULTILINE)
+        if len(hr) > 1:
+            issues.append(f'{len(hr)} --- separators found')
+        # Check for ` code blocks
+        code = _text.count('```')
+        if code:
+            issues.append(f'{code} code blocks found')
+        # Check for stray backticks / 残留表格管道（非表格行的孤立 |）
+        stray_backticks = len(re.findall(r'(?<!`)`(?!`)', _text))
+        if stray_backticks:
+            issues.append(f'{stray_backticks} stray backticks found')
+
+        passed = len(issues) == 0
+        score = 1.0 if passed else max(0.3, 1.0 - len(issues) * 0.15)
+        det = 'No MD artifacts' if passed else '; '.join(issues)
+        return GateCheckResult(name='md_artifacts', passed=passed, score=score, details=det, severity='error')
+
+    def run_all(self) -> GateReport:
+        """运行全部检查，含行业参数基线校验"""
+        # 行业参数基线校验
+        try:
+            company = getattr(self, 'asset', '') or getattr(self, 'company_name', '')
+            if company:
+                industry = KnowledgeInjector.get_industry_by_company(company)
+                if industry:
+                    baseline = KnowledgeInjector.get_valuation_baseline(industry)
+                    if baseline:
+                        msg = "Valuation baseline: industry=%s, WACC=%.1f%%" % (
+                            industry,
+                            baseline.get('wacc', {}).get('default', 0)
+                        )
+                        # Store for later use
+                        self._data_fidelity_note = msg
+        except Exception:
+            pass
+
+        # P0-4（2026-08-01 审计）：初始化 Gate KPI 元评估追踪器
+        _metrics = GateMetricsTracker()
+
+        _check_funcs = [
+            self._check_content_volume,
+            self._check_content_density,
+            # R56（2026-08-03）：判断密度/数据密度（对标金牌报告基准）
+            self._check_judgment_density,
+            self._check_aigc_fingerprint,
+            self._check_human_sense,
+            self._check_sac_coverage,
+            self._check_chart_density,
+            self._check_chart_completeness,
+            self._check_data_traceability,
+            self._check_annotation_types,
+            self._check_global_perspective,
+            self._check_financial_statements_coverage,
+            self._check_format_consistency,
+            self._check_forbidden_patterns,
+            self._check_persuasion_architecture,
+            self._check_table_density,
+            self._check_moat_analysis,
+            self._check_multi_model,
+            self._check_decision_gate,
+            self._check_dcf_sensitivity,
+            self._check_so_what_chain,
+            self._check_placeholder_charts,
+            self._check_chart_analysis_quality,
+            self._check_ai_tone_by_llm,
+            self._check_human_impossible_dimension,
+            self._check_explicit_conclusion,
+            self._check_template_leak,
+            self._check_evidence_layer,
+            self._check_falsification_conditions,
+            self._check_meta_cognition,
+            self._check_so_what_per_judgment,
+            self._check_data_type_annotation,
+            self._check_attribution_depth,
+            self._check_bold_call,
+            self._check_synthesis_consistency,
+            self._check_cross_section_consistency,
+            self._check_data_dict_refs,
+            # R16（2026-08-01 深度补强）：盈利预测表 + 反共识信号存在性校验
+            self._check_forecast_presence,
+            # R20（2026-08-02 王牌模块）：供应链瓶颈分析存在性校验
+            self._check_bottleneck_analysis,
+            self._check_markdown_artifacts,
+            self._check_personal_narrative,
+            self._check_section_continuity,
+            self._check_table_quality_md,
+            # P2-4（2026-08-01 审计）：风险四层框架
+            self._check_risk_layering,
+            # R28（2026-08-02 方向B）：数据口径一致性（多来源冲突 + 单位标注）
+            self._check_data_conflicts,
+            self._check_rating_target_consistency,
+            # R31（2026-08-02 排版根治）：文档布局质量（空白页/空段落）
+            self._check_layout_quality,
+            # R53审计（2026-08-03 P1-1）：正文完整性扫描（截断/碎片/未完成句）
+            self._check_completeness_scan,
+            # R35（2026-08-02 算术校验层）：占比/估值中值/目标价空间/EPS桥反向验算
+            self._check_arithmetic_audit,
+            # R46（2026-08-02 不变量断言层）：流通市值/持股勾稽/PE×净利 物理不可能拦截
+            self._check_invariant_audit,
+            # R53审计（2026-08-03 P0-1 估值闭环）：估值链四方勾稽——EPS×股本=净利、
+            # 市值=股价×股本、目标价/PE=EPS，任一环偏差>5% 即 FAIL（持 data_dict 作外部锚）
+            self._check_valuation_integrity,
+            # R35（2026-08-02 模板句高重复检测）：模板污染/概念错位
+            self._check_template_repeat,
+            # R53审计（2026-08-03 P1-2）：语义重复检测（跨章节相似度，替代硬编码黑名单）
+            self._check_semantic_repeat,
+            # R38（2026-08-02 财务数值一致性）：毛利率/PE 与 data_dict 真实值冲突检测
+            self._check_financial_value_consistency,
+            # R55（2026-08-03 方法论升级）：行业报告质量护栏
+            self._check_stock_pick_chain,      # 选股传导链存在性
+            self._check_unlisted_threat,       # 非上市威胁判断存在性
+            self._check_tam_bottomup,          # TAM/SAM/SOM 自底向上校验
+            self._check_regional_penetration,  # 区域渗透率错位判断
+            # R57（2026-08-03）：行业并购视角 + 假设驱动 + ESG实质性
+            self._check_industry_consolidation,  # 行业整合/并购信号
+            self._check_core_hypothesis,         # MBB假设驱动
+            self._check_esg_materiality,         # ESG实质性
+            # R58（2026-08-03）：四大审计确定性检查（财务造假信号）
+            self._check_financial_fraud_signals,
+            # R60（2026-08-03）：证据链门禁（工具数据进正文验证）
+            self._check_evidence_chain,
+            # R55（2026-08-03 Phase E）：LLM 数据交叉验证（对侧 provider）
+            self._check_llm_data_verification,
+        ]
+        checks = []
+        # R15（2026-08-01 提速）：把 LLM 检查（ai_tone/human_impossible/数据验证，各 60s+）
+        # 与其余确定性检查并行执行。确定性检查走主线程（快），LLM 检查放线程池。
+        _llm_check_names = ("_check_ai_tone_by_llm", "_check_human_impossible_dimension",
+                            "_check_llm_data_verification")
+        _llm_results = {}
+
+        def _run_llm_check(_func):
+            try:
+                return _func.__name__, _func()
+            except Exception as _e:
+                return _func.__name__, GateCheckResult(
+                    name=_func.__name__.replace("_check_", ""),
+                    passed=False, score=0.0,
+                    details=f"检查异常: {str(_e)[:80]}", severity="error")
+
+        from concurrent.futures import ThreadPoolExecutor
+        _llm_pool = ThreadPoolExecutor(max_workers=2)
+        _llm_futures = {
+            _llm_pool.submit(_run_llm_check, _func): _func.__name__
+            for _func in _check_funcs if _func.__name__ in _llm_check_names
+        }
+
+        for _func in _check_funcs:
+            if _func.__name__ in _llm_check_names:
+                continue  # LLM 检查并行处理
+            _t0 = _time_module.time()
+            try:
+                _result = _func()
+            except Exception as _e:
+                _result = GateCheckResult(
+                    name=_func.__name__.replace("_check_", ""),
+                    passed=False, score=0.0,
+                    details=f"检查异常: {str(_e)[:80]}", severity="error")
+            _elapsed = _time_module.time() - _t0
+            checks.append(_result)
+            _metrics.record(
+                check_name=_result.name, passed=_result.passed,
+                score=_result.score, elapsed_sec=_elapsed,
+                severity=_result.severity, details=_result.details,
+            )
+
+        # 收集并行 LLM 检查结果
+        for _fut in _llm_futures:
+            try:
+                _name, _result = _fut.result()
+            except Exception as _e:
+                _name = _llm_futures[_fut]
+                _result = GateCheckResult(
+                    name=_name.replace("_check_", ""),
+                    passed=False, score=0.0,
+                    details=f"检查异常: {str(_e)[:80]}", severity="error")
+            checks.append(_result)
+            _metrics.record(
+                check_name=_result.name, passed=_result.passed,
+                score=_result.score, elapsed_sec=0,
+                severity=_result.severity, details=_result.details,
+            )
+        _llm_pool.shutdown(wait=True)
+
+        # 将 metrics 挂载到 gate 实例上供外部访问
+        self._last_metrics = _metrics
+
+        report = GateReport()
+        report.checks = checks
+        report.overall_score = sum(c.score for c in checks) / max(len(checks), 1)
+        report.passed = all(c.passed for c in checks if c.severity == "error")
+        report.failures = ["[%s] %s: %s" % (c.severity.upper(), c.name, c.details)
+                           for c in checks if not c.passed]
+        # FP7a: Register gate failures with LearningLoop for evolution
+        # FP5: Gate回馈 — 失败模式自动注册+优先级提升
+        if not report.passed:
+            _fail_names = [c.name for c in report.checks if not c.passed]
+            if hasattr(self, '_fail_counter'):
+                for fn in _fail_names:
+                    self._fail_counter[fn] = self._fail_counter.get(fn, 0) + 1
+            else:
+                self._fail_counter = {fn: 1 for fn in _fail_names}
+            # 连续失败3次的检查项 → 标记为"需prompt调整" + 自动降级约束方式
+            _hot_fails = [fn for fn, cnt in self._fail_counter.items() if cnt >= 3]
+            if _hot_fails:
+                report.suggestions.append(f"[HOT] 连续失败: {', '.join(_hot_fails[:3])}")
+        # FP7a: Register gate failures with LearningLoop for evolution
+        # FP5: Gate回馈 — 失败模式自动注册+优先级提升
+        if not report.passed:
+            _fail_names = [c.name for c in report.checks if not c.passed]
+            if hasattr(self, '_fail_counter'):
+                for fn in _fail_names:
+                    self._fail_counter[fn] = self._fail_counter.get(fn, 0) + 1
+            else:
+                self._fail_counter = {fn: 1 for fn in _fail_names}
+            # 连续失败3次的检查项 → 标记为"需prompt调整" + 自动降级约束方式
+            _hot_fails = [fn for fn, cnt in self._fail_counter.items() if cnt >= 3]
+            if _hot_fails:
+                report.suggestions.append(f"[HOT] 连续失败: {', '.join(_hot_fails[:3])}")
+                logger.info("[FP5] %d hot failures detected: %s", len(_hot_fails), _hot_fails)
+                # P1热加载: 对hot failures自动应用更严格的约束
+                _auto_adjust = {
+                    'explicit_conclusion': '_rule_inject_conclusion已在StyleCompiler第2位',
+                    'decision_gate': '_rule_inject_decision_gate已在StyleCompiler第3位',
+                    'so_what_chain': '需调整writing prompt中SoWhat要求的位置',
+                    'so_what_per_judgment': '同上',
+                    'data_type_annotation': '已在system prompt ## [数据] 锚点中',
+                }
+                for hf in _hot_fails:
+                    if hf in _auto_adjust:
+                        report.suggestions.append(f"  [AUTO] {hf}: {_auto_adjust[hf]}")
+        
+        # L3: detect empty/corrupted text from LLM failure
+        if not self.report_text or len(self.report_text.strip()) < 200:
+            report.passed = False
+            report.failures.append('[L3] Core LLM failure: report text empty or truncated')
+            report.overall_score = 0.0
+        if not report.passed and hasattr(self, 'report_text') and self.report_text:
+            try:
+                from pipeline.learning_loop import LearningLoop
+                ll = LearningLoop()
+                ll.after_report(
+                    asset=getattr(self, 'asset', 'unknown'),
+                    report_type=getattr(self, 'report_type', 'industry_deep'),
+                    result={
+                        "iron_gate": report.overall_score,
+                        "passed": report.passed,
+                        "failures": report.failures if isinstance(report.failures, list) else [],
+                        "report_type": getattr(self, 'report_type', 'industry_deep'),
+                    }
+                )
+                logger.info("[FP7a] Gate failure registered to LearningLoop")
+            except Exception as e:
+                logger.debug("[FP7a] LearningLoop: %s", e)
+        return report
+
+    def _count_charts(self):
+        import re
+        # 统计真实嵌入的图表（markdown 图片），排除 placeholder 占位符
+        real = re.findall(r'!\[[^\]]*\]\(([^)]+)\)', self.report_text)
+        non_placeholder = [p for p in real if 'placeholder' not in p.lower() and 'CHART' not in p]
+        # 兼容未注入的 [CHART:id] 占位符（算作待生成图表，不计数）
+        return len(non_placeholder)
+
+    def _count_tables(self):
+        import re
+        md_tables = len(re.findall(r'^\|[-:| ]+\|$', self.report_text, re.MULTILINE))
+        year_tables = len(re.findall(r'\u5e74[\uff1a:]', self.report_text))
+        text_tables = len(re.findall(r'\d+[\.,]?\d*\s*[%亿元万]?\s+\d+[\.,]?\d*\s*[%亿元万]?', self.report_text))
+        year_refs = len(re.findall(r'20\d{2}', self.report_text))
+        return max(md_tables, min(text_tables // 3, 5), min(year_refs // 5, 3))
+
+    def _run_critic_agent(self) -> tuple:
+        """调用 Critic Agent 做语义评审"""
+        try:
+            from pipeline.agent_loop import ScoreEngine
+            engine = ScoreEngine(report_type=self.report_type)
+            score_result = engine.score(self.report_text, self.report_type)
+            overall = score_result.get("overall", 0.5)
+            if "deepseek_overall" in score_result:
+                ds_overall = score_result["deepseek_overall"]
+                overall = overall * 0.4 + ds_overall * 0.6
+            feedback_lines = ["Critic Agent 评审结果:"]
+            for dim, dim_score in score_result.get("dimensions", {}).items():
+                status = "PASS" if dim_score >= 0.7 else "FAIL"
+                feedback_lines.append("  [%s] %s: %.2f" % (status, dim, dim_score))
+            if score_result.get("details"):
+                for d in score_result["details"][:5]:
+                    feedback_lines.append("  %s" % d)
+            feedback = "\n".join(feedback_lines)
+            return (overall, feedback)
+        except Exception as e:
+            raise
+
+    def _check_content_volume(self) -> GateCheckResult:
+        vol = len(self.report_text)
+        passed = vol >= self.min_chars
+        ratio = min(vol / self.min_chars, 1.0)
+        return GateCheckResult(name="content_volume", passed=passed, score=ratio,
+                               details="字数: %d/%d" % (vol, self.min_chars))
+
+    def _check_content_density(self) -> GateCheckResult:
+        md_size = len(self.report_text)
+        docx_path = self.report_path.with_suffix(".docx")
+        docx_size = docx_path.stat().st_size if docx_path.exists() else 0
+        ratio = min(docx_size / max(md_size, 1) * 10, 1.0) if docx_size > 0 else 0.7
+        return GateCheckResult(name="content_density", passed=True, score=ratio,
+                               details="MD:%d DOCX:%d" % (md_size, docx_size))
+
+    def _check_judgment_density(self) -> GateCheckResult:
+        """R56（2026-08-03）：判断密度/数据密度——对标金牌报告基准。
+
+        methodology_backtest_deep.json 统计：金牌报告判断 2.6/千字（中位）、
+        数据 13.3/千字（中位）；普通报告 1.5/千字。p10 保守下限作为门槛：
+          min_judgment_density = 1.2 判断/千字
+          min_data_density = 5.0 数据/千字
+        （低于 p10 说明报告"只描述不判断"或"判断无数据支撑"）
+
+        判断词：我们认为/我们判断/预计/有望/超预期/风险/评级 等。
+        数据点：数字+单位（%/亿元/倍/万股/元）。
+        """
+        import re as _re
+        text = self.report_text or ""
+        if len(text) < 300:
+            return GateCheckResult("judgment_density", True, 1.0,
+                                   "text too short, skipped", severity="warning")
+        # 阈值从 backtest_deep 读取（可被覆盖）
+        _min_jd = float(os.environ.get("MIN_JUDGMENT_DENSITY", "1.2"))
+        _min_dd = float(os.environ.get("MIN_DATA_DENSITY", "5.0"))
+
+        _chars = len(text)
+        _kchars = _chars / 1000.0
+
+        # 判断词计数（对标 backtest 用的 19 词）
+        _judgment_words = ["我们认为", "我们判断", "我们预计", "预计", "有望",
+                           "超预期", "低于预期", "判断", "评级", "建议",
+                           "看好", "看空", "风险", "催化剂", "拐点", "推荐"]
+        _n_judgments = sum(len(_re.findall(w, text)) for w in _judgment_words)
+        # 数据点计数：数字+单位
+        _data_pats = re.findall(r'\d+(?:\.\d+)?\s*(?:%|亿元|亿|倍|万股|万股|元|万吨|万台|万部|家|个)', text)
+        _n_data = len(_data_pats)
+
+        _jd = _n_judgments / _kchars if _kchars > 0 else 0
+        _dd = _n_data / _kchars if _kchars > 0 else 0
+
+        issues = []
+        if _jd < _min_jd:
+            issues.append(f"判断密度{_jd:.1f}/千字 < {_min_jd}（金牌基准 p10，报告偏'描述'缺'判断'）")
+        if _dd < _min_dd:
+            issues.append(f"数据密度{_dd:.1f}/千字 < {_min_dd}（金牌基准 p10，判断缺数据支撑）")
+
+        passed = len(issues) == 0
+        score = 1.0 if passed else max(0.3, 1.0 - 0.3 * len(issues))
+        det = f"判断密度:{_jd:.1f}/千字 数据密度:{_dd:.1f}/千字" + (
+            " | " + "; ".join(issues) if issues else "（对标金牌基准）")
+        return GateCheckResult("judgment_density", passed, score, det, severity="error")
+
+    def _check_aigc_fingerprint(self) -> GateCheckResult:
+        patterns = ["以下是根据", "根据您的要求", "好的，", "作为AI", "作为人工智能",
+                    "我无法", "我不能", "首先，让我", "让我为您"]
+        matches = sum(1 for p in patterns if p in self.report_text[:500])
+        ratio = matches / max(len(patterns), 1)
+        passed = ratio < 0.15
+        return GateCheckResult(name="AIGC痕迹", passed=passed, score=1.0 - ratio,
+                               details="AI痕迹: %.0f%%" % (ratio * 100))
+
+    def _check_human_sense(self) -> GateCheckResult:
+        signals = ["我们", "调研发现", "判断", "我们认为", "据我们了解", "跟踪", "发现", "分析", "测算", "注意到",
+                   "从我们的分析", "我们判断", "从业多年", "从历史上看", "我们注意到",
+                   "据我们测算", "我们的核心", "从行业经验"]
+        count = sum(1 for s in signals if s in self.report_text)
+        score = min(count / 4.0, 1.0)
+        passed = count >= 1
+        return GateCheckResult(name="人感检测", passed=passed, score=score,
+                               details="人感信号: %d个" % count)
+
+    def _check_sac_coverage(self) -> GateCheckResult:
+        try:
+            dim_keywords = self.sac.get_dimension_keywords()
+            if not dim_keywords:
+                return GateCheckResult(name="SAC维度覆盖", passed=False, score=0.0,
+                                       details="SAC维度未加载")
+            # R6（2026-08-01 圆桌升级）：SAC 维度覆盖从"整体百分比阈值"改为
+            # "必需维度缺一即阻断"。此前 18 维缺 3 维（83% 覆盖）仍能通过 70% 阈值，
+            # 导致 core_disagreement / elasticity_analysis / capital_flow 等
+            # 必需维度整段缺失的报告照样出厂 —— 这是"发散根因第3层"。
+            # 现在：required_dimensions 中任一维度关键词全缺失 → error 阻断。
+            required_ids = set()
+            try:
+                sac_data = self.sac._data or {}
+                for dim in sac_data.get("required_dimensions", []):
+                    if isinstance(dim, dict) and dim.get("id"):
+                        required_ids.add(dim["id"])
+            except Exception:
+                pass
+            covered = 0
+            total = len(dim_keywords)
+            missing = []
+            missing_required = []
+            for dim, keywords in dim_keywords.items():
+                if any(kw in self.report_text for kw in keywords):
+                    covered += 1
+                else:
+                    missing.append(dim)
+                    if dim in required_ids:
+                        missing_required.append(dim)
+            ratio = covered / max(total, 1)
+            # 必需维度全部覆盖 + 整体覆盖率达到阈值才算过
+            _sac_threshold = self._get_threshold("sac_coverage", 0.7)
+            required_ok = len(missing_required) == 0
+            ratio_ok = ratio >= _sac_threshold
+            # 2026-08-01 修订：非上市/IPO申报企业部分 PE/VC 维度（创始人质押/
+            # 烧钱率/down round）在招股书中天然无数据。若整体覆盖率高（≥85%）
+            # 且仅缺 ≤2 个必需维度，且报告声明了数据缺口，则豁免（透明声明原则）。
+            # 防止逼 LLM 编造私有市场数据（违反 FP2）。
+            _high_coverage = ratio >= 0.80
+            _small_gap = len(missing_required) <= 2
+            _declared = bool(re.search(r'(数据有限|数据不足|待尽调|待核实|无法评估|信息缺口|数据缺失|无公开数据)', self.report_text))
+            if _high_coverage and _small_gap and _declared:
+                required_ok = True
+            passed = required_ok and ratio_ok
+            detail = "覆盖: %d/%d (%.0f%%)" % (covered, total, ratio * 100)
+            if missing_required:
+                # R12（2026-08-01 全量优化）：完整维度名进 feedback（不再截断到 10 字符），
+                # 让写循环能精确定位要补齐的 SAC 维度。
+                detail += " [必需维度缺失=%s]" % ", ".join(str(m)[:40] for m in missing_required[:8])
+            if missing:
+                detail += " 缺失: %s" % ", ".join(str(m)[:10] for m in missing[:3])
+            if _high_coverage and _small_gap and _declared:
+                detail += " (已声明数据缺口,豁免)"
+            return GateCheckResult(name="SAC维度覆盖", passed=passed, score=ratio, details=detail,
+                                   severity="error")
+        except Exception as e:
+            return GateCheckResult(name="SAC维度覆盖", passed=False, score=0.0,
+                                   details="失败: %s" % str(e)[:50])
+
+    def _check_chart_density(self) -> GateCheckResult:
+        charts = self._count_charts()
+        tables = self._count_tables()
+        min_t = 2 if self.report_type in ('industry_deep', 'industry') else 3
+        mc = self.min_charts
+        # FP7b L1 视觉降级：无真实数据时图表为 0 属预期，不再硬性要求图表数量，
+        # 仅要求表格密度达标；score 照常扣分（图表部分 0.5 权重），由整体阈值把关
+        if self._allow_placeholder_degradation:
+            passed = tables >= min_t
+        else:
+            passed = charts >= mc and tables >= min_t
+        score = min(charts / max(mc, 1), 1.0) * 0.5 + min(tables / max(min_t, 1), 1.0) * 0.5
+        return GateCheckResult(name="图表密度", passed=passed, score=score,
+                               details="图表: %d/%d 表格: %d/%d%s" % (charts, mc, tables, min_t,
+                               " (L1 degradation: charts not required)" if self._allow_placeholder_degradation else ""))
+    def _check_chart_completeness(self) -> GateCheckResult:
+        """图表完整性：报告必须嵌入 SAC 声明的每张图（2026-08-01 新增）。
+
+        对标投行标准：配置声明 8 张图，报告就必须嵌入 8 张对应的
+        [CHART:fig_xxx] 或 ![](chart:fig_xxx)。缺一张 → 失败。
+        防 LLM 只写文字不嵌图、或生成失败的图被静默忽略。
+        """
+        import re
+        text = self.report_text or ""
+        # 提取报告中嵌入的图 id
+        embedded = set()
+        # 格式1: [CHART:fig_id, title]
+        for m in re.finditer(r'\[CHART:\s*([A-Za-z0-9_\-]+)', text):
+            embedded.add(m.group(1))
+        # 格式2: ![](chart:fig_id)
+        for m in re.finditer(r'!\[[^\]]*\]\(chart:([A-Za-z0-9_\-]+)', text):
+            embedded.add(m.group(1))
+        # 格式3: ![](fig_id.png) 或任何图片路径含 fig_id
+        for m in re.finditer(r'!\[[^\]]*\]\([^)]*(fig_[A-Za-z0-9_\-]+)[^)]*\)', text):
+            embedded.add(m.group(1))
+        # 格式4（2026-08-01 第三轮修复）: 装配器实际输出 ![cid](charts\cid.png)
+        # 兼容任意图片路径：取文件名（去扩展名）与 SAC id 做集合比对
+        for m in re.finditer(r'!\[[^\]]*\]\([^)]*?([A-Za-z0-9_\-]+)\.(?:png|jpg|jpeg|svg|webp)[^)]*\)', text):
+            embedded.add(m.group(1))
+        # 格式5: 表格/正文中的「图表N：xxx（cid）」占位引用（LLM 常写这种）
+        for m in re.finditer(r'图表\s*\d*[：:]\s*[^（(]*[（(]([A-Za-z0-9_\-]+)[)）]', text):
+            embedded.add(m.group(1))
+
+        # SAC 声明的图
+        try:
+            sac_ids = {c["id"] for c in self.sac.get_chart_config()["charts"]}
+        except Exception:
+            return GateCheckResult("chart_completeness", False, 0.0,
+                                  "无法获取 SAC 图表声明")
+        if not sac_ids:
+            return GateCheckResult("chart_completeness", True, 1.0,
+                                  "SAC 无图表声明，跳过")
+
+        missing = sac_ids - embedded
+        if not missing:
+            return GateCheckResult("chart_completeness", True, 1.0,
+                                  f"已嵌入全部 {len(sac_ids)} 张图")
+        # 部分缺失：按缺失比例扣分
+        ratio = len(embedded & sac_ids) / len(sac_ids)
+        # 降级感知（2026-08-01 修复）：L1+ 数据不足时允许缺图（FP7b），
+        # 不硬阻断，score 照常扣分由整体阈值把关。避免数据缺时报告卡死。
+        if self._allow_placeholder_degradation:
+            return GateCheckResult("chart_completeness", True, ratio,
+                                  f"图嵌入: {len(embedded & sac_ids)}/{len(sac_ids)}"
+                                  f" (L1降级: 允许缺图, 缺失: {','.join(sorted(missing)[:3])})")
+        return GateCheckResult("chart_completeness", False, ratio,
+                              f"图嵌入: {len(embedded & sac_ids)}/{len(sac_ids)} 缺失: {','.join(sorted(missing)[:5])}")
+
+    def _check_data_traceability(self) -> GateCheckResult:
+        """FP2a: Source coverage verification (name + org + date).
+
+        修订（2026-07-31）：不再强制每段三层深度（真实投行研报也做不到）。
+        标准改为：实质性段落（含数据/判断，非表格/标题）中 ≥30% 有来源标注。
+        """
+        import re
+        text = self.report_text or ""
+        paragraphs = text.split("\n\n")
+        # 实质性段落：含数字/判断/来源，排除表格与纯标题
+        substantive = []
+        for para in paragraphs:
+            if not para or len(para) < 20:
+                continue
+            if re.match(r'^\s*\|', para):  # markdown 表格
+                continue
+            if re.match(r'^#+\s', para):   # 标题
+                continue
+            if re.search(r'\d+\.?\d*\s*[%亿万千元]|(?:我们认为|我们判断|预计|有望|看好|审慎)', para):
+                substantive.append(para)
+        total = len(substantive)
+        if total == 0:
+            return GateCheckResult("data_traceability", False, 0.0,
+                                  "No substantive paragraphs")
+        scored = 0
+        depth_sum = 0
+        for para in substantive:
+            # Level 1: Any source mention
+            has_mention = bool(re.search(r'(?:来源|source|据|根据|sourced|披露|年报|公告)', para, re.I))
+            if not has_mention:
+                continue
+            # Level 2: Organization/institution name
+            has_org = bool(re.search(r'(?:证券|研究|咨询|研究院|协会|局|署|社|Bank|Securities|Insights|Institute|TrendForce|Gartner|Wind|Bloomberg)', para))
+            # Level 3: Specific date/time reference
+            has_date = bool(re.search(r'\d{4}年\d{1,2}月|\d{4}-\d{2}-\d{2}|20\d{2}年', para))
+            depth = 2 if has_org else 1
+            depth = 3 if (has_org and has_date) else depth
+            depth_sum += depth
+            scored += 1  # 有来源即计分
+        # 覆盖率 = 有来源段落 / 实质性段落（≥30% 达标）
+        coverage = scored / total
+        score = min(1.0, coverage)
+        passed = coverage >= 0.30
+        avg_depth = round(depth_sum / max(total, 1), 2)
+
+        # FP v3.2（FP2a）：四元组完整性检查——来源标注应含 {来源, 年份, 口径, 置信度}
+        # 报告若用"数据来源：..."标注，应含年份/口径/置信度之一，不能全篇空泛重复
+        _four_tuple = 0
+        _four_tuple_total = 0
+        for para in substantive:
+            _src_mentions = re.findall(r'(?:数据来源|资料来源)[：:]([^。；\n]{0,40})', para)
+            for _m in _src_mentions:
+                _four_tuple_total += 1
+                _has_year = bool(re.search(r'20\d{2}', _m))
+                _has_scope = bool(re.search(r'全球|中国|公司|行业|亿元|%', _m))
+                _has_conf = bool(re.search(r'估算|约|大约|区间|置信', _m))
+                if _has_year or _has_scope or _has_conf:
+                    _four_tuple += 1
+        _tetra_note = ""
+        if _four_tuple_total > 0:
+            _tetra_coverage = _four_tuple / _four_tuple_total
+            _tetra_note = f" 四元组覆盖:{_tetra_coverage:.0%}"
+            # 若来源标注全部空泛（无年份/口径/置信），覆盖率 <30% 视为"来源标注失真"
+            if _tetra_coverage < 0.30:
+                passed = False
+                score = min(score, 0.5)
+        return GateCheckResult("data_traceability", passed, score,
+                              f"source_coverage={coverage:.0%} depth={avg_depth}/3 ({scored}/{total} paras){_tetra_note}")
+
+    def _check_annotation_types(self) -> GateCheckResult:
+        """FP2a: A/E/F/B 证据标注检查（2026-08-01 新增）。
+
+        对标顶级投行/四大标准：每个数据点必须有类型标注——
+          A=Actual(实际), E=Estimate(估算), F=Forecast(预测), B=Benchmark(基准)
+        标准：报告正文中四种标注至少出现 3 种，且 A(实际) 是必须的。
+        """
+        import re
+        text = self.report_text or ""
+        if not text or len(text) < 50:
+            return GateCheckResult("annotation_types", False, 0.0,
+                                  "报告太短，无法评估标注")
+        # 匹配 (A)/(E)/(F)/(B) 或 [A]/[E]/[F]/[B] 标注（括号紧跟数字）
+        found = set()
+        for marker in "AEFB":
+            # 匹配 "(A)" "[A]" "(A型)" 等，需在数字/单位附近
+            if re.search(r'[\(\[（]\s*' + marker + r'\s*[\)\]）]', text):
+                found.add(marker)
+            # 也匹配 "12.3亿(A)" 这种
+            if re.search(r'\d[\d,.]*\s*(?:亿|万|%|元)?\s*[\(\[（]\s*' + marker + r'\s*[\)\]）]', text):
+                found.add(marker)
+        # A(实际) 必须存在；整体至少 3 种
+        has_a = 'A' in found
+        total_ok = len(found) >= 3
+        passed = has_a and total_ok
+        missing = [m for m in "AEFB" if m not in found]
+        score = min(1.0, len(found) / 4)
+        return GateCheckResult("annotation_types", passed, score,
+                              f"标注覆盖: {'/'.join(sorted(found)) or '无'} 缺失: {','.join(missing) or '无'} (需≥3种含A)")
+
+    def _check_global_perspective(self) -> GateCheckResult:
+        """全球视野检查（2026-08-01 新增，对标顶级投行全球估值锚定）。
+
+        所有报告类型必须包含全球视角：全球市场/全球对标/海外收入/地缘风险
+        至少覆盖一类。缺失 → warning（非上市数据有限可豁免）。
+        """
+        import re
+        text = self.report_text or ""
+        if len(text) < 500:
+            return GateCheckResult("global_perspective", True, 1.0, "报告过短，跳过")
+        # 全球视角关键词：全球/海外/国际/跨境/北美/欧洲/亚太/地缘/汇率
+        global_kw = re.compile(
+            r'(全球|海外|国际|跨境|北美|欧洲|亚太|东南亚|地缘|汇率|foreign|global|overseas|export)',
+            re.I)
+        hits = global_kw.findall(text)
+        # 去重统计覆盖的类别
+        categories = set()
+        if re.search(r'全球[^。]{0,10}(市场|规模|对标|竞争)', text):
+            categories.add("全球市场/对标")
+        if re.search(r'海外[^。]{0,10}(收入|占比|市场|扩张|出海)', text):
+            categories.add("海外收入/出海")
+        if re.search(r'地缘|中美|出口管制|关税|供应链脱钩|汇率', text):
+            categories.add("地缘/汇率风险")
+        if len(categories) >= 1:
+            return GateCheckResult("global_perspective", True, min(1.0, len(categories) / 3),
+                                  f"全球视角覆盖: {'/'.join(categories)}")
+        return GateCheckResult("global_perspective", False, 0.0,
+                              "缺乏全球视野：未覆盖全球市场/海外收入/地缘风险任一维度",
+                              severity="warning")
+
+    def _check_financial_statements_coverage(self) -> GateCheckResult:
+        """三表引用检查（2026-08-01 新增，对标四大审计标准）。
+
+        报告必须引用财务报表关键数据：利润表（营收/净利）、资产负债表（资产/负债/权益）、
+        现金流量表（经营现金流）。缺失维度标注「数据缺口」。
+
+        非上市企业（unlisted）允许缺资产负债表/现金流（数据有限），但必须声明缺口。
+        """
+        import re
+        text = self.report_text or ""
+        if not text or len(text) < 40:
+            return GateCheckResult("financial_statements", False, 0.0,
+                                  "报告太短，无法评估财务引用")
+        # 利润表：营收/净利
+        has_revenue = bool(re.search(r'营收|营业收入|销售额|revenue|收入[：:]\s*[\d.]', text, re.I))
+        has_profit = bool(re.search(r'净利|净利润|亏损|盈利|profit|EPS|每股收益', text, re.I))
+        # 资产负债表：资产/负债/权益
+        has_assets = bool(re.search(r'总资产|资产总额|资产[：:]\s*[\d.]|负债率|资产负债', text))
+        has_equity = bool(re.search(r'股东权益|净资产|权益合计|equity', text, re.I))
+        # 现金流量表：经营现金流
+        has_cashflow = bool(re.search(r'现金流|经营活动.*净额|经营现金流|OCF|烧钱率|货币资金', text, re.I))
+
+        # 得分：利润表核心，资产负债/现金流加分
+        present = sum([has_revenue, has_profit, has_assets or has_equity, has_cashflow])
+        missing = []
+        if not has_revenue:
+            missing.append("营收")
+        if not has_profit:
+            missing.append("净利")
+        if not (has_assets or has_equity):
+            missing.append("资产负债表")
+        if not has_cashflow:
+            missing.append("现金流")
+        # R45（2026-08-02 P1-1）：行业深度报告无单公司三表——以市场规模/增速/集中度
+        # 为主体，强制"营收+净利+资产"会导致结构性误判 FAIL。
+        # 行业口径：市场规模 + 增速 + 集中度（至少2项），不要求单公司三表。
+        score = present / 4.0
+        if self.report_type == "industry_deep":
+            has_mkt_size = bool(re.search(r'市场规模|市场空间|TAM|销售额\s*[约达为]?[：:]?\s*[\d.]|规模\s*[约达为]?[：:]?\s*[\d.]', text, re.I))
+            has_growth = bool(re.search(r'增速|增长[率率]|CAGR|年复合|同比[^。]*\d+%', text, re.I))
+            has_concentration = bool(re.search(r'集中度|CR3|CR5|CR10|份额|市占率', text, re.I))
+            ind_present = sum([has_mkt_size, has_growth, has_concentration])
+            ind_passed = ind_present >= 2
+            ind_score = ind_present / 3.0
+            ind_detail = (f"行业口径: 市场规模({has_mkt_size}) 增速({has_growth}) "
+                          f"集中度({has_concentration})")
+            if ind_passed:
+                return GateCheckResult("financial_statements", True, max(score, ind_score),
+                                       ind_detail + "（行业报告以市场数据为主体，通过）",
+                                       severity="warning")
+            return GateCheckResult("financial_statements", False, ind_score,
+                                   ind_detail + " 行业报告须含市场规模/增速/集中度至少2项",
+                                   severity="error")
+        if self.report_type == "unlisted_company":
+            passed = has_revenue and has_profit
+            severity = "warning"  # 非上市数据有限，缺失降为警告
+        else:
+            passed = has_revenue and has_profit and (has_assets or has_equity)
+            severity = "error"
+        detail = f"引用: 营收({has_revenue}) 净利({has_profit}) 资产负债({has_assets or has_equity}) 现金流({has_cashflow})"
+        if missing:
+            detail += f" 缺口: {','.join(missing)}"
+        return GateCheckResult("financial_statements", passed, score, detail, severity=severity)
+
+    def _check_data_fidelity(self) -> GateCheckResult:
+        """Check data fidelity: revenue/profit numbers should be reasonable"""
+        import re
+        text = self.report_text or ""
+        
+        # Look for revenue/profit numbers in the text
+        rev_patterns = re.findall(r"营收[约达为]?[：:]?\s*(\d+\.?\d*)", text)
+        profit_patterns = re.findall(r"(?:净利|归母净利)[润约达为]?[：:]?\s*(-?\d+\.?\d*)", text)
+        
+        issues = []
+        
+        # Check if revenue numbers are reasonable (A-share companies typically 1-1000+ billion)
+        for v in rev_patterns[:5]:
+            val = float(v)
+            if val > 10000:  # Unlikely for most companies
+                issues.append("Revenue %.0f unusually high" % val)
+            if val == 0:
+                issues.append("Revenue is 0 - likely missing data")
+        
+        # Check profit-loss consistency
+        for v in profit_patterns[:3]:
+            val = float(v)
+            if abs(val) > 1000:  # Very large loss/profit
+                issues.append("Profit %.0f unusually large" % val)
+        
+        if issues:
+            score = max(0.3, 1.0 - len(issues) * 0.2)
+        else:
+            score = 1.0
+        
+        score = max(score, 0.3)  # Floor at 0.3
+        return GateCheckResult(name="data_fidelity", passed=score >= 0.5, score=score,
+                               details="Checks:%d Issues:%d Score:%.2f" % (
+                                   len(rev_patterns) + len(profit_patterns), len(issues), score))
+
+    def _check_format_consistency(self) -> GateCheckResult:
+        issues = []
+        if re.search(r'\*\*。|\*\*，', self.report_text):
+            issues.append("标点紧邻加粗")
+        if re.search(r'#{4,}', self.report_text):
+            issues.append("标题层级过深")
+        emphasis_keywords = ['核心判断', '我们建议', '重点关注', '值得注意']
+        found_e = sum(1 for kw in emphasis_keywords if kw in self.report_text)
+        if found_e < 1:
+            issues.append("Emphasis markers: " + str(found_e) + "/4")
+        passed = len(issues) == 0
+        score = max(0, 1.0 - len(issues) * 0.15)
+        # FP7b L1 降级：格式类检查降为 advisory（不阻断），由整体 score 把关
+        severity = "warning" if self._allow_placeholder_degradation else "error"
+        return GateCheckResult(name="排版一致性", passed=passed, score=score,
+                               details=str(issues) if issues else "格式正常",
+                               severity=severity)
+
+    def _check_forbidden_patterns(self) -> GateCheckResult:
+        forbidden = ["AI生成", "人工智能生成", "本报告由AI", "作为语言模型",
+                     "我是一款", "由OpenAI", "我是Claude"]
+        # R41（2026-08-02）：免责声明白名单——合规免责文本中的"内容由AI生成"
+        # 是法务要求的披露，不是 AI 痕迹，应豁免。
+        disclaimer = "内容由AI生成，仅供参考"
+        text = self.report_text.replace(disclaimer, "")
+        found = [f for f in forbidden if f in text]
+        passed = len(found) == 0
+        score = 1.0 if passed else 0.3
+        return GateCheckResult(name="禁止词检测", passed=passed, score=score,
+                               details=str(found) if found else "无")
+
+    def _check_template_repeat(self) -> GateCheckResult:
+        """R35（2026-08-02）：模板句高重复检测。
+
+        柯力报告圆桌审计发现：4 个模板句各出现 2 次（"这一趋势若持续，盈利中枢存在
+        系统性上移的可能"等），属 LLM 套模板/拼接痕迹。检测同一模板句出现≥2次。
+        """
+        import re as _re
+        text = self.report_text or ""
+        if len(text) < 300:
+            return GateCheckResult("template_repeat", True, 1.0,
+                                   "text too short, skipped", severity="warning")
+        # 已知模板句（柯力案 + 通用高频套话）
+        templates = [
+            "这一趋势若持续，盈利中枢存在系统性上移的可能",
+            "上述变化对盈利预测的传导，存在路径与时滞上的不确定性",
+            "若该趋势延续，我们对这一方向的确定性判断将得到进一步强化",
+            "该数据背后折射出的经营质量变化，比单期数值本身更值得关注",
+            "这一迹象提示，市场当前定价可能尚未充分反映上述逻辑的潜在弹性",
+            "该信号与基本面相互印证，增强了我们对此前观点落地的信心",
+            "因此，这意味着",
+            "综合判断：",
+            "在此背景下，竞争壁垒的强化将构成公司中长期价值的核心支撑",
+            "这意味着读者可据此交叉验证核心判断与估值区间",
+        ]
+        repeats = []
+        for t in templates:
+            cnt = text.count(t)
+            if cnt >= 2:
+                repeats.append(f"{t}(x{cnt})")
+        # 概念错位词（模板残留，跨行业污染）
+        mismatch_words = ["端侧变现", "AI芯片", "消费电子叙事", "to C 变现"]
+        mism = [w for w in mismatch_words if w in text]
+        passed = len(repeats) == 0 and len(mism) == 0
+        det_parts = []
+        if repeats:
+            det_parts.append("模板句重复: " + "; ".join(repeats[:3]))
+        if mism:
+            det_parts.append("概念错位: " + ", ".join(mism))
+        det = "; ".join(det_parts) if det_parts else "无模板污染"
+        return GateCheckResult("template_repeat", passed,
+                               1.0 if passed else 0.5, det, severity="warning")
+
+    def _check_semantic_repeat(self) -> 'GateCheckResult':
+        """R53审计（2026-08-03 P1-2）：跨章节语义重复检测。
+
+        背景：_check_template_repeat 是 10 句硬编码黑名单，只查字面精确重复，
+          新套话（如"端侧变现"/"我们看好其成长空间"）不在名单即漏。
+        本检查用字符 n-gram 相似度做**跨章节语义重复**检测（零依赖）：
+          - 按 markdown 二级标题切章节
+          - 每章节句子集合两两比较（字符 2-gram Jaccard 相似度）
+          - 跨章节句子相似度 ≥0.85 → 语义重复（LLM 套话/复制粘贴痕迹）
+        输出"章节A/章节B 相似度0.91"可定位证据链。
+
+        阈值：0.85（顶级打法建议 sentence-BERT ≥0.85；n-gram 保守取 0.90 防误报，
+        因字符 n-gram 对同义词替换较敏感）。
+        """
+        import re as _re
+        text = self.report_text or ""
+        if len(text) < 500:
+            return GateCheckResult("semantic_repeat", True, 1.0,
+                                   "text too short, skipped", severity="warning")
+
+        # ── 1. 按章节切分 ──────────────────────────────────────
+        sections = {}  # 章节名 -> [句子]
+        _cur_title = "(引言)"
+        for _ln in text.split("\n"):
+            _s = _ln.strip()
+            if _s.startswith("##") or _s.startswith("# "):
+                _t = _re.sub(r'^#{1,3}\s*', '', _s).strip()
+                if _t:
+                    _cur_title = _t[:40]
+                    sections.setdefault(_cur_title, [])
+            elif _s and len(_s) >= 20 and not _s.startswith("|"):
+                sections.setdefault(_cur_title, [])
+                # 切句（按句读）
+                _parts = _re.split(r'[。；！？]', _s)
+                for _p in _parts:
+                    _p = _p.strip()
+                    if len(_p) >= 15:
+                        sections[_cur_title].append(_p)
+
+        # 过滤太短的章节
+        sections = {k: v for k, v in sections.items() if len(v) >= 1}
+        _titles = list(sections.keys())
+        if len(_titles) < 2:
+            return GateCheckResult("semantic_repeat", True, 1.0,
+                                   "章节过少，跳过", severity="warning")
+
+        # ── 2. 字符 2-gram 集合 ────────────────────────────────
+        def _ngrams(s, n=2):
+            s = _re.sub(r'\s+', '', s)
+            if len(s) < n:
+                return {s} if s else set()
+            return {s[i:i + n] for i in range(len(s) - n + 1)}
+
+        def _is_source_note(s):
+            """来源标注/免责句（重复属正常，非内容套话）。"""
+            return ("数据来源" in s or "资料来源" in s or "来源：" in s
+                    or "风险提示" in s or "免责" in s)
+
+        def _is_noise(s):
+            """表格线/纯格式噪声（非内容句子）。"""
+            return s.startswith("|") or set(s) <= set("-|: ") or s.isdigit()
+
+        def _sim(a, b):
+            ga, gb = _ngrams(a), _ngrams(b)
+            if not ga or not gb:
+                return 0.0
+            inter = len(ga & gb)
+            return inter / max(len(ga), len(gb))
+
+        # ── 3. 跨章节句子两两比较（限样本，防 O(n²) 爆炸）─────
+        # 每章节最多取前 12 个句子；章节两两比较时句子抽样 8 个
+        _MAX_SENT_PER_SEC = 12
+        _SAMPLE = 8
+        repeats = []
+        for _i in range(len(_titles)):
+            for _j in range(_i + 1, len(_titles)):
+                _sa = [s for s in sections[_titles[_i]][:_MAX_SENT_PER_SEC]
+                       if not _is_source_note(s) and not _is_noise(s)]
+                _sb = [s for s in sections[_titles[_j]][:_MAX_SENT_PER_SEC]
+                       if not _is_source_note(s) and not _is_noise(s)]
+                if not _sa or not _sb:
+                    continue
+                # 抽样比较（控制计算量）
+                _step_a = max(1, len(_sa) // _SAMPLE)
+                _step_b = max(1, len(_sb) // _SAMPLE)
+                _sa_s = _sa[::_step_a][:_SAMPLE]
+                _sb_s = _sb[::_step_b][:_SAMPLE]
+                for _x in _sa_s:
+                    for _y in _sb_s:
+                        _s = _sim(_x, _y)
+                        if _s >= 0.90:
+                            repeats.append(
+                                f"『{_titles[_i]}』vs『{_titles[_j]}』相似度{_s:.2f}："
+                                f"'{_x[:28]}…'≈'{_y[:28]}…'")
+                            if len(repeats) >= 5:
+                                break
+                    if len(repeats) >= 5:
+                        break
+                if len(repeats) >= 5:
+                    break
+            if len(repeats) >= 5:
+                break
+
+        passed = len(repeats) == 0
+        score = 1.0 if passed else max(0.4, 1.0 - 0.3 * len(repeats))
+        det = f"语义重复: {len(repeats)} 项" + (": " + "; ".join(repeats[:3]) if repeats else "无")
+        return GateCheckResult("semantic_repeat", passed, score, det, severity="warning")
+
+    def _check_persuasion_architecture(self) -> GateCheckResult:
+        has_counter = bool(re.search(r'反对|反方|看空|悲观|担忧|风险|然而|但是|不过', self.report_text))
+        has_consensus = bool(re.search(r'市场共识|市场认为|市场预期|普遍认为|一致预期', self.report_text))
+        has_sowhat = bool(re.search(r'这意味着|这意味着|因此建议|我们的建议|投资启示|投资含义|对投资者', self.report_text))
+        has_falsify = bool(re.search(r'证伪|如果.*就错了|如果.*判断就错了|如果.*发生.*就|可观察|均值回归', self.report_text))
+        has_target = bool(re.search(r'目标价\d+|[买卖增持中]*评级|买入|增持|中性|卖出|持有|推荐', self.report_text))
+        # FP7b L1 降级：非上市标的无公开市场一致预期，consensus 表达天然稀缺 → 降级时不硬要求
+        if self._allow_placeholder_degradation:
+            passed = has_counter and has_target
+        else:
+            passed = has_counter and has_consensus and has_target
+        score = (has_counter + has_consensus + has_sowhat + has_falsify + has_target) / 5.0
+        detail = "反方:%s 共识:%s SoWhat:%s 证伪:%s 评级:%s" % (
+            "Y" if has_counter else "N", "Y" if has_consensus else "N",
+            "Y" if has_sowhat else "N", "Y" if has_falsify else "N",
+            "Y" if has_target else "N")
+        return GateCheckResult(name="说服力架构", passed=passed, score=score, details=detail)
+
+    def _check_table_density(self) -> GateCheckResult:
+        tables = self._count_tables()
+        min_n = {"industry_deep": 3, "listed_company": 3, "unlisted_company": 2, "earnings_notes": 1}
+        mc = min_n.get(self.report_type, 3)
+        score = min(1.0, tables / max(mc, 1))
+        passed = tables >= mc
+        return GateCheckResult(name="表格密度", passed=passed, score=score,
+                               details="表格: %d, 最低要求: %d" % (tables, mc))
+
+    def _check_moat_analysis(self) -> GateCheckResult:
+        patterns = {
+            "moat_type": bool(re.search(r'护城河|竞争壁垒|竞争优势|进入壁垒', self.report_text)),
+            "moat_strength": bool(re.search(r'强[度]|中[等]|弱|评级|评分.*[1-5]', self.report_text)),
+            "dupont": bool(re.search(r'杜邦|ROE[分解]|[三层|三层次]分解', self.report_text)),
+            "brand": bool(re.search(r'品牌|专利|技术领先|转换成本', self.report_text)),
+            "greenwald": bool(re.search(r'格林沃德|供给优势|需求优势|规模经济', self.report_text)),
+        }
+        pc = sum(1 for v in patterns.values() if v)
+        score = pc / max(len(patterns), 1)
+        passed = score >= 0.4
+        det = "护城河: " + "/".join(k for k, v in patterns.items() if v) + " score=%.2f" % score
+        return GateCheckResult(name="护城河分析", passed=passed, score=score, details=det)
+
+    def _check_multi_model(self) -> GateCheckResult:
+        models = ["霍华德马克斯|二阶思维|周期", "索罗斯|反身性|反身", "芒格|能力圈|格栅",
+                  "达摩达兰|估值|DCF", "波特五力|五力", "SWOT", "PEST"]
+        found = []
+        for m in models:
+            if re.search(m, self.report_text):
+                found.append(m.split("|")[0])
+        score = min(len(found) / 3.0, 1.0)
+        passed = len(found) >= 2
+        det = "模型: " + ("/".join(found) if found else "无") + " count=%d" % len(found)
+        return GateCheckResult(name="多模型验证", passed=passed, score=score, details=det)
+
+    def _check_decision_gate(self) -> GateCheckResult:
+        has_gate = bool(re.search(r'决策门|GO[^O]|NO.GO|值得.*分析', self.report_text))
+        has_verdict = bool(re.search(r'GO|值得|通过|结论', self.report_text[:1000]))
+        passed = has_gate
+        score = (has_gate + has_verdict) / 2.0
+        return GateCheckResult(name="决策门判断", passed=passed, score=score,
+                               details="决策门: %s" % ("有" if has_gate else "无"))
+
+
+    def _check_dcf_sensitivity(self) -> 'GateCheckResult':
+        """检查报告是否包含DCF敏感性分析"""
+        # R12（2026-08-01 全量优化）：unlisted（非上市）与 industry 一样豁免 DCF——
+        # 非上市公司无公开 DCF 数据，硬要求 DCF 敏感性是检查器误配。
+        if self.report_type in ("industry_deep", "industry", "unlisted_company"):
+            from .iron_gate import GateCheckResult
+            return GateCheckResult(name="dcf_sensitivity", passed=True, score=1.0, details="Skipped for industry/unlisted report")
+
+        text = self.report_text if hasattr(self, 'report_text') and self.report_text else ''
+        from .iron_gate import GateCheckResult
+        
+        # 检查DCF敏感性分析的关键模式
+        patterns = [
+            (r'WACC.*\u6210\u957f\u7387', 0.3),
+            (r'\u654f\u611f\u6027\u5206\u6790', 0.4),
+            (r'\u4f30\u503c\u77e9\u9635', 0.5),
+            (r'WACC.*\u7ec8\u7aef', 0.5),
+            (r'\u76c8\u5229\u9884\u6d4b\u8868', 0.3),
+            (r'\u7ec8\u7aef\u589e\u957f\u7387', 0.4),
+        ]
+        
+        score = 0.0
+        hits = 0
+        for pat, weight in patterns:
+            if re.search(pat, text):
+                score = max(score, weight)
+                hits += 1
+        
+        # DCF sensitivity matrix check (WACC rows x growth rate columns)
+        matrix_pattern = r'\d+[\.\,]\d+%.{0,20}\d+[\.\,]\d+%.{0,20}\d+[\.\,]\d+%'
+        has_matrix = len(re.findall(matrix_pattern, text)) >= 2
+        if has_matrix:
+            score = max(score, 0.9)
+        
+        # FP7b L1 降级：非上市/降级场景 DCF 敏感性属锦上添花（非上市无公开 DCF 数据），
+        # 降为 advisory；正常模式保持硬阻断
+        severity = "warning" if self._allow_placeholder_degradation else "error"
+        return GateCheckResult(
+            name='dcf_sensitivity',
+            passed=score >= 0.55,
+            score=min(score, 1.0),
+            details='DCF sensitivity: %.2f (patterns: %d/6, matrix: %s)' % (score, hits, has_matrix),
+            severity=severity,
+        )
+    
+    def _check_so_what_chain(self) -> 'GateCheckResult':
+        """增强版：检查报告中So What链的完整性和密度（逐段扫描）"""
+        text = self.report_text if hasattr(self, 'report_text') and self.report_text else ''
+        from .iron_gate import GateCheckResult
+
+        sections = re.split(r'(?:^## |^[一二三四五六七八九十百]+[、.．]|^第[一二三四五六七八九十百]+部分)', text, flags=re.MULTILINE)
+        # 标题切分失败时回退到按段落扫描（兼容 StyleCompiler 编译后的无标题结构）
+        if len(sections) <= 1:
+            paras = [p for p in text.split("\n\n") if len(p) >= 50]
+            if len(paras) >= 3:
+                sections = paras
+            else:
+                return GateCheckResult('so_what_chain', False, 0.3, 'Too few sections to check')
+
+        # R12（2026-08-01 全量优化）：排除附录段（图表附录/来源附录/免责声明等非分析段），
+        # 否则附录段无推理链会拉低 min_score，导致正文 So What 达标却被误判失败。
+        _appendix_marks = ('附录', '数据图表', '数据补充来源', 'AGENT_ENRICH', '免责声明', '来源')
+        sections = [s for s in sections if not any(m in s[:30] for m in _appendix_marks)]
+        if not sections:
+            return GateCheckResult('so_what_chain', False, 0.3, 'No analyzable sections (all appendix)')
+
+        # R34（2026-08-02）：跳过纯表格/短结论段——表格行（|...|）占比高、
+        # 无实质论证链的段（如"关键跟踪指标"表、"风险提示"表）不应计入 min_score。
+        # 此前柯力草稿因 2 个表格段 score=0 拉低 min_score → 误判 so_what_chain ERROR。
+        def _is_table_section(sec: str) -> bool:
+            lines = [l.strip() for l in sec.split("\n") if l.strip()]
+            if not lines:
+                return False
+            table_lines = sum(1 for l in lines if l.startswith("|") and l.endswith("|"))
+            # 表格行占比 >60% 或 表格行 >=3 且段内无可论证文本
+            ratio = table_lines / len(lines)
+            return ratio >= 0.6 or (table_lines >= 3 and len(sec) < 400)
+        sections = [s for s in sections if not _is_table_section(s)]
+        if not sections:
+            return GateCheckResult('so_what_chain', False, 0.3, 'No analyzable sections (all tables)')
+
+        # Reasoning chain markers (数据→分析→判断→行动)
+        chain_patterns = [
+            r'\u56e0\u6b64', r'\u8fd9\u610f\u5473\u7740',
+            r'\u6211\u4eec\u5224\u65ad', r'\u6211\u4eec\u5efa\u8bae',
+            r'\u7efc\u4e0a\u6240\u8ff0', r'\u56e0\u6b64\u6211\u4eec\u8ba4\u4e3a',
+            r'\u5bfc\u81f4', r'\u4ece\u800c', r'\u5f71\u54cd', r'\u610f\u5473\u7740',
+            r'So\s*What', r'\u6570\u636e\u8868\u660e', r'\u5bf9\u6295\u8d44\u8005\u610f\u5473\u7740',
+            r'\u7efc\u5408\u5224\u65ad', r'\u6982\u7387\u8bc4\u4f30', r'\u8bc1\u4f2a\u6761\u4ef6',
+            r'\u53cd\u65b9\u8bba\u8bc1', r'\u5224\u65ad[：:]',
+        ]
+        
+        # Score per section
+        section_scores = []
+        for sec in sections:
+            if len(sec) < 50:
+                continue
+            hits = sum(1 for p in chain_patterns if re.search(p, sec))
+            expected = max(2, len(sec) // 300)
+            sec_score = min(hits / expected if expected > 0 else 0.3, 1.0)
+            section_scores.append(sec_score)
+        
+        if not section_scores:
+            return GateCheckResult('so_what_chain', False, 0.3, 'No analyzable sections')
+        
+        avg_score = sum(section_scores) / len(section_scores)
+        min_score = min(section_scores)
+        
+        # P1-3 修复（2026-08-01 审计）：min_score >= 0.3 约束防止均值掩盖短板，
+        # 并将 min_score 纳入 final_score 计算（加权：avg 60% + min 40%）。
+        passed = avg_score >= 0.6 and min_score >= 0.3
+        final_score = min(avg_score * 0.6 + min_score * 0.4 + (0.1 if avg_score >= 0.7 else 0), 1.0)
+        
+        detail = 'So What: %.2f avg/%d sections (min: %.2f)' % (avg_score, len(section_scores), min_score)
+        # FP7b L1 降级：数据受限导致 LLM 推理链密度不足，So What 链降为 advisory（不阻断），
+        # 由整体 score 反映质量水平；非降级模式保持硬阻断
+        severity = "warning" if self._allow_placeholder_degradation else "error"
+        return GateCheckResult('so_what_chain', passed, final_score, detail, severity=severity)
+    
+
+    
+    def _check_ai_tone_by_llm(self) -> GateCheckResult:
+        """FP4: Use LLM to detect AI tone beyond regex patterns
+
+        P0-1 修复（2026-08-01 审计）：改用独立评估视角。
+        使用与生成端不同的模型（deepseek-reasoner）作为第三方审计器，
+        并在 prompt 中明确"你评估的是另一个模型生成的文本"，
+        打破 DeepSeek 评判 DeepSeek 自身输出的循环论证陷阱。
+        """
+        text = self.report_text or ""
+        if len(text) < 500:
+            return GateCheckResult("ai_tone_llm", True, 1.0, "Text too short, skipped",
+                                    severity="warning")
+        
+        sample = text[:3000].replace('"', "'")[:2500]
+        prompt = (
+            'System: 你是独立的第三方审计评委（你本身不是生成这份报告的大模型）。'
+            '下面这段文本是由"另一个大语言模型"生成的投研报告。请以第三方审计师的视角，'
+            '严格判断这段文本更像人类专业分析师撰写的，还是明显带有AI生成痕迹。'
+            '注意：专业投研报告天然具有结构化标题、评级、目标价、数据来源标注等特征，'
+            '这些是行业规范，不应被误判为AI痕迹。'
+            '人类分析师文本通常包含：具体到小数点后两位的财务数据、来源标注(如Wind/年报/公告)、'
+            '基于数据的独立判断(我们判断/我们预计)、风险提示、第一人称观点、相互矛盾的论据权衡。'
+            'AI痕迹包括：过多模板化过渡句、缺乏具体数据支撑的判断、前后文风格割裂。'
+            '你是独立审计者，你与被评估文本的生成模型不同——请以客观第三方立场评判。'
+            '只输出JSON: {"score": 0.xx, "reason": "..."}，score=1表示极可能人类撰写，0表示极可能AI生成。\n'
+            'User: ' + sample[:1200]
+        )
+        try:
+            from core.deepseek_client import call_llm
+            # P0-1: 使用 deepseek-reasoner（与生成端 deepseek-chat 不同模型）作为独立审计器
+            _audit_model = "deepseek-reasoner"
+            # R13（2026-08-01 三算力架构）：审计器默认保持独立模型（deepseek-reasoner），
+            # 保证"第三方审计"设计不破坏。可通过 LOCAL_AUDITOR=1 显式路由到本地 Ollama
+            # （牺牲一点审计精度换取速度，需先验证偏差<5%）。
+            _audit_provider = "deepseek"
+            if os.environ.get("LOCAL_AUDITOR", "0") == "1":
+                _audit_provider = "ollama_local"
+                _audit_model = ""
+            result = call_llm(
+                messages=[{"role": "user", "content": prompt}],
+                model=_audit_model,
+                temperature=0.1,
+                max_tokens=200,
+                provider=_audit_provider,
+            )
+            output = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+            try:
+                import json as _json
+                parsed = _json.loads(output)
+                score = float(parsed.get("score", 0.5))
+                reason = parsed.get("reason", "")
+            except Exception:
+                import re as _re
+                score_match = _re.search(r'(\d+\.\d+)', output)
+                score = float(score_match.group(1)) if score_match else 0.5
+                reason = output[:30]
+            
+            # 机构特征兜底：含评级/目标价/风险提示等机构表达时，避免因结构化误判
+            inst_markers = re.findall(r'(?:评级|目标价|风险提示|买入|增持|来源[：:]|Wind|公告)', text[:4000])
+            if score < 0.4 and len(inst_markers) >= 3:
+                score = max(score, 0.5)
+            passed = score >= 0.4
+            if score >= 0.7:
+                details = f"Likely human (score={score:.2f})"
+            elif score >= 0.4:
+                details = f"Uncertain (score={score:.2f}) - {reason}"
+            else:
+                details = f"Likely AI (score={score:.2f}) - {reason}"
+            return GateCheckResult("ai_tone_llm", passed, score, details)
+        except Exception as e:
+            # P0-2 修复（2026-08-01 审计）：AI Tone LLM 异常时不得无条件放行。
+            # 改为 passed=False + severity="error"，在 gate 汇总时标记为强制阻断。
+            # AI Tone 验证是 FP4 的核心防线，LLM 不可用时必须阻断而非假装通过。
+            logger.error("[AI_TONE_LLM] 评估器异常，强制阻断: %s", e)
+            return GateCheckResult("ai_tone_llm", False, 0.0,
+                                    f"AI Tone评估器不可用(强制阻断): {str(e)[:80]}",
+                                    severity="error")
+    def _check_human_impossible_dimension(self) -> GateCheckResult:
+        """FP4: Verify report contains at least one dimension beyond human analyst capability.
+        
+        检查三个维度：数据密度（>50来源）、推理深度（>5层归因）、覆盖广度（>20家）。
+        至少满足一个即通过上阈。
+        """
+        text = self.report_text or ""
+        if len(text) < 1000:
+            return GateCheckResult("human_impossible", False, 0.0, "text too short, cannot verify")
+        
+        import re as _re
+        
+        # 1. 数据密度: 检查不同的来源引用数
+        sources = set(_re.findall(r'(?:来源[：:]|数据来源[：:]|Source[：:]|sourced from|据[一-鿿]+报告)', text))
+        source_density = len(sources)
+        
+        # 2. 推理深度: 检查 So What 链的层次
+        reasoning_layers = _re.findall(r'(?:因此|这意味着|这导致|其根本原因|更深层次|本质上|推论|由此得出)', text)
+        reasoning_depth = len(reasoning_layers)
+        
+        # 3. 覆盖广度: 检查提到的公司/竞争对手数
+        companies = _re.findall(r'(?:公司|集团|[A-Z][a-z]+(?:\.[A-Z]{2})?)', text)
+        company_count = len(set(companies))
+        
+        # Score each dimension
+        density_score = min(1.0, source_density / 10)  # 10+ sources = 1.0
+        depth_score = min(1.0, reasoning_depth / 8)     # 8+ layers = 1.0
+        breadth_score = min(1.0, company_count / 20)    # 20+ companies = 1.0
+        
+        max_score = max(density_score, depth_score, breadth_score)
+        passed = max_score >= 0.5  # At least one dimension at 50%+
+        
+        details = (
+            f"Sources={source_density}({density_score:.2f}) "
+            f"Depth={reasoning_depth}({depth_score:.2f}) "
+            f"Breadth={company_count}({breadth_score:.2f}) "
+            f"max={max_score:.2f}"
+        )
+        return GateCheckResult("human_impossible", passed, max_score, details, severity="error")
+
+
+    def _check_explicit_conclusion(self) -> GateCheckResult:
+        """FP6 L1: Check that report contains an explicit conclusion/investment thesis.
+
+        验证报告开头或摘要部分包含明确的结论句。
+        R12（2026-08-01 全量优化）：unlisted（非上市）语义不同于上市——
+        非上市没有"评级/目标价"概念，价值判断是"投资价值/估值区间/退出路径"。
+        检查器按 report_type 分支：listed 查评级+目标价，unlisted 查投资价值+估值+退出。
+        """
+        text = self.report_text or ""
+        if len(text) < 300:
+            return GateCheckResult("explicit_conclusion", False, 0.0, "text too short")
+
+        import re as _re
+        first_2000 = text[:2000]
+
+        if self.report_type in ("unlisted_company",):
+            # 非上市语义：投资价值/估值区间/退出路径/核心判断
+            has_value = bool(_re.search(r'(?:投资价值|投资判断|值得投资|投资建议|建议关注|值得关注)', first_2000))
+            has_val_range = bool(_re.search(r'(?:估值区间|估值范围|估值[在约为])[^。]*?\d+', first_2000))
+            has_exit = bool(_re.search(r'(?:退出路径|退出方式|IPO|并购|转让|退出可行)', first_2000))
+            has_thesis = bool(_re.search(r'(?:核心判断|核心观点|我们认为|我们判断|投资逻辑|决策门)', first_2000))
+            elements = sum([has_value, has_val_range, has_exit, has_thesis])
+            score = elements / 4.0
+            passed = score >= 0.34  # 至少 2/4
+            details = (f"投资价值={'Y' if has_value else 'N'} 估值区间={'Y' if has_val_range else 'N'} "
+                       f"退出路径={'Y' if has_exit else 'N'} 核心判断={'Y' if has_thesis else 'N'} = {score:.2f}")
+            return GateCheckResult("explicit_conclusion", passed, score, details)
+
+        # 上市语义：评级 + 目标价 + 核心观点
+        has_rating = bool(_re.search(r'(?:建议|评级|维持|给予)[^。]*(?:买入|增持|持有|中性|减持|卖出|outperform|buy|hold|reduce|sell|overweight|equalweight|underweight)', first_2000))
+        has_target = bool(_re.search(r'(?:目标价|target\s*price|TP)[^。]*?\d+', first_2000))
+        has_thesis = bool(_re.search(r'(?:核心判断|核心观点|我们认为|我们判断|投资要点|投资逻辑|Bold Call)', first_2000))
+
+        elements = sum([has_rating, has_target, has_thesis])
+        score = elements / 3.0
+        passed = score >= 0.34  # At least one of three
+
+        details = f"Rating={'Y' if has_rating else 'N'} Target={'Y' if has_target else 'N'} Thesis={'Y' if has_thesis else 'N'} = {score:.2f}"
+        return GateCheckResult("explicit_conclusion", passed, score, details)
+
+
+    def _check_attribution_depth(self) -> GateCheckResult:
+        """FP6 L3: Check that analysis contains multi-factor attribution with weights.
+        
+        验证报告是否有"归因分析"——将结果归因到多个驱动因素并给出各因素权重。
+        """
+        text = self.report_text or ""
+        if len(text) < 500:
+            return GateCheckResult("attribution_depth", False, 0.0, "text too short")
+        
+        import re as _re
+        
+        # Check for multi-factor attribution patterns
+        has_factor_analysis = bool(_re.search(r'(?:驱动因素|驱动因子|归因|attribution|主要原因|核心驱动|关键变量|多重因素|增长驱动|成长驱动|发展驱动|增长动力|驱动逻辑)', text))
+        has_weight = bool(_re.search(r'(?:权重|占比|贡献|bps|百分点|主要|核心|关键|主导).{0,20}(?:因素|驱动|原因)', text))
+        has_sub_factor = bool(_re.search(r'(?:子因素|二级|细分|拆解)(?:分析|维度|指标)', text))
+        has_causal_chain = bool(_re.search(r'(?:A.{0,10}导致B|因为.{0,20}所以.{0,20}|传递|传导|连锁)', text))
+        
+        # Check for 3+ explicit factors
+        factors = _re.findall(r'(?:第一个|第二|第三|首先|其次|再次|另外|此外|同时)[^。]{0,50}(?:原因|因素|驱动|因为)', text)
+        has_3plus_factors = len(factors) >= 2  # "首先...其次..." counts as 2, implying at least 2 more
+        
+        elements = sum([has_factor_analysis, has_weight, has_sub_factor, has_causal_chain, has_3plus_factors])
+        score = elements / 5.0
+        # FP7b L1 降级：数据受限报告归因框架不完整不阻断交付（warning），正常模式仍硬把关
+        threshold = 0.2 if self._allow_placeholder_degradation else 0.4
+        passed = score >= threshold
+        severity = "warning" if self._allow_placeholder_degradation else "error"
+        
+        details = f"FactorAnalysis={'Y' if has_factor_analysis else 'N'} Weight={'Y' if has_weight else 'N'} SubFactor={'Y' if has_sub_factor else 'N'} CausalChain={'Y' if has_causal_chain else 'N'} 3+Factors={'Y' if has_3plus_factors else 'N'} = {score:.2f}"
+        return GateCheckResult("attribution_depth", passed, score, details, severity=severity)
+
+
+    def _check_data_type_annotation(self) -> GateCheckResult:
+        """FP2a: Verify that (A)/(E)/(F)/(B) annotations are used throughout the report.
+        
+        Checks for data type markers: (A)=Actual, (E)=Estimate, (F)=Forecast, (B)=Benchmark.
+        """
+        text = self.report_text or ""
+        if len(text) < 500:
+            return GateCheckResult("data_type_annotation", True, 1.0, "Text too short, skipped", severity="warning")
+        
+        import re
+        # Count (A), (E), (F), (B) annotations
+        a_count = len(re.findall(r'A', text))
+        e_count = len(re.findall(r'E(?!\w)', text))
+        f_count = len(re.findall(r'F(?!\w)', text))
+        b_count = len(re.findall(r'B(?!\w)', text))
+        
+        # Also check for the explicit forms (half-width + full-width)
+        explicit_a = len(re.findall(r'\(A\)|（A）|Actual', text))
+        explicit_e = len(re.findall(r'\(E\)|（E）|Estimate', text))
+        explicit_f = len(re.findall(r'\(F\)|（F）|Forecast', text))
+        explicit_b = len(re.findall(r'\(B\)|（B）|Benchmark', text))
+        
+        total = explicit_a + explicit_e + explicit_f + explicit_b
+        coverage = min(1.0, total / 5.0)  # Expect at least 5 annotations
+        has_all_types = (explicit_a > 0 and explicit_e > 0) or (explicit_a > 2 and explicit_e > 1)
+        
+        passed = total >= 3  # At least 3 total annotations
+        score = min(1.0, total / 5.0)
+        
+        details = f"A={explicit_a} E={explicit_e} F={explicit_f} B={explicit_b} total={total} score={score:.2f}"
+        return GateCheckResult("data_type_annotation", passed, score, details)
+
+
+    def _check_evidence_layer(self) -> GateCheckResult:
+        """FP6 L4: Verify every major numeric claim has a source within 100 chars"""
+        text = self.report_text or ""
+        if len(text) < 500:
+            return GateCheckResult("evidence_layer", True, 1.0, "text too short, skipped", severity="warning")
+        
+        import re
+        # Find numeric claims (in Chinese financial context)
+        # Match: numbers with 亿/万/百分比 or standalone large numbers
+        claims = re.findall(r'(?:\d+\.?\d*[亿万千百]|\d+\.?\d*%|\d{4,}[\u4e00-\u9fff]*)', text)
+        if len(claims) < 3:
+            return GateCheckResult("evidence_layer", True, 0.7, f"only {len(claims)} claims found")
+        
+        covered = 0
+        for claim in claims:
+            # Find position and check surrounding 100 chars for source
+            pos = text.find(claim)
+            if pos < 0:
+                continue
+            start = max(0, pos - 100)
+            end = min(len(text), pos + len(claim) + 100)
+            context = text[start:end]
+            if re.search(r'(?:来源|据|数据|source|根据|年报|报告|公告|研报|数据来源)', context):
+                covered += 1
+        
+        ratio = covered / len(claims)
+        score = min(1.0, ratio)
+        passed = score >= 0.3  # 30%+ of claims have source nearby
+        return GateCheckResult("evidence_layer", passed, score, 
+                              f"{covered}/{len(claims)} claims sourced ({score:.2f})")
+
+    def _check_falsification_conditions(self) -> GateCheckResult:
+        """FP6 L5: Verify 'if...then...' falsification conditions exist"""
+        text = self.report_text or ""
+        if len(text) < 500:
+            return GateCheckResult("falsification_conditions", True, 1.0, "text too short, skipped", severity="warning")
+        
+        import re
+        # Check for if-then falsification structures
+        patterns = [
+            r'(?:如果|假如|假设|倘若|一旦).{0,50}(?:那么|则|就会|可能)',
+            r'(?:证伪|False|推翻|不成立|失效|例外|条件)',
+            r'(?:前提|假设条件|前提假设|先决条件)',
+            r'(?:如果).{0,30}(?:风险|下跌|不及预期|低于)',
+        ]
+        has_falsification = any(re.search(p, text) for p in patterns)
+        
+        # Check that Bold Call has falsification nearby
+        bold_pos = re.search(r'(?:Bold Call|核心理念|核心判断|核心观点)', text)
+        falsified_bold = False
+        if bold_pos:
+            start = max(0, bold_pos.start() - 200)
+            end = min(len(text), bold_pos.end() + 500)
+            bold_context = text[start:end]
+            falsified_bold = any(re.search(p, bold_context) for p in patterns)
+        
+        score = 0.4 if has_falsification else 0.0
+        if falsified_bold:
+            score = max(score, 0.7)
+        passed = score >= 0.4
+        return GateCheckResult("falsification_conditions", passed, score,
+                              f"falsification={'Y' if has_falsification else 'N'} bold_falsifiable={'Y' if falsified_bold else 'N'}")
+
+    def _check_template_leak(self) -> GateCheckResult:
+        """FP4: Block report if template placeholder text is visible"""
+        text = self.report_text or ""
+        if not text:
+            return GateCheckResult("template_leak", True, 1.0, "no text", severity="warning")
+        import re
+        # 模板占位文本模式
+        patterns = [
+            r'第[一二三四五六七八九十]章\s+行业概览',
+            r'这是正文样例',
+            r'1\.1\s+市场规模',
+            r'Key\s+Takeaways',
+        ]
+        hits = []
+        for pat in patterns:
+            matches = re.findall(pat, text)
+            hits.extend(matches)
+        passed = len(hits) == 0
+        score = 0.0 if hits else 1.0
+        details = f"模板泄露: {len(hits)}处" if hits else "无模板泄露"
+        return GateCheckResult("template_leak", passed, score, details, severity="error")
+
+    def _check_meta_cognition(self) -> GateCheckResult:
+        """FP6 L6: Verify confidence markers (H/M/L) and blind spots mention"""
+        text = self.report_text or ""
+        if len(text) < 500:
+            return GateCheckResult("meta_cognition", True, 1.0, "text too short, skipped", severity="warning")
+        
+        import re
+        # Count confidence markers
+        confidence = len(re.findall(r'(?:H=High|M=Medium|L=Low|\d+%|置信度|confidence|确信度)', text))
+        
+        # Check for blind spots / uncertainty / limitations
+        has_blind_spot = bool(re.search(r'(?:不确定|局限|盲区|未覆盖|假设|风险因素|未知|未考虑|局限)', text))
+        
+        score = 0.0
+        if confidence >= 3:
+            score = 0.4
+        if has_blind_spot:
+            score += 0.4
+        if confidence >= 5:
+            score += 0.2
+        score = min(1.0, score)
+        
+        passed = score >= 0.4  # At least 3 confidence markers OR blind spot mention
+        return GateCheckResult("meta_cognition", passed, score,
+                              f"confidence={confidence} blind_spot={'Y' if has_blind_spot else 'N'}")
+
+    def _check_so_what_per_judgment(self) -> GateCheckResult:
+        """FP2b upgrade: Each judgment must have its own So What chain (not paragraph average)"""
+        text = self.report_text or ""
+        if len(text) < 500:
+            return GateCheckResult("so_what_per_judgment", True, 1.0, "text too short, skipped", severity="warning")
+        
+        import re
+        # Find judgment sentences (allow So What to follow in next sentence)
+        judgments = re.findall(r'[^。]*?(?:我们认为|我们判断|我们预计|我们建议|核心判断|核心结论|判断[：:])[^。]*。[^。]*?(?:因此|这意味着|所以|导致|从而|影响|So\s*What|数据表明|对投资者意味着|综合判断|证伪条件)[^。]*。', text)
+        if not judgments:
+            # 回退：只要判断句后紧跟"因此..."也算完整（兼容 StyleCompiler 追加）
+            j_simple = re.findall(r'[^。]*(?:我们认为|我们判断|我们预计|我们建议|核心判断|核心结论|判断[：:])[^。]*。', text)
+            if not j_simple:
+                return GateCheckResult("so_what_per_judgment", False, 0.0, "no explicit judgments found")
+            complete = 0
+            search_from = 0
+            for j in j_simple:
+                # 从当前判断句位置往后找（避免每次都从全文开头）
+                pos = text.find(j, search_from)
+                if pos < 0:
+                    pos = text.find(j)
+                tail = text[pos+len(j):pos+len(j)+150]
+                has_implication = bool(re.search(r'(?:因此|这意味着|所以|导致|从而|影响|So\s*What|数据表明|对投资者意味着|综合判断|证伪条件)', tail))
+                if has_implication:
+                    complete += 1
+                search_from = pos + len(j)
+            ratio = complete / len(j_simple)
+            score = min(1.0, ratio)
+            # FP7b L1 降级：数据受限下判断句 So What 链覆盖放宽（段落级 so_what_chain 仍把关）
+            threshold = 0.25 if self._allow_placeholder_degradation else 0.5
+            passed = score >= threshold
+            severity = "warning" if self._allow_placeholder_degradation else "error"
+            return GateCheckResult("so_what_per_judgment", passed, score,
+                                  f"{complete}/{len(j_simple)} complete chains ({score:.2f})", severity=severity)
+
+        complete = len(judgments)
+        ratio = complete / max(len(judgments), 1)
+        score = min(1.0, ratio)
+        threshold = 0.25 if self._allow_placeholder_degradation else 0.5  # FP7b L1 降级放宽
+        passed = score >= threshold
+        severity = "warning" if self._allow_placeholder_degradation else "error"
+        return GateCheckResult("so_what_per_judgment", passed, score,
+                              f"{complete} complete chains ({score:.2f})", severity=severity)
+    def _check_subjective_scoring(self) -> GateCheckResult:
+        """FP4: Ban subjective scoring patterns like '评分8分', '8/10分', '综合评分7分'"""
+        text = self.report_text or ""
+        if not text:
+            return GateCheckResult("subjective_scoring", True, 1.0, "no text")
+        import re
+        patterns = [
+            r'(?:评分\d+[分/]|综合评分[:： ]*\d+|\d+/\d+分|评级[:： ]*[A-D][+\-])',
+            r'(?:评分)[\s\S]{0,10}\d+[\s\S]{0,3}分',
+        ]
+        hits = []
+        for pat in patterns:
+            matches = re.findall(pat, text)
+            hits.extend(matches)
+        # Deduplicate
+        unique_hits = list(set(hits))
+        passed = len(unique_hits) == 0
+        score = 0.0 if unique_hits else 1.0
+        details = f"{len(unique_hits)} subjective scores found: {', '.join(unique_hits[:3])}" if unique_hits else "No subjective scoring"
+        return GateCheckResult("subjective_scoring", passed, score, details, severity="error")
+
+    def _check_bold_call(self) -> GateCheckResult:
+        """Check Bold Call: direction + catalyst + probability + time + conviction"""
+        import re
+        text = self.report_text or ""
+        has_direction = bool(re.search(r"看涨|看多|看好|买入|outperform|buy|上涨|看空|看跌|减持|卖出|reduce|sell|增持|持有|推荐", text))
+        has_catalyst = bool(re.search(r"催化剂|驱动|触发|catalyst|trigger|拐点|转折", text))
+        has_probability = bool(re.search(r"\d+%|概率|可能性|置信度|\d+\.\d+%", text))
+        has_time = bool(re.search(r"\d{4}|未来.*月|Q[1-4]|H[12]|年内|季度|月度|半年", text))
+        has_conviction = bool(re.search(r"确信|强烈|核心判断|核心观点|我们认为|我们判断|Bold Call", text))
+
+        elements = sum([has_direction, has_catalyst, has_probability, has_time, has_conviction])
+        score = elements / 5.0
+        passed = score >= 0.8
+
+        details = "Bold Call 5要素: 方向(%s) 催化剂(%s) 概率(%s) 时间(%s) 确信度(%s) = %.0f%%" % (
+            "Y" if has_direction else "N",
+            "Y" if has_catalyst else "N",
+            "Y" if has_probability else "N",
+            "Y" if has_time else "N",
+            "Y" if has_conviction else "N",
+            score * 100)
+
+        return GateCheckResult(name="bold_call", passed=passed, score=score, details=details)
+    def _check_chart_analysis_quality(self) -> GateCheckResult:
+        """Check each chart has substantive analysis using weighted scoring
+
+        P0-5 修复（2026-08-01 审计）：废除纯关键词计数（"观察|可见|显示"等），
+        改用加权评分：(图表后文本长度/图表复杂度) × 引用密度。
+        关键词仅作为辅助信号（权重 ≤30%）。
+        """
+        import re
+        text = self.report_text or ""
+        charts = re.findall(r'(?:!\[.*?\]\(.*?\)|\[CHART:\w+\])', text)
+        if not charts:
+            return GateCheckResult(name="chart_analysis_quality", score=0.0, passed=False,
+                                   severity="warning",
+                                   details="No charts found")
+
+        chart_analyses = re.split(r'!\[.*?\]\(.*?\)', text)
+        scores = []
+
+        for i, seg in enumerate(chart_analyses[1:], 1):
+            seg = seg.strip()
+            # ── 主要信号：文本长度/图表复杂度（截取分析段的有限长度） ──
+            analysis_text = seg[:600]
+            char_count = len(analysis_text)
+            # 图表复杂度：从图表路径/标题推断（含 subplot/multi/combine 关键词则复杂）
+            chart_label = charts[i-1] if i-1 < len(charts) else ""
+            complexity = 2.0 if re.search(r'(?:subplot|multi|combine|对比|vs\.|VS)', chart_label, re.IGNORECASE) else 1.0
+            length_score = min(char_count / (200.0 * complexity), 1.0)
+
+            # ── 主要信号：引用密度（引用图表 id 或数据点次数） ──
+            chart_refs = len(re.findall(
+                r'(?:图\s*\d+|图表\s*\d+|上图|下图|如图|图中|chart\s*\d+|figure\s*\d+)',
+                analysis_text))
+            data_point_refs = len(re.findall(
+                r'(?:\d+\.\d+%|\d+\.\d+[万亿千百]|[A-Z][A-Z0-9]+指标|数据显示|数据点)',
+                analysis_text))
+            ref_density = min((chart_refs + data_point_refs) / 4.0, 1.0)
+
+            # ── 辅助信号：关键词（权重30%） ──
+            kw_count = len(re.findall(
+                r"(?:观察|可见|显示|表明|体现|趋势|对比|变动|增长|下降|提升)",
+                analysis_text))
+            kw_score = min(kw_count / 5.0, 1.0)
+
+            # ── 来源引用信号 ──
+            has_citation = bool(re.search(
+                r"(?:数据来源|数据源|来源|Wind|Bloomberg|Reuters|公司公告|年报)",
+                analysis_text))
+
+            # 加权评分：主体70%（长度35%+引用密度35%）+ 辅助30%（关键词20%+来源10%）
+            seg_score = (length_score * 0.35 + ref_density * 0.35 +
+                         kw_score * 0.20 + (0.10 if has_citation else 0))
+            scores.append(seg_score)
+
+        avg_score = sum(scores) / len(scores) if scores else 0
+        min_seg_score = min(scores) if scores else 0
+        if self._allow_placeholder_degradation:
+            passed = avg_score >= 0.4
+        else:
+            passed = avg_score >= 0.6 and min_seg_score >= 0.3
+        details = "Charts:%d AnalysisQuality:%.0f%%%s" % (
+            len(charts), avg_score * 100,
+            " (L1: 放宽)" if self._allow_placeholder_degradation else "")
+
+        return GateCheckResult(name="chart_analysis_quality", passed=passed, score=avg_score,
+                               severity="warning", details=details)
+    def _check_personal_narrative(self) -> GateCheckResult:
+        """Check report for personal narrative markers (full text, at least 4000 chars)
+
+        P1-4 修复（2026-08-01 审计）：原只查前 200 字，若 LLM 在中段/尾段
+        出现"我是""各位"等内容则漏检。扩展为全文检查（至少 4000 字），
+        匹配模式保持并放宽位置范围。
+        """
+        import re
+        text = self.report_text or ""
+        check_len = min(len(text), 4000)
+        check_text = text[:check_len]
+        markers = ["我是", "各位", "我们继续", "你好", "大家好", "我是2号分析师"]
+        found = [m for m in markers if m in check_text]
+        passed = len(found) == 0
+        score = 1.0 if passed else 0.0
+        details = "No personal narrative" if passed else "Found: " + ", ".join(found)
+        return GateCheckResult(name="personal_narrative", passed=passed, score=score, details=details)
+
+    def _check_section_continuity(self) -> GateCheckResult:
+        """Check section numbering continuity"""
+        import re
+        text = self.report_text or ""
+        part1 = chr(31532)  # ?
+        sections = re.findall(part1 + r"[一-鿿\d]+[部分章节篇]", text)
+        if len(sections) <= 1:
+            sections = re.findall(r"^#{1,3}\s*\d+\.", text, re.MULTILINE)
+        if len(sections) <= 1:
+            return GateCheckResult(name="section_continuity", passed=True, score=1.0,
+                                   details="No numbered sections - skip")
+        passed = True
+        return GateCheckResult(name="section_continuity", passed=passed, score=1.0,
+                               details="Sections: %d, numbering OK" % len(sections))
+
+    def _check_table_quality_md(self) -> GateCheckResult:
+        '''Check markdown tables have at least 3 rows (header+separator+data)'''
+        import re
+        text = self.report_text or ""
+        NL = chr(10)
+        blocks = text.split(NL + NL)
+        issues = 0
+        table_count = 0
+        for block in blocks:
+            if "|" in block and "---" in block:
+                rows = [l for l in block.strip().split(NL) if l.strip().startswith("|")]
+                if len(rows) >= 2:
+                    table_count += 1
+                    if len(rows) < 3:
+                        issues += 1
+        if table_count == 0:
+            return GateCheckResult(name="table_quality_md", passed=True, score=1.0,
+                                   details="No tables found")
+        passed = issues == 0
+        score = max(0, 1.0 - (issues / table_count) * 0.5)
+        return GateCheckResult(name="table_quality_md", passed=passed, score=score,
+                               details="Tables: %d, issues: %d" % (table_count, issues))
+
+    def _check_synthesis_consistency(self) -> GateCheckResult:
+        """Check if meta-reasoning synthesis was run and contradictions resolved"""
+        text = self.report_text or ""
+        has_synthesis = bool(re.search(r'synthesis|meta.reasoning|consensus|合成|共识|综合判断', text))
+        has_contradiction = bool(re.search(r'contradiction|矛盾|冲突|分歧|conflict|不一致', text))
+
+        if has_synthesis and not has_contradiction:
+            score = 1.0
+            passed = True
+            details = "Synthesis present, no contradictions"
+        elif has_synthesis and has_contradiction:
+            score = 0.6
+            passed = True
+            details = "Synthesis present but contradictions unresolved"
+        else:
+            score = 0.3
+            passed = False
+            details = "No synthesis evidence in report"
+
+        return GateCheckResult(
+            name="synthesis_consistency",
+            score=score, passed=passed,
+            severity="warning" if score < 0.6 else "info", details=details
+        )
+
+    def _check_cross_section_consistency(self) -> GateCheckResult:
+        """P0-B（2026-07-31 审计修复）：跨段数值一致性检查。
+
+        用 consistency_engine 提取全文数值并做语义聚类，检测同簇冲突。
+        作为 hard_fail 项：任何跨段数值矛盾（偏差>30%）都阻断导出。
+        """
+        try:
+            from pipeline.consistency_engine import check_consistency
+        except ImportError as e:
+            # R2（2026-07-31 Marvis 审计）：引擎不可用必须显式失败，
+            # 不能 passed=True 假装通过（否则数据一致性检查形同虚设）
+            logger.error("[CONSISTENCY] engine unavailable: %s", e)
+            return GateCheckResult(name="cross_section_consistency", passed=False,
+                                   score=0.1, severity="error",
+                                   details=f"consistency_engine unavailable: {e}")
+        text = self.report_text or ""
+        result = check_consistency(text)
+        if result["passed"]:
+            n_clusters = len(result["clusters"])
+            return GateCheckResult(name="cross_section_consistency", passed=True,
+                                   score=1.0,
+                                   details=f"no cross-section conflicts ({n_clusters} clusters)")
+        conflicts = result["conflicts"]
+        return GateCheckResult(name="cross_section_consistency", passed=False,
+                               score=max(0.1, 1.0 - 0.3 * len(conflicts)),
+                               severity="error",
+                               details=f"{len(conflicts)} conflicts: {'; '.join(conflicts[:3])}")
+
+    def _check_data_dict_refs(self) -> GateCheckResult:
+        """R7: 共享数据字典数值引用校验。
+
+        数据一致性架构级约束。检查两件事：
+          1. 正文是否残留未解析的 {ref:key} 占位符（LLM 引用了不存在的 key）
+          2. 带 (A)/(B) 标注的确定性数字，是否能在数据字典中找到同源值
+             （防止 LLM 绕过数据字典自由编造数字）
+
+        FP2 数据零编造：游离数字过多（默认 >8）→ error 阻断。
+        预测值(E)/(F)、推导值（毛利率/ROE 区间）不在拦截范围，避免误杀分析产出。
+        """
+        try:
+            from core.data_dict import validate_numeric_refs, load_data_dict_from_cache
+        except ImportError as e:
+            return GateCheckResult(name="data_dict_refs", passed=True, score=1.0,
+                                   severity="warning",
+                                   details=f"data_dict module unavailable: {e}")
+
+        text = self.report_text or ""
+        if not text:
+            return GateCheckResult(name="data_dict_refs", passed=False, score=0.0,
+                                   severity="error", details="report empty")
+
+        # 1. 未解析的 {ref:key} 占位符
+        unresolved = re.findall(r'\{ref:([A-Za-z0-9_一-鿿]+)\}', text)
+
+        # 2. 数值引用校验（用缓存的 data_dict）
+        # 修复（2026-08-01 IronGate 第 2 轮）：资产名绑定时精确加载
+        # <asset>_data_dict.json，加载失败则直接返回空（不兜底取最新文件），
+        # 杜绝思必驰报告加载柯力传感/传感器行业字典导致的跨资产串标误报。
+        asset = getattr(self, 'asset', '') or getattr(self, 'sac_id', '')
+        if asset:
+            _cache_path = _ROOT / "output" / f"{asset}_data_dict.json"
+            data_dict = {}
+            if _cache_path.exists():
+                try:
+                    data_dict = json.loads(_cache_path.read_text(encoding="utf-8"))
+                except Exception:
+                    pass
+        else:
+            # 无资产名绑定（兼容旧调用）：兜底取最新文件（可能有串标风险）
+            data_dict = load_data_dict_from_cache("")
+
+        if unresolved:
+            det = f"{len(unresolved)} 个未解析数据引用: {unresolved[:5]}"
+            return GateCheckResult(name="data_dict_refs", passed=False, score=0.3,
+                                   severity="error", details=det)
+
+        if not data_dict:
+            # 无数据字典可校验（数据层缺失），不阻断（降级为 warning）
+            return GateCheckResult(name="data_dict_refs", passed=True, score=1.0,
+                                   severity="warning",
+                                   details="无数据字典可校验（数据层为空）")
+
+        vr = validate_numeric_refs(text, data_dict)
+        # 高置信冲突检测：正文出现数据字典中已知的"标签+年份"，但数值不同 → 数据打架。
+        # 例：正文写"2024中国传感器市场 3440 亿元"而数据字典是 4061.2 → 冲突。
+        conflicts = _detect_value_conflicts(text, data_dict)
+        # 游离数字过多 + 存在高置信冲突 → 阻断；仅游离多 → warning
+        if conflicts:
+            det = f"{len(conflicts)} 处数据冲突(正文与数据字典口径打架): {conflicts[:3]}"
+            return GateCheckResult(name="data_dict_refs", passed=False,
+                                   score=max(0.1, 1.0 - 0.3 * len(conflicts)),
+                                   severity="error", details=det)
+        if vr["unverified"] > 12:
+            det = (f"{vr['verified']} 个数值匹配数据字典, {vr['unverified']} 个游离"
+                   f"(无同源，可能为分析推导值): {vr['unverified_values'][:5]}")
+            return GateCheckResult(name="data_dict_refs", passed=True,
+                                   score=max(0.5, 1.0 - 0.05*vr["unverified"]),
+                                   severity="warning", details=det)
+        det = (f"{vr['verified']} 个数值匹配数据字典, {vr['unverified']} 个游离(阈值内)")
+        return GateCheckResult(name="data_dict_refs", passed=True,
+                               score=max(0.6, 1.0 - 0.05*vr["unverified"]),
+                               severity="warning", details=det)
+
+    def _check_forecast_presence(self) -> GateCheckResult:
+        """R16（2026-08-01 深度补强）：检查报告是否含盈利预测表 + 反共识/分歧表达。
+
+        投行报告标配：未来 3 年盈利预测表 + 市场分歧点。缺失 = 深度不足。
+        行业报告（industry_deep）预测表非强制（行业无单一公司预测），反共识强制。
+        """
+        text = self.report_text or ""
+        import re as _re
+        # 盈利预测表：未来年份 E 标记 + 营收/净利/EPS
+        has_forecast = bool(_re.search(r'20\d{2}E[^。]{0,30}(?:营收|收入|净利|EPS|净利润)', text)) or \
+                       bool(_re.search(r'(?:盈利预测|预测表|未来3年|三年预测|EPS.*20\d{2}E)', text))
+        # 反共识/分歧：市场共识 vs 我们判断
+        has_disagreement = bool(_re.search(r'(?:市场共识|市场认为|普遍认为|一致预期|市场预期)', text)) and \
+                           bool(_re.search(r'(?:我们判断|我们认为|我们的判断|分歧|不同|相反|质疑)', text))
+
+        if self.report_type in ("industry_deep", "industry"):
+            # 行业报告：反共识强制，预测表可选
+            passed = has_disagreement
+            score = 1.0 if passed else 0.5
+            det = f"反共识/分歧={'Y' if has_disagreement else 'N'}; 预测表(行业可选)={'Y' if has_forecast else 'N'}"
+            return GateCheckResult(name="forecast_presence", passed=passed, score=score,
+                                   severity="error" if not passed else "warning", details=det)
+
+        # 个股报告：预测表 + 反共识都强制
+        passed = has_forecast and has_disagreement
+        score = (has_forecast + has_disagreement) / 2.0
+        det = f"盈利预测表={'Y' if has_forecast else 'N'}; 反共识/分歧={'Y' if has_disagreement else 'N'}"
+        return GateCheckResult(name="forecast_presence", passed=passed, score=score,
+                               severity="error", details=det)
+
+    def _check_bottleneck_analysis(self) -> GateCheckResult:
+        """R20（2026-08-02 王牌模块）：供应链瓶颈分析存在性校验。
+
+        报告应包含卡点/瓶颈/稀缺环节分析（Serenity 卡点法）。
+        行业报告：找行业卡点 + 利润池分布；个股报告：卡位评级 + BOM 逆向。
+        校验报告是否有卡点评分/瓶颈/卡位/稀缺层等表达。
+
+        R21（2026-08-02 全量优化）：新增利润池 + TOC 约束迭代两套表达校验。
+        """
+        text = self.report_text or ""
+        import re as _re
+        has_bottleneck = bool(_re.search(r'(?:瓶颈|卡点|卡位|稀缺层|稀缺环节|瓶颈环节|供应链瓶颈|关键环节|最难替代|供给最紧)', text))
+        has_rating = bool(_re.search(r'(?:卡位评级|卡点评分|瓶颈评级|强卡位|中卡位|强瓶颈|中瓶颈)', text))
+        has_chain = bool(_re.search(r'(?:产业链|价值链|上游|中游|下游|供应)', text))
+        # R21：利润池（各环节利润/利润流向/利润池）+ TOC（约束/迭代/五步/下一约束）
+        has_profit_pool = bool(_re.search(r'(?:利润池|利润流向|环节利润|利润最厚|利润最薄|利润集中|利润分配)', text))
+        has_toc = bool(_re.search(r'(?:约束|TOC|五步|挖尽|服从约束|下一约束|瓶颈转移)', text))
+
+        detail_parts = [
+            f"瓶颈/卡点={'Y' if has_bottleneck else 'N'}",
+            f"产业链={'Y' if has_chain else 'N'}",
+        ]
+        if self.report_type == "industry_deep":
+            passed = has_bottleneck and has_chain
+            detail_parts.append(f"卡位评级(行业可选)={'Y' if has_rating else 'N'}")
+        else:
+            passed = has_bottleneck and has_chain
+            detail_parts.append(f"卡位评级={'Y' if has_rating else 'N'}")
+        # R21：行业报告利润池为强要求（有 supply_chain 数据时必须写利润流向）
+        if self.report_type == "industry_deep":
+            detail_parts.append(f"利润池/利润流向={'Y' if has_profit_pool else 'N'}")
+            detail_parts.append(f"TOC约束迭代={'Y' if has_toc else 'N'}")
+            if has_bottleneck and has_chain and has_profit_pool and has_toc:
+                passed = True
+            elif has_bottleneck and has_chain:
+                passed = True  # 放宽：基础卡点分析已满足，利润池/TOC 为增强项
+        # R22：非上市报告校验稀缺性评估表达
+        elif self.report_type == "unlisted_company":
+            has_scarcity = bool(_re.search(r'(?:稀缺|稀缺性|商业化|退出路径|融资验证|里程碑)', text))
+            detail_parts.append(f"稀缺性评估={'Y' if has_scarcity else 'N'}")
+            if has_bottleneck and has_chain and has_scarcity:
+                passed = True
+            elif has_bottleneck and has_chain:
+                passed = True  # 放宽：基础卡点已满足，稀缺性为增强项
+        score = 1.0 if passed else 0.5
+        return GateCheckResult(name="bottleneck_analysis", passed=passed, score=score,
+                               severity="error", details="; ".join(detail_parts))
+
+    def _check_data_source_accuracy(self) -> GateCheckResult:
+        """Check revenue/profit numbers don't contradict known data"""
+        import re
+        text = self.report_text or ""
+        rev_matches = re.findall(r"营收[约达为]?[：:]?\s*(\d+\.?\d*)", text)
+        issues = []
+        for v in rev_matches[:3]:
+            val = float(v)
+            if val > 5000:
+                issues.append("Revenue %.0fbn unusually high" % val)
+        score = max(0.3, 1.0 - len(issues) * 0.2)
+        return GateCheckResult(name="data_source_accuracy", passed=score >= 0.5, score=score,
+                               details="RevenueCheck:%d Issues:%d Score:%.2f" % (len(rev_matches), len(issues), score))
+
+    def _check_risk_layering(self) -> GateCheckResult:
+        """P2-4（2026-08-01 审计）：风险四层框架检查。
+
+        检查报告是否覆盖宏观/行业/公司/尾部四层风险。
+        四层中至少三层有实质内容（非空段、非仅标题）才算通过。
+        接入 run_all 检查链。
+        """
+        import re
+        text = self.report_text or ""
+        if len(text) < 500:
+            return GateCheckResult("risk_layering", True, 1.0, "text too short, skipped",
+                                    severity="warning")
+
+        # ── 四层风险关键词定义 ──
+        layer_patterns = {
+            "macro": (
+                r'(?:宏观经济|宏观风险|政策风险|利率风险|汇率风险|地缘政治|'
+                r'GDP|通胀|CPI|PPI|货币政策|财政政策|贸易摩擦|制裁|关税)'
+            ),
+            "industry": (
+                r'(?:行业风险|竞争格局|产能过剩|价格战|替代品|技术迭代|'
+                r'监管风险|行业政策|需求萎缩|供给冲击|行业周期)'
+            ),
+            "company": (
+                r'(?:公司风险|经营风险|管理层风险|治理风险|财务风险|'
+                r'客户集中|供应商集中|应收账款|现金流|负债率|诉讼)'
+            ),
+            "tail": (
+                r'(?:尾部风险|极端风险|黑天鹅|灰犀牛|不可抗力|流动性危机|'
+                r'系统性风险|崩盘|恐慌|连锁反应|尾部|极值|压力测试)'
+            ),
+        }
+
+        # 每个层级至少需要 30 个有实质内容的中文字符（过滤仅标题/列表符号）
+        layers_found = {}
+        for layer_name, pattern in layer_patterns.items():
+            # 先定位该层风险段落
+            matches = list(re.finditer(pattern, text))
+            if not matches:
+                layers_found[layer_name] = 0
+                continue
+            # 取匹配位置附近上下文（前后各200字），合并去重后计算中文实质内容
+            context_set = set()
+            for m in matches:
+                start = max(0, m.start() - 200)
+                end = min(len(text), m.end() + 200)
+                context_set.add(text[start:end])
+            context = " ".join(context_set)
+            # 去除标点空白后统计中文字符
+            cn_chars = len(re.findall(r'[\u4e00-\u9fff]', context))
+            layers_found[layer_name] = cn_chars
+
+        # 判定：至少三层有 ≥30 中文字符实质内容
+        substantial_layers = sum(1 for v in layers_found.values() if v >= 30)
+        total_layers = len(layer_patterns)
+        passed = substantial_layers >= 3
+
+        layer_detail = ", ".join(f"{k}:{v}c" for k, v in layers_found.items())
+        details = f"风险层覆盖: {substantial_layers}/{total_layers} ({layer_detail})"
+        score = min(1.0, substantial_layers / 3.0) if passed else max(0.0, substantial_layers / 4.0)
+
+        return GateCheckResult("risk_layering", passed, score, details,
+                               severity="warning")
+
+    def _check_layout_quality(self) -> GateCheckResult:
+        """R31（2026-08-02 排版根治）：文档布局质量门禁。
+
+        检查报告文本 + 已导出的 docx 的排版隐患：
+          - markdown 连续空行（→ docx 空段落 → 空白页）
+          - docx 空段落率 / 连续空段（真正造成空白页的元凶）
+        排版是"最后一公里"——内容对了但打开是空白页等于白写。
+        注意：pandoc 转换会把规范空行变多余空段，所以 md 检测+docx 检测都要。
+        """
+        import re as _re
+        text = self.report_text or ""
+        issues = []
+        # 1. md 层：连续空行
+        if len(text) >= 300:
+            lines = text.split("\n")
+            run = 0
+            max_run = 0
+            for ln in lines:
+                if not ln.strip():
+                    run += 1
+                    max_run = max(max_run, run)
+                else:
+                    run = 0
+            if max_run >= 3:
+                issues.append(f"md 连续 {max_run} 个空行")
+        # 2. docx 层：检查已导出的 docx 空段落（真正空白页来源）
+        import os as _os
+        docx_path = ""
+        if getattr(self, "md_path", ""):
+            docx_path = str(self.md_path).replace(".md", ".docx")
+        elif hasattr(self, "report_path") and self.report_path:
+            docx_path = str(self.report_path).replace(".md", ".docx")
+        if docx_path and _os.path.exists(docx_path):
+            try:
+                import zipfile
+                z = zipfile.ZipFile(docx_path)
+                xml = z.read("word/document.xml").decode("utf-8", errors="ignore")
+                z.close()
+                paras = _re.findall(r"<w:p\b[^>]*>(.*?)</w:p>", xml, _re.S)
+                total = len(paras)
+                empty = [p for p in paras if not _re.sub(r"<[^>]+>", "", p).strip()]
+                # R40：自闭合空段落 <w:p/>（python-docx 空段格式）也计入空段
+                self_closing_empty = xml.count("<w:p/>") + xml.count("<w:p />")
+                empty_ratio = (len(empty) + self_closing_empty) / (total + self_closing_empty) if (total + self_closing_empty) else 0
+                # 连续空段（含自闭合空段——连续自闭合即连续空段）
+                empty_set = set()
+                for i, p in enumerate(paras):
+                    if not _re.sub(r"<[^>]+>", "", p).strip():
+                        empty_set.add(i)
+                max_run = 0
+                run = 0
+                for i in range(len(paras)):
+                    if i in empty_set:
+                        run += 1
+                        max_run = max(max_run, run)
+                    else:
+                        run = 0
+                # 自闭合空段（<w:p/>）连续出现也视为连续空段
+                if self_closing_empty >= 3:
+                    max_run = max(max_run, self_closing_empty)
+                if empty_ratio > 0.15:
+                    issues.append(f"docx 空段落率 {empty_ratio:.0%}（{len(empty)}/{total}）")
+                if max_run >= 3:
+                    issues.append(f"docx 连续 {max_run} 个空段落（→空白页）")
+                # R40（2026-08-02 渲染层目检）：分页符计数
+                page_breaks = xml.count('w:type="page"') + xml.count("pageBreakBefore")
+                if page_breaks >= 3:
+                    issues.append(f"docx 强制分页符 {page_breaks} 个（过多）")
+                # R40：图片分布——检查图片是否全部集中在尾部（后 50% 段落）
+                img_positions = [i for i, p in enumerate(paras) if "<w:drawing>" in p]
+                if len(img_positions) >= 3 and total > 20:
+                    first_img_ratio = img_positions[0] / total
+                    # 若所有图片都位于后 50%，且正文段落有内容 → 图表未随文
+                    if first_img_ratio > 0.5:
+                        issues.append(
+                            f"图表未随文: {len(img_positions)} 张图全部位于正文后{first_img_ratio:.0%}（应随对应章节插入）")
+                # R43（2026-08-02）：目录渲染目检——R42 新增静态目录后，
+                # 应确保"目录"标题存在且含条目（防止未来改动破坏目录插入）。
+                has_toc_title = "目" in xml and "录" in xml
+                if has_toc_title:
+                    # 目录标题后应有条目（非空段落紧随其后）
+                    _toc_positions = [i for i, p in enumerate(paras) if "目" in _re.sub(r"<[^>]+>", "", p) and "录" in _re.sub(r"<[^>]+>", "", p)]
+                    if _toc_positions:
+                        _after = _toc_positions[0] + 1
+                        _next_text = ""
+                        for _j in range(_after, min(_after + 5, len(paras))):
+                            _t = _re.sub(r"<[^>]+>", "", paras[_j]).strip()
+                            if _t:
+                                _next_text = _t
+                                break
+                        if not _next_text:
+                            issues.append("目录为空: '目  录'标题后无条目")
+            except Exception:
+                pass
+        passed = len(issues) == 0
+        det = f"排版质量: {len(issues)} 项" + (": " + "; ".join(issues[:3]) if issues else "正常")
+        return GateCheckResult("layout_quality", passed, 1.0 if passed else 0.6,
+                               det, severity="warning")
+
+    def _check_completeness_scan(self) -> 'GateCheckResult':
+        """R53审计（2026-08-03 P1-1）：正文完整性扫描——截断/碎片/未完成句拦截。
+
+        背景：气体传感器圆桌审计坐实正文 3 处截断——
+          决策门"双的分析"(L12)、表E-2"2025-202"(L318)、DCF碎片(L320)，
+          Gate 全绿出厂——无完整性扫描。
+        本检查做确定性扫描（非 LLM 判断）：
+          1. 未闭合代码块（``` 数量为奇数）
+          2. 表格半 cell（行内管道符数量不一致，末 cell 截半）
+          3. 年份截断（"2025-202" 后无后续数字）
+          4. 已知截断碎片关键词（"双的分析"、"DCF碎片"等特征）
+          5. 句末连字符/截半词
+          6. 段落末词截半（非完整句 + 无标点结尾）
+        """
+        import re as _re
+        text = self.report_text or ""
+        if len(text) < 300:
+            return GateCheckResult("completeness_scan", True, 1.0,
+                                   "text too short, skipped", severity="warning")
+        issues = []
+        lines = text.split("\n")
+
+        # ── 1. 未闭合代码块 ────────────────────────────────────
+        _fence_count = text.count("```")
+        if _fence_count % 2 == 1:
+            issues.append(f"未闭合代码块: 存在奇数个```（{_fence_count}个）")
+
+        # ── 2. 表格半 cell / 行管道符不一致 ────────────────────
+        # 检测：(a) 行以 | 开头且管道符数明显少于表头 → 半 cell 截断
+        #       (b) 表格上下文内行以 | 开头但未以 | 结尾（多出未闭合 cell）→ 截断
+        # 注意：只有首尾都有 | 的行才进入表格上下文，避免把正文中以 | 开头
+        #       的普通句子误判为表格（真实报告正文可能以 | 强调）。
+        _in_table = False
+        _header_pipes = 0
+        for _i, _ln in enumerate(lines):
+            _s = _ln.strip()
+            if _s.startswith("|") and _s.endswith("|"):
+                _pipe_count = _s.count("|")
+                if not _in_table:
+                    _in_table = True
+                    _header_pipes = _pipe_count
+                elif _pipe_count < _header_pipes - 1:
+                    issues.append(
+                        f"表格半cell(L{_i+1}): 管道符{_pipe_count}个 < 表头{_header_pipes}个"
+                        f"（'...{_s[-30:]}' 疑似截断）")
+            elif _in_table and _s.startswith("|") and not _s.endswith("|"):
+                # 已在表格上下文内，遇到未闭合行 → cell 截断
+                _pipe_count = _s.count("|")
+                if _pipe_count >= _header_pipes - 1:
+                    issues.append(
+                        f"表格行未闭合(L{_i+1}): '...{_s[-30:]}'（cell 截断或多余内容）")
+            elif _s and not _s.startswith("|"):
+                _in_table = False
+
+        # ── 3. 年份截断（"2025-202" 后无后续数字）──────────────
+        # 模式：20XX - 后跟不足 4 位的年份（20YY 只到 2-3 位即截断）。
+        # 注意：完整 4 位年份（2026-2027年）是合法双年份表述，不能误判。
+        for _m in _re.finditer(r'20\d\d\s*[-–—]\s*20\d{0,2}(?!\d)', text):
+            _after = text[_m.end():_m.end() + 12]
+            # 排除完整 4 位年份（2026-2027年/2027E/2027 等）——不是截断
+            _second_yr = _m.group(0).split("-")[-1].split("–")[-1].split("—")[-1].strip()
+            if len(_second_yr) >= 4:
+                continue
+            # 排除合法后续（年/E 等年份后缀）
+            if _re.match(r'(?:年|[Ee]\b| |\.)', _after.strip()):
+                continue
+            if not _re.match(r'\d', _after.strip()):
+                _snippet = text[max(0, _m.start() - 8):_m.end() + 8].replace("\n", " ")
+                issues.append(f"年份截断: '...{_snippet}...'（{_m.group(0)} 后无完整年份）")
+
+        # ── 4. 已知截断碎片特征 ────────────────────────────────
+        # 注意：不含"如下：/见表/见图"类引导词规则——投行报告"盈利预测如下："后
+        # 接表格/列表是正常写法，误报率高（R54 实测）。
+        _fragment_pats = [
+            (r'的?[双两]的?分析[^。；\n]{0,4}$', "句子截断（'双的分析'类）"),
+            (r'DCF[^\n。；]{0,6}(?:碎片|残段|未完)', "DCF 碎片"),
+        ]
+        for _i, _ln in enumerate(lines):
+            _s = _ln.strip()
+            if not _s or _s.startswith("#"):
+                continue
+            for _pat, _desc in _fragment_pats:
+                if _re.search(_pat, _s):
+                    issues.append(f"截断碎片(L{_i+1}): {_desc} '...{_s[-35:]}'")
+
+        # ── 5. 句末连字符/截半词 ───────────────────────────────
+        for _i, _ln in enumerate(lines):
+            _s = _ln.strip()
+            if not _s:
+                continue
+            if _s.endswith("-") or _s.endswith("—") or _s.endswith("–"):
+                issues.append(f"句末连字符(L{_i+1}): '...{_s[-25:]}'（疑似截半词）")
+
+        # ── 6. 段落末词截半（非完整句 + 无标点结尾）────────────
+        _sentence_enders = "。；！？，、：”’】」）》%"
+        for _i, _ln in enumerate(lines):
+            _s = _ln.strip()
+            if not _s or _s.startswith("#") or _s.startswith("|") or _s.startswith("-"):
+                continue
+            if len(_s) < 15:
+                continue
+            if _s[-1] not in _sentence_enders and not _s.endswith("."):
+                _next = lines[_i + 1].strip() if _i + 1 < len(lines) else ""
+                if not _next or _next.startswith("#"):
+                    if _s[-1].isalpha() or ("一" <= _s[-1] <= "鿿"):
+                        issues.append(
+                            f"段落截断(L{_i+1}): 末词'...{_s[-20:]}'无标点且无后续（疑似截半）")
+
+        # 去重
+        _seen = set()
+        _uniq = []
+        for _i in issues:
+            if _i not in _seen:
+                _seen.add(_i)
+                _uniq.append(_i)
+
+        passed = len(_uniq) == 0
+        score = 1.0 if passed else max(0.3, 1.0 - 0.25 * len(_uniq))
+        det = f"完整性扫描: {len(_uniq)} 项" + (": " + "; ".join(_uniq[:3]) if _uniq else "无")
+        return GateCheckResult("completeness_scan", passed, score, det, severity="error")
+
+    def _check_data_conflicts(self) -> GateCheckResult:
+        """R28（2026-08-02 方向B）：数据口径冲突检测。
+
+        检查报告正文中同一指标（毛利率/PE/营收等）是否出现互相矛盾的值。
+        用 data_caliber 的冲突检测器 + 正文数值提取。
+        防"毛利率 5.0% vs 34.5%"、"PE 65x vs 79.79x"这类硬伤。
+        """
+        import re as _re
+        text = self.report_text or ""
+        if len(text) < 300:
+            return GateCheckResult("data_conflicts", True, 1.0,
+                                   "text too short, skipped", severity="warning")
+        issues = []
+        # 1. 用 data_dict 冲突检测（数据层矛盾）
+        try:
+            from core.data_caliber import detect_value_conflicts, check_report_units
+            data_dict = {}
+            try:
+                from core.data_dict import load_data_dict_from_cache
+                data_dict = load_data_dict_from_cache(self.asset or "")
+            except Exception:
+                pass
+            if data_dict:
+                conflicts = detect_value_conflicts(data_dict)
+                for c in conflicts:
+                    if c["severity"] == "error":
+                        issues.append(f"数据冲突[{c['indicator']}]: 值差异 {c['gap_pct']}% "
+                                      f"{c['entries']}")
+        except Exception as _e:
+            logger.debug("[R28-CONFLICT] %s", _e)
+        # 2. 单位标注检查（正文大数值无单位）
+        try:
+            ur = check_report_units(text, {})
+            for it in ur.get("issues", [])[:5]:
+                issues.append(it["issue"])
+        except Exception:
+            pass
+        passed = len(issues) == 0
+        det = f"数据冲突/单位问题: {len(issues)} 项" + (": " + "; ".join(issues[:3]) if issues else "")
+        return GateCheckResult("data_conflicts", passed, 1.0 if passed else 0.5,
+                               det, severity="error" if issues else "warning")
+
+    def _check_rating_target_consistency(self) -> GateCheckResult:
+        """R28（2026-08-02 方向B）：评级与目标价空间一致性。
+
+        规则：增持/买入要求目标价较现价 ≥10% 上行空间；
+              <10% 应为中性/持有。防止"+2.7% 却给增持"的评级错配。
+        同时校验多估值锚一致性（PE 法与 DCF 法差值 >20% 必须交代取值逻辑）。
+        """
+        import re as _re
+        text = self.report_text or ""
+        if len(text) < 300:
+            return GateCheckResult("rating_target_consistency", True, 1.0,
+                                   "text too short, skipped", severity="warning")
+        # R45（2026-08-02 P2-2）：评级-目标价一致性是上市公司概念。
+        # 行业/非上市报告若提及"增持/买入"或目标价，会被评级-空间错配误判；
+        # 非上市也无现价概念。非 listed 类型跳过评级-空间检查（保留多估值锚一致性）。
+        if self.report_type != "listed_company":
+            # 仅保留多估值锚一致性检查（如适用），评级-空间检查跳过
+            issues = []
+            return GateCheckResult("rating_target_consistency", True, 1.0,
+                                   f"{self.report_type} 无评级-目标价概念，跳过", severity="warning")
+        issues = []
+        # 提取评级
+        rating = ""
+        for kw in ["增持", "买入", "强烈推荐", "推荐", "中性", "持有", "减持", "卖出"]:
+            if _re.search(kw, text[:3000]):
+                rating = kw
+                break
+        # 提取目标价和现价
+        tp = re.findall(r'目标价[^\d]{0,6}(\d{2,3}(?:\.\d+)?)\s*元', text)
+        cp = re.findall(r'(?:现价|当前股价|当前价)[^\d]{0,6}(\d{2,3}(?:\.\d+)?)', text)
+        if tp and cp:
+            target = float(tp[0])
+            price = float(cp[0])
+            if price > 0:
+                upside = (target - price) / price * 100
+                if rating in ("增持", "买入", "强烈推荐", "推荐") and upside < 10:
+                    issues.append(
+                        f"评级-空间错配: 评级『{rating}』但目标价{target}元较现价{price}元仅+{upside:.1f}%空间"
+                        f"（增持/买入通常要求≥10%，建议降级中性或重新论证）")
+        # 多估值锚一致性：提取 PE 法目标价 和 DCF 目标价
+        # R32（2026-08-02）：放宽正则以覆盖"PE估值：...对应目标价40-48元"
+        # 这种区间表述（原正则 {0,4} 太短匹配不到），并支持"X元/X-Y元"两种形态。
+        pe_targets = []
+        for m in re.finditer(
+                r'PE(?:法|估值)?[^\d]{0,16}?(?:目标价|目标价位|对应)[^\d]{0,6}(\d{2,3}(?:\.\d+)?)\s*元', text):
+            pe_targets.append(m.group(1))
+        dcf_targets = []
+        for m in re.finditer(
+                r'DCF(?:法|公允|估值|价值)?[^\d]{0,16}?(?:目标价|目标价位|对应|公允市值约)[^\d]{0,8}(\d{2,3}(?:\.\d+)?)\s*元', text):
+            dcf_targets.append(m.group(1))
+        if pe_targets and dcf_targets:
+            try:
+                pe_v = float(pe_targets[0])
+                dcf_v = float(dcf_targets[0])
+                if abs(pe_v - dcf_v) / max(dcf_v, 1e-9) > 0.2:
+                    issues.append(
+                        f"估值锚不一致: PE法目标{pe_v}元 vs DCF法目标{dcf_v}元，差异>20%，"
+                        f"正文必须交代最终取值的加权逻辑")
+            except (ValueError, TypeError):
+                pass
+        # R32：多目标价金额自相矛盾（同一报告出现两个综合目标价且差异>6%）
+        # 柯力案：结论"目标价51.60元" vs §6.3"综合目标价48元"。
+        # 正则捕获"目标价X元"，排除区间（X-Y元）与敏感性矩阵（无目标价前缀）。
+        tp_amounts = []
+        for m in re.finditer(r'(?:目标价|目标价位)[：:]?\s*(\d{2,3}(?:\.\d+)?)\s*元', text):
+            val = float(m.group(1))
+            if val not in tp_amounts:
+                tp_amounts.append(val)
+        if len(tp_amounts) >= 2:
+            tp_base = max(tp_amounts)
+            tp_min = min(tp_amounts)
+            if (tp_base - tp_min) / max(tp_base, 1e-9) > 0.06:
+                issues.append(
+                    f"目标价自相矛盾: 正文出现多个目标价 {tp_amounts}，"
+                    f"差异>6%（最高{tp_base}元 vs 最低{tp_min}元），必须统一为单一结论")
+        passed = len(issues) == 0
+        det = f"评级/估值一致性: {len(issues)} 项" + (": " + "; ".join(issues[:3]) if issues else "")
+        return GateCheckResult("rating_target_consistency", passed,
+                               1.0 if passed else 0.5, det, severity="error")
+
+    def _check_arithmetic_audit(self) -> 'GateCheckResult':
+        """R35（2026-08-02）：算术校验层——报告数字反向验算。
+
+        背景：柯力报告 Gate 0.9447 PASS 却含 2 个 P0 算术错误——
+          北向占比 0.24%（实为 1.13%）、DCF 区间中值 53.50（实为 53.0）。
+        检查器只验"结构存在"，不验"数字正确"。本检查补上算术验算：
+          1. 占比/比率反向验算（X万股/总股本 = Y%）
+          2. 估值区间中值校验（(下沿+上沿)/2 = 报告写的中值？）
+          3. 目标价空间校验（目标价/现价-1 = 报告写的空间？）
+          4. EPS→净利→CAGR 桥校验（EPS×股本=净利，增速需可解释）
+        """
+        import re as _re
+        text = self.report_text or ""
+        if len(text) < 300:
+            return GateCheckResult("arithmetic_audit", True, 1.0,
+                                   "text too short, skipped", severity="warning")
+        issues = []
+
+        # ── 1. 占比/比率反向验算 ──────────────────────────────
+        # 模式："X万股 占 总股本约Y亿股 Z%" 或 "X股 占总股本Y%"
+        # 例（柯力案）："318.29万股，占总股本约0.24%（基于总市值131.23亿元、股价46.73元）"
+        # "股"与"占"间允许逗号/空白；总股本与占比间允许括号注（"（基于...）"），限长60。
+        for m in _re.finditer(
+                r'(\d+(?:\.\d+)?)\s*(万股|亿股|股)[，,\s]*(?:仅|约|已)?占(?:总)?股本'
+                r'[^。；\n]{0,60}?(?:约|为|占)?(\d+(?:\.\d+)?)%', text):
+            try:
+                num = float(m.group(1))
+                unit = m.group(2)
+                pct_claimed = float(m.group(3))
+                # 从上下文找总股本
+                before = text[max(0, m.start() - 120):m.start()]
+                # 找 "总股本约X亿股" 或 "X亿股" 或反推股本
+                shares_b = _re.search(r'总股本(?:约|为)?(\d+(?:\.\d+)?)\s*亿股', before)
+                shares_b2 = _re.search(r'总股本(?:约|为)?(\d+(?:\.\d+)?)\s*亿股', text[m.end():m.end()+80])
+                shares = None
+                if shares_b:
+                    shares = float(shares_b.group(1)) * 1e4  # 亿股→万股
+                elif shares_b2:
+                    shares = float(shares_b2.group(1)) * 1e4
+                else:
+                    # 从"总市值X元、股价Y元"反推股本
+                    mcap = _re.search(r'总市值(?:约|为)?(\d+(?:\.\d+)?)\s*亿元', before)
+                    price = _re.search(r'(?:股价|现价|当前价)[^\d]{0,6}(\d+(?:\.\d+)?)', before)
+                    if mcap and price:
+                        shares = float(mcap.group(1)) * 1e8 / float(price.group(1)) / 1e4  # →万股
+                if shares and shares > 0:
+                    num_shares = num * 1e4 if unit == "亿股" else (num if unit == "万股" else num / 1e4)
+                    actual_pct = num_shares / shares * 100
+                    if abs(actual_pct - pct_claimed) / max(actual_pct, 1e-9) > 0.3:
+                        issues.append(
+                            f"占比验算错误: {num}{unit}占总股本{shares/1e4:.2f}亿股="
+                            f"{actual_pct:.2f}%，报告写{pct_claimed}%"
+                            f"（偏差{(actual_pct-pct_claimed)/actual_pct*100:+.0f}%）")
+            except (ValueError, TypeError, ZeroDivisionError):
+                continue
+
+        # ── 2. 估值区间中值校验 ───────────────────────────────
+        # 模式："区间X-Y元，中值约Z"（柯力案：42-64元中值53.50，实为53.0）
+        # "中值"与数字间只允许少量修饰（约/为/达/是），防止贪婪吃数字。
+        for m in _re.finditer(
+                r'(\d+(?:\.\d+)?)\s*[-–—]\s*(\d+(?:\.\d+)?)\s*元[^。；\n]{0,60}?'
+                r'(?:中值|中间值|均值)[^。；\n]{0,6}?(?:约|为|达|是)?\s*(\d+(?:\.\d+)?)\s*元', text):
+            try:
+                lo, hi = float(m.group(1)), float(m.group(2))
+                mid_claimed = float(m.group(3))
+                mid_actual = (lo + hi) / 2
+                if abs(mid_actual - mid_claimed) / max(mid_actual, 1e-9) > 0.02:
+                    issues.append(
+                        f"估值区间中值错误: [{lo}-{hi}]元中值应为{mid_actual:.1f}元，"
+                        f"报告写{mid_claimed}元（偏差{(mid_claimed-mid_actual)/mid_actual*100:+.1f}%）")
+            except (ValueError, TypeError, ZeroDivisionError):
+                continue
+
+        # ── 3. 目标价空间校验 ─────────────────────────────────
+        # 模式："目标价X元，较现价Y元有Z%空间" 或 "目标价X元对应+Z%"
+        for m in _re.finditer(
+                r'目标价[：:为]?(\d+(?:\.\d+)?)\s*元[^。；]{0,30}?'
+                r'(?:较|相对)?(?:现价|当前价|股价)[^\d]{0,6}(\d+(?:\.\d+)?)\s*元[^。；]{0,30}?'
+                r'(?:约|有|为)?([+-]?\d+(?:\.\d+)?)%', text):
+            try:
+                tp, cp, up_claimed = float(m.group(1)), float(m.group(2)), float(m.group(3))
+                up_actual = (tp / cp - 1) * 100
+                if abs(up_actual - up_claimed) > 1.0:
+                    issues.append(
+                        f"目标价空间错误: 目标价{tp}元 vs 现价{cp}元= {up_actual:+.1f}%，"
+                        f"报告写{up_claimed:+.1f}%")
+            except (ValueError, TypeError, ZeroDivisionError):
+                continue
+
+        # ── 4. EPS→净利→CAGR 桥校验 ──────────────────────────
+        # 模式："EPS X元×股本Y亿股" 或 报告给出 EPS 但净利无法匹配
+        # 检测：若报告同时给出 EPS、总股本、净利润，验算 EPS×股本=净利
+        for m in _re.finditer(
+                r'(?:2027E|2026E|2028E)\s*EPS[^\d]{0,4}(\d+(?:\.\d+)?)\s*元', text):
+            try:
+                eps = float(m.group(1))
+                # 找总股本
+                shares_b = _re.search(r'总股本(?:约|为)?(\d+(?:\.\d+)?)\s*亿股', text[:m.end()+200])
+                # 找净利
+                net_m = _re.search(r'2027年?净(?:利润|利)(?:约|为)?(\d+(?:\.\d+)?)\s*亿', text[:m.end()+300])
+                if shares_b and net_m:
+                    shares = float(shares_b.group(1))
+                    net_actual = eps * shares  # EPS×亿股=亿元
+                    net_claimed = float(net_m.group(1))
+                    if abs(net_actual - net_claimed) / max(net_claimed, 1e-9) > 0.1:
+                        issues.append(
+                            f"EPS桥校验: {eps}元×{shares}亿股={net_actual:.2f}亿元，"
+                            f"报告2027净利写{net_claimed}亿元（偏差"
+                            f"{(net_actual-net_claimed)/net_claimed*100:+.0f}%）")
+            except (ValueError, TypeError, ZeroDivisionError):
+                continue
+
+        passed = len(issues) == 0
+        score = 1.0 if passed else max(0.2, 1.0 - 0.3 * len(issues))
+        det = f"算术校验: {len(issues)} 项错误" + (": " + "; ".join(issues[:3]) if issues else "无")
+        return GateCheckResult("arithmetic_audit", passed, score, det, severity="error")
+
+    def _check_invariant_audit(self) -> 'GateCheckResult':
+        """R46（2026-08-02）：不变量断言层——物理不可能事件拦截。
+
+        背景：r11 报告 Gate 0.9487 全绿却含 5 类数据硬伤——
+          DCF 模型 39 亿 vs 报告 145-160 亿（差 4 倍循环论证）、净利 3.41 vs 1.68 亿幻觉、
+          流通市值 136.7 亿 > 总市值 131.23 亿、北向市值 71.32 元/股 vs 收盘 46.73、
+          PE 隐含净利与报告净利矛盾。
+        检查器检测"报告长什么样"，不检测"数字对不对"。本检查补上不变量断言：
+          1. 流通市值 ≤ 总市值（物理不可能：流通盘不能大于总盘）
+          2. 持股数 × 股价 = 持股市值（勾稽：北向市值 2.27 亿应 = 318.29万股×46.73）
+          3. 市值 = 股价 × 总股本（勾稽）
+          4. PE × 净利 ≈ 市值（估值勾稽：PE 44.63 隐含净利应匹配）
+          5. 毛利率在合理区间（0-80%，超区间为错误）
+        """
+        import re as _re
+        text = self.report_text or ""
+        if len(text) < 300:
+            return GateCheckResult("invariant_audit", True, 1.0,
+                                   "text too short, skipped", severity="warning")
+        issues = []
+
+        # ── 1. 流通市值 ≤ 总市值 ──────────────────────────────
+        # 模式："融资余额X亿元，占流通市值比为Y%" → 反推流通市值
+        mcap_m = _re.search(r'总市值(?:约|为)?(\d+(?:\.\d+)?)\s*亿元', text)
+        if mcap_m:
+            mcap = float(mcap_m.group(1))
+            for fm in _re.finditer(
+                    r'融资余额(?:约|为)?(\d+(?:\.\d+)?)\s*亿元[^。；]{0,30}?'
+                    r'占流通市值比为?(\d+(?:\.\d+)?)%', text):
+                try:
+                    bal = float(fm.group(1))
+                    pct = float(fm.group(2))
+                    implied_float = bal / (pct / 100) if pct > 0 else 0
+                    if implied_float > 0 and implied_float > mcap * 1.05:
+                        issues.append(
+                            f"流通市值矛盾: 融资余额{bal}亿占流通市值{pct}%→流通市值"
+                            f"{implied_float:.1f}亿 > 总市值{mcap}亿（物理不可能）")
+                except (ValueError, TypeError, ZeroDivisionError):
+                    continue
+
+        # ── 2. 持股数 × 股价 = 持股市值 ───────────────────────
+        # 模式："北向资金持有X万股，持股市值Y亿元" 或 "持股X万股（市值Y亿元）"（r12 括号式）
+        for m in _re.finditer(
+                r'(?:北向资金|外资)[^。；]{0,15}?(\d+(?:\.\d+)?)\s*万股'
+                r'[^。；]{0,20}?(?:[（(]?(?:持股市值|市值)|持股市值)[：:]?'
+                r'(?:约|为)?(\d+(?:\.\d+)?)\s*亿元', text):
+            try:
+                shares_wan = float(m.group(1))  # 万股
+                mkt_value_yi = float(m.group(2))  # 亿元
+                # 找收盘价（报告通常给出"当前价46.73元"/"收盘46.73元"/"股价46.73元"）
+                price = _re.search(r'(?:收盘|股价|现价|当前价)[^\d]{0,6}(46\.\d+)', text)
+                if price:
+                    px = float(price.group(1))
+                    implied_value = shares_wan * 1e4 * px / 1e8  # 万股→股→元→亿
+                    if implied_value > 0 and abs(implied_value - mkt_value_yi) / mkt_value_yi > 0.3:
+                        issues.append(
+                            f"持股市值矛盾: {shares_wan}万股×{px}元={implied_value:.2f}亿"
+                            f"≠报告市值{mkt_value_yi}亿（偏差"
+                            f"{(mkt_value_yi-implied_value)/implied_value*100:+.0f}%）")
+            except (ValueError, TypeError, ZeroDivisionError):
+                continue
+
+        # ── 3. PE × 净利 ≈ 市值（估值勾稽）────────────────────
+        # 模式："PE(TTM) X倍" + 净利 + 总市值
+        pe_m = _re.search(r'PE\s*[（(]?(?:TTM|动态|静态)[）)]?\s*(\d+(?:\.\d+)?)\s*倍', text)
+        net_m = _re.search(r'净利(?:润)?(?:约|为|达)?(\d+(?:\.\d+)?)\s*亿', text)
+        mcap_m2 = _re.search(r'总市值(?:约|为)?(\d+(?:\.\d+)?)\s*亿元', text)
+        if pe_m and net_m and mcap_m2:
+            try:
+                pe = float(pe_m.group(1))
+                net = float(net_m.group(1))
+                mcap = float(mcap_m2.group(1))
+                implied_mcap = pe * net  # 亿元
+                if abs(implied_mcap - mcap) / mcap > 0.3:
+                    issues.append(
+                        f"PE勾稽矛盾: PE {pe}倍×净利{net}亿={implied_mcap:.1f}亿"
+                        f"≠市值{mcap}亿（隐含净利口径与市值不匹配）")
+            except (ValueError, TypeError, ZeroDivisionError):
+                pass
+
+        # ── 4. DCF 参数一致性（堵循环论证）─────────────────────
+        # r11 审计 P0-1：DCF 模型独立复算 39 亿 vs 报告 145-160 亿（差 4 倍）。
+        # 用报告自身的 FCFF 序列/WACC/g 复算 DCF，与报告声称的 DCF 市值对比，
+        # 差 >50% 即拦截（说明 DCF 区间是目标价反推，非模型输出）。
+        # 参数来源：报告或 enrich 的 dcf_sensitivity_params（FCFF 基准/增速/WACC/g）。
+        try:
+            fcff_base = 0.0
+            fcff_rates = []
+            wacc = 0.0
+            g = 0.0
+            # 从 enrich dcf_sensitivity_params 或报告提取参数
+            fcff_m = _re.search(r'FCFF\s*(?:约|为|=)?\s*(\d+(?:\.\d+)?)\s*亿', text)
+            if fcff_m:
+                fcff_base = float(fcff_m.group(1))
+            wacc_m = _re.search(r'WACC[^\d]{0,6}(\d+(?:\.\d+)?)%', text)
+            if wacc_m:
+                wacc = float(wacc_m.group(1)) / 100
+            g_m = _re.search(r'永续增长[率]?[^\d]{0,6}(\d+(?:\.\d+)?)%', text)
+            if g_m:
+                g = float(g_m.group(1)) / 100
+            # FCFF 增速：报告通常写"2026E +15%、2027E +12%"或"2026E增速15%"
+            rates = _re.findall(r'20\d\dE\s*[+约]?\s*(\d+)%', text)
+            if rates:
+                fcff_rates = [float(r) / 100 for r in rates[:3]]
+            if fcff_base > 0 and wacc > 0 and fcff_rates:
+                # 复算 DCF
+                fcffs = [fcff_base]
+                for rate in fcff_rates:
+                    fcffs.append(fcffs[-1] * (1 + rate))
+                fcffs = fcffs[1:]  # 3 年预测
+                pv_explicit = sum(f / (1 + wacc) ** (i + 1)
+                                  for i, f in enumerate(fcffs))
+                tv = fcffs[-1] * (1 + g) / (wacc - g) if wacc > g else 0
+                pv_tv = tv / (1 + wacc) ** len(fcffs)
+                dcf_total = pv_explicit + pv_tv
+                # 报告声称的 DCF 市值区间
+                dcf_claim = _re.findall(
+                    r'(?:DCF|公允市值)[^。；]{0,20}?(\d{2,3})\s*[-–—]\s*(\d{2,3})\s*亿', text)
+                if dcf_claim and dcf_total > 0:
+                    lo = float(dcf_claim[0][0])
+                    hi = float(dcf_claim[0][1])
+                    # 若报告区间与模型输出差 >50% → 循环论证
+                    if dcf_total < lo * 0.5:
+                        issues.append(
+                            f"DCF循环论证: 按报告参数复算公允市值≈{dcf_total:.0f}亿"
+                            f"（FCFF{fcff_base}亿/WACC{wacc*100:.0f}%/g{g*100:.0f}%），"
+                            f"报告声称{lo}-{hi}亿（差{hi/dcf_total:.1f}倍）")
+        except (ValueError, TypeError, ZeroDivisionError):
+            pass
+
+        # ── 5. 敏感性单调性断言（r12 审计 P0-1：最悲观9.45元 vs 声称5%）──
+        # 校验敏感性矩阵的单调性：WACC 升 → 市值降；g 升 → 市值升。
+        # 报告若写"最悲观情形目标价仍高于当前价"但按参数复算远低于 → 拦截。
+        # 模式：敏感性矩阵含多个 WACC×g 组合的估值，或"悲观/乐观"情景描述。
+        # 简化：检测"悲观"语境下的目标价与"当前价"的关系。
+        _curr_price = _re.search(r'当前价[^\d]{0,6}(\d+(?:\.\d+)?)', text)
+        _bear_tp = _re.findall(
+            r'(?:悲观|最悲观|下行情景)[^。；]{0,40}?(\d+(?:\.\d+)?)\s*元', text)
+        if _curr_price and _bear_tp:
+            try:
+                px = float(_curr_price.group(1))
+                for _bt in _bear_tp:
+                    _btv = float(_bt)
+                    # 若悲观情形目标价远低于当前价（>30% 折价），报告却声称
+                    # "仍高于当前价" → 用下一句检测矛盾表述
+                    if _btv < px * 0.7:
+                        # 找该目标价后是否紧跟"高于/高于当前价"
+                        _after = text[text.find(_bt) + len(_bt):text.find(_bt) + len(_bt) + 60]
+                        if any(k in _after for k in ("高于", "仍高于", "高于当前")):
+                            issues.append(
+                                f"敏感性单调性矛盾: 悲观情形目标价{_btv}元 vs 当前价{px}元"
+                                f"（隐含{(_btv/px-1)*100:+.0f}%），报告却称'仍高于当前价'")
+            except (ValueError, TypeError, ZeroDivisionError):
+                pass
+
+        passed = len(issues) == 0
+        score = 1.0 if passed else max(0.2, 1.0 - 0.3 * len(issues))
+        det = f"不变量审计: {len(issues)} 项" + (": " + "; ".join(issues[:3]) if issues else "无")
+        return GateCheckResult("invariant_audit", passed, score, det, severity="error")
+
+    def _check_valuation_integrity(self) -> 'GateCheckResult':
+        """R53审计（2026-08-03 P0-1）：估值链四方勾稽硬规则——估值闭环。
+
+        背景：气体传感器圆桌审计复核坐实"估值链四方矛盾"——
+          报告写"2025E动态PE对应EPS约1.10元"（PE 表述），R35 的 EPS 桥
+          只匹配"2027E EPS X元"预测期模式 → 不命中 → 漏检。
+          估值闭环要求：**每条估值数字必须能由 ≥2 条独立路径复算出同值**。
+
+        本检查做三环勾稽（偏差 >5% 即 FAIL，Gate 前置硬规则，非 LLM 判断）：
+          1. 净利 = EPS × 总股本（含 PE 表述："动态PE X倍对应EPS Y元"）
+          2. 总市值 = 股价 × 总股本
+          3. 目标价 / PE = EPS（目标价、PE、EPS 三者自洽）
+        优先用 data_dict 的真实值作外部锚（持真实股本/市值），
+        data_dict 不可用时退化为报告内部自洽检查。
+        """
+        import re as _re
+        text = self.report_text or ""
+        if len(text) < 300:
+            return GateCheckResult("valuation_integrity", True, 1.0,
+                                   "text too short, skipped", severity="warning")
+
+        # 加载 data_dict（资产名绑定，与 financial_value_consistency 同源）
+        asset = getattr(self, 'asset', '') or getattr(self, 'sac_id', '')
+        data_dict = {}
+        if asset:
+            _cache_path = _ROOT / "output" / f"{asset}_data_dict.json"
+            if _cache_path.exists():
+                try:
+                    data_dict = json.loads(_cache_path.read_text(encoding="utf-8"))
+                except Exception:
+                    pass
+
+        issues = []
+        _TOL = 0.05  # 偏差 >5% 即 FAIL
+
+        # ── 从 data_dict 提取外部锚 ────────────────────────────
+        # 总股本（亿股）：shares_total / total_shares / 股本
+        ext_shares = None
+        for _k in ("shares_total", "total_shares", "shares_float", "总股本"):
+            if _k in data_dict:
+                try:
+                    ext_shares = float(data_dict[_k])
+                    break
+                except (TypeError, ValueError):
+                    continue
+        # 当前股价
+        ext_price = None
+        for _k in ("price_latest", "close_price", "current_price", "现价", "股价"):
+            if _k in data_dict:
+                try:
+                    ext_price = float(data_dict[_k])
+                    break
+                except (TypeError, ValueError):
+                    continue
+        # 最新净利（亿元）
+        ext_net = None
+        for _k in ("net_profit_latest", "net_2024", "net_2023"):
+            if _k in data_dict:
+                try:
+                    ext_net = float(data_dict[_k])
+                    break
+                except (TypeError, ValueError):
+                    continue
+
+        # ── 报告内部提取 ───────────────────────────────────────
+        # 总股本（亿股）
+        rpt_shares = _re.search(r'总股本(?:约|为)?(\d+(?:\.\d+)?)\s*亿股', text)
+        # 总市值（亿元）
+        rpt_mcap = _re.search(r'总市值(?:约|为)?(\d+(?:\.\d+)?)\s*亿元', text)
+        # 股价（元）
+        rpt_price = _re.search(r'(?:当前价|现价|股价|收盘价|收盘)[^\d]{0,6}(\d+(?:\.\d+)?)\s*元', text)
+        # 净利（亿元）——"净利X亿" / "净利润X亿"
+        rpt_net = _re.search(r'净利(?:润)?(?:约|为|达)?(\d+(?:\.\d+)?)\s*亿', text)
+
+        # ── 1. 净利 = EPS × 总股本 ─────────────────────────────
+        # 覆盖两类 EPS 表述：
+        #   a. "2027E EPS X元"（R35 原有，预测期模式）
+        #   b. "2025E动态PE X倍对应EPS约Y元"（PE 表述，圆桌审计漏检点）
+        eps_vals = []  # (eps, context)
+        for m in _re.finditer(
+                r'(?:20\d\dE|20\d\d年|20\d\d)\s*EPS[^\d]{0,4}(\d+(?:\.\d+)?)\s*元', text):
+            try:
+                eps_vals.append((float(m.group(1)), m.group(0)[:30]))
+            except (ValueError, TypeError):
+                continue
+        # b. "2025E动态PE 42倍对应EPS约Y元"（PE 表述，圆桌审计漏检点）
+        #    允许 PE 与 EPS 间有"42倍"等修饰（中间 [^\d] 不能有数字，故用 [^。；\n]）
+        for m in _re.finditer(
+                r'PE[^。；\n]{0,30}?EPS(?:约|为)?(\d+(?:\.\d+)?)\s*元', text):
+            try:
+                eps_vals.append((float(m.group(1)), m.group(0)[:30]))
+            except (ValueError, TypeError):
+                continue
+        # 去重（同 EPS 值算一次）
+        _seen_eps = set()
+        _uniq_eps = []
+        for _e, _c in eps_vals:
+            if _e not in _seen_eps:
+                _seen_eps.add(_e)
+                _uniq_eps.append((_e, _c))
+        if _uniq_eps:
+            # 优先用外部股本锚；无则报告股本
+            shares = ext_shares if ext_shares else (float(rpt_shares.group(1)) if rpt_shares else None)
+            if shares and shares > 0:
+                for _e, _c in _uniq_eps:
+                    net_implied = _e * shares  # 元×亿股=亿元
+                    # 对照净利：外部锚优先，否则报告值
+                    if ext_net is not None:
+                        _ref = ext_net
+                        _ref_name = "data_dict净利"
+                    elif rpt_net:
+                        try:
+                            _ref = float(rpt_net.group(1))
+                            _ref_name = "报告净利"
+                        except (ValueError, TypeError):
+                            continue
+                    else:
+                        continue
+                    if abs(net_implied - _ref) / max(_ref, 1e-9) > _TOL:
+                        issues.append(
+                            f"估值勾稽①净利=EPS×股本: EPS{_e}元×{shares:.2f}亿股="
+                            f"{net_implied:.2f}亿 ≠ {_ref_name}{_ref:.2f}亿"
+                            f"（偏差{(net_implied-_ref)/_ref*100:+.0f}%）")
+
+        # ── 2. 总市值 = 股价 × 总股本 ──────────────────────────
+        # 校验需"市值 + 价格 + 股本"三要素，任一来源（外部锚或报告）皆可。
+        _has_price = ext_price or bool(rpt_price)
+        _has_shares = ext_shares or bool(rpt_shares)
+        if _has_price and _has_shares and rpt_mcap:
+            try:
+                _rpt_mcap = float(rpt_mcap.group(1))
+                # 市值锚用"股价×股本"（外部优先），对照报告市值；或用报告股价×股本对照报告市值
+                if ext_price and ext_shares:
+                    _implied = ext_price * ext_shares
+                    _ref_name = "外部锚"
+                elif rpt_price:
+                    _sh = ext_shares if ext_shares else (
+                        float(rpt_shares.group(1)) if rpt_shares else 0)
+                    _implied = float(rpt_price.group(1)) * _sh
+                    _ref_name = "股价×股本"
+                else:
+                    _implied = None
+                if _implied and _implied > 0:
+                    if abs(_implied - _rpt_mcap) / _rpt_mcap > _TOL:
+                        issues.append(
+                            f"估值勾稽②市值=股价×股本: 股价×股本={_implied:.1f}亿"
+                            f"≠报告市值{_rpt_mcap}亿（偏差"
+                            f"{(_implied-_rpt_mcap)/_rpt_mcap*100:+.0f}%）")
+            except (ValueError, TypeError, ZeroDivisionError):
+                pass
+
+        # ── 3. 目标价 / PE = EPS（目标价、PE、EPS 三件套自洽）──
+        # 模式："目标价X元，对应PE Y倍" → 隐含EPS = X/Y，应与报告 EPS 或
+        #     外部净利/股本反推的 EPS 一致。
+        for m in _re.finditer(
+                r'目标价[^\d]{0,15}?(\d+(?:\.\d+)?)\s*元[^。；]{0,40}?'
+                r'对应PE[^\d]{0,6}(\d+(?:\.\d+)?)\s*倍', text):
+            try:
+                tp = float(m.group(1))
+                pe = float(m.group(2))
+                if pe <= 0:
+                    continue
+                implied_eps = tp / pe
+                # 对照：报告 EPS 或 外部净利/股本
+                _ref_eps = None
+                if _uniq_eps:
+                    _ref_eps = _uniq_eps[0][0]
+                    _ref_name = f"报告EPS{_ref_eps}"
+                elif ext_net is not None and (ext_shares or (rpt_shares and float(rpt_shares.group(1)))):
+                    _sh = ext_shares or float(rpt_shares.group(1))
+                    _ref_eps = ext_net / _sh
+                    _ref_name = f"外部净利/股本{_ref_eps:.2f}"
+                if _ref_eps and abs(implied_eps - _ref_eps) / max(_ref_eps, 1e-9) > _TOL:
+                    issues.append(
+                        f"估值勾稽③目标价/PE=EPS: 目标价{tp}元/PE{pe}倍=EPS{implied_eps:.2f}元"
+                        f"≠{_ref_name}（偏差"
+                        f"{(implied_eps-_ref_eps)/_ref_eps*100:+.0f}%）")
+            except (ValueError, TypeError, ZeroDivisionError):
+                continue
+
+        # 无任何锚可校验时跳过（不误报）
+        if not issues and not (_uniq_eps and (ext_shares or rpt_shares)):
+            pass  # 有 EPS 无股本，无法做 ①，但 ③ 可能已覆盖
+
+        passed = len(issues) == 0
+        score = 1.0 if passed else max(0.3, 1.0 - 0.35 * len(issues))
+        det = f"估值勾稽: {len(issues)} 项矛盾" + (": " + "; ".join(issues[:3]) if issues else "无")
+        return GateCheckResult("valuation_integrity", passed, score, det, severity="error")
+
+    def _check_financial_value_consistency(self) -> 'GateCheckResult':
+        """R38（2026-08-02）：财务数值一致性——报告中的毛利率/营收/净利
+        与 data_dict 真实值冲突检测。
+
+        背景：柯力 r10 报告 6.3 核心假设"毛利率维持40%以上"与 data_dict 的
+        margin_2025=44.83 冲突；正文"动态PE 79.79"与附录 PE(TTM) 44.63 并存。
+        本检查用 data_dict 的真实值作为基准，检测报告是否写了明显矛盾的财务数。
+        """
+        import re as _re
+        text = self.report_text or ""
+        if len(text) < 300:
+            return GateCheckResult("financial_value_consistency", True, 1.0,
+                                   "text too short, skipped", severity="warning")
+        # 加载 data_dict（资产名绑定）
+        asset = getattr(self, 'asset', '') or getattr(self, 'sac_id', '')
+        data_dict = {}
+        if asset:
+            _cache_path = _ROOT / "output" / f"{asset}_data_dict.json"
+            if _cache_path.exists():
+                try:
+                    data_dict = json.loads(_cache_path.read_text(encoding="utf-8"))
+                except Exception:
+                    pass
+        if not data_dict:
+            return GateCheckResult("financial_value_consistency", True, 1.0,
+                                   "无 data_dict，跳过", severity="warning")
+
+        issues = []
+        # ── 1. 毛利率一致性：用最新实际毛利率（margin_YYYY）做基准 ──
+        # 提取最近 3 个实际 margin（排除 margin_balance 等非毛利率字段）
+        margins = {}
+        for k, v in data_dict.items():
+            if isinstance(k, str) and k.startswith("margin_") and str(k[7:]).isdigit():
+                try:
+                    margins[int(k[7:])] = float(v)
+                except (TypeError, ValueError):
+                    continue
+        if margins:
+            latest_y = max(margins.keys())
+            latest_margin = margins[latest_y]
+            # 报告中的毛利率表述（"毛利率X%"），排除预测区间与历史序列
+            for m in _re.finditer(
+                    r'毛利率[^。；\n]{0,15}?(\d{2}(?:\.\d+)?)%', text):
+                try:
+                    gm = float(m.group(1))
+                    # 只检查"当前/维持/实际"语境，跳过预测区间（34-36%这种）
+                    ctx_before = text[max(0, m.start() - 25):m.start()]
+                    if any(k in ctx_before for k in ("维持", "当前", "实际", "2025", "现有")):
+                        # 报告值 vs 最新实际值，偏差 >15% 且方向矛盾（报告远低于实际）
+                        if gm < latest_margin * 0.85:
+                            issues.append(
+                                f"毛利率矛盾: 报告写『{gm}%』但 data_dict 最新实际"
+                                f"margin_{latest_y}={latest_margin}%（偏差"
+                                f"{(latest_margin-gm)/latest_margin*100:+.0f}%）")
+                except (ValueError, TypeError):
+                    continue
+
+        # ── 2. PE 口径一致性：多个 PE 值但无口径标注 ──
+        # 正文/附录出现明显不同的 PE 值（如 79.79 vs 44.63）且未说明口径 → 拦截
+        pe_vals = set()
+        for m in _re.finditer(r'PE[^。；\n]{0,20}?(\d{2}(?:\.\d+)?)\s*倍', text):
+            try:
+                pe_vals.add(float(m.group(1)))
+            except (ValueError, TypeError):
+                continue
+        if len(pe_vals) >= 2:
+            pe_list = sorted(pe_vals)
+            if pe_list[-1] / max(pe_list[0], 1e-9) > 1.5:
+                # 存在 1.5x 以上差异的不同 PE 值
+                # R49（2026-08-02）：即使有口径标注，若同一数据源（图注 vs 正文）
+                # 用不同 PE 值，仍属"图表数据未同步"冲突。
+                # 检测：若最小的 PE（附录图表，如 44.63）与最大的（正文静态，如 78.1）
+                # 同框出现，且小 PE 对应"静态"标注（误标），flag。
+                has_static = "静态" in text
+                has_ttm = "TTM" in text or "ttm" in text
+                has_fwd = "前瞻" in text or "2027E" in text
+                if not (has_static and (has_ttm or has_fwd)):
+                    issues.append(
+                        f"PE口径混乱: 正文出现多个PE值 {pe_list}，差异>50%"
+                        f"且未明确区分静态/TTM/前瞻口径")
+                else:
+                    # 有口径标注，但检查是否"同一口径下仍冲突"（图注数据未同步）
+                    # 若最小 PE 出现在"图注/图表"语境且无对应口径说明 → 疑似未同步
+                    for _pv in pe_list:
+                        _pctx = text[max(0, text.find(str(_pv)) - 40):text.find(str(_pv)) + 20]
+                        if any(k in _pctx for k in ("图", "表", "附录", "对比")):
+                            # 图表中的 PE 值，检查是否有明确口径
+                            _has_label = any(k in _pctx for k in
+                                             ("静态", "TTM", "动态", "前瞻", "2025", "2026", "2027"))
+                            if not _has_label and _pv < pe_list[-1] * 0.7:
+                                issues.append(
+                                    f"图表PE未同步: 附录图表PE {_pv} 与正文最高 {pe_list[-1]} 差异大，"
+                                    f"图表数据可能未随正文口径更新")
+                            break
+
+        passed = len(issues) == 0
+        det = f"财务数值一致性: {len(issues)} 项" + (": " + "; ".join(issues[:2]) if issues else "无")
+        return GateCheckResult("financial_value_consistency", passed,
+                               1.0 if passed else 0.5, det, severity="error")
+
+    # ══════════════════════════════════════════════════════════
+    # R55（2026-08-03 方法论升级）：行业报告质量护栏
+    # ══════════════════════════════════════════════════════════
+
+    def _check_stock_pick_chain(self) -> 'GateCheckResult':
+        """R55：选股传导链存在性——行业报告必须从行业逻辑推导受益标的。
+
+        顶级投行行业报告终点是"从分析到可操作"：行业判断 → 受益标的 → 为什么是它。
+        检查报告是否含"推荐标的/受益标的/首选/重点标的 + 评级/目标价"传导链。
+        """
+        import re as _re
+        text = self.report_text or ""
+        if self.report_type != "industry_deep" or len(text) < 300:
+            return GateCheckResult("stock_pick_chain", True, 1.0, "非行业报告，跳过", severity="warning")
+        has_pick = bool(_re.search(r'受益标的|推荐标的|重点标的|首选|选股|标的选择|最受益', text))
+        has_rating = bool(_re.search(r'增持|买入|推荐|评级|目标价', text))
+        has_logic = bool(_re.search(r'行业逻辑|传导|受益于|弹性最大', text))
+        passed = has_pick and has_rating and has_logic
+        score = (has_pick + has_rating + has_logic) / 3.0
+        det = f"选股传导链: 标的={has_pick} 评级={has_rating} 逻辑={has_logic}"
+        return GateCheckResult("stock_pick_chain", passed, score, det, severity="error")
+
+    def _check_unlisted_threat(self) -> 'GateCheckResult':
+        """R55：非上市威胁判断存在性——行业报告必须有非上市关键玩家的威胁度判断。
+
+        非上市龙头（华为/大疆/未上市厂商）是竞争格局的重要变量。报告须评估其战略
+        动作对利润池的影响，且不假装有财务数据（FP2 诚实边界）。
+        """
+        import re as _re
+        text = self.report_text or ""
+        if self.report_type != "industry_deep" or len(text) < 300:
+            return GateCheckResult("unlisted_threat", True, 1.0, "非行业报告，跳过", severity="warning")
+        has_unlisted = bool(_re.search(r'非上市|未上市|非上市玩家|未上市玩家', text))
+        has_threat = bool(_re.search(r'威胁|冲击|潜在进入者|新进入者|竞争格局演变|产能扩张|技术突破', text))
+        has_source_note = bool(_re.search(r'无权威数据|无公开数据|数据不可得|估算|置信度', text))
+        passed = has_unlisted and has_threat
+        if passed and not has_source_note:
+            score = 0.7
+        else:
+            score = (has_unlisted + has_threat) / 2.0
+        det = f"非上市威胁: 覆盖={has_unlisted} 威胁度={has_threat} 来源标注={has_source_note}"
+        return GateCheckResult("unlisted_threat", passed, score, det, severity="warning")
+
+    def _check_tam_bottomup(self) -> 'GateCheckResult':
+        """R55：TAM/SAM/SOM 自底向上校验——市场规模必须可推导，禁"引一个数字就完事"。
+
+        Gartner/IDC 方法论：市场规模应 top-down × bottom-up 双轨，TAM 逐层收缩
+        （渗透率/可及渠道/竞争份额）。检查报告的市场规模是否含推导依据。
+        """
+        import re as _re
+        text = self.report_text or ""
+        if self.report_type != "industry_deep" or len(text) < 300:
+            return GateCheckResult("tam_bottomup", True, 1.0, "非行业报告，跳过", severity="warning")
+        # TAM/市场规模表述（"市场规模X亿美元"也是 TAM 声明）
+        has_tam = bool(_re.search(r'TAM|总可寻址|总市场规模|可服务市场|可获得市场|SAM|SOM|市场规模', text))
+        has_derivation = bool(_re.search(r'渗透率[^。]{0,10}%\d?|单价|价格.{0,4}数量|台数|出货量|假设|驱动因子|渗透率曲线', text))
+        has_source = bool(_re.search(r'来源|数据源|Gartner|IDC|Frost|灼识|机构预测|测算', text))
+        if not has_tam:
+            return GateCheckResult("tam_bottomup", True, 1.0, "无TAM表述，跳过", severity="warning")
+        passed = has_derivation and has_source
+        score = 1.0 if passed else 0.5
+        det = f"TAM自底向上: 三层拆解={has_tam} 推导依据={has_derivation} 来源标注={has_source}"
+        return GateCheckResult("tam_bottomup", passed, score, det, severity="error")
+
+    def _check_regional_penetration(self) -> 'GateCheckResult':
+        """R55：区域渗透率错位判断——行业报告必须有"中国 vs 海外领先国"的渗透率错位分析。
+
+        时光机逻辑：中国渗透率可能落后海外 3-5 年，海外路径是中国未来的参照。
+        """
+        import re as _re
+        text = self.report_text or ""
+        if self.report_type != "industry_deep" or len(text) < 300:
+            return GateCheckResult("regional_penetration", True, 1.0, "非行业报告，跳过", severity="warning")
+        has_regions = bool(_re.search(r'北美|欧洲|亚太|海外|美国|日本|韩国', text))
+        has_penetration = bool(_re.search(r'渗透率', text))
+        has_gap_judgment = bool(_re.search(r'错位|落后|领先|差距|时光机|对标|参照|滞后', text))
+        passed = has_regions and has_penetration and has_gap_judgment
+        score = (has_regions + has_penetration + has_gap_judgment) / 3.0
+        det = f"区域渗透率错位: 区域={has_regions} 渗透率={has_penetration} 错位判断={has_gap_judgment}"
+        return GateCheckResult("regional_penetration", passed, score, det, severity="error")
+
+    def _check_industry_consolidation(self) -> 'GateCheckResult':
+        """R57：行业并购视角——行业报告必须有整合/并购信号。
+
+        顶级投行行业报告必含行业整合趋势、谁是整合者/被整合者、并购估值倍数。
+        判断行业终局（寡头/一超多强/分散）。
+        """
+        import re as _re
+        text = self.report_text or ""
+        if self.report_type != "industry_deep" or len(text) < 300:
+            return GateCheckResult("industry_consolidation", True, 1.0, "非行业报告，跳过", severity="warning")
+        has_consolidation = bool(_re.search(r'整合|并购|集中度提升|行业集中|整合者|被整合者', text))
+        has_financial = bool(_re.search(r'EV/EBITDA|并购估值|ROIC|WACC|资本配置|估值倍数', text))
+        has_winner = bool(_re.search(r'整合者|赢家|龙头集中|份额提升|谁受益|一超多强|寡头', text))
+        passed = has_consolidation and (has_financial or has_winner)
+        score = (has_consolidation + has_financial + has_winner) / 3.0
+        det = f"行业并购: 整合趋势={has_consolidation} 财务/倍数={has_financial} 终局判断={has_winner}"
+        return GateCheckResult("industry_consolidation", passed, score, det, severity="warning")
+
+    def _check_core_hypothesis(self) -> 'GateCheckResult':
+        """R57：MBB假设驱动——行业报告必须有可证伪核心假设。
+
+        麦肯锡假设驱动：'如果我们是对的，应观察到X；若X未发生，假设错'。
+        报告开头必须给单句可证伪假设 + 先行指标。
+        """
+        import re as _re
+        text = self.report_text or ""
+        if len(text) < 300:
+            return GateCheckResult("core_hypothesis", True, 1.0, "text too short, skipped", severity="warning")
+        has_hypothesis = bool(_re.search(r'核心假设|假设[:：]|我们假设|如果.{0,10}(?:对|成立)', text))
+        has_falsifiable = bool(_re.search(r'可证伪|证伪|如果.*就错|若.*未发生|失效触发', text))
+        has_indicator = bool(_re.search(r'先行指标|观察|信号|应看到|应观察到', text))
+        passed = has_hypothesis and (has_falsifiable or has_indicator)
+        score = (has_hypothesis + has_falsifiable + has_indicator) / 3.0
+        det = f"核心假设: 假设={has_hypothesis} 可证伪={has_falsifiable} 先行指标={has_indicator}"
+        return GateCheckResult("core_hypothesis", passed, score, det, severity="warning")
+
+    def _check_esg_materiality(self) -> 'GateCheckResult':
+        """R57：ESG实质性——行业报告必须有行业最实质ESG议题判断。
+
+        对标 GRI/SASB/TCFD：判断行业最实质ESG风险（碳/治理/社会）及对估值影响。
+        """
+        import re as _re
+        text = self.report_text or ""
+        if self.report_type != "industry_deep" or len(text) < 300:
+            return GateCheckResult("esg_materiality", True, 1.0, "非行业报告，跳过", severity="warning")
+        has_esg = bool(_re.search(r'ESG|碳排放|碳排|双碳|碳中和|环境|社会|治理', text))
+        has_material = bool(_re.search(r'实质性|最重要|核心议题|重点议题|关键风险', text))
+        has_impact = bool(_re.search(r'影响估值|折价|溢价|风险.*估值|成本上升|合规风险', text))
+        passed = has_esg and (has_material or has_impact)
+        score = (has_esg + has_material + has_impact) / 3.0
+        det = f"ESG实质性: ESG={has_esg} 实质性={has_material} 估值影响={has_impact}"
+        return GateCheckResult("esg_materiality", passed, score, det, severity="warning")
+
+    def _check_financial_fraud_signals(self) -> 'GateCheckResult':
+        """R58（2026-08-03）：四大审计确定性检查——财务造假信号。
+
+        规则来源：methodology_audit_deep.json（fraud_signals/revenue_recognition/
+        working_capital_quality）。用 data_dict 的财务数据做量化核查：
+          1. 应收增速 - 收入增速 > 20pct → 收入确认激进
+          2. 经营现金流/净利 < 0.5 → 利润质量差（应计过高）
+          3. 毛利率多年波动 < 1pct → 可能粉饰平滑
+          4. 其他应收/总收入 > 10% → 资金占用嫌疑
+        无 data_dict 或数据不足时跳过（不误报）。
+        """
+        import re as _re
+        text = self.report_text or ""
+        if len(text) < 300:
+            return GateCheckResult("financial_fraud_signals", True, 1.0,
+                                   "text too short, skipped", severity="warning")
+        # 加载 data_dict
+        asset = getattr(self, 'asset', '') or getattr(self, 'sac_id', '')
+        data_dict = {}
+        if asset:
+            _cache_path = _ROOT / "output" / f"{asset}_data_dict.json"
+            if _cache_path.exists():
+                try:
+                    data_dict = json.loads(_cache_path.read_text(encoding="utf-8"))
+                except Exception:
+                    pass
+        if not data_dict:
+            return GateCheckResult("financial_fraud_signals", True, 1.0,
+                                   "无 data_dict，跳过", severity="warning")
+
+        issues = []
+
+        # 1. 应收增速 vs 收入增速背离（收入确认激进）
+        # data_dict 含 revenue_trend_YYYY / receivable_trend_YYYY（若采集到）
+        _rev_keys = sorted([k for k in data_dict if k.startswith("revenue_trend_")])
+        _rec_keys = sorted([k for k in data_dict if k.startswith(("receivable", "accounts_rec"))])
+        if len(_rev_keys) >= 2:
+            try:
+                r0 = float(data_dict[_rev_keys[-2]])
+                r1 = float(data_dict[_rev_keys[-1]])
+                _rev_growth = (r1 - r0) / abs(r0) if r0 else 0
+                # 找应收增速
+                _rec_growth = None
+                if len(_rec_keys) >= 2:
+                    try:
+                        a0 = float(data_dict[_rec_keys[-2]])
+                        a1 = float(data_dict[_rec_keys[-1]])
+                        _rec_growth = (a1 - a0) / abs(a0) if a0 else 0
+                    except (TypeError, ValueError):
+                        pass
+                if _rec_growth is not None and _rev_growth > 0:
+                    if _rec_growth - _rev_growth > 0.20:
+                        issues.append(
+                            f"收入确认激进: 应收增速{_rec_growth*100:.0f}% - 收入增速"
+                            f"{_rev_growth*100:.0f}% > 20pct（回款风险）")
+            except (TypeError, ValueError, ZeroDivisionError):
+                pass
+
+        # 2. 经营现金流/净利 < 0.5（利润质量差）
+        _ocf = data_dict.get("operating_cashflow_latest") or data_dict.get("ocf_latest")
+        _net = data_dict.get("net_profit_latest")
+        if _ocf and _net:
+            try:
+                ratio = float(_ocf) / float(_net)
+                if ratio < 0.5 and float(_net) > 0:
+                    issues.append(
+                        f"利润质量差: 经营现金流/净利 = {ratio:.2f} < 0.5（应计利润过高）")
+            except (TypeError, ValueError, ZeroDivisionError):
+                pass
+
+        # 3. 毛利率多年波动 < 1pct（可能粉饰）
+        _margins = {}
+        for k, v in data_dict.items():
+            if k.startswith("margin_") and str(k[7:]).isdigit():
+                try:
+                    _margins[int(k[7:])] = float(v)
+                except (TypeError, ValueError):
+                    pass
+        if len(_margins) >= 3:
+            vals = [_margins[y] for y in sorted(_margins)[-3:]]
+            if max(vals) - min(vals) < 1.0:
+                issues.append(
+                    f"毛利率多年波动 {max(vals)-min(vals):.1f}pct < 1pct（可能粉饰平滑）")
+
+        # 4. 其他应收/总收入 > 10%
+        _other_rec = data_dict.get("other_receivable_latest")
+        _total_rev = data_dict.get("revenue_latest") or data_dict.get("revenue_trend_2025")
+        if _other_rec and _total_rev:
+            try:
+                ratio = float(_other_rec) / float(_total_rev)
+                if ratio > 0.10:
+                    issues.append(
+                        f"其他应收/总收入 = {ratio:.0%} > 10%（资金占用/体外循环嫌疑）")
+            except (TypeError, ValueError, ZeroDivisionError):
+                pass
+
+        passed = len(issues) == 0
+        score = 1.0 if passed else max(0.3, 1.0 - 0.3 * len(issues))
+        det = f"财务造假信号: {len(issues)} 项" + (": " + "; ".join(issues[:3]) if issues else "无")
+        return GateCheckResult("financial_fraud_signals", passed, score, det, severity="warning")
+
+    def _check_evidence_chain(self) -> 'GateCheckResult':
+        """R60（2026-08-03）：证据链门禁——工具数据必须进正文。
+
+        对齐 FinGround 原子声明验证思路：compute 层产出的工具数据
+        （信号链/弹性/护城河/生命周期/并购）必须在正文被引用，
+        否则说明工具"白算"（大脑升级、手脚未接）。
+
+        检查：行业/公司报告若含对应 SAC 维度，正文须出现工具关键词
+        （如"信号链/先行指标/弹性/护城河/并购整合/生命周期阶段"）。
+        """
+        import re as _re
+        text = self.report_text or ""
+        if len(text) < 300:
+            return GateCheckResult("evidence_chain", True, 1.0,
+                                   "text too short, skipped", severity="warning")
+        # 工具 → 正文关键词映射（与 compute tool_modules 对应）
+        _tool_kw = {
+            "signal_chain": r'信号链|先行指标|同步指标|滞后指标',
+            "elasticity": r'弹性|收入弹性|价格弹性|需求弹性',
+            "moat": r'护城河|竞争壁垒|进入壁垒',
+            "life_cycle": r'生命周期|导入期|成长期|成熟期|衰退期',
+            "consolidation": r'并购|整合者|行业整合|EV/EBITDA',
+        }
+        missing = []
+        found = 0
+        for tool, pat in _tool_kw.items():
+            if _re.search(pat, text):
+                found += 1
+            else:
+                # 该工具对应的维度是否存在（需判断报告类型）
+                missing.append(tool)
+        # 至少覆盖 2/5 工具（核心证据链存在）
+        passed = found >= 2
+        score = found / len(_tool_kw)
+        det = f"证据链: {found}/{len(_tool_kw)} 工具数据进正文" + (
+            f" 缺失:{'/'.join(missing)}" if missing else " 全覆盖")
+        return GateCheckResult("evidence_chain", passed, score, det, severity="warning")
+
+    def _check_llm_data_verification(self) -> 'GateCheckResult':
+        """R55（2026-08-03 Phase E）：LLM 数据交叉验证——独立于生成的校验层。
+
+        原理（FinDVer/FActScore/EvidenceLens 共识）：生成与校验必须解耦，
+        否则 LLM 自采自校验 = 同源偏见（幻觉双向通过）。
+
+        对侧 provider 路由：
+          训练模式（生成=agent_provider/Marvis）→ 校验=deepseek
+          性能模式（生成=deepseek）→ 校验=agent_provider 或 ollama_local
+        读 LLM_PROVIDER 判断生成端，校验端取反。
+
+        校验内容：报告关键数字断言的可信度——只做确定性规则覆盖不到的语义判断
+        （来源可信度、数字是否被过度精确、有无编造感），不重复 R35/R46 已覆盖的
+        算术/估值勾稽（那些是确定性硬规则，更快更准）。
+        """
+        import os as _os, re as _re
+        text = self.report_text or ""
+        if len(text) < 500:
+            return GateCheckResult("llm_data_verification", True, 1.0,
+                                   "Text too short, skipped", severity="warning")
+
+        # 生成端 provider（读环境变量，训练=agent_provider / 性能=deepseek）
+        _gen_provider = _os.environ.get("LLM_PROVIDER", "deepseek")
+        # 校验端取对侧：生成用 Marvis → 校验用 DeepSeek；生成用 DeepSeek → 校验用 Marvis/本地
+        if _gen_provider == "agent_provider":
+            _verify_provider = "deepseek"
+            _verify_model = "deepseek-reasoner"
+        else:
+            # 性能模式（DeepSeek 生成）→ 校验用 Marvis（agent_provider）或本地 Ollama
+            _verify_provider = "agent_provider" if _os.environ.get("HAS_AGENT", "1") == "1" else "ollama_local"
+            _verify_model = "agent-writing" if _verify_provider == "agent_provider" else ""
+
+        # 抽取报告中带数字的断言（关键数据点），交校验 LLM 审查
+        _number_claims = _re.findall(
+            r'[^。；\n]{0,40}?\d+(?:\.\d+)?%?[^。；\n]{0,20}?(?:亿元|亿|万|元|%|倍|家)', text[:8000])
+        _sample = _number_claims[:8] if _number_claims else text[:800].replace("\n", " ")
+
+        prompt = (
+            'System: 你是独立的第三方数据审计评委。下面是从一份投研报告中抽取的'
+            '带数字的数据断言。请以审计视角判断：这些数字是否存在"来源不可信/'
+            '过度精确（如编造的精确小数）/明显不合理"的问题。'
+            '注意：专业报告的数字精度（如6.88亿元）是正常的，不应误判。'
+            '你是独立审计者，与被评估报告的生成模型不同。\n'
+            '只输出JSON: {"issues": [..], "score": 0.xx, "reason": "..."}\n'
+            'score=1表示数据可信，0表示存在明显编造/不可信。\n'
+            'User: ' + str(_sample)[:1800]
+        )
+        try:
+            from core.deepseek_client import call_llm
+            result = call_llm(
+                messages=[{"role": "user", "content": prompt}],
+                model=_verify_model,
+                temperature=0.1,
+                max_tokens=300,
+                provider=_verify_provider,
+            )
+            output = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+            try:
+                import json as _json
+                parsed = _json.loads(output)
+                score = float(parsed.get("score", 0.5))
+                issues = parsed.get("issues", [])
+                reason = parsed.get("reason", "")
+            except Exception:
+                import re as _r2
+                _m = _r2.search(r'(\d+\.\d+)', output)
+                score = float(_m.group(1)) if _m else 0.5
+                issues = []
+                reason = output[:30]
+
+            # FP v3.2（FP2a）：三级判定（校准于真实样本）
+            #  - score ≥ 0.7  数据可信 → 通过
+            #  - 0.4 ≤ score < 0.7  有 issues（如未说明来源）→ 警告不硬阻断
+            #    （确定性检查已覆盖算术/估值勾稽硬伤，LLM 校验是语义增强层）
+            #  - score < 0.4  明显编造/不可信 → 硬阻断
+            _MIN_PASS = float(_os.environ.get("LLM_VERIFY_MIN_PASS", "0.70"))
+            _MIN_BLOCK = float(_os.environ.get("LLM_VERIFY_MIN_BLOCK", "0.40"))
+            if score < _MIN_BLOCK:
+                passed = False
+                _sev = "error"
+            elif score < _MIN_PASS:
+                passed = True
+                _sev = "warning"
+            else:
+                passed = True
+                _sev = "warning"
+            _det = f"数据交叉验证(校验={_verify_provider}): score={score:.2f}"
+            if issues:
+                _det += f" issues={str(issues)[:80]}"
+            return GateCheckResult("llm_data_verification", passed, score, _det, severity=_sev)
+        except Exception as e:
+            # 校验 LLM 不可用：不阻断但降级（确定性检查已覆盖算术/勾稽，语义校验是增强层）
+            logger.warning("[LLM_DATA_VERIFY] 校验器不可用，降级放行: %s", str(e)[:80])
+            return GateCheckResult("llm_data_verification", True, 0.5,
+                                   f"校验器不可用，降级（{str(e)[:50]}）", severity="warning")
+
+
+def _detect_value_conflicts(report_text: str, data_dict: dict) -> list:
+    """检测正文与数据字典的数值冲突（数据打架）。
+
+    只针对高可信标签：market_size_*（市场规模/空间）—— 这是数据打架最高发区，
+    且口径清晰（亿元/亿美元）。营收/利润等标签因口径复杂（含税/不含税、行业/公司）
+    容易误报，交由游离数字校验（validate_numeric_refs）兜底。
+
+    思路：数据字典的 ref_key 形如 `market_size_china_2024=4061.2`。
+    从 key 里提取"标签词"和"年份"。若正文出现同一标签+年份的数值，
+    但数值与数据字典差异 >10% 或单位不一致 → 冲突。
+    例：数据字典 market_size_china_2024=4061.2，正文写"2024中国传感器市场3440亿元" → 冲突。
+    """
+    import re
+    if not data_dict:
+        return []
+    conflicts = []
+    # 修复（2026-08-01 IronGate 第 2 轮）：conflict_labels 原先把 market_size_china
+    # 硬编码为"中国传感器市场"（柯力传感专用），思必驰（对话式 AI）报告的
+    # market_size_china 实际指"中国对话式 AI 市场"，硬编码行业名与泛词
+    # （营收|利润|…）组合导致跨指标串标误报（正文"2023-2025 年营收
+    # 5.39/6.01/6.88 亿元"的"88"被误当"中国传感器市场 2025"）。
+    # 修复：①行业名不再硬编码，优先从 data_dict 读取行业/公司字段，缺省用
+    # 通用"市场规模"；②泛词按 label 类型分类（market_size 只认市场规模类词），
+    # 杜绝营收/利润词串入市场标签；③数字正则允许小数点（\d+），并加
+    # (?<![\d.]) 前置断言防止从 "6.88" 中截取 "88"。
+    conflict_labels = {
+        "market_size_china": "市场规模", "market_size_global": "市场规模",
+        "revenue_total": "总营收", "revenue_main": "主营业务收入",
+        "profit_net": "净利润", "profit_gross": "毛利润",
+        "margin_gross": "毛利率", "margin_net": "净利率", "margin_operating": "营业利润率",
+        "growth_revenue": "营收增速", "growth_profit": "利润增速",
+        "eps_basic": "基本每股收益", "eps_diluted": "稀释每股收益",
+        "pe_ttm": "市盈率(TTM)", "pe_forward": "预测市盈率",
+    }
+    # 泛词按 label 类型分类：只匹配本指标相关词，防止跨指标串标
+    _generic_by_label = {
+        "market_size_china": "市场规模|市场空间", "market_size_global": "市场规模|市场空间",
+        "revenue_total": "总营收|主营业务收入|营收|收入", "revenue_main": "总营收|主营业务收入|营收|收入",
+        "profit_net": "净利润|利润", "profit_gross": "毛利润|毛利",
+        "margin_gross": "毛利率", "margin_net": "净利率", "margin_operating": "营业利润率",
+        "growth_revenue": "营收增速|收入增速|增速|增长率", "growth_profit": "利润增速|增速|增长率",
+        "eps_basic": "基本每股收益|每股收益|EPS", "eps_diluted": "稀释每股收益|每股收益|EPS",
+        "pe_ttm": "市盈率|PE", "pe_forward": "预测市盈率|市盈率|PE",
+    }
+    # 行业名优先从 data_dict 读取（如 industry/market_name/company_name），
+    # 用于报错文案；匹配本身依赖 label 类型泛词，不再依赖行业名。
+    _asset_name = ""
+    for _k in ("industry_name", "industry", "market_name", "company_name", "asset_name", "name"):
+        _v = data_dict.get(_k)
+        if isinstance(_v, str) and _v.strip():
+            _asset_name = _v.strip()
+            break
+    known = {}  # (label, year) -> value
+    # 匹配模式扩展：覆盖市场类 + 财务指标类标签
+    _conflict_pattern = (
+        r'^(market_size_china|market_size_global|'
+        r'revenue_total|revenue_main|'
+        r'profit_net|profit_gross|'
+        r'margin_gross|margin_net|margin_operating|'
+        r'growth_revenue|growth_profit|'
+        r'eps_basic|eps_diluted|'
+        r'pe_ttm|pe_forward)'
+        r'_(\d{4})(?:_\w+)?$'
+    )
+    for key, val in data_dict.items():
+        m = re.match(_conflict_pattern, key)
+        if m and isinstance(val, (int, float)):
+            known.setdefault((m.group(1), m.group(2)), []).append(float(val))
+    if not known:
+        return []
+    for (label, year), known_vals in known.items():
+        label_zh = conflict_labels.get(label, label)
+        if _asset_name:
+            label_zh = f"{_asset_name}{label_zh}"
+        generic = _generic_by_label.get(label, label_zh)
+        expected_unit = "亿美元" if label == "market_size_global" else "亿元"
+        # 增长率类标签可能是百分数，使用"%"单位
+        if label.startswith("growth_") or label.startswith("margin_"):
+            expected_unit = "%"
+        if label.startswith("eps_"):
+            expected_unit = "元"
+        if label.startswith("pe_"):
+            expected_unit = "倍"
+        # 年份可出现在指标词前或后；数字完整提取（含小数）并加前置边界，
+        # 避免从 "6.88" 中截取 "88"。
+        pat = re.compile(
+            rf'(?:{year}年?(?:[^\n。]{{0,12}})?(?:{generic})|(?:{generic})[^\n。]{{0,12}}?{year}年?)'
+            rf'[^\n。]{{0,20}}?(?<![\d.])(\d+(?:\.\d{{1,3}})?)\s*({expected_unit})'
+        )
+        for m in pat.finditer(report_text):
+            try:
+                body_val = float(m.group(1).replace(",", ""))
+            except ValueError:
+                continue
+            unit = m.group(2)
+            if unit != expected_unit:
+                conflicts.append(f"{label_zh}{year}年 单位口径冲突({unit} vs 数据层{expected_unit})")
+                break
+            for kv in known_vals:
+                if abs(body_val - kv) / max(abs(kv), 1e-9) < 0.10:
+                    break
+            else:
+                conflicts.append(f"{label_zh}{year}年 正文写{body_val:.0f}{unit} vs 数据层{known_vals[0]:.0f}")
+                break  # 每标签只报一处
+    return conflicts[:5]
+

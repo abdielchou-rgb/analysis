@@ -1,0 +1,118 @@
+{
+  "version": "1.0",
+  "description": "品牌→实体→集团映射表，解决品牌/实体映射断裂问题",
+  "mappings": [
+    {
+      "brand": "维德路特",
+      "entity": "维德路特油站系统(上海)有限公司",
+      "group": "Vontier",
+      "group_type": "美股上市",
+      "note": "原误归Dover，2020年从Fortive拆分Vontier"
+    },
+    {
+      "brand": "Veeder-Root",
+      "entity": "Veeder-Root (Vontier子公司)",
+      "group": "Vontier",
+      "group_type": "美股上市",
+      "note": "加油站液位系统全球市占率>65%"
+    },
+    {
+      "brand": "吉蔚",
+      "entity": "吉蔚交通科技(北京)有限公司",
+      "group": "Vontier",
+      "group_type": "中外合资",
+      "note": "原北京长吉加油设备，现与Vontier合资"
+    },
+    {
+      "brand": "GVR中国",
+      "entity": "吉蔚交通科技(北京) + 维德路特油站系统(上海)",
+      "group": "Vontier",
+      "group_type": "外资主导合资",
+      "note": "Vontier在中国的加油站业务统一品牌"
+    },
+    {
+      "brand": "优必得",
+      "entity": "优必得石油设备(苏州)有限公司",
+      "group": "Dover Fueling Solutions (DFS)",
+      "group_type": "美股上市",
+      "note": "2003年注册，830万美元注册资本"
+    },
+    {
+      "brand": "OPW",
+      "entity": "OPW (Dover子公司)",
+      "group": "Dover Fueling Solutions (DFS)",
+      "group_type": "美股上市",
+      "note": "Dover旗下加油设备品牌，与优必得同体系"
+    },
+    {
+      "brand": "托肯恒山",
+      "entity": "托肯恒山科技(广州)有限公司",
+      "group": "Dover Fueling Solutions (DFS)",
+      "group_type": "外资控股",
+      "note": "1989年中国第一台微电脑加油机"
+    },
+    {
+      "brand": "Tokheim",
+      "entity": "Tokheim (Dover子公司)",
+      "group": "Dover Fueling Solutions (DFS)",
+      "group_type": "美股上市",
+      "note": "全球加油设备品牌，Dover体系"
+    },
+    {
+      "brand": "富仁高科",
+      "entity": "江阴市富仁高科股份有限公司",
+      "group": "富仁集团",
+      "group_type": "非上市民营",
+      "note": "400+专利，主导起草GB/T 9081-2023"
+    },
+    {
+      "brand": "稳恩佳力佳",
+      "entity": "稳恩佳力佳(北京)石油化工设备有限公司",
+      "group": "独立",
+      "group_type": "非上市民营",
+      "note": "中石油入围"
+    },
+    {
+      "brand": "KROHNE",
+      "entity": "科隆测量仪器(上海)有限公司",
+      "group": "KROHNE Group",
+      "group_type": "外资未上市",
+      "note": "1921年成立，雷达物位计全球TOP3"
+    },
+    {
+      "brand": "科隆",
+      "entity": "科隆测量仪器(上海)有限公司",
+      "group": "KROHNE Group",
+      "group_type": "外资未上市",
+      "note": "SIL2认证"
+    },
+    {
+      "brand": "昆仑海岸",
+      "entity": "北京昆仑海岸科技股份有限公司",
+      "group": "独立",
+      "group_type": "非上市民营",
+      "note": "工业传感器/液位变送器"
+    },
+    {
+      "brand": "ABB",
+      "entity": "ABB（中国）有限公司",
+      "group": "ABB Group",
+      "group_type": "瑞士上市",
+      "note": "K-TEK、LMT系列液位传感器"
+    },
+    {
+      "brand": "亚普",
+      "entity": "亚普汽车部件股份有限公司",
+      "group": "独立",
+      "group_type": "A股上市(603013)",
+      "note": "汽车油箱/燃油系统"
+    },
+    {
+      "brand": "博世",
+      "entity": "博世（中国）投资有限公司",
+      "group": "Robert Bosch GmbH",
+      "group_type": "德国未上市",
+      "note": "汽车液位传感器OEM"
+    }
+  ]
+}

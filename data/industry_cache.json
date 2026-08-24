@@ -1,0 +1,135 @@
+{
+  "??": {
+    "last_updated": "2026-07-27T10:15:15.621352",
+    "sources": [
+      "MarketResearchReports - Global Deuterium Oxide Market Report 2025",
+      "IndexBox - World Heavy Water Market Analysis 2026",
+      "??? - ???????????????2026",
+      "???? - ????????",
+      "??????"
+    ],
+    "market_size": {
+      "global_2024": 61.5,
+      "global_2027e": 78.0,
+      "global_2031e": 105.0,
+      "global_cagr_2024_2031": 8.0,
+      "china_import_2024": 438,
+      "china_share_global_import": 16.6
+    },
+    "production": {
+      "oman_volume_2024": 142000,
+      "saudi_volume_2024": 6100,
+      "global_total_volume_2024": 151000,
+      "avg_export_price_2024": 1510193,
+      "avg_import_price_2024": 1319523,
+      "top_producers_by_value": [
+        {
+          "country": "??",
+          "export_value": 301,
+          "share_pct": 11.0
+        },
+        {
+          "country": "???",
+          "export_value": 121,
+          "share_pct": 4.6
+        },
+        {
+          "country": "??",
+          "export_value": 85,
+          "share_pct": 3.2
+        }
+      ]
+    },
+    "key_players": [
+      {
+        "name": "Isowater",
+        "country": "???",
+        "tier": 1
+      },
+      {
+        "name": "Cambridge Isotope Laboratories",
+        "country": "??",
+        "tier": 1
+      },
+      {
+        "name": "Mesbah Energy",
+        "country": "??",
+        "tier": 1
+      },
+      {
+        "name": "Heavy Water Board (HWB)",
+        "country": "??",
+        "tier": 1
+      },
+      {
+        "name": "deutraMed",
+        "country": "??",
+        "tier": 2
+      }
+    ],
+    "segments": {
+      "deuterated_nmr_solvents": {
+        "share": 40,
+        "note": "??????"
+      },
+      "semiconductor_industry": {
+        "share": 22,
+        "note": "?????"
+      },
+      "oled_industry": {
+        "share": 15,
+        "note": "OLED??"
+      },
+      "pharmaceutical": {
+        "share": 13,
+        "note": "????"
+      },
+      "others": {
+        "share": 10,
+        "note": "????"
+      }
+    },
+    "purity_segments": {
+      "purity_99": {
+        "share": 30
+      },
+      "purity_998": {
+        "share": 38
+      },
+      "purity_999": {
+        "share": 32
+      }
+    },
+    "growth_drivers": [
+      "??????????????",
+      "??????????????",
+      "OLED?????????????",
+      "????????",
+      "????(NMR)????????"
+    ],
+    "risks": [
+      "????????????????",
+      "??????????94%?????",
+      "???????2024?????14.2%?",
+      "??????",
+      "?????????"
+    ],
+    "policy_landscape": [
+      {
+        "name": "???????????",
+        "type": "????",
+        "impact": "supportive"
+      },
+      {
+        "name": "??????????",
+        "type": "????",
+        "impact": "supportive"
+      },
+      {
+        "name": "?????????",
+        "type": "????",
+        "impact": "restrictive"
+      }
+    ]
+  }
+}

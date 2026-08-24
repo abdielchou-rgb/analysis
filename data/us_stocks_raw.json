@@ -1,0 +1,275 @@
+{
+  "stocks": [
+    {
+      "ticker": "AAPL",
+      "revenue_ttm_m": 466823.0,
+      "net_income_ttm_m": 128930.0,
+      "eps_ttm": 8.72,
+      "pe_ttm": 35.44,
+      "market_cap_b": 4569.3,
+      "source": "https://stockanalysis.com/stocks/aapl/financials/"
+    },
+    {
+      "ticker": "MSFT",
+      "revenue_ttm_m": 331839.0,
+      "net_income_ttm_m": 133749.0,
+      "eps_ttm": 17.95,
+      "pe_ttm": 25.89,
+      "market_cap_b": 3462.8,
+      "source": "https://stockanalysis.com/stocks/msft/financials/"
+    },
+    {
+      "ticker": "GOOGL",
+      "revenue_ttm_m": 445867.0,
+      "net_income_ttm_m": 244205.0,
+      "eps_ttm": 19.91,
+      "pe_ttm": 17.87,
+      "market_cap_b": 4363.9,
+      "source": "https://stockanalysis.com/stocks/googl/financials/"
+    },
+    {
+      "ticker": "AMZN",
+      "revenue_ttm_m": 775680.0,
+      "net_income_ttm_m": 135281.0,
+      "eps_ttm": 12.44,
+      "pe_ttm": 21.84,
+      "market_cap_b": 2954.5,
+      "source": "https://stockanalysis.com/stocks/amzn/financials/"
+    },
+    {
+      "ticker": "NVDA",
+      "revenue_ttm_m": 253491.0,
+      "net_income_ttm_m": 159613.0,
+      "eps_ttm": 6.53,
+      "pe_ttm": 30.74,
+      "market_cap_b": 4906.5,
+      "source": "https://stockanalysis.com/stocks/nvda/financials/"
+    },
+    {
+      "ticker": "META",
+      "revenue_ttm_m": 228247.0,
+      "net_income_ttm_m": 68098.0,
+      "eps_ttm": 26.55,
+      "pe_ttm": 20.98,
+      "market_cap_b": 1428.7,
+      "source": "https://stockanalysis.com/stocks/meta/financials/"
+    },
+    {
+      "ticker": "TSLA",
+      "revenue_ttm_m": 103619.0,
+      "net_income_ttm_m": 3804.0,
+      "eps_ttm": 1.08,
+      "pe_ttm": 288.28,
+      "market_cap_b": 1096.6,
+      "source": "https://stockanalysis.com/stocks/tsla/financials/"
+    },
+    {
+      "ticker": "AVGO",
+      "revenue_ttm_m": 75465.0,
+      "net_income_ttm_m": 29317.0,
+      "eps_ttm": 6.0,
+      "pe_ttm": 64.79,
+      "market_cap_b": 1899.4,
+      "source": "https://stockanalysis.com/stocks/avgo/financials/"
+    },
+    {
+      "ticker": "JPM",
+      "revenue_ttm_m": 186328.0,
+      "net_income_ttm_m": 63633.0,
+      "eps_ttm": 23.34,
+      "pe_ttm": 15.1,
+      "market_cap_b": 960.9,
+      "source": "https://stockanalysis.com/stocks/jpm/financials/"
+    },
+    {
+      "ticker": "V",
+      "revenue_ttm_m": 44488.0,
+      "net_income_ttm_m": 22592.0,
+      "eps_ttm": 11.56,
+      "pe_ttm": 31.17,
+      "market_cap_b": 704.2,
+      "source": "https://stockanalysis.com/stocks/v/financials/"
+    },
+    {
+      "ticker": "UNH",
+      "revenue_ttm_m": 450129.0,
+      "net_income_ttm_m": 14912.0,
+      "eps_ttm": 15.54,
+      "pe_ttm": 26.68,
+      "market_cap_b": 397.9,
+      "source": "https://stockanalysis.com/stocks/unh/financials/"
+    },
+    {
+      "ticker": "WMT",
+      "revenue_ttm_m": 725305.0,
+      "net_income_ttm_m": 22736.0,
+      "eps_ttm": 2.85,
+      "pe_ttm": 39.15,
+      "market_cap_b": 890.1,
+      "source": "https://stockanalysis.com/stocks/wmt/financials/"
+    },
+    {
+      "ticker": "LLY",
+      "revenue_ttm_m": 72250.0,
+      "net_income_ttm_m": 25277.0,
+      "eps_ttm": 28.15,
+      "pe_ttm": 40.81,
+      "market_cap_b": 1031.6,
+      "source": "https://stockanalysis.com/stocks/lly/financials/"
+    },
+    {
+      "ticker": "XOM",
+      "revenue_ttm_m": 361060.0,
+      "net_income_ttm_m": 32757.0,
+      "eps_ttm": 7.77,
+      "pe_ttm": 20.03,
+      "market_cap_b": 656.1,
+      "source": "https://stockanalysis.com/stocks/xom/financials/"
+    },
+    {
+      "ticker": "MA",
+      "revenue_ttm_m": 35083.0,
+      "net_income_ttm_m": 4388.0,
+      "eps_ttm": 18.18,
+      "pe_ttm": 31.52,
+      "market_cap_b": 138.3,
+      "source": "https://stockanalysis.com/stocks/ma/financials/"
+    },
+    {
+      "ticker": "PG",
+      "revenue_ttm_m": 87032.0,
+      "net_income_ttm_m": 16046.0,
+      "eps_ttm": 6.62,
+      "pe_ttm": 21.83,
+      "market_cap_b": 350.3,
+      "source": "https://stockanalysis.com/stocks/pg/financials/"
+    },
+    {
+      "ticker": "JNJ",
+      "revenue_ttm_m": 97929.0,
+      "net_income_ttm_m": 21037.0,
+      "eps_ttm": 8.63,
+      "pe_ttm": 29.72,
+      "market_cap_b": 625.2,
+      "source": "https://stockanalysis.com/stocks/jnj/financials/"
+    },
+    {
+      "ticker": "HD",
+      "revenue_ttm_m": 166592.0,
+      "net_income_ttm_m": 14012.0,
+      "eps_ttm": 14.08,
+      "pe_ttm": 23.58,
+      "market_cap_b": 330.4,
+      "source": "https://stockanalysis.com/stocks/hd/financials/"
+    },
+    {
+      "ticker": "COST",
+      "revenue_ttm_m": 293587.0,
+      "net_income_ttm_m": 8838.0,
+      "eps_ttm": 19.88,
+      "pe_ttm": 47.88,
+      "market_cap_b": 423.2,
+      "source": "https://stockanalysis.com/stocks/cost/financials/"
+    },
+    {
+      "ticker": "ABBV",
+      "revenue_ttm_m": 64386.0,
+      "net_income_ttm_m": 6310.0,
+      "eps_ttm": 3.54,
+      "pe_ttm": 70.89,
+      "market_cap_b": 447.3,
+      "source": "https://stockanalysis.com/stocks/abbv/financials/"
+    },
+    {
+      "ticker": "BAC",
+      "revenue_ttm_m": 115792.0,
+      "net_income_ttm_m": 32143.0,
+      "eps_ttm": 4.34,
+      "pe_ttm": 14.32,
+      "market_cap_b": 460.3,
+      "source": "https://stockanalysis.com/stocks/bac/financials/"
+    },
+    {
+      "ticker": "ORCL",
+      "revenue_ttm_m": 67357.0,
+      "net_income_ttm_m": 16984.0,
+      "eps_ttm": 5.83,
+      "pe_ttm": 22.28,
+      "market_cap_b": 378.4,
+      "source": "https://stockanalysis.com/stocks/orcl/financials/"
+    },
+    {
+      "ticker": "CRM",
+      "revenue_ttm_m": 42829.0,
+      "net_income_ttm_m": 8023.0,
+      "eps_ttm": 8.64,
+      "pe_ttm": 21.36,
+      "market_cap_b": 171.4,
+      "source": "https://stockanalysis.com/stocks/crm/financials/"
+    },
+    {
+      "ticker": "KO",
+      "revenue_ttm_m": 50129.0,
+      "net_income_ttm_m": 14316.0,
+      "eps_ttm": 3.33,
+      "pe_ttm": 26.32,
+      "market_cap_b": 376.8,
+      "source": "https://stockanalysis.com/stocks/ko/financials/"
+    },
+    {
+      "ticker": "PEP",
+      "revenue_ttm_m": 96904.0,
+      "net_income_ttm_m": 10451.0,
+      "eps_ttm": 7.63,
+      "pe_ttm": 18.29,
+      "market_cap_b": 191.1,
+      "source": "https://stockanalysis.com/stocks/pep/financials/"
+    },
+    {
+      "ticker": "NFLX",
+      "revenue_ttm_m": 48371.0,
+      "net_income_ttm_m": 13650.0,
+      "eps_ttm": 3.18,
+      "pe_ttm": 22.59,
+      "market_cap_b": 308.4,
+      "source": "https://stockanalysis.com/stocks/nflx/financials/"
+    },
+    {
+      "ticker": "AMD",
+      "revenue_ttm_m": 37454.0,
+      "net_income_ttm_m": 5009.0,
+      "eps_ttm": 3.08,
+      "pe_ttm": 158.78,
+      "market_cap_b": 795.3,
+      "source": "https://stockanalysis.com/stocks/amd/financials/"
+    },
+    {
+      "ticker": "INTC",
+      "revenue_ttm_m": 57032.0,
+      "net_income_ttm_m": -11289.0,
+      "eps_ttm": -2.11,
+      "pe_ttm": null,
+      "market_cap_b": null,
+      "source": "https://stockanalysis.com/stocks/intc/financials/"
+    },
+    {
+      "ticker": "QCOM",
+      "revenue_ttm_m": 44069.0,
+      "net_income_ttm_m": 9259.0,
+      "eps_ttm": 8.64,
+      "pe_ttm": 17.18,
+      "market_cap_b": 159.1,
+      "source": "https://stockanalysis.com/stocks/qcom/financials/"
+    },
+    {
+      "ticker": "TXN",
+      "revenue_ttm_m": 19453.0,
+      "net_income_ttm_m": 6052.0,
+      "eps_ttm": 6.57,
+      "pe_ttm": 41.89,
+      "market_cap_b": 253.5,
+      "source": "https://stockanalysis.com/stocks/txn/financials/"
+    }
+  ],
+  "note": "单位百万美元; market_cap=PE*TTM净利估算"
+}

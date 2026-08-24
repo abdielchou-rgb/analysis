@@ -1,0 +1,1259 @@
+{
+  "entries": [
+    {
+      "timestamp": "2026-08-05T11:09:46.349975",
+      "asset": "测试标的",
+      "report_type": "listed_company",
+      "frameworks": [
+        "bottleneck_engine",
+        "ma_valuation"
+      ],
+      "gate_score": 0.9123,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-08-05T11:10:01.972862",
+      "asset": "测试标的",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "bottleneck_engine"
+      ],
+      "gate_score": 0.91,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T11:10:01.998577",
+      "asset": "测试标的2",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "bottleneck_engine"
+      ],
+      "gate_score": 0.95,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T11:10:10.668648",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T11:10:10.709435",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T11:10:10.727075",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T11:11:19.283749",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T11:11:19.315751",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T11:11:19.333311",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T11:15:36.847515",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T11:15:36.910803",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T11:15:36.939315",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T11:57:08.243305",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T11:57:08.272591",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T11:57:08.289078",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T11:58:58.128312",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T11:58:58.187746",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T11:58:58.220998",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T11:59:35.307484",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T11:59:35.358784",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T11:59:35.397855",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T12:20:31.272354",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T12:20:31.323681",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T12:20:31.344624",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T12:27:34.764250",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T12:27:34.790354",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T12:27:34.808911",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T12:29:19.120038",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T12:29:19.183373",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T12:29:19.219375",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T12:29:43.762419",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T12:29:43.788964",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T12:29:43.807850",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T12:40:30.018157",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T12:40:30.048700",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T12:40:30.064881",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T12:43:29.418497",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T12:43:29.462967",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T12:43:29.492417",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T12:43:52.907057",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T12:43:52.954062",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T12:43:52.984181",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T12:44:18.857108",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T12:44:18.889941",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T12:44:18.912248",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T12:57:24.536693",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T12:57:24.603543",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T12:57:24.645325",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T12:57:50.111481",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T12:57:50.140703",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T12:57:50.159705",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T13:04:06.519833",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T13:04:06.561132",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T13:04:06.588710",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T14:48:21.808550",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T14:48:21.859347",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T14:48:21.891969",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T14:48:55.824609",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T14:48:55.894903",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T14:48:55.941645",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T14:49:24.854524",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T14:49:24.916996",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T14:49:24.962181",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T19:22:08.977814",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T19:22:09.032229",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-05T19:22:09.068381",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-06T01:27:04.100726",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-06T01:27:04.137384",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-06T01:27:04.159266",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-06T01:27:51.414047",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-06T01:27:51.444646",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-06T01:27:51.466615",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-06T01:28:21.247141",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-06T01:28:21.276253",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-06T01:28:21.295056",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-06T03:33:29.337176",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-06T03:33:29.356045",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-06T03:33:29.367119",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-06T06:06:05.007468",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-06T06:06:05.026455",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-06T06:06:05.036084",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-06T06:30:45.646339",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-06T06:30:45.665025",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-06T06:30:45.675978",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-06T09:26:33.329691",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-06T09:26:33.346744",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-06T09:26:33.356141",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-06T09:51:54.725816",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-06T09:51:54.746142",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-06T09:51:54.757040",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-06T12:30:36.789501",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-06T12:30:36.832407",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-06T12:30:36.857400",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-06T23:24:21.216584",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-06T23:24:21.234718",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-06T23:24:21.244884",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-07T09:36:39.871585",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-07T09:36:39.891843",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-07T09:36:39.902787",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-07T10:13:48.988250",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-07T10:13:49.003918",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-07T10:13:49.015012",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-07T10:38:43.737616",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-07T10:38:43.752597",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-07T10:38:43.763688",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-07T10:44:22.000591",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-07T10:44:22.019726",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-07T10:44:22.027936",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-07T12:31:36.373430",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-07T12:31:36.393676",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-07T12:31:36.404668",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-07T13:10:17.416216",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-07T13:10:17.438198",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-07T13:10:17.449284",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    }
+  ]
+}

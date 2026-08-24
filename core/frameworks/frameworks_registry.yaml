@@ -1,0 +1,155 @@
+version: '1.0'
+created: '2026-07-30'
+description: 从投资经典文献中提取的分析框架YAML配置注册表
+frameworks:
+  expectations_investing:
+    name: Expectations Investing
+    author: Michael Mauboussin & Alfred Rappaport
+    source: Expectations Investing (2001, 2021)
+    core_thesis: 股价编码了市场的共识预期，分析师的工作是逆向推导这些预期，然后判断合理的修正方向
+    sac_dimension_mapping:
+    - core_disagreement
+    - valuation_assessment
+    - falsification
+    priority: 1
+  cycle_thinking:
+    name: Cycle Thinking & Second-Level Thinking
+    author: Howard Marks
+    source: The Most Important Thing (2011)
+    core_thesis: 理解市场周期位置和第二层思维是超越平均回报的关键
+    sac_dimension_mapping:
+    - decision_gate
+    - core_disagreement
+    - capital_flow
+    priority: 1
+  mental_models:
+    name: Mental Models Latticework
+    author: Charlie Munger
+    source: Poor Charlie's Almanack (2005)
+    core_thesis: 多学科思维模型的格栅化是避免愚蠢决策的最佳保障
+    sac_dimension_mapping:
+    - core_disagreement
+    - falsification
+    - governance_esg
+    priority: 2
+  moat_analysis:
+    name: Economic Moat Framework
+    author: Pat Dorsey / Morningstar
+    source: The Five Rules for Successful Stock Investing (2004)
+    core_thesis: 可持续竞争优势（护城河）是长期超额回报的核心来源
+    sac_dimension_mapping:
+    - business_model
+    - competitive_position
+    - growth_drivers
+    priority: 1
+  value_driver:
+    name: Value Driver Framework (DCF)
+    author: McKinsey (Koller, Goedhart, Wessels)
+    source: 'Valuation: Measuring and Managing the Value of Companies (7th ed, 2020)'
+    core_thesis: 企业价值由ROIC相对WACC的差值和增长共同驱动
+    sac_dimension_mapping:
+    - financial_analysis
+    - valuation_assessment
+    - growth_drivers
+    priority: 1
+  cfa_standards:
+    name: CFA Research Report Standards
+    author: CFA Institute
+    source: CFA Institute Research Objectivity Standards
+    core_thesis: 研究报告必须客观、透明、全面披露利益冲突和分析假设
+    sac_dimension_mapping:
+    - governance_esg
+    - falsification
+    priority: 3
+  strategy_engine:
+    name: 企业战略引擎框架
+    author: Hamilton Helmer / 七步战略
+    source: The Strategy Engine
+    core_thesis: 商业模式+单位经济+护城河是战略引擎的三个齿轮，必须形成正向反馈循环
+    sac_dimension_mapping:
+    - business_model
+    - competitive_position
+    - growth_drivers
+    priority: 1
+  accounting_for_value:
+    name: 会计驱动价值框架
+    author: Stephen Penman
+    source: Accounting for Value (2011)
+    core_thesis: 会计数据是价值的锚点，市场价格与会计锚点的偏离是识别错误定价的机会
+    sac_dimension_mapping:
+    - financial_analysis
+    - valuation_assessment
+    - accounting_penetration
+    priority: 1
+  quality_investing:
+    name: 高质量投资框架
+    author: Cunningham, Eide & Hargreaves
+    source: Quality Investing (2016)
+    core_thesis: 高质量公司具有可持续竞争优势、优秀资本配置、强大企业文化的共同特征
+    sac_dimension_mapping:
+    - business_model
+    - growth_drivers
+    - governance_esg
+    - competitive_position
+    priority: 1
+  signal_noise:
+    name: 信号与噪声预测框架
+    author: Nate Silver
+    source: The Signal and the Noise (2012)
+    core_thesis: 预测的质量取决于区分信号和噪声，贝叶斯更新和证伪条件是高质量预测的核心
+    sac_dimension_mapping:
+    - catalyst
+    - falsification
+    - growth_drivers
+    priority: 1
+  security_analysis:
+    name: 证券分析框架
+    author: Benjamin Graham & David Dodd
+    source: Security Analysis (1934)
+    core_thesis: 安全边际是投资的核心，以低于内在价值的价格买入，为判断错误留出缓冲空间
+    sac_dimension_mapping:
+    - financial_analysis
+    - valuation_assessment
+    - falsification
+    priority: 1
+  competition_demystified:
+    name: 竞争优势三维框架
+    author: Bruce Greenwald
+    source: Competition Demystified (2005)
+    core_thesis: 竞争优势只有三种：供应优势、需求优势、规模经济。识别优势类型是竞争战略的核心
+    sac_dimension_mapping:
+    - competitive_position
+    - business_model
+    - growth_drivers
+    priority: 1
+  issue_tree:
+    name: 问题树（Issue Tree）
+    author: McKinsey
+    source: Consulting problem-solving methodology
+    core_thesis: 把大问题拆成互斥穷尽（MECE）的子问题树，每个节点可单独验证
+    sac_dimension_mapping:
+    - core_disagreement
+    - falsification
+    - decision_gate
+    priority: 2
+  pyramid_principle:
+    name: 金字塔原理
+    author: Barbara Minto
+    source: The Minto Pyramid Principle (1987)
+    core_thesis: 结论先行，论据分层——读者先看到结论再看到理由，塔尖与塔基逻辑一致
+    sac_dimension_mapping:
+    - exec_summary
+    - core_disagreement
+    - so_what
+    priority: 1
+  hypothesis_driven:
+    name: 假设驱动分析
+    author: McKinsey / BCG
+    source: Consulting hypothesis-driven problem solving
+    core_thesis: 先假设结论，再找证据验证或推翻，假设先行让分析聚焦
+    sac_dimension_mapping:
+    - core_disagreement
+    - hypothesis
+    - decision_gate
+    - falsification
+    priority: 1

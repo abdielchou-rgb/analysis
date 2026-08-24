@@ -1,0 +1,998 @@
+{
+  "气体传感器": {
+    "players": [
+      {
+        "name": "炜盛电子(Winsen)",
+        "public": false,
+        "threat_level": "high",
+        "role": "国产替代主力(汉威子公司)",
+        "strategic_actions": "全技术栈（半导体/电化学/红外）扩张，拓展海外与汽车电子",
+        "impact_on_profit_pool": "规模化压低中低端价格，逼国际巨头向高端转型",
+        "data_available": false,
+        "note": "无独立财务数据，定性判断"
+      },
+      {
+        "name": "奥松传感(Aosong)",
+        "public": false,
+        "threat_level": "medium",
+        "role": "挑战者",
+        "strategic_actions": "MEMS温湿度/气体传感器，渗透国产家电与汽车供应链",
+        "impact_on_profit_pool": "细分价格竞争，侵蚀Sensirion中端份额",
+        "data_available": false,
+        "note": "多轮融资，无公开财务"
+      },
+      {
+        "name": "诺安环境",
+        "public": false,
+        "threat_level": "medium",
+        "role": "利基玩家",
+        "strategic_actions": "NDIR非分散红外技术，环保监测/暖通空调",
+        "impact_on_profit_pool": "高性价比国产红外方案，替代Honeywell/Amphenol",
+        "data_available": false,
+        "note": "无公开财务"
+      }
+    ],
+    "source": "ai_search: 华经情报网/公司融资信息"
+  },
+  "半导体": {
+    "players": [
+      {
+        "name": "华为海思(HiSilicon)",
+        "public": false,
+        "threat_level": "high",
+        "role": "高端芯片设计/IP核",
+        "strategic_actions": "受限环境下自研先进制程（麒麟系列），推动国产供应链验证",
+        "impact_on_profit_pool": "减少对外购芯片依赖，重塑手机/服务器利润分配",
+        "data_available": false,
+        "note": "华为全资子公司"
+      },
+      {
+        "name": "长江存储(YMTC)",
+        "public": false,
+        "threat_level": "high",
+        "role": "NAND闪存制造",
+        "strategic_actions": "突破232层3D NAND，积极扩产",
+        "impact_on_profit_pool": "打破三星/SK海力士/美光定价权，压低NAND价格",
+        "data_available": false,
+        "note": "无公开财务"
+      },
+      {
+        "name": "长鑫存储(CXMT)",
+        "public": false,
+        "threat_level": "medium",
+        "role": "DRAM存储制造",
+        "strategic_actions": "推进10nm级DRAM，国产设备提良率",
+        "impact_on_profit_pool": "价格挑战者，迫使国际巨头成熟制程让利",
+        "data_available": false,
+        "note": "无公开财务"
+      },
+      {
+        "name": "上海微电子装备(SMEE)",
+        "public": false,
+        "threat_level": "medium",
+        "role": "半导体装备(光刻机)",
+        "strategic_actions": "国产光刻机SSA600系列商业化验证",
+        "impact_on_profit_pool": "量产将降低晶圆厂CapEx，改变设备采购成本结构",
+        "data_available": false,
+        "note": "无公开财务"
+      }
+    ],
+    "source": "ai_search: 公开行业报告"
+  },
+  "人形机器人": {
+    "players": [
+      {
+        "name": "Figure AI",
+        "public": false,
+        "threat_level": "high",
+        "role": "全球挑战者",
+        "strategic_actions": "Figure 02商用落地（BMW工厂），OpenAI合作具身智能",
+        "impact_on_profit_pool": "加速行业量产竞赛，压缩先行者定价空间",
+        "data_available": false,
+        "note": "高估值融资，无公开财务"
+      },
+      {
+        "name": "智元机器人",
+        "public": false,
+        "threat_level": "high",
+        "role": "中国挑战者",
+        "strategic_actions": "远征A2系列量产，华为系供应链，具身智能大模型布局",
+        "impact_on_profit_pool": "推动国产供应链成熟，影响整机利润分配",
+        "data_available": false,
+        "note": "彭志辉创办，多轮融资"
+      },
+      {
+        "name": "1X Technologies",
+        "public": false,
+        "threat_level": "medium",
+        "role": "全球挑战者",
+        "strategic_actions": "NEO家庭机器人，OpenAI投资",
+        "impact_on_profit_pool": "探索家庭场景，长期影响消费级市场",
+        "data_available": false,
+        "note": "无公开财务"
+      }
+    ],
+    "source": "ai_search: 第一批检索/公开融资信息"
+  },
+  "光伏": {
+    "players": [
+      {
+        "name": "华为数字能源",
+        "public": false,
+        "threat_level": "high",
+        "role": "智能光伏/逆变器(华为子公司)",
+        "strategic_actions": "FusionSolar组串式逆变器全球重要份额，光储一体化生态",
+        "impact_on_profit_pool": "挤压SMA/Power Electronics等逆变器厂商利润空间",
+        "data_available": false,
+        "note": "华为全资子公司，无独立财务"
+      },
+      {
+        "name": "正信光电",
+        "public": false,
+        "threat_level": "medium",
+        "role": "组件制造/电站开发",
+        "strategic_actions": "曾尝试IPO未果，高效组件+海外新兴市场",
+        "impact_on_profit_pool": "中低端组件价格竞争，影响利润率",
+        "data_available": false,
+        "note": "非上市"
+      },
+      {
+        "name": "Verogy",
+        "public": false,
+        "threat_level": "low",
+        "role": "美国工商业光伏开发商",
+        "strategic_actions": "美国本土分布式光伏，IRA补贴扩份额",
+        "impact_on_profit_pool": "渠道商影响上游议价空间",
+        "data_available": false,
+        "note": "区域性开发商"
+      }
+    ],
+    "source": "ai_search: Wood Mackenzie（非上市独立玩家少，头部多已上市）"
+  },
+  "锂电": {
+    "players": [
+      {
+        "name": "瑞浦兰钧(REPT)",
+        "public": false,
+        "threat_level": "high",
+        "role": "挑战者(Pre-IPO)",
+        "strategic_actions": "青山集团镍矿资源支持，280Ah储能大电芯，低成本扩张",
+        "impact_on_profit_pool": "极致成本控制侵蚀二三线电池厂利润，加速价格战",
+        "data_available": false,
+        "note": "已递交港交所招股书，若上市应移入players"
+      },
+      {
+        "name": "欣旺达电动汽车电池",
+        "public": false,
+        "threat_level": "medium",
+        "role": "挑战者(未独立上市)",
+        "strategic_actions": "快充技术，蔚来/理想/小鹏为股东",
+        "impact_on_profit_pool": "HEV/快充细分分流差异化客户",
+        "data_available": false,
+        "note": "拆分业务未独立上市"
+      },
+      {
+        "name": "卫蓝新能源",
+        "public": false,
+        "threat_level": "medium",
+        "role": "技术颠覆者(固态电池)",
+        "strategic_actions": "半固态电池包与蔚来合作",
+        "impact_on_profit_pool": "短期影响有限，长期或颠覆液态锂电格局",
+        "data_available": false,
+        "note": "量产前"
+      }
+    ],
+    "source": "ai_search: 招股书/高工锂电"
+  },
+  "工控自动化": {
+    "players": [
+      {
+        "name": "倍福(Beckhoff)",
+        "public": false,
+        "threat_level": "high",
+        "role": "全球龙头(PC-Based Control)",
+        "strategic_actions": "推广IPC+EtherCAT总线，软硬一体化挑战传统PLC巨头",
+        "impact_on_profit_pool": "开放架构侵蚀封闭PLC厂商高端份额",
+        "data_available": false,
+        "note": "德国家族企业"
+      },
+      {
+        "name": "路斯特(Lenze)",
+        "public": false,
+        "threat_level": "medium",
+        "role": "挑战者(驱动与自动化)",
+        "strategic_actions": "机械工程驱动一体化方案，包装/物流定制化",
+        "impact_on_profit_pool": "细分专用设备高性价比挤压大型厂商",
+        "data_available": false,
+        "note": "德国企业"
+      },
+      {
+        "name": "Beckhoff（德国倍福）",
+        "public": false,
+        "threat_level": "high",
+        "role": "全球工业PC/运动控制龙头",
+        "strategic_actions": "EtherCAT总线生态扩张/深耕高端OEM客户",
+        "impact_on_profit_pool": "挤压国产中高端运动控制器与工业PC利润率",
+        "data_available": false,
+        "note": "德国非上市家族企业，工业PC+EtherCAT事实标准制定者，定性判断"
+      },
+      {
+        "name": "Phoenix Contact（菲尼克斯电气）",
+        "public": false,
+        "threat_level": "medium",
+        "role": "工业连接器/接口技术全球龙头",
+        "strategic_actions": "PLCnext开放生态/工业物联网平台布局",
+        "impact_on_profit_pool": "在连接器与接口层维持高毛利，压缩国产替代空间",
+        "data_available": false,
+        "note": "德国非上市家族企业，定性判断"
+      }
+    ],
+    "source": "ai_search: 公司官网/行业分析（非上市玩家少，信捷已上市603416.SH应移出）"
+  },
+  "医疗器械": {
+    "players": [
+      {
+        "name": "深圳精锋医疗",
+        "public": false,
+        "threat_level": "medium",
+        "role": "挑战者(手术机器人)",
+        "strategic_actions": "多孔/单孔手术机器人临床推进，寻求IPO",
+        "impact_on_profit_pool": "低价打破直觉外科垄断，压缩高端手术机器人利润",
+        "data_available": false,
+        "note": "截至检索日未挂牌"
+      },
+      {
+        "name": "深圳核心医疗",
+        "public": false,
+        "threat_level": "medium",
+        "role": "利基玩家(人工心脏)",
+        "strategic_actions": "人工心脏(心室辅助装置)国产化，B轮/C轮融资",
+        "impact_on_profit_pool": "国产替代进口心室辅助装置，重塑高端器械利润池",
+        "data_available": false,
+        "note": "初创型，无公开财务"
+      },
+      {
+        "name": "深圳安科高技术",
+        "public": false,
+        "threat_level": "medium",
+        "role": "国产医学影像（MRI/CT）老牌厂商",
+        "strategic_actions": "高端MRI/CT国产化迭代/基层医疗下沉",
+        "impact_on_profit_pool": "在中低端影像设备市场与联影/迈瑞争夺份额",
+        "data_available": false,
+        "note": "非上市，中国最早一批影像设备企业，定性判断"
+      },
+      {
+        "name": "品驰医疗（北京品驰）",
+        "public": false,
+        "threat_level": "medium",
+        "role": "国产脑起搏器（DBS）领军",
+        "strategic_actions": "神经调控产品线扩张/进口替代",
+        "impact_on_profit_pool": "打破美敦力在神经调控领域的垄断利润",
+        "data_available": false,
+        "note": "非上市，清华系背景，定性判断"
+      }
+    ],
+    "source": "ai_search: 公司官网/36氪（器械头部多已上市，非上市巨头稀少）"
+  },
+  "消费电子": {
+    "players": [
+      {
+        "name": "华为技术",
+        "public": false,
+        "threat_level": "high",
+        "role": "中国龙头",
+        "strategic_actions": "Mate 60突破芯片封锁，鸿蒙生态，全屋智能/车机互联",
+        "impact_on_profit_pool": "打破高端双寡头局面，迫使对手增研发并降高端利润率",
+        "data_available": false,
+        "note": "非上市但全球顶级研发投入"
+      },
+      {
+        "name": "大疆创新",
+        "public": false,
+        "threat_level": "high",
+        "role": "全球龙头(无人机)",
+        "strategic_actions": "垄断消费级无人机(市占率>70%)，拓展影像稳定器/行业应用",
+        "impact_on_profit_pool": "高壁垒超额利润，挤压Sony/Canon视频拍摄空间",
+        "data_available": false,
+        "note": "非上市"
+      },
+      {
+        "name": "Valve",
+        "public": false,
+        "threat_level": "medium",
+        "role": "挑战者(游戏硬件)",
+        "strategic_actions": "Steam Deck掌机+Steam分发平台",
+        "impact_on_profit_pool": "从Switch和手游分流用户时长与消费",
+        "data_available": false,
+        "note": "美国游戏软硬件巨头"
+      }
+    ],
+    "source": "ai_search: 公开行业信息"
+  },
+  "加油设备": {
+    "players": [
+      {
+        "name": "托肯恒山(Tokheim Hengshan)",
+        "public": false,
+        "threat_level": "high",
+        "role": "加油机/液位仪/整站方案",
+        "strategic_actions": "中石化/中石油供应商，加油站整站方案绑定液位仪，Dover体系全球技术迁移",
+        "impact_on_profit_pool": "中石化/中石油核心供应商，整站方案深度绑定液位仪采购，挤压独立液位仪厂商入围空间",
+        "data_available": false,
+        "note": "1989年广州成立，中国第一台微电脑加油机，Dover Fueling Solutions成员，与优必得同体系"
+      },
+      {
+        "name": "GVR中国（吉蔚交通科技）",
+        "public": false,
+        "threat_level": "high",
+        "role": "液位仪/油气回收/油站管理系统",
+        "strategic_actions": "Veeder-Root全球技术中国落地，加油站液位系统垄断级份额，TLS-450PLUS整站管理",
+        "impact_on_profit_pool": "Veeder-Root全球加油站液位系统市占率超65%，在中国油站液位仪市场具有定价权",
+        "data_available": false,
+        "note": "原北京长吉加油设备+维德路特上海，属Vontier集团（非Dover），吉蔚合资"
+      },
+      {
+        "name": "富仁高科",
+        "public": false,
+        "threat_level": "high",
+        "role": "加油机国标制定者/液位仪",
+        "strategic_actions": "主导加油机国标(GB/T 9081-2023)，400+专利，智能加油机器人",
+        "impact_on_profit_pool": "国标制定者地位构筑准入壁垒，专利池覆盖抬高行业技术门槛",
+        "data_available": false,
+        "note": "江苏江阴，2001年成立，主导起草GB/T 9081-2023加油机国标"
+      },
+      {
+        "name": "稳恩佳力佳",
+        "public": false,
+        "threat_level": "medium",
+        "role": "加油机/液位仪/油气回收",
+        "strategic_actions": "中石油入围，加油站数字化，油气回收系统",
+        "impact_on_profit_pool": "中石油入围带来稳定份额，数字化方案提升客户粘性",
+        "data_available": false,
+        "note": "北京，非上市，加油机+液位仪+油气回收+加油站管理系统"
+      },
+      {
+        "name": "广东贝林",
+        "public": false,
+        "threat_level": "low",
+        "role": "加油机配件/液位仪配件",
+        "strategic_actions": "配件供应链，液位仪组件",
+        "impact_on_profit_pool": "配件层供应商，间接影响整机厂商成本结构",
+        "data_available": false,
+        "note": "广东，非上市，加油机配件/液位仪/油气回收部件"
+      },
+      {
+        "name": "河南英高",
+        "public": false,
+        "threat_level": "low",
+        "role": "加油机/液位仪",
+        "strategic_actions": "加油机+液位仪+油气回收",
+        "impact_on_profit_pool": "区域性参与者，对全国利润池影响有限",
+        "data_available": false,
+        "note": "河南，非上市"
+      }
+    ],
+    "source": "ai_search: 公司官网/行业报告/Dover/Vontier公开信息"
+  },
+  "液位仪表": {
+    "players": [
+      {
+        "name": "KROHNE科隆",
+        "public": false,
+        "threat_level": "high",
+        "role": "雷达物位计/船舶液位/工业储罐",
+        "strategic_actions": "雷达物位计高端市场，SIL2认证，船舶液位系统壁垒",
+        "impact_on_profit_pool": "雷达物位计全球TOP3，高端工业储罐液位市场利润丰厚，SIL2认证构筑安全仪表壁垒",
+        "data_available": false,
+        "note": "德国1921年成立，外资在华（科隆测量仪器上海），雷达物位计全球TOP3，船舶液位系统全球领先"
+      },
+      {
+        "name": "昆仑海岸",
+        "public": false,
+        "threat_level": "medium",
+        "role": "液位变送器/工业传感器",
+        "strategic_actions": "物联网传感器平台，液位变送器中端市场",
+        "impact_on_profit_pool": "物联网平台模式降低部署成本，中端液位变送器价格竞争影响外资品牌定价",
+        "data_available": false,
+        "note": "北京，非上市，工业传感器/液位变送器/压力变送器"
+      },
+      {
+        "name": "济南特美瑞",
+        "public": false,
+        "threat_level": "low",
+        "role": "液位仪表/压力仪表",
+        "strategic_actions": "工业液位仪表",
+        "impact_on_profit_pool": "中低端液位仪表价格竞争",
+        "data_available": false,
+        "note": "济南，非上市"
+      },
+      {
+        "name": "沈阳航天新阳",
+        "public": false,
+        "threat_level": "low",
+        "role": "航天级液位传感器",
+        "strategic_actions": "航天背景，液位传感器/压力传感器",
+        "impact_on_profit_pool": "航天级高可靠性壁垒，特定场景不可替代",
+        "data_available": false,
+        "note": "沈阳，非上市，航天背景"
+      }
+    ],
+    "source": "ai_search: 公司官网/行业报告"
+  },
+  "船舶与海工": {
+    "players": [
+      {
+        "name": "Kongsberg",
+        "public": true,
+        "threat_level": "low",
+        "role": "船舶液位/储罐管理",
+        "strategic_actions": "海事液位系统，LNG储罐，北极航线",
+        "impact_on_profit_pool": "海事液位系统细分龙头，LNG储罐液位管理高壁垒",
+        "data_available": false,
+        "note": "挪威上市(OSE:KOG)，海事/船舶液位/储罐管理系统"
+      }
+    ],
+    "source": "ai_search: Kongsberg官网/OSE公开信息"
+  },
+  "汽车零部件": {
+    "players": [
+      {
+        "name": "亚普股份",
+        "public": true,
+        "threat_level": "low",
+        "role": "汽车油箱燃油系统",
+        "strategic_actions": "汽车油箱/燃油系统，液位传感器集成",
+        "impact_on_profit_pool": "汽车油箱燃油系统供应商，液位传感器集成于油箱总成",
+        "data_available": false,
+        "note": "A股上市(603013)，汽车油箱/燃油系统，液位传感器集成"
+      },
+      {
+        "name": "博世(Bosch)",
+        "public": true,
+        "threat_level": "low",
+        "role": "汽车液位传感器OEM",
+        "strategic_actions": "汽车传感器巨头，油箱液位传感器OEM",
+        "impact_on_profit_pool": "全球最大汽车传感器OEM，液位传感器只是小品类，但绑定整车平台",
+        "data_available": false,
+        "note": "德国上市，汽车传感器巨头，油箱液位传感器OEM"
+      }
+    ],
+    "source": "ai_search: 公开财报/行业报告"
+  },
+  "工业自动化": {
+    "players": [
+      {
+        "name": "ABB",
+        "public": true,
+        "threat_level": "low",
+        "role": "工业传感器全品类",
+        "strategic_actions": "工业自动化全栈，液位传感器高端，系统集成优势",
+        "impact_on_profit_pool": "工业自动化巨头，液位/压力/流量传感器全品类覆盖，但液位非核心，整体威胁低",
+        "data_available": false,
+        "note": "瑞士上市，工业自动化巨头，K-TEK/LMT系列液位传感器"
+      }
+    ],
+    "source": "ai_search: ABB官网/公开财报"
+  },
+  "油位传感器": {
+    "players": [
+      {
+        "name": "托肯恒山(Tokheim Hengshan)",
+        "public": false,
+        "threat_level": "high",
+        "role": "加油机/液位仪/整站方案",
+        "strategic_actions": "中石化/中石油供应商，加油站整站方案绑定液位仪，Dover体系全球技术迁移",
+        "impact_on_profit_pool": "中石化/中石油核心供应商，整站方案深度绑定液位仪采购，挤压独立液位仪厂商入围空间",
+        "data_available": false,
+        "note": "1989年广州成立，中国第一台微电脑加油机，Dover Fueling Solutions成员，与优必得同体系"
+      },
+      {
+        "name": "GVR中国（吉蔚交通科技）",
+        "public": false,
+        "threat_level": "high",
+        "role": "液位仪/油气回收/油站管理系统",
+        "strategic_actions": "Veeder-Root全球技术中国落地，加油站液位系统垄断级份额，TLS-450PLUS整站管理",
+        "impact_on_profit_pool": "Veeder-Root全球加油站液位系统市占率超65%，在中国油站液位仪市场具有定价权",
+        "data_available": false,
+        "note": "原北京长吉加油设备+维德路特上海，属Vontier集团（非Dover），吉蔚合资"
+      },
+      {
+        "name": "富仁高科",
+        "public": false,
+        "threat_level": "high",
+        "role": "加油机国标制定者/液位仪",
+        "strategic_actions": "主导加油机国标(GB/T 9081-2023)，400+专利，智能加油机器人",
+        "impact_on_profit_pool": "国标制定者地位构筑准入壁垒，专利池覆盖抬高行业技术门槛",
+        "data_available": false,
+        "note": "江苏江阴，2001年成立，主导起草GB/T 9081-2023加油机国标"
+      },
+      {
+        "name": "稳恩佳力佳",
+        "public": false,
+        "threat_level": "medium",
+        "role": "加油机/液位仪/油气回收",
+        "strategic_actions": "中石油入围，加油站数字化，油气回收系统",
+        "impact_on_profit_pool": "中石油入围带来稳定份额，数字化方案提升客户粘性",
+        "data_available": false,
+        "note": "北京，非上市，加油机+液位仪+油气回收+加油站管理系统"
+      },
+      {
+        "name": "广东贝林",
+        "public": false,
+        "threat_level": "low",
+        "role": "加油机配件/液位仪配件",
+        "strategic_actions": "配件供应链，液位仪组件",
+        "impact_on_profit_pool": "配件层供应商，间接影响整机厂商成本结构",
+        "data_available": false,
+        "note": "广东，非上市，加油机配件/液位仪/油气回收部件"
+      },
+      {
+        "name": "河南英高",
+        "public": false,
+        "threat_level": "low",
+        "role": "加油机/液位仪",
+        "strategic_actions": "加油机+液位仪+油气回收",
+        "impact_on_profit_pool": "区域性参与者，对全国利润池影响有限",
+        "data_available": false,
+        "note": "河南，非上市"
+      },
+      {
+        "name": "KROHNE科隆",
+        "public": false,
+        "threat_level": "high",
+        "role": "雷达物位计/船舶液位/工业储罐",
+        "strategic_actions": "雷达物位计高端市场，SIL2认证，船舶液位系统壁垒",
+        "impact_on_profit_pool": "雷达物位计全球TOP3，高端工业储罐液位市场利润丰厚，SIL2认证构筑安全仪表壁垒",
+        "data_available": false,
+        "note": "德国1921年成立，外资在华（科隆测量仪器上海），雷达物位计全球TOP3，船舶液位系统全球领先"
+      },
+      {
+        "name": "昆仑海岸",
+        "public": false,
+        "threat_level": "medium",
+        "role": "液位变送器/工业传感器",
+        "strategic_actions": "物联网传感器平台，液位变送器中端市场",
+        "impact_on_profit_pool": "物联网平台模式降低部署成本，中端液位变送器价格竞争影响外资品牌定价",
+        "data_available": false,
+        "note": "北京，非上市，工业传感器/液位变送器/压力变送器"
+      },
+      {
+        "name": "济南特美瑞",
+        "public": false,
+        "threat_level": "low",
+        "role": "液位仪表/压力仪表",
+        "strategic_actions": "工业液位仪表",
+        "impact_on_profit_pool": "中低端液位仪表价格竞争",
+        "data_available": false,
+        "note": "济南，非上市"
+      },
+      {
+        "name": "沈阳航天新阳",
+        "public": false,
+        "threat_level": "low",
+        "role": "航天级液位传感器",
+        "strategic_actions": "航天背景，液位传感器/压力传感器",
+        "impact_on_profit_pool": "航天级高可靠性壁垒，特定场景不可替代",
+        "data_available": false,
+        "note": "沈阳，非上市，航天背景"
+      },
+      {
+        "name": "郑州永邦",
+        "public": false,
+        "threat_level": "high",
+        "role": "油位传感器/汽车电子",
+        "strategic_actions": "车用油位传感器龙头，国产替代，供货主流主机厂",
+        "impact_on_profit_pool": "国产车用油位传感器份额领先，挤压外资（大陆/电装）定价空间",
+        "data_available": false,
+        "note": "郑州，非上市，汽车油位传感器/仪表"
+      },
+      {
+        "name": "河南长润",
+        "public": false,
+        "threat_level": "medium",
+        "role": "液位传感器/油位仪表",
+        "strategic_actions": "工业液位/油位仪表，石化油罐监测",
+        "impact_on_profit_pool": "石化行业油罐液位监测国产替代",
+        "data_available": false,
+        "note": "河南，非上市，R69新增"
+      },
+      {
+        "name": "郑州开物通",
+        "public": false,
+        "threat_level": "medium",
+        "role": "油位传感器/物联网",
+        "strategic_actions": "物联网油位监测，油罐远程监控",
+        "impact_on_profit_pool": "物联网化油位监测方案降低运维成本",
+        "data_available": false,
+        "note": "郑州，非上市，R69新增"
+      },
+      {
+        "name": "深圳计为",
+        "public": false,
+        "threat_level": "medium",
+        "role": "液位开关/油位仪表",
+        "strategic_actions": "音叉/磁翻板液位计，油位场景",
+        "impact_on_profit_pool": "国产液位仪表价格竞争力强",
+        "data_available": false,
+        "note": "深圳，非上市，R69新增"
+      },
+      {
+        "name": "北京锐达",
+        "public": false,
+        "threat_level": "low",
+        "role": "液位仪表/石油化工",
+        "strategic_actions": "石油化工液位监测",
+        "impact_on_profit_pool": "细分石化液位市场补充",
+        "data_available": false,
+        "note": "北京，非上市，R69新增"
+      },
+      {
+        "name": "浙达精益",
+        "public": false,
+        "threat_level": "low",
+        "role": "油位传感器/汽车零部件",
+        "strategic_actions": "汽车油位传感器/液位传感器",
+        "impact_on_profit_pool": "车用油位传感器国产参与者",
+        "data_available": false,
+        "note": "浙江，非上市，R69新增"
+      },
+      {
+        "name": "东润仪表",
+        "public": false,
+        "threat_level": "low",
+        "role": "液位仪表/工业自动化",
+        "strategic_actions": "工业液位/物位仪表",
+        "impact_on_profit_pool": "工业仪表国产替代参与者",
+        "data_available": false,
+        "note": "山东，非上市，R69新增"
+      },
+      {
+        "name": "福州盛博",
+        "public": false,
+        "threat_level": "low",
+        "role": "液位传感器/工业自动化",
+        "strategic_actions": "液位/压力传感器",
+        "impact_on_profit_pool": "工业传感器国产参与者",
+        "data_available": false,
+        "note": "福州，非上市，R69新增"
+      }
+    ],
+    "source": "ai_search: 公司官网/行业报告/Dover/Vontier公开信息 + R69全量覆盖审计"
+  },
+  "智慧物流": {
+    "players": [
+      {
+        "name": "中集智能",
+        "public": false,
+        "threat_level": "high",
+        "role": "智能集装箱/冷链IoT整链方案",
+        "strategic_actions": "依托中集集团集装箱制造优势，绑定船东/物流商提供整箱智能化改造",
+        "impact_on_profit_pool": "在集装箱追踪渗透初期以整箱方案抢份额",
+        "data_available": false,
+        "note": "中集集团旗下"
+      },
+      {
+        "name": "G7物联（汇通天下）",
+        "public": false,
+        "threat_level": "high",
+        "role": "公路货运IoT+数据平台",
+        "strategic_actions": "百万级重卡装机量+数据服务变现，覆盖车联网全链路",
+        "impact_on_profit_pool": "以车队数据平台挤压纯硬件厂商议价权",
+        "data_available": false,
+        "note": "公路货运龙头"
+      },
+      {
+        "name": "锐明技术",
+        "public": true,
+        "threat_level": "medium",
+        "role": "商用车视频监控/主动安全",
+        "strategic_actions": "车载视频+AI安全方案出海，海外收入占比提升",
+        "impact_on_profit_pool": "商用车安全细分与久通交集有限但可延伸",
+        "data_available": true,
+        "note": "A股上市(002990)"
+      },
+      {
+        "name": "博实结",
+        "public": true,
+        "threat_level": "medium",
+        "role": "北斗/GPS定位终端与IoT",
+        "strategic_actions": "定位模组+终端规模化出货，价格竞争力强",
+        "impact_on_profit_pool": "低端定位终端价格战压力",
+        "data_available": true,
+        "note": "A股上市"
+      },
+      {
+        "name": "移为通信",
+        "public": true,
+        "threat_level": "medium",
+        "role": "车载/资产管理定位终端出海",
+        "strategic_actions": "海外ODM+运营商渠道，产品线广",
+        "impact_on_profit_pool": "海外中低端终端竞争",
+        "data_available": true,
+        "note": "A股上市(300590)"
+      },
+      {
+        "name": "鸿泉物联",
+        "public": true,
+        "threat_level": "low",
+        "role": "商用车网联化终端",
+        "strategic_actions": "智能增强驾驶系统+车联网，聚焦商用车法规市场",
+        "impact_on_profit_pool": "细分领域竞争有限",
+        "data_available": true,
+        "note": "A股上市(688288)"
+      },
+      {
+        "name": "中寰卫星",
+        "public": false,
+        "threat_level": "medium",
+        "role": "商用车车联网与导航",
+        "strategic_actions": "北斗导航+车联网运营，背靠航天科技集团",
+        "impact_on_profit_pool": "商用车前装渠道竞争",
+        "data_available": false,
+        "note": "航天科技旗下"
+      },
+      {
+        "name": "星软科技",
+        "public": false,
+        "threat_level": "medium",
+        "role": "车辆管理定位平台",
+        "strategic_actions": "车队管理平台+终端绑定，区域市场深耕",
+        "impact_on_profit_pool": "中小车队客户分流",
+        "data_available": false,
+        "note": ""
+      }
+    ]
+  },
+  "传感器": {
+    "players": [
+      {
+        "name": "HBM（Spectris旗下）",
+        "public": false,
+        "threat_level": "high",
+        "role": "全球称重/力传感器技术标杆（德国）",
+        "strategic_actions": "高端称重与测力方案，工业4.0数字化产品线",
+        "impact_on_profit_pool": "占据高端称重与测力利润池，压制国产向上突破",
+        "data_available": false,
+        "note": "非上市（母公司Spectris），柯力高端对标对象"
+      },
+      {
+        "name": "ATI Industrial Automation",
+        "public": false,
+        "threat_level": "high",
+        "role": "全球六维力/力矩传感器头部（美国，Novanta旗下）",
+        "strategic_actions": "机器人末端力控标准制定者，汽车/航空测试全覆盖",
+        "impact_on_profit_pool": "六维力高端市场定价锚，国产六维力需绕其价格带",
+        "data_available": false,
+        "note": "非上市（母公司Novanta上市）"
+      },
+      {
+        "name": "Interface（美国）",
+        "public": false,
+        "threat_level": "medium",
+        "role": "精密测力传感器老牌厂商",
+        "strategic_actions": "材料试验机/航空航天测力，单点与多分量测力",
+        "impact_on_profit_pool": "细分精密测力利基市场",
+        "data_available": false,
+        "note": "非上市"
+      },
+      {
+        "name": "坤维科技",
+        "public": false,
+        "threat_level": "high",
+        "role": "国产六维力传感器新锐（人形机器人供应链）",
+        "strategic_actions": "与多家机器人本体厂深度绑定，六维力批量出货",
+        "impact_on_profit_pool": "人形机器人六维力放量期抢跑，对柯力形成直接竞争",
+        "data_available": false,
+        "note": "多轮融资，无公开财务"
+      },
+      {
+        "name": "宇立仪器",
+        "public": false,
+        "threat_level": "medium",
+        "role": "国产六维力/关节力传感器厂商",
+        "strategic_actions": "工业机器人打磨/装配力控，汽车测试",
+        "impact_on_profit_pool": "工业六维力国产替代主力之一",
+        "data_available": false,
+        "note": "非上市"
+      },
+      {
+        "name": "鑫精诚传感器",
+        "public": false,
+        "threat_level": "medium",
+        "role": "测力/称重传感器专业厂商（深圳）",
+        "strategic_actions": "微型测力、压装测力传感器，3C与锂电设备",
+        "impact_on_profit_pool": "3C/锂电设备测力细分竞争",
+        "data_available": false,
+        "note": "非上市"
+      },
+      {
+        "name": "他山科技",
+        "public": false,
+        "threat_level": "medium",
+        "role": "触觉传感器/AI触觉芯片（人形机器人）",
+        "strategic_actions": "机器人灵巧手触觉传感，芯片+算法一体",
+        "impact_on_profit_pool": "触觉模态新赛道，可能重构机器人传感生态",
+        "data_available": false,
+        "note": "非上市"
+      },
+      {
+        "name": "帕西尼感知科技",
+        "public": false,
+        "threat_level": "medium",
+        "role": "多维触觉传感器（人形机器人灵巧手）",
+        "strategic_actions": "PX-6AX触觉传感器，与多家机器人厂商合作",
+        "impact_on_profit_pool": "触觉模态竞争，差异化于力/力矩",
+        "data_available": false,
+        "note": "非上市"
+      },
+      {
+        "name": "蓝点触控",
+        "public": false,
+        "threat_level": "low",
+        "role": "柔性触觉传感器厂商",
+        "strategic_actions": "电子皮肤/触觉传感，机器人及消费电子",
+        "impact_on_profit_pool": "触觉传感长尾补充",
+        "data_available": false,
+        "note": "非上市"
+      },
+      {
+        "name": "钛深科技",
+        "public": false,
+        "threat_level": "low",
+        "role": "柔性压力/触觉传感器（深圳）",
+        "strategic_actions": "医疗与机器人柔性压力传感",
+        "impact_on_profit_pool": "柔性传感差异化路线",
+        "data_available": false,
+        "note": "非上市"
+      },
+      {
+        "name": "中航电测",
+        "public": true,
+        "threat_level": "medium",
+        "role": "国内称重传感器/航空测控上市公司（300114）",
+        "strategic_actions": "应变计+称重传感器+航空测控，军工背景",
+        "impact_on_profit_pool": "称重传感国产第二极，价格竞争",
+        "data_available": true,
+        "note": "上市"
+      },
+      {
+        "name": "汉威科技",
+        "public": true,
+        "threat_level": "medium",
+        "role": "气体传感器龙头（300007），向多物理量扩张",
+        "strategic_actions": "传感器森林生态+物联网平台，外延并购扩张",
+        "impact_on_profit_pool": "多物理量平台化对标样本，生态打法相似",
+        "data_available": true,
+        "note": "上市"
+      }
+    ],
+    "_meta": {
+      "source": "R73柯力生态补录",
+      "added": "2026-08-05"
+    }
+  },
+  "商业航天": {
+    "players": [
+      {
+        "name": "蓝箭航天",
+        "public": false,
+        "threat_level": "high",
+        "role": "液氧甲烷运载火箭(朱雀系列)/火箭总装",
+        "strategic_actions": "朱雀二号全球首发液氧甲烷入轨，朱雀三号2025年12月首飞入轨但一子级回收失败，2026年Q2再冲回收；2025年底科创板IPO申请拟募75亿，最新估值约220亿元",
+        "impact_on_profit_pool": "国内液氧甲烷路线龙头，回收复用成功后将成为发射成本下探的最大推动者，挤压固体火箭与进口发射份额",
+        "data_available": true,
+        "note": "2025年12月被抽中IPO现场检查"
+      },
+      {
+        "name": "天兵科技",
+        "public": false,
+        "threat_level": "high",
+        "role": "液氧煤油运载火箭(天龙系列)",
+        "strategic_actions": "Pre-D/D轮近25亿融资、估值约225亿元；天龙三号一级动力系统试车成功，2025年发射失利后重启飞行试验",
+        "impact_on_profit_pool": "大推力液氧煤油路线竞争者，若天龙三号恢复发射将直接争夺中型运力市场",
+        "data_available": true,
+        "note": "2024年天龙三号静态点火事故后整改"
+      },
+      {
+        "name": "星河动力",
+        "public": false,
+        "threat_level": "medium",
+        "role": "固体/液体运载火箭(谷神星/智神星)",
+        "strategic_actions": "D轮24亿融资、累计超53亿、估值约150亿元；谷神星一号多次商业发射成功",
+        "impact_on_profit_pool": "商业发射次数居民营前列，小型固体火箭性价比路线，提前卡位小卫星组网发射",
+        "data_available": true,
+        "note": ""
+      },
+      {
+        "name": "星际荣耀",
+        "public": false,
+        "threat_level": "medium",
+        "role": "固体/液氧甲烷火箭(双曲线系列)",
+        "strategic_actions": "启动上市辅导；双曲线一号固体火箭多次发射，双曲线三号液氧甲烷研制中",
+        "impact_on_profit_pool": "固体火箭早期商业化玩家，液氧甲烷复用路线跟进者",
+        "data_available": true,
+        "note": ""
+      },
+      {
+        "name": "中科宇航",
+        "public": false,
+        "threat_level": "medium",
+        "role": "固体火箭(力箭系列)/发射服务",
+        "strategic_actions": "启动上市辅导；力箭一号固体火箭多次成功发射，承接国家任务与商业订单",
+        "impact_on_profit_pool": "国家队背景的固体火箭主力，在快速响应发射与小卫星组网有稳定份额",
+        "data_available": true,
+        "note": ""
+      },
+      {
+        "name": "东方空间",
+        "public": false,
+        "threat_level": "medium",
+        "role": "中型运载火箭(引力系列)",
+        "strategic_actions": "完成大额融资；引力一号固体捆绑火箭2024年首飞成功，引力二号液氧煤油研制中",
+        "impact_on_profit_pool": "固体捆绑快速入轨路线代表，瞄准中型运力批量发射需求",
+        "data_available": true,
+        "note": ""
+      },
+      {
+        "name": "深蓝航天",
+        "public": false,
+        "threat_level": "medium",
+        "role": "液氧煤油火箭(星云系列)/回收技术",
+        "strategic_actions": "完成多轮融资；星云一号垂直起降回收试验多次成功，对标猎鹰9回收复用路线",
+        "impact_on_profit_pool": "国内回收技术储备最深的民营火箭公司之一，复用验证进度领先",
+        "data_available": true,
+        "note": ""
+      },
+      {
+        "name": "上海垣信",
+        "public": false,
+        "threat_level": "high",
+        "role": "低轨星座运营(千帆星座G60)",
+        "strategic_actions": "估值超400亿元；千帆星座2026年8月已238颗在轨，A轮67亿后再次启动50-60亿融资；规划1.5万颗卫星",
+        "impact_on_profit_pool": "国内两大低轨星座运营商之一，卫星制造与发射的最大需求方，产业链话语权极强",
+        "data_available": true,
+        "note": "发射节奏曾停滞"
+      },
+      {
+        "name": "微纳星空",
+        "public": false,
+        "threat_level": "medium",
+        "role": "商业卫星制造(微纳卫星平台)",
+        "strategic_actions": "14轮融资超20亿、2026年1月估值约100亿元；2025年营收3.85亿但三年累亏10.93亿，核心航天产品毛利率仅5.05%；中标8亿环天卫星星座项目，年产卫星超60颗",
+        "impact_on_profit_pool": "卫星制造环节代表玩家，呈现高收入低毛利强垫资特征，估值与盈利脱钩风险典型",
+        "data_available": true,
+        "note": "2025年9月完成IPO辅导备案，拟募50亿"
+      },
+      {
+        "name": "银河航天",
+        "public": false,
+        "threat_level": "medium",
+        "role": "商业卫星制造/低轨宽带星座",
+        "strategic_actions": "完成多轮大额融资；小批量卫星产线投产，承担国家与商业组网任务",
+        "impact_on_profit_pool": "卫星批量化制造与星座组网核心玩家，但盈利模式尚未闭环",
+        "data_available": true,
+        "note": ""
+      },
+      {
+        "name": "时空道宇",
+        "public": false,
+        "threat_level": "medium",
+        "role": "卫星制造/车联网星座(吉利系)",
+        "strategic_actions": "吉利集团旗下，完成大额融资；未来出行星座组网与商业运营并行",
+        "impact_on_profit_pool": "产业资本背景的星座运营者，垂直整合卫星制造与出行应用",
+        "data_available": true,
+        "note": ""
+      },
+      {
+        "name": "九州云箭",
+        "public": false,
+        "threat_level": "low",
+        "role": "液氧甲烷发动机供应商",
+        "strategic_actions": "多轮融资；凌云系列发动机配套民营火箭，供货蓝箭/星际荣耀等",
+        "impact_on_profit_pool": "发动机供应链独立供应商，受益于火箭公司发动机外购需求",
+        "data_available": true,
+        "note": ""
+      }
+    ]
+  }
+}

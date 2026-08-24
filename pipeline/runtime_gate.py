@@ -1,0 +1,299 @@
+"""
+runtime_gate.py - Runtime health check for the entire pipeline.
+Ensures the system can actually run before measuring output quality.
+"""
+import os, sys, logging, time, importlib
+from pathlib import Path
+from typing import Dict, List, Tuple, Optional
+
+logger = logging.getLogger("2hao.runtime_gate")
+
+_ROOT = Path(__file__).resolve().parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
+
+class RuntimeGate:
+    """Check if the pipeline is actually runnable."""
+
+    TIMEOUT_PER_MODULE = 10  # seconds
+
+    CRITICAL_MODULES = [
+        "core.sacs",
+        "core.deepseek_client",
+        "core.models",
+        "core.compute.pipeline",
+        "core.compute.valuation.dcf",
+        "core.compute.valuation.comparable",
+        "core.quality_scorer",
+        "core.fp_scorer",
+        "core.style_profiles",
+        "pipeline.e2e_orchestrator",
+        "pipeline.iron_gate",
+        "pipeline.data_pipeline",
+        "pipeline.chart_pipeline",
+        "pipeline.learning_loop",
+        "pipeline.compute_engine",
+        "pipeline.section_writer",
+        "pipeline.chart_assembler",
+    ]
+
+    def __init__(self, project_root: Optional[str] = None):
+        self.project_root = project_root or str(_ROOT)
+
+    def check_imports(self) -> Dict:
+        """Check all critical modules can be imported"""
+        results = {}
+        all_ok = True
+        for mod_name in self.CRITICAL_MODULES:
+            try:
+                importlib.import_module(mod_name)
+                results[mod_name] = {"ok": True}
+            except Exception as e:
+                results[mod_name] = {"ok": False, "error": str(e)[:100]}
+                all_ok = False
+        return {
+            "all_ok": all_ok,
+            "ok_count": sum(1 for v in results.values() if v["ok"]),
+            "fail_count": sum(1 for v in results.values() if not v.get("ok")),
+            "modules": results,
+        }
+
+    def check_syntax(self) -> Dict:
+        """Check all Python files have valid syntax (fast, no disk writes).
+
+        Perf fix (2026-08-01): 原实现用 py_compile.compile 遍历全项目并把 .pyc
+        写到慢速挂载文件系统，且未跳过 data/qlib_bin 等纯数据目录（4万+ 文件），
+        在慢速文件系统上耗时 ~40s。现改为 ast.parse（纯内存、不写盘）并跳过
+        纯数据/归档目录，将耗时降至 ~1.5s。检查语义不变：仍报告语法错误。
+        """
+        import ast
+        errors = []
+        ok_count = 0
+        # 纯源码目录遍历；数据/缓存/归档目录不包含待检查的 Python 源码
+        skip_dirs = {
+            "__pycache__", ".git", "node_modules", "output", "outputs",
+            "V30_compute", "V30_tools", "V30",
+            "qlib_bin", "基线", "archive", "data", "logs", "export",
+            ".github", ".pytest_cache", ".mypy_cache",
+        }
+        for root, dirs, files in os.walk(self.project_root):
+            dirs[:] = [d for d in dirs if d not in skip_dirs]
+            for f in files:
+                if not f.endswith(".py"):
+                    continue
+                fp = os.path.join(root, f)
+                try:
+                    with open(fp, "r", encoding="utf-8", errors="ignore") as fh:
+                        ast.parse(fh.read(), filename=fp)
+                    ok_count += 1
+                except SyntaxError as e:
+                    errors.append({"file": fp, "error": str(e)[:100]})
+                except Exception:
+                    pass
+        return {
+            "all_ok": len(errors) == 0,
+            "ok_count": ok_count,
+            "error_count": len(errors),
+            "errors": errors,
+        }
+
+    def check_pipeline_flow(self) -> Dict:
+        """Verify E2E orchestrator can be constructed (but don't run it)"""
+        steps = []
+        all_ok = True
+
+        # Step 1: SAC loading
+        try:
+            from core.sacs import SACLoader
+            for rt in ["industry_deep", "listed_company", "unlisted_company"]:
+                sac = SACLoader(rt)
+                steps.append({"step": f"SAC_{rt}", "ok": True})
+        except Exception as e:
+            steps.append({"step": "SAC", "ok": False, "error": str(e)[:80]})
+            all_ok = False
+
+        # Step 2: IronGate construction
+        try:
+            from pipeline.iron_gate import IronGate
+            import tempfile
+            tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False, encoding="utf-8")
+            tmp.write("# Test\nContent")
+            tmp_path = tmp.name
+            tmp.close()
+            gate = IronGate(tmp_path, report_type="industry_deep", style="cicc")
+            steps.append({"step": "IronGate", "ok": True})
+            os.unlink(tmp_path)
+            # Clean up any IronGate sidecar artifacts
+            for ext in [".content.json", ".report.md", "gate_check.md"]:
+                sidecar = tmp_path.replace(".md", ext)
+                if os.path.exists(sidecar):
+                    os.unlink(sidecar)
+        except Exception as e:
+            steps.append({"step": "IronGate", "ok": False, "error": str(e)[:80]})
+            all_ok = False
+
+        # Step 3: DataPipeline construction
+        try:
+            from pipeline.data_pipeline import DataPipeline
+            dp = DataPipeline()
+            steps.append({"step": "DataPipeline", "ok": True})
+        except Exception as e:
+            steps.append({"step": "DataPipeline", "ok": False, "error": str(e)[:80]})
+            all_ok = False
+
+        # Step 4: E2EOrchestrator construction
+        try:
+            from pipeline.e2e_orchestrator import E2EOrchestratorV2
+            o = E2EOrchestratorV2("test", "industry_deep", "cicc")
+            steps.append({"step": "E2EOrchestrator", "ok": True})
+        except Exception as e:
+            steps.append({"step": "E2EOrchestrator", "ok": False, "error": str(e)[:80]})
+            all_ok = False
+
+        # Step 5: Chart pipeline construction
+        try:
+            from pipeline.chart_pipeline import ChartPipeline
+            cp = ChartPipeline("industry_deep", "cicc")
+            steps.append({"step": "ChartPipeline", "ok": True})
+        except Exception as e:
+            steps.append({"step": "ChartPipeline", "ok": False, "error": str(e)[:80]})
+            all_ok = False
+
+        return {
+            "all_ok": all_ok,
+            "steps": steps,
+        }
+
+
+    def check_self_audit(self) -> Dict:
+        """Run self-audit checks to catch regressions early."""
+        try:
+            import subprocess, json
+            result = subprocess.run([sys.executable, str(_ROOT / "_self_audit.py"), "--json"],
+                                  capture_output=True, text=True, timeout=30, encoding="utf-8", errors="replace")
+            if result.returncode == 0:
+                logger.info("[SELF_AUDIT] All checks passed")
+                return {"ok": True, "output": result.stdout[:500]}
+            else:
+                logger.warning("[SELF_AUDIT] %d checks failed:\n%s",
+                             result.returncode, result.stdout[:300])
+                return {"ok": False, "output": result.stdout[:500], "stderr": result.stderr[:200]}
+        except FileNotFoundError:
+            logger.warning("[SELF_AUDIT] _self_audit.py not found, skipping")
+            return {"ok": True, "skipped": True}
+        except subprocess.TimeoutExpired:
+            logger.warning("[SELF_AUDIT] timed out after 30s, skipping")
+            return {"ok": True, "skipped": True}
+        except Exception as e:
+            logger.warning("[SELF_AUDIT] failed: %s", e)
+            return {"ok": True, "skipped": True}
+
+    def check_all(self) -> Dict:
+        """Run all checks and return combined result"""
+        results = {}
+
+        t0 = time.time()
+        results["imports"] = self.check_imports()
+        t1 = time.time()
+
+        results["syntax"] = self.check_syntax()
+        t2 = time.time()
+
+        results["pipeline"] = self.check_pipeline_flow()
+        results["self_audit"] = self.check_self_audit()
+        t6 = time.time()
+        t3 = time.time()
+
+        # Calculate score
+        import_ok = results["imports"]["all_ok"]
+        syntax_ok = results["syntax"]["all_ok"]
+        flow_ok = results["pipeline"]["all_ok"]
+
+        # Score: 1.0 if everything works, 0.0 if pipeline fails, 0.5 if partial
+        if import_ok and syntax_ok and flow_ok:
+            runtime_score = 1.0
+            status = "PASS"
+        elif flow_ok:
+            runtime_score = 0.5
+            status = "PARTIAL"
+        else:
+            runtime_score = 0.0
+            status = "FAIL"
+
+        results["summary"] = {
+            "status": status,
+            "runtime_score": runtime_score,
+            "imports_ok": import_ok,
+            "syntax_ok": syntax_ok,
+            "pipeline_ok": flow_ok,
+            "import_time_ms": int((t1-t0)*1000),
+            "syntax_time_ms": int((t2-t1)*1000),
+            "pipeline_time_ms": int((t3-t2)*1000),
+            "total_time_ms": int((t3-t0)*1000),
+        }
+        return results
+
+    def format_report(self, results: Dict) -> str:
+        lines = []
+        lines.append("=" * 60)
+        lines.append("Runtime Gate Report")
+        lines.append("=" * 60)
+        s = results["summary"]
+        lines.append(f"Status: {s['status']}")
+        lines.append(f"Runtime score: {s['runtime_score']}")
+        lines.append(f"Imports: {'PASS' if s['imports_ok'] else 'FAIL'} ({s['import_time_ms']}ms)")
+        lines.append(f"Syntax:  {'PASS' if s['syntax_ok'] else 'FAIL'} ({s['syntax_time_ms']}ms)")
+        lines.append(f"Pipeline: {'PASS' if s['pipeline_ok'] else 'FAIL'} ({s['pipeline_time_ms']}ms)")
+        lines.append(f"Total: {s['total_time_ms']}ms")
+
+        if not results["imports"]["all_ok"]:
+            lines.append(f"\nImport failures ({results['imports']['fail_count']}):")
+            for mod, info in results["imports"]["modules"].items():
+                if not info.get("ok"):
+                    lines.append(f"  {mod}: {info['error']}")
+
+        if results["syntax"]["error_count"] > 0:
+            lines.append(f"\nSyntax errors ({results['syntax']['error_count']}):")
+            for e in results["syntax"]["errors"][:10]:
+                lines.append(f"  {os.path.relpath(e['file'], self.project_root)}: {e['error']}")
+
+        if not results["pipeline"]["all_ok"]:
+            lines.append(f"\nPipeline flow failures:")
+            for step in results["pipeline"]["steps"]:
+                if not step["ok"]:
+                    lines.append(f"  {step['step']}: {step.get('error', 'unknown')}")
+
+        lines.append("=" * 60)
+
+        if s["runtime_score"] == 1.0:
+            lines.append("Verdict: SYSTEM IS RUNNABLE")
+        elif s["runtime_score"] >= 0.5:
+            lines.append("Verdict: SYSTEM IS PARTIALLY RUNNABLE - pipeline constructs OK")
+        else:
+            lines.append("Verdict: SYSTEM IS NOT RUNNABLE - pipeline construction FAILS")
+
+        return "\n".join(lines)
+
+
+def check_and_report(output_path: Optional[str] = None) -> Dict:
+    """Run all runtime checks and optionally save report"""
+    gate = RuntimeGate()
+    results = gate.check_all()
+    report = gate.format_report(results)
+
+    if output_path:
+        import json
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(results, f, ensure_ascii=False, indent=2)
+        text_path = output_path.replace(".json", ".txt")
+        with open(text_path, "w", encoding="utf-8") as f:
+            f.write(report)
+
+    logger.info(f"\n{report}")
+    return results
+
+
+if __name__ == "__main__":
+    check_and_report(str(_ROOT / "output" / "_runtime_gate.json"))

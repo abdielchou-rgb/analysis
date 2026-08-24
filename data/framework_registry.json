@@ -1,0 +1,238 @@
+{
+  "_meta": {
+    "schema_version": "0.1",
+    "description": "2号分析师 子分析框架注册表 — FP8 元认知选择的框架底座",
+    "usage": "analyst_planner 根据标的数据充足度/报告类型/行业特征选择框架组合；框架效果由 method_reflection 回写",
+    "calibration": {
+      "coverage_enrich_threshold": 0.7,
+      "coverage_threshold_source": "R77 P0-2 校准——universe_build 从 registry 读，FP5 回测可回写",
+      "note": "低于阈值建议 enrich 补采；接入 FP5 演化后可回写实测校准值"
+    }
+  },
+  "frameworks": [
+    {
+      "id": "bottleneck_engine",
+      "名称": "瓶颈引擎",
+      "适用条件": {
+        "report_types": [
+          "industry_deep",
+          "listed_company",
+          "unlisted_company"
+        ],
+        "data_requirement": "有产业链数据(industry_chain/profit_pool)",
+        "when": "需定位供应链卡点/利润池/稀缺层",
+        "exclude": "数据完全缺失产业链时"
+      },
+      "映射SAC": [
+        "产业链联动",
+        "利润池",
+        "竞争格局"
+      ],
+      "注入方式": "core.bottleneck_engine.analyze → compute.tool_modules",
+      "效果": {
+        "已用次数": 3,
+        "平均Gate分": 0.92,
+        "评分": "high",
+        "数据来源": "估算基线(2026-08-05 R77 标记，非实测)"
+      },
+      "备注": "R20-R23 建设，卡点评分10问20分"
+    },
+    {
+      "id": "ma_valuation",
+      "名称": "并购估值/行业整合",
+      "适用条件": {
+        "report_types": [
+          "industry_deep",
+          "listed_company"
+        ],
+        "data_requirement": "有并购案例库(m_and_a_cases.json)或行业整合信号",
+        "when": "行业处于整合期/需判断终局/有并购动态",
+        "exclude": "无并购数据的早期行业"
+      },
+      "映射SAC": [
+        "行业整合与并购趋势",
+        "资本市场映射"
+      ],
+      "注入方式": "core.compute.consolidation → compute",
+      "效果": {
+        "已用次数": 1,
+        "平均Gate分": 0.9,
+        "评分": "medium",
+        "数据来源": "估算基线(2026-08-05 R77 标记，非实测)"
+      },
+      "备注": "R57-R58 建设，EV/EBITDA 倍数校准"
+    },
+    {
+      "id": "forecast_loop",
+      "名称": "预测验证闭环",
+      "适用条件": {
+        "report_types": [
+          "listed_company"
+        ],
+        "data_requirement": "有预测记录(forward_picks)且可到期验证",
+        "when": "需记录Bold Call目标价供到期回测",
+        "exclude": "无真实目标价的预测"
+      },
+      "映射SAC": [
+        "Bold Call",
+        "资本市场映射"
+      ],
+      "注入方式": "core.forward_picks + validate_predictions",
+      "效果": {
+        "已用次数": 1,
+        "平均Gate分": 0.88,
+        "评分": "medium",
+        "数据来源": "估算基线(2026-08-05 R77 标记，非实测)"
+      },
+      "备注": "R30-R64 建设，FP5 演化闭环"
+    },
+    {
+      "id": "deep_research",
+      "名称": "深度研究(递归多轮)",
+      "适用条件": {
+        "report_types": [
+          "industry_deep",
+          "listed_company"
+        ],
+        "data_requirement": "标的复杂/需PhD级多轮调研",
+        "when": "普通管线数据不足/需跨来源深度验证",
+        "exclude": "简单标的不需要多轮"
+      },
+      "映射SAC": [
+        "市场空间",
+        "技术路线",
+        "全球竞争格局"
+      ],
+      "注入方式": "skill 2hao-deep-research → enrich-file 回流",
+      "效果": {
+        "已用次数": 2,
+        "平均Gate分": 0.9,
+        "评分": "high",
+        "数据来源": "估算基线(2026-08-05 R77 标记，非实测)"
+      },
+      "备注": "递归多轮研究，WDM+Munger决策"
+    },
+    {
+      "id": "scenario_analysis",
+      "名称": "情景分析(多情景估值)",
+      "适用条件": {
+        "report_types": [
+          "listed_company",
+          "industry_deep"
+        ],
+        "data_requirement": "有DCF/估值参数可做敏感性",
+        "when": "需悲观/基准/乐观多情景定价",
+        "exclude": "数据不足做敏感性时"
+      },
+      "映射SAC": [
+        "资本市场映射",
+        "证伪条件"
+      ],
+      "注入方式": "core.compute.run_scenario → compute",
+      "效果": {
+        "已用次数": 3,
+        "平均Gate分": 0.91,
+        "评分": "high",
+        "数据来源": "估算基线(2026-08-05 R77 标记，非实测)"
+      },
+      "备注": "R49 敏感性单调性校验"
+    },
+    {
+      "id": "elasticity_analysis",
+      "名称": "弹性分析(需求/价格/供给/交叉)",
+      "适用条件": {
+        "report_types": [
+          "industry_deep"
+        ],
+        "data_requirement": "有行业对经济变量敏感度数据",
+        "when": "判断行业周期属性/定价权强弱",
+        "exclude": "无宏观/价格数据时"
+      },
+      "映射SAC": [
+        "弹性分析",
+        "供需平衡"
+      ],
+      "注入方式": "compute.tool_modules.elasticity",
+      "效果": {
+        "已用次数": 2,
+        "平均Gate分": 0.89,
+        "评分": "medium",
+        "数据来源": "估算基线(2026-08-05 R77 标记，非实测)"
+      },
+      "备注": "R59 接线进 compute"
+    },
+    {
+      "id": "signal_chain",
+      "名称": "信号链(先行/同步/滞后)",
+      "适用条件": {
+        "report_types": [
+          "industry_deep",
+          "listed_company"
+        ],
+        "data_requirement": "有先行指标/高频数据(leading_indicators)",
+        "when": "需建立可追踪的判断验证体系",
+        "exclude": "无信号数据时"
+      },
+      "映射SAC": [
+        "信号验证体系",
+        "核心假设"
+      ],
+      "注入方式": "compute.tool_modules.signal_chain",
+      "效果": {
+        "已用次数": 1,
+        "平均Gate分": 0.9,
+        "评分": "medium",
+        "数据来源": "估算基线(2026-08-05 R77 标记，非实测)"
+      },
+      "备注": "R55-R59 接线"
+    },
+    {
+      "id": "decision_memo",
+      "名称": "委托方决策备忘录",
+      "适用条件": {
+        "report_types": [
+          "decision_memo"
+        ],
+        "data_requirement": "有委托方必答问题清单(client_questions)+行业真相数据",
+        "when": "写给委托方(董事长/CEO)的决策情报报告——是否进入某市场/整合可行性/延伸产业",
+        "exclude": "二级市场投资评级场景(用 industry_deep/listed_company)"
+      },
+      "映射SAC": [
+        "客户问题清单",
+        "执行摘要",
+        "市场空间",
+        "竞争格局",
+        "禀赋匹配",
+        "生产主体决策",
+        "财务测算",
+        "最坏损失",
+        "执行路线图"
+      ],
+      "注入方式": "R83: report_planner.client_questions + SACLoader(decision_memo)",
+      "效果": {
+        "已用次数": 0,
+        "平均Gate分": 0.9,
+        "评分": "high",
+        "数据来源": "R83 新增(2026-08-07 油位v0.89事故后)，效果为估算基线"
+      },
+      "备注": "R83 建设，源头是油位v0.89对象错位事故；禁评级/目标价，强制执行摘要+决策建议+最坏损失+路线图"
+    }
+  ],
+  "dimension_focus_rules": [
+    {
+      "condition": "数据充足度低(semantic_gap)",
+      "策略": "聚焦核心判断链维度(市场空间/竞争/估值)，精简辅助维度(ESG/资金面)",
+      "依据": "FP8-3 维度裁剪须数据驱动"
+    },
+    {
+      "condition": "报告类型=industry_deep 且有产业链数据",
+      "策略": "优先 bottleneck_engine + ma_valuation",
+      "依据": "框架适用条件匹配"
+    },
+    {
+      "condition": "数据全部可得",
+      "策略": "全维度覆盖 + 多框架组合",
+      "依据": "FP3 超级维度深度最大化"
+    }
+  ]
+}

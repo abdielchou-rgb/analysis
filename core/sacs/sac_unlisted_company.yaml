@@ -1,0 +1,363 @@
+id: sac_unlisted_company
+name: 非上市企业分析(V3-圆桌融合版)
+applies_to:
+- unlisted_company
+pre_workflow:
+- step: 分析声明强制
+  description: 第一页必须包含数据源声明:天眼查工商信息/股权结构/司法风险、公开媒体报道、可比公司财务数据(仅作估值参照)
+- step: 数据缺口记录
+  description: 在写作前记录所有已知数据缺口--哪些是有数据的、哪些是估算的、哪些是空白的
+logic_chain:
+- step: 决策门判断【新增】
+  description: 先判断是否值得分析 - 数据充分? 投资价值? 退出路径? 至少2/3 GO才继续
+  maps_to:
+  - decision_gate
+- step: 赢牌分析【PE/VC新增】
+  description: 为什么这个deal是我们的——独家access？行业资源？创始人关系？投资条款优势？——没有独特性就不值得深入
+  maps_to:
+  - deal_win_analysis
+- step: 数据约束声明
+  description: 本分析基于哪些数据？哪些是估算值？信息缺口在哪？--数据透明是可信度的基础
+  maps_to:
+  - data_declaration
+- step: 公司基本面定位
+  description: 公司全称/注册地/成立时间/注册资本/实控人/主营业务--先把公司锚定在产业地图上
+  maps_to:
+  - company_profile
+- step: 融资与股权结构
+  description: 融资历程(轮次/时间/金额/投后估值/领投方)、股权结构、实控人控制力--判断资金链和治理
+  maps_to:
+  - funding_history
+- step: 基准率预测【PE/VC新增】
+  description: 同阶段/同行业/同类型公司的真实成功概率——用统计数据替代故事，这是PE/VC和公募分析的分水岭
+  maps_to:
+  - reference_class_forecast
+- step: 业务与单位经济
+  description: 营收规模区间、核心用户/客户指标、单位经济模型--在有限数据下做最合理的估算.【增强】护城河类型判断(品牌/转换成本/网络效应/成本优势)
+  maps_to:
+  - business_kpi
+- step: 竞争壁垒评估
+  description: 技术/品牌/网络效应/规模/许可--壁垒类型和可持续性--大厂进入风险.【增强】格林沃德三维竞争优势,反馈回路分析
+  maps_to:
+  - competitive_moat
+- step: 估值三角验证
+  description: 三个独立估值口径(最近融资/可比公司/TAM法推演),明确失败概率和流动性折价调整.TAM法:行业天花板×公司份额→营收推算→对标利润率→折现.【增强】弹性分析用于行业天花板判断
+  maps_to:
+  - valuation_estimate
+- step: 创始人团队评估
+  description: 创始人背景/过往战绩/团队完整性/能力互补性/股权激励/核心人员流失风险——非上市企业最核心的变量就是人
+  maps_to:
+  - founder_team
+- step: 产品与技术壁垒
+  description: 技术差异化程度/研发效率/迭代速度/技术路线风险/IP保护强度/替代威胁——不是所有技术都是护城河
+  maps_to:
+  - product_tech
+- step: 市场验证与PMF
+  description: 单位经济改善轨迹/留存曲线/获客效率/有机增长vs烧钱增长/NPS/客户集中度——是否真正找到了PMF？
+  maps_to:
+  - market_traction
+- step: 资本效率与融资评估
+  description: 烧钱率/剩余跑道/单位经济改善vs烧钱减速/下一轮融资确定性/潜在稀释/投资人阵容质量
+  maps_to:
+  - capital_efficiency
+- step: 退出路径分析
+  description: IPO/并购/二级转让--可行性和时间窗口--明确每种路径的预期.【增强】叙事/故事驱动分析(戴老板九宫格)
+  maps_to:
+  - exit_analysis
+- step: 里程碑-融资映射【PE/VC新增】
+  description: 烧钱率vs里程碑的动态映射——跑道够不够到下一个估值跃迁？down round概率？
+  maps_to:
+  - milestone_runway_map
+- step: 尽调清单
+  description: 按重要性排列的待核实事项--从数据缺口到核实方法
+  maps_to:
+  - due_diligence
+- step: 退出窗口-周期分析【PE/VC新增】
+  description: 退出窗口与宏观经济周期的相关性——IPO窗口是否打开？Plan B是什么？退出IRR的情景分析
+  maps_to:
+  - exit_cycle_analysis
+- step: 证伪与红线
+  description: 哪些可观察变化会推翻判断？至少3条--非上市企业特有的红线(创始人质押/关键客户条款等).【增强】均值回归视角--行业估值中枢是否偏离历史均值
+  maps_to:
+  - falsification
+- step: 创始人风险信号矩阵【PE/VC新增】
+  description: 持续监控创始人风险信号——质押变化/高管离职/专注度变化/融资频率异常/婚姻变动——非一次性评估
+  maps_to:
+  - founder_risk_signals
+- step: 产业链联动与政策评分【新增】
+  description: 公司在产业链中的位置; 政策对行业的力度评分
+  maps_to:
+  - industry_chain
+  - policy_score
+writing_rhythm:
+  name: 非上市企业写作节奏指南(V3)
+  description: 非上市企业报告的透明度优先原则--在数据约束下做合理的投资判断
+  flow_diagram: win analysis -> decision gate -> data constraint -> company anchor
+    -> reference class forecast -> funding -> unit economics -> moat -> valuation
+    triangle -> founder -> product/tech -> PMF/traction -> capital efficiency -> milestone-runway
+    map -> exit analysis -> exit cycle analysis -> DD -> founder risk signals -> falsification
+    -> industry chain/policy
+  principles:
+  - '【V3新增】决策门先行: 先判断数据充分性和投资价值'
+  - 第一页顶部必须包含数据源声明(What we know / What we estimate / What we don't know)
+  - 核心叙事:数据约束 -> 公司锚定 -> 资金链 -> 单位经济 -> 壁垒 -> 估值三角 -> 退出 -> 尽调 -> 证伪
+  - 每个估值数字必须标注数据来源和置信度(基于XX数据估算,置信度中等)
+  - 估值三角验证(Step 6)必须给出三个独立口径的比较表格
+  - 【新增】弹性分析(Step 6):评估行业天花板对宏观经济变量的敏感度
+  - 【新增】护城河分析(Step 4):至少评估3种护城河类型
+  - 退出路径(Step 7)是投资者最关心的维度--必须详细分析IPO/并购/老股转让的可行性
+  - 尽调清单(Step 8)必须区分高/中/低优先级,标注核实方法
+  - 全文语调:诚实比乐观重要.宁可说我们不知道也不要用我们认为填补信息缺口
+  - 【新增】多模型校验:至少用3种思维模型审视核心判断
+  - 【V3新增】So What三层链
+  - '【V3新增】政策评分: 对行业政策方向做量化评分'
+  - 创始人评估(新增Step 8)是区别于上市公司分析的核心——非上市企业最关键的变量是人的质量
+  - 产品技术评估(Step 9)必须区分真正的技术壁垒和伪差异化(NOT real moat)
+  - PMF验证(Step 10)通过留存曲线和NPS判断产品-市场匹配程度，而非收入增速
+  - 资本效率评估(Step 11)决定下轮融资的确定性——烧钱率比增长率更能预测生存
+  - 估值三角(Step 7)必须参考最近的融资估值、可比公司、DCF/TAM三法交叉
+  - 退出路径(Step 12)建议增加S基金/私募二级市场作为补充退出方式
+  - 【PE/VC新增】赢牌分析(Step 2)是非上市分析的独特起点——没有独特性就没有深入分析的必要
+  - 【PE/VC新增】基准率预测(Step 4)必须在估值(Step 7)前提供——估值不能脱离真实成功概率
+  - 【PE/VC新增】创始人风险(Step 14)不是一次性评估——是持续监控，关注信号变化而非单点得分
+  - 【PE/VC新增】里程碑-融资映射(Step 12)是判断融资风险的核心工具——烧钱率比增长率更能预测生存
+  - 【PE/VC新增】退出窗口(Step 13)必须有情景分析：牛市(IPO)/基准(并购)/熊市(S基金+折价)
+  - '全篇基调: 诚实地承认不确定性比掩盖它更能建立信任。宁可说"基于X的基准率，成功率约Y%"，也不要说"我们认为该公司有很大的成功机会"'
+required_dimensions:
+- id: data_declaration
+  question: 数据源声明--本分析基于哪些数据？哪些是估算值？
+  evidence_min: 1
+  counter_evidence: false
+- id: company_profile
+  question: 公司全称、注册地、成立时间、注册资本、实控人、主营业务、目标市场
+  evidence_min: 2
+- id: funding_history
+  question: 融资历程(轮次/时间/金额/投后估值/领投方)、股权结构、实控人
+  evidence_min: 2
+- id: business_kpi
+  question: 业务KPI:营收规模区间、核心用户/客户指标、单位经济模型.【增强】护城河类型初步判断
+  evidence_min: 2
+  counter_evidence: true
+  sub_questions:
+  - 营收规模与增长
+  - 核心用户/客户指标
+  - 单位经济模型
+  - 护城河类型初步判断(品牌/转换成本/网络效应/成本优势)
+- id: competitive_moat
+  question: 竞争壁垒:技术/品牌/网络效应/规模/许可--壁垒类型和可持续性.【增强】格林沃德三维,正/负反馈回路
+  evidence_min: 2
+  counter_evidence: true
+  sub_questions:
+  - 壁垒类型和强度
+  - 大厂进入风险
+  - 格林沃德三维:供应优势/需求优势/规模经济
+  - 正反馈回路(网络效应)
+  - 负反馈回路(竞争加剧)
+- id: valuation_estimate
+  question: 估值三角验证--三个独立口径是否指向同一区间？明确失败概率(15-30%)和流动性折价(20-30%)调整.【增强】弹性分析用于行业天花板敏感性测试
+  evidence_min: 2
+  counter_evidence: true
+  sub_questions:
+  - 口径一:最近融资估值(时间/轮次/估值)
+  - 口径二:可比公司倍数(行业PS/PE区间)
+  - 口径三:TAM法推算(市场×份额→营收→利润→折现)
+  - 失败概率调整
+  - 流动性折价调整
+  - 综合估值区间
+  - 弹性分析:行业天花板对GDP/政策的敏感度
+- id: exit_analysis
+  question: 退出路径:IPO/并购/二级转让--可行性和时间窗口.【增强】叙事驱动分析--市场对该公司有何叙事预期？
+  evidence_min: 1
+- id: due_diligence
+  question: 尽调清单:按重要性排列的待核实事项
+  evidence_min: 1
+- id: falsification
+  question: 证伪条件:哪些可观察变化会推翻判断？至少3条.【增强】均值回归视角
+  evidence_min: 2
+  counter_evidence: true
+  sub_questions:
+  - 证伪条件(至少3条可观察变化)
+  - 行业估值中枢是否偏离历史均值
+  - 创始人风险(质押/关键客户条款等)
+- id: decision_gate
+  question: '决策门: 数据充分? 投资价值? 退出路径?'
+  evidence_min: 1
+  position: page_1
+- id: industry_chain
+  question: '产业链定位: 公司在产业链中的位置和议价权'
+  evidence_min: 1
+- id: policy_score
+  question: '政策评分: 行业政策方向量化评分'
+  evidence_min: 1
+- id: founder_team
+  question: 创始人与团队评估：背景/过往战绩/能力互补性/行业资源/股权结构/核心人员流失风险
+  evidence_min: 2
+  counter_evidence: true
+- id: product_tech
+  question: 产品与技术差异化：技术壁垒/研发效率/产品迭代速度/技术路线风险/IP保护
+  evidence_min: 2
+  counter_evidence: true
+- id: market_traction
+  question: 市场验证与增长指标：单位经济改善趋势/留存率/获客效率/网络效应强度/PMF验证
+  evidence_min: 2
+  counter_evidence: true
+- id: capital_efficiency
+  question: 资本效率与融资能力：烧钱率/跑道/单位经济改善趋势/下一轮融资确定性/稀释风险
+  evidence_min: 2
+  counter_evidence: true
+- id: deal_win_analysis
+  question: 赢牌分析：为什么这个 deal 是我们的？独家Access？行业资源？创始人关系？竞争格局如何？
+  evidence_min: 2
+  counter_evidence: true
+  sub_questions:
+  - 我们的 access 来源是什么？独家还是竞拍？
+  - 创始人为什么选择我们？
+  - 我们在这个行业的 portfolio 能提供什么价值？
+  - 如果我们不投，谁会投？为什么？
+  - 这个 deal 的投资条款是否有优势？
+- id: reference_class_forecast
+  question: 基准率预测：同阶段/同行业/同类型公司的真实成功概率是多少？
+  evidence_min: 1
+  counter_evidence: true
+  sub_questions:
+  - 同阶段公司5年存活率基准是多少？
+  - 类似商业模式的成功率基准？
+  - 创始人背景与成功概率的相关性？
+  - 同类公司退出估值中位数？
+- id: founder_risk_signals
+  question: 创始人风险信号矩阵：质押变化/核心高管离职/发言风格变化/融资频率异常
+  evidence_min: 2
+  counter_evidence: true
+  sub_questions:
+  - 创始人是否有个人财务压力信号？
+  - 核心团队在过去12个月的人事变动？
+  - 创始人的时间分配——是否还在一线？
+  - 创始人的心理状态和专注度是否稳定？
+  - 是否有创始人内斗或婚姻变动风险？
+- id: milestone_runway_map
+  question: 里程碑-融资映射：当前的烧钱率、剩余跑道、下一个估值里程碑、down round概率
+  evidence_min: 2
+  counter_evidence: true
+  sub_questions:
+  - 当前的月烧钱率和剩余跑道（月）？
+  - 下一个估值提升的里程碑是什么？
+  - 以当前烧钱率能否撑到里程碑？如不能，差距多大？
+  - 如果下一轮是 down round，稀释多少？
+  - 同类公司在相同里程碑前的失败率？
+- id: exit_cycle_analysis
+  question: 退出窗口-周期相关性：退出窗口与宏观经济周期的关系、情景分析、Plan B
+  evidence_min: 2
+  counter_evidence: true
+  sub_questions:
+  - 当前IPO/并购窗口状态？
+  - 该资产的退出与宏观经济周期的相关性？
+  - 退出IRR的情景分析（牛市/基准/熊市）？
+  - 如果首选退出路径关闭，Plan B是什么？
+  - 同阶段同类资产最近的退出情况和估值？
+- id: global_benchmark
+  question: '全球对标: 同赛道海外可比公司/竞品的估值、阶段、技术路线对比, 建立全球参照系'
+  evidence_min: 1
+  counter_evidence: true
+  sub_questions:
+  - 全球同类非上市/上市可比公司清单
+  - 海外对标公司的估值与融资阶段
+  - 公司与海外对标的技术/市场差异
+  - 全球对标对本公司估值区间的含义
+- id: overseas_expansion
+  question: '出海路径: 海外市场扩张的可行性/模式/目标区域/风险, 是否具备全球化的条件'
+  evidence_min: 1
+  counter_evidence: true
+  sub_questions:
+  - 产品或服务是否具备出海条件
+  - 目标海外区域及进入模式(直销/代理/本地化)
+  - 海外竞争格局与准入壁垒
+  - 出海对收入/估值的潜在贡献
+- id: cross_border_dd
+  question: '跨境尽调: 海外关联方/跨境合规/数据出境/地缘风险等需要额外尽调的事项'
+  evidence_min: 1
+  counter_evidence: true
+  sub_questions:
+  - 海外关联方与跨境交易核查
+  - 数据合规/跨境数据传输风险
+  - 地缘政治对海外扩张的制约
+  - 跨境法律/税务/监管风险清单
+- id: core_hypothesis
+  question: '【R57 MBB假设驱动】可证伪核心假设--"如果我们是对的，应观察到X"。单句可证伪假设+先行指标+失效触发线'
+  evidence_min: 2
+  counter_evidence: true
+  sub_questions:
+  - 单句可证伪假设（公司核心投资逻辑）
+  - 先行指标（假设成立应观察到的信号）
+  - 失效触发线（什么数据出现=假设错）
+- id: esg_materiality
+  question: '【R57四大ESG】ESG实质性风险/机遇: 行业最实质ESG议题(SASB), 治理风险, ESG对估值影响'
+  evidence_min: 1
+  counter_evidence: true
+  sub_questions:
+  - 行业最实质ESG议题
+  - 公司治理风险(股权/关联/合规)
+  - ESG对估值影响
+chart_config:
+  min_charts: 4
+  min_tables: 3
+  charts:
+  - id: fig_business_model
+    num: 1
+    type: bar
+    caption: '{asset}商业模式分析'
+    source: 公司资料/行业研究
+    maps_to: business_kpi
+  - id: fig_market_size
+    num: 2
+    type: bar
+    caption: '{asset}所在市场规模与预测'
+    source: 灼识咨询/行业研究
+    maps_to: industry_chain
+  - id: fig_market_positioning
+    num: 3
+    type: radar
+    caption: '{asset}市场定位矩阵'
+    source: 公开市场数据/行业研究
+    maps_to: competitive_moat
+  - id: fig_growth_drivers
+    num: 4
+    type: line
+    caption: '{asset}增长驱动因素分解'
+    source: 行业研究/专家访谈
+    maps_to: market_traction
+  - id: fig_competitive_landscape
+    num: 5
+    type: bar_cluster
+    caption: '{asset}竞争格局概览'
+    source: 公开资料/行业研究
+    maps_to: competitive_moat
+  - id: fig_financial_trends
+    num: 6
+    type: dual_axis
+    caption: '{asset}营收与净利趋势'
+    source: 公司财务数据/招股书
+    maps_to: business_kpi
+  - id: fig_funding_history
+    num: 7
+    type: bar
+    caption: '{asset}融资历程与估值'
+    source: 天眼查/公开报道
+    maps_to: funding_history
+  - id: fig_industry_chain
+    num: 8
+    type: waterfall
+    caption: '{asset}产业链价值分布'
+    source: 公开资料整理/行业访谈
+    maps_to: industry_chain
+evidence_requirements:
+  min_sources: 4
+  primary_source_min: 1
+  counter_evidence_required: true
+forbidden_patterns:
+- SAC
+- MECE
+- 范式路由
+- AI生成
+- AI辅助
+- 本报告由系统生成
+

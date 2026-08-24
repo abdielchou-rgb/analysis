@@ -1,0 +1,43 @@
+concepts:
+- "<html xmlns:v=\"urn:schemas-microsoft-com:vml\"\r\nxmlns:o=\"urn:schemas-microsoft-com:office:office\"\
+  \r\nxmlns:w=\"urn:schemas-microsoft-com:office:word\"\r\nxmlns:m=\"http://schemas."
+- "com/office/2004/12/omml\"\r\nxmlns=\"http://www."
+- "org/TR/REC-html40\">\r\n\r\n<head>\r\n<meta http-equiv=Content-Type content=\"\
+  text/html; charset=windows-1252\">\r\n<meta name=ProgId content=Word."
+- "Document>\r\n<meta name=Generator content=\"Microsoft Word 15\">\r\n<meta name=Originator\
+  \ content=\"Microsoft Word 15\">\r\n<link rel=File-List href=\"letters_files/filelist."
+- "xml\">\r\n<link rel=Edit-Time-Data href=\"letters_files/editdata."
+- "mso]>\r\n<style>\r\nv\\:* {behavior:url(#default#VML);}\r\no\\:* {behavior:url(#default#VML);}\r\
+  \nw\\:* {behavior:url(#default#VML);}\r\n."
+- "shape {behavior:url(#default#VML);}\r\n</style>\r\n<!"
+- "[endif]-->\r\n<title>Shareholder Letters</title>\r\n<!"
+- "--[if gte mso 9]><xml>\r\n <o:DocumentProperties>\r\n  <o:Author>Mark L."
+- "Sisley</o:Author>\r\n  <o:Template>Normal</o:Template>\r\n  <o:LastAuthor>Mark\
+  \ Sisley</o:LastAuthor>\r\n  <o:Revision>4</o:Revision>\r\n  <o:TotalTime>100</o:TotalTime>\r\
+  \n  <o:Created>2025-09-29T10:41:00Z</o:Created>\r\n  <o:LastSaved>2025-12-02T11:48:00Z</o:LastSaved>\r\
+  \n  <o:Pages>1</o:Pages>\r\n  <o:Words>745</o:Words>\r\n  <o:Characters>4252</o:Characters>\r\
+  \n  <o:Company>Microsoft</o:Company>\r\n  <o:Lines>35</o:Lines>\r\n  <o:Paragraphs>9</o:Paragraphs>\r\
+  \n  <o:CharactersWithSpaces>4988</o:CharactersWithSpaces>\r\n  <o:Version>16."
+- "00</o:Version>\r\n </o:DocumentProperties>\r\n</xml><!"
+- "[endif]-->\r\n<link rel=themeData href=\"letters_files/themedata."
+- "thmx\">\r\n<link rel=colorSchemeMapping href=\"letters_files/colorschememapping."
+- "--[if gte mso 9]><xml>\r\n <w:WordDocument>\r\n  <w:View>Print</w:View>\r\n  <w:SpellingState>Clean</w:SpellingState>\r\
+  \n  <w:GrammarState>Clean</w:GrammarState>\r\n  <w:TrackMoves>false</w:TrackMoves>\r\
+  \n  <w:TrackFormatting/>\r\n  <w:ValidateAgainstSchemas/>\r\n  <w:SaveIfXMLInvalid>false</w:SaveIfXMLInvalid>\r\
+  \n  <w:IgnoreMixedContent>false</w:IgnoreMixedContent>\r\n  <w:AlwaysShowPlaceholderText>false</w:AlwaysShowPlaceholderText>\r\
+  \n  <w:DoNotPromoteQF/>\r\n  <w:LidThemeOther>EN-US</w:LidThemeOther>\r\n  <w:LidThemeAsian>X-NONE</w:LidThemeAsian>\r\
+  \n  <w:LidThemeComplexScript>X-NONE</w:LidThemeComplexScript>\r\n  <w:Compatibility>\r\
+  \n   <w:BreakWrappedTables/>\r\n   <w:SnapToGridInCell/>\r\n   <w:WrapTextWithPunct/>\r\
+  \n   <w:UseAsianBreakRules/>\r\n   <w:DontGrowAutofit/>\r\n   <w:SplitPgBreakAndParaMark/>\r\
+  \n   <w:DontVertAlignCellWithSp/>\r\n   <w:DontBreakConstrainedForcedTables/>\r\n\
+  \   <w:DontVertAlignInTxbx/>\r\n   <w:Word11KerningPairs/>\r\n   <w:CachedColBalance/>\r\
+  \n  </w:Compatibility>\r\n  <w:BrowserLevel>MicrosoftInternetExplorer4</w:BrowserLevel>\r\
+  \n  <m:mathPr>\r\n   <m:mathFont m:val=\"Cambria Math\"/>\r\n   <m:brkBin m:val=\"\
+  before\"/>\r\n   <m:brkBinSub m:val=\"&#45;-\"/>\r\n   <m:smallFrac m:val=\"off\"\
+  />\r\n   <m:dispDef/>\r\n   <m:lMargin m:val=\"0\"/>\r\n   <m:rMargin m:val=\"0\"\
+  />\r\n   <m:defJc m:val=\"centerGroup\"/>\r\n   <m:wrapIndent m:val=\"1440\"/>\r\
+  \n   <m:intLim m:val=\"subSup\"/>\r\n   <m:naryLim m:val=\"undOvr\"/>\r\n  </m:mathPr></w:WordDocument>\r\
+  \n</xml><!"
+id: buffett_letters
+name: Buffett Shareholder Letters
+sac_target: governance_esg

@@ -1,0 +1,13 @@
+id: style_bcg
+name: BCG Style
+colors: {primary: '#000000', accent: '#00684E'}
+typography: {main_font: 'Georgia', heading_font: 'Georgia'}
+writing:
+  conclusion_first: true
+  min_judgment_density: 1.3
+  max_sentence_chars: 140
+  forbidden_terms: ['值得注意的是', '综上所述', '总而言之']
+  signature_terms: ['our analysis indicates', 'we see', 'the evidence suggests']
+  citation_style: inline
+charts:
+  preferred_types: ['bar_cluster', 'scatter', 'waterfall']

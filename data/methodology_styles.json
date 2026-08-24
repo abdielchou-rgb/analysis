@@ -1,0 +1,158 @@
+{
+  "unknown": [
+    {
+      "institution": "unknown",
+      "file": "样本回测_框架文档.md",
+      "sections": {
+        "key_findings": "段\n- A3. 正文框架(5分): 清晰的章节划分(1/2/3结构)\n- A4. 风险提示(3分): 独立的风险提示段落\n- A5. 投资建议(3分): 明确的投资建议或结论\n- A6. 数据附录(2分): 数据来源汇总或附录"
+      }
+    },
+    {
+      "institution": "unknown",
+      "file": "风格指纹_分析报告.md",
+      "sections": {
+        "key_findings": "必有图 | 每3-5页一个图/表 | 选择性配图 |\n| 论证深度 | What->So What->Now What | 现状->原因->影响->建议 | 逻辑->数据->结论->建议 |\n| 数据来源 | 全部标注, 精确到页码 | 主要数据点有源 | 选择性标注 |\n| 反方论证 | 必有Counter-argument/Bear Case | 风险提示独立段落 | 简略风险提示 |\n| 人感信号 | 经验引用>=3处/页 | 经验引用>=1处/页 | 偶有经验引用 |\n\n---",
+        "valuation": "对标+催化剂事件+治理评估\n  必备模块: 业务拆解/财务分析/盈利预测/估值模型(PE/PB/DCF)/催化剂/风险\n\n**非上市公司报告**: 商业模式穿透+创始团队+赛道卡位+竞品对标+融资历史\n  必备模块: 商业模式/赛道分析/核心能力/财务估算/一级市场对标/退出分析",
+        "scenarios": "对照 |\n| P2-06 | 不确定性精确定位(具体边界数值) |\n| P2-07 | Devil's Advocate自审循环 |\n\n---",
+        "core_thesis": "]->[数据支撑]->[推理逻辑]->[So What含义]\n数据引用: 上标数字脚注[1][2][3], 脚注区详细列出来源\n语言: \"我们认为\"\"报告认为\"等客观措辞\n反AI特征: 无模板化表达, 每段论点-数据-推理配比不同"
+      }
+    },
+    {
+      "institution": "unknown",
+      "file": "中信建投_医药创新药2026策略.md",
+      "sections": {
+        "key_findings": "1. 国际化2.0纵深发展：2025年license-out 103个，首付款84.5亿美元创新高\n2. ADC、IO双抗、GLP-1减重、小核酸药物多点开花\n3. CXO调整基本完成，海外需求稳定\n4. 上游产业链复苏，国产化率提升"
+      }
+    },
+    {
+      "institution": "unknown",
+      "file": "传媒互联网2026策略_AI应用.md",
+      "sections": {
+        "key_findings": "- AI应用持续渗透，2026年商业化拐点\n- 游戏行业精品化趋势，出海空间广阔\n- 港股互联网估值修复，回购力度加大",
+        "valuation": "修复，回购力度加大"
+      }
+    },
+    {
+      "institution": "unknown",
+      "file": "医药生物行业2026策略_临床价值三段论.md",
+      "sections": {
+        "valuation": "修复，Q3主升浪涨幅14.9%\n- 医疗研发外包Q3涨幅46.29%最突出",
+        "core_thesis": "- 全球重回降息通道，利好创新类资产\n- 国内政策结构性转向：医保\"腾笼换鸟\"支持创新药\n- 中国医药创新崛起，全球需求扩容"
+      }
+    },
+    {
+      "institution": "unknown",
+      "file": "华泰证券_电力超级周期2026策略.md",
+      "sections": {
+        "key_findings": "1. 电新投资从供给研究转向需求研究\n2. AI带来全球电力超级周期\n3. AI电力装机：2025年30GW→2030年110GW\n4. 中美26/27年新增AI数据中心4.1/4.9GW和26/31GW"
+      }
+    },
+    {
+      "institution": "unknown",
+      "file": "华泰证券_科技行业2026策略_AI商业化.md",
+      "sections": {
+        "key_findings": "全球AI产业正处于能力跃迁与商业化加速的交汇点"
+      }
+    },
+    {
+      "institution": "unknown",
+      "file": "慧博智能_2026A股中期策略.md",
+      "sections": {
+        "sector_preference": "- 超配：先进制造、TMT\n- 标配：基建链、内需消费\n- 低配：红利"
+      }
+    },
+    {
+      "institution": "unknown",
+      "file": "财信证券_半导体行业2026策略.md",
+      "sections": {
+        "key_findings": "2025年电子板块涨幅33.5%，费城半导体+34.6%"
+      }
+    }
+  ],
+  "bcg": [
+    {
+      "institution": "bcg",
+      "file": "BCG_AI_Medtech_2025.md",
+      "sections": {
+        "key_findings": "- 1,016 AI/ML FDA authorizations received by 387 companies through Q3 2024\n- Software-as-Medical-Device (SaMD): 71% of all AI/ML authorizations\n- Cardiology is most heavily penetrated specialty\n- US coding hotspots responsible for ~50% of AI/ML authorizations\n- Top 5 non-US: Israel, France, China, South Korea, Japan = 27%\n- China-specific: United-Imaging (Shanghai) holds 25 AI/ML clearances\n\nINVESTMENT TRENDS:\n- Largest VC deal: United-Imaging raised  at  valuation (2017)\n- IPO: .62B at .4B valu",
+        "valuation": "(2017)\n- IPO: .62B at .4B valuation\n- AI/ML in medtech growing rapidly with regulatory support",
+        "investment_trends": "- Largest VC deal: United-Imaging raised  at  valuation (2017)\n- IPO: .62B at .4B valuation\n- AI/ML in medtech growing rapidly with regulatory support"
+      }
+    },
+    {
+      "institution": "bcg",
+      "file": "BCG_China_Biopharma_Innovation_2026.md",
+      "sections": {
+        "key_findings": "- China's biopharma: from efficiency revolution to value leadership\n- Regulatory alignment with international standards\n- Capital, talent, academia-industry ecosystem rapidly coalescing\n- China moving from marginal follower to influential innovation hub\n- Next decade: transition from efficiency advantage to globally recognized innovation value\n- Key enablers: regulatory reform, cost optimization, increased financing\n- DeepSeek demonstrated China's ability to disrupt with cost-efficient innovatio"
+      }
+    },
+    {
+      "institution": "bcg",
+      "file": "BCG_GenAI_Healthcare_2025.md",
+      "sections": {
+        "key_findings": "- GenAI to drive 8-10% OPEX savings across MedTech, payers, biopharma by 2027\n- 6-11% revenue growth contribution in these segments\n- Market value:  by 2027 (85% CAGR)\n\nTHREE VALUE CREATION LEVERS:\n1. Top-line growth\n2. Efficiency improvements\n3. Productivity gains\n\nChina context: GenAI in healthcare manufacturing creates safer, more efficient production"
+      }
+    },
+    {
+      "institution": "bcg",
+      "file": "BCG_Semiconductor_Supply_Chain_2024.md",
+      "sections": {
+        "key_findings": "- .3T in new wafer fabrication investment projected 2024-2032 (vs  prior 10 years)\n- US projected to capture 28% of capex (vs 9% without CHIPS Act)\n- ATP (Assembly, Test, Packaging) diversifying from China/Taiwan to SE Asia, Latin America, E Europe\n- Materials production to follow fab capacity to US and Europe\n- Geographic concentration in few regions creates supply chain vulnerabilities\n\nCHINA DYNAMICS:\n- China semiconductor self-sufficiency drive\n- Export controls accelerating domestic innovat"
+      }
+    }
+  ],
+  "cicc": [
+    {
+      "institution": "cicc",
+      "file": "CICC_研报精选_20251124.md",
+      "sections": {
+        "key_findings": "- 当前美国AI相关股票的高估值反映了投资者对未来长期盈利增长的过度乐观\n- 泡沫的破裂可能体现为芯片产业规模经济的作用，尤其叠加竞争格局的变化\n- 与房地产泡沫不同，科技泡沫的破裂在短期带来较大冲击，但长远看是创造性破坏",
+        "valuation": "反映了投资者对未来长期盈利增长的过度乐观\n- 泡沫的破裂可能体现为芯片产业规模经济的作用，尤其叠加竞争格局的变化\n- 与房地产泡沫不同，科技泡沫的破裂在短期带来较大冲击，但长远看是创造性破坏"
+      }
+    },
+    {
+      "institution": "cicc",
+      "file": "CICC_研报精选_20251130.md",
+      "sections": {
+        "key_findings": "- 国际货币秩序演化是经济规模、金融市场深度、制度可信度与技术多维力量的综合作用\n- 美元体系的支撑基础正在动摇，全球贸易与资本流动正加速多元化和碎片化\n- 实现人民币地位跃升，需要\"功能建设\"与\"制度改革\"双轮驱动"
+      }
+    }
+  ],
+  "goldman_sachs": [
+    {
+      "institution": "goldman_sachs",
+      "file": "GS_China_Robotaxi_202505.md",
+      "sections": {
+        "key_findings": "- China Robotaxi TAM: USD 54M (2025) → USD 12B (2030) → USD 47B (2035) — 757x growth\n- 500K robotaxis expected across 10+ cities by 2030\n- Positive gross margins expected: Tier-1 cities by 2026E, Tier-2 by 2031E, others by 2034E\n- Revenue per robotaxi in Tier-1 cities: up to  by 2035E (vs /day in 2025)\n- Key players: Baidu Apollo (highest tech barrier), Pony AI, WeRide\n- Insurance still in early development stage\n- Supportive government policies across Beijing, Shanghai, Wuhan, Guangzhou\n- Key r",
+        "core_thesis": "Robotaxis represent the earliest and most visible commercialization path for autonomous driving technology. Growing consumer acceptance, tightening driver supply, and government support create a favorable environment."
+      }
+    },
+    {
+      "institution": "goldman_sachs",
+      "file": "GS_Demographics_to_Demand_202606.md",
+      "sections": {
+        "key_findings": "- 0.6pp advantage in annual demand growth for sectors with greatest tailwinds vs headwinds\n- Top 5 tailwind industries: Pharma & Biotech, Utilities, Med Tech, Staples Retail, Multiline Retail\n- Bottom 5 headwind industries: Public Transit, Airports, Tech Hardware, Autos, Consumer Capital Goods\n- DDD impact: avg +4.2%/-0.3% through 2030, +8.7%/-1.7% through 2040 (UN base case)\n\nDEMOGRAPHIC TRENDS:\n- Developed economies: retiree growth (65+) of 4M annually\n- Core consumers (35-55): accelerated dec"
+      }
+    }
+  ],
+  "morgan_stanley": [
+    {
+      "institution": "morgan_stanley",
+      "file": "MS_China_Equity_Strategy_202605.md",
+      "sections": {
+        "key_positioning": "- Equal-weight on China (vs. EM)\n- Favor A-shares over offshore listings\n- Focus: global export champions in AI and Energy supply chains",
+        "framework": "1. China's industrial upgrade and innovation - systemic framework through Five-Year Plans\n2. Exports anchor cyclical growth - electronics and renewables supply chains as direct beneficiaries\n3. AI/Energy capex cycle - China best positioned in global AI/Energy supply chains\n4. Property market stabilization - Top 10 cities secondary prices near flat\n5. Shareholder return reforms - dividends, buybacks, market value management",
+        "valuation": "- MSCI China at 11.9x 12-month forward P/E (~4% discount vs. MSCI EM)\n- CSI300 demonstrating superior risk-adjusted returns in 2025 and 2026 YTD\n- Mild CNY appreciation expected - positive for equities",
+        "scenarios": "- Bull case: durable bilateral stabilization, formal tariff rollbacks\n- Base case: truce continues with selected relaxation\n- Bear case: escalation in US-Iran conflict, deterioration in relations",
+        "sector_preference": "- Semis, Capital Goods, Healthcare showing strong performance\n- Real Estate, Consumer Disc underperforming\n- Key themes: AI/tech innovation, green transition, supply chain resilience"
+      }
+    },
+    {
+      "institution": "morgan_stanley",
+      "file": "MS_China_Micro_Alpha_202603.md",
+      "sections": {
+        "key_positioning": "- MSCI China underperformed EM YTD due to AI memory super-cycle\n- More resilience demonstrated amid oil/geopolitical uncertainty\n- 2026 = year to strive for stabilization and sustainability"
+      }
+    }
+  ]
+}

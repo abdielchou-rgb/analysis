@@ -1,0 +1,481 @@
+id: sac_industry_deep
+name: 行业深度研究 - 因果链框架(V3-圆桌融合版)
+applies_to:
+- industry
+logic_chain:
+- step: 问题树MECE分解【R57新增】
+  description: 麦肯锡问题树：自顶向下把"这个行业值不值得研究/投"拆成互斥穷尽的子问题。四大分支：①需求端(空间/增速/渗透率) ②供给端(格局/壁垒/技术)
+    ③价值端(利润池/估值/资本配置) ④环境端(政策/地缘/ESG)。每分支再拆到可回答的子问题，确保不遗漏不重叠
+  maps_to:
+  - core_hypothesis
+  - market_size
+  - supply_demand
+  - competitive
+  - profit_pool
+  - policy
+  - geopolitical_risk
+  - esg_materiality
+- step: 决策门判断【新增】
+  description: 先判断行业是否值得深度分析 - 存在稀缺层? 利润在流动? 有Bold Call? 至少2/3 GO才继续
+  maps_to:
+  - decision_gate
+- step: 稀缺层定位
+  description: 行业的真正瓶颈在哪一层？为什么是这一层？
+  maps_to:
+  - bold_call
+  - core_disagreement
+  - supply_demand
+- step: 利润迁移路径
+  description: 利润现在在哪、向哪流动、谁在失去议价权
+  maps_to:
+  - profit_pool
+  - industry_boundary
+- step: 竞争格局重构
+  description: 稀缺层变化如何改变竞争格局--赢家逻辑是否改变
+  maps_to:
+  - competitive
+  - life_cycle
+- step: 技术路线验证
+  description: 技术变化是否支撑利润迁移方向--确定性有多高
+  maps_to:
+  - technology
+- step: 市场空间校准
+  description: 稀缺层约束下的真实可及市场--天花板在哪.采用TAM法:先估总可寻址市场(全球+中国)、再估可服务市场(SAM)、再估可获得市场(SOM),明确渗透率曲线和增速驱动因子
+  maps_to:
+  - market_size
+- step: 弹性与信号验证【新增】
+  description: 【新增】弹性分析:需求收入弹性/价格弹性/供给弹性/交叉弹性--量化行业对经济变量的敏感度.信号链:先行指标→同步指标→滞后指标--建立可追踪的判断验证体系
+  maps_to:
+  - elasticity_analysis
+  - signal_chain
+- step: 政策传导检验
+  description: 政策变化加速还是阻碍这个逻辑--传导链路
+  maps_to:
+  - policy
+- step: 资本市场映射
+  description: 当前价格隐含什么预期--一致预期差在哪.戴维斯双击/双杀分析--估值×盈利双因子判断
+  maps_to:
+  - capital_market
+- step: 资金面与产业链联动【新增】
+  description: 北向资金/公募仓位/两融/大股东增减持; 产业链上下游传导分析
+  maps_to:
+  - capital_flow
+  - industry_chain
+pre_workflow:
+- step: 需求翻译
+  description: 把分析主题转化为系统变化--什么在变、为什么在变
+- step: 行业属性标签【增强】
+  description: 【增强】打行业标签--碎片化/集中化？国有/私有？周期/防御？品牌/成本/技术驱动？--标签决定后续分析重心
+- step: 价值链定位
+  description: 8层价值链找到受限层
+- step: 稀缺层验证
+  description: 多信号验证受限层判断
+- step: Bold Call 生成
+  description: 基于稀缺层生成明确的Bold Call+分歧点
+writing_rhythm:
+  name: 行业深度写作节奏指南(V3)
+  description: 行业报告的叙事弧线--从异常信号切入,经利润池定位到投资含义
+  flow_diagram: 异常信号(Bold Call) -> 稀缺在哪 -> 利润怎么动 -> 竞争怎么变 -> 技术是否支撑 -> 天花板在哪 -> 弹性与信号验证
+    -> 政策是否加速 -> 市场定价错在哪
+  principles:
+  - '【V3新增】决策门先行: 开篇先判断是否值得深入(3个决策门至少2个GO)'
+  - 第一页的前200字必须包含Bold Call(方向+时间窗口+核心变量),不能从行业边界与分类开始
+  - 叙事弧线:异常信号 -> 稀缺层定位 -> 利润迁移 -> 竞争重构 -> 弹性与信号 -> 估值重定价
+  - 每个因果链步骤只需要200-400字的深度分析+1-2个数据支撑
+  - 利润池分析(Step 2)是全文最长的章节,至少500字+2张图表
+  - 【新增】弹性分析(Step 6新增):必须给出需求收入弹性判断(IED系数),说明行业是强周期/防御型/中性
+  - 【新增】信号链(Step 6新增):必须给出3级信号链--先行/同步/滞后指标各1-2个
+  - 【新增】多思维模型校验:每个分析步骤至少用3种思维模型审视判断(参考戴老板12模型+佩奇数学模型)
+  - 资本市场映射(Step 8)是全文最短的章节,聚焦一致预期差即可
+  - 全文必须有一个可被证伪的核心判断--如果读者看完不知道你什么时候会错,报告不合格
+  - 【新增】生命周期重心错位判断:导入期看技术路线/成长期看渗透率/成熟期看格局/衰退期看替代
+  - '【V3新增】So What三层链: 每个分析板块必须回答 - 数据说明了什么? 这对投资者意味着什么? 具体该怎么操作?'
+  - '【V3新增】Bold Call必须包含: 具体方向+时间窗口(至少精确到季度)+核心触发变量+可证伪条件'
+  - '【V3新增】资金面分析: 必须包含北向资金/公募仓位/两融等至少2个维度的资金面判断'
+  - '【V3新增】产业链联动: 必须分析上下游传导关系,不孤立分析单一行业'
+  - '【R93重构】行业评级 + 受益环节排序,非个股目标价: 行业报告给行业评级(增持/中性/减持)+受益环节排序(哪个环节先兑现),不给单一股票目标价。目标价是个股概念,行业报告硬给目标价=对象错位'
+  - '【R93重构】上市公司/非上市公司是行业判断的论据: 公司分析必须回扣行业判断——"判断说X,公司数据验证X"或"公司数据质疑X"。禁止孤立介绍公司(上市/非上市各来一段,游离于判断之外)'
+  - '【R93重构】非上市公司=未来信号: 一级市场融资/估值/技术押注是行业方向的先行指标,用于验证"成长期/拐点"判断,非孤立威胁清单'
+  - '【R93重构】开头是行业判断非预期差分歧: 行业报告开篇回答"行业所处阶段+投资主线",不用"我们vs一致预期"分歧框架(那是个股框架)'
+required_dimensions:
+- id: bold_call
+  question: 一个明确的投资判断(方向+时间窗口+核心变量+可证伪条件)【V3:必须包含4要素】
+  evidence_min: 3
+  position: page_2
+  sub_questions:
+  - '方向: 看多还是看空? 方向是否有歧义?'
+  - '时间窗口: 精确到季度或月份'
+  - '核心触发变量: 什么变量变化会触发判断兑现?'
+  - '证伪条件: 什么情况下判断会错?'
+  required_sub_elements:
+  - (看多|看空|增持|减持|买入|卖出|评级)
+  - (时间窗口|时间范围|未来\s*\d+\s*(季度|月|年)|至\s*\d+\s*年)
+  - (触发|兑现条件|关键变量|催化剂)
+  - (证伪|什么情况.*错|失效条件|假设.*不成立)
+- id: core_disagreement
+  question: '【R93重构】行业判断 vs 市场定价的差异(可选,不强制开头): 行业报告的分歧框架应自然融入"市场定价错在哪",不是开篇独立段落。开篇回答行业阶段+主线,分歧出现在资本市场映射章节'
+  evidence_min: 1
+  counter_evidence: true
+  position: mid
+  required_sub_elements:
+  - (共识|市场预期|一致预期)
+  - (分歧|我们看|我们的判断|不同于|定价错)
+  - (预期差|差异|偏离)
+- id: core_hypothesis
+  question: 【R57 MBB假设驱动】可证伪核心假设--"如果我们是对的，应观察到X；若X未发生，假设就错"。报告开头必须给一个单句可证伪的假设，并配先行指标与失效触发线
+  evidence_min: 2
+  position: page_2
+  sub_questions:
+  - 单句可证伪假设（方向+机制）
+  - 先行指标（假设成立应观察到的信号）
+  - 失效触发线（什么数据出现=假设错）
+  - 假设与 Bold Call 的关系（假设是分析的起点，Bold Call 是结论）
+  required_sub_elements:
+  - (假设|hypothesis)
+  - (先行指标|验证信号|应观察到)
+  - (失效|证伪|不成立|推翻)
+- id: industry_boundary
+  question: 行业边界分类--覆盖范围、关联行业边界、行业属性标签
+  evidence_min: 1
+- id: life_cycle
+  question: 生命周期阶段与周期属性.【增强】明确当前阶段并说明该阶段分析重心(导入期→技术路线可行性/成长期→渗透率天花板/成熟期→竞争格局/衰退期→替代品冲击)
+  evidence_min: 1
+  sub_questions:
+  - 当前生命周期阶段判断
+  - 该阶段的核心分析变量
+  - 预计进入下一阶段的时间与条件
+  - 阶段性重点:导入期看技术路线/成长期渗透率/成熟期格局/衰退期替代
+  required_sub_elements:
+  - (导入期|成长期|成熟期|衰退期|生命周期)
+  - (渗透率|增速|增长阶段)
+  - (拐点|天花板|饱和)
+- id: policy
+  question: '政策传导链 + 政策力度评分【V3】: 政策方向(鼓励/中性/限制)量化评分(-10到+10), 执行率分析, 政治周期定位'
+  evidence_min: 2
+  counter_evidence: true
+  sub_questions:
+  - 政策方向评分(-10到+10)
+  - 执行率分析(中央vs地方)
+  - 政治周期定位(两会/中央经济工作会/党代会)
+  - 补贴阶段判断(培育/退坡/已退出)
+- id: market_size
+  question: 市场空间--采用TAM法:TAM/SAM/SOM三层拆解,渗透率曲线,量价驱动因子拆分.【增强】渗透率曲线形态判断--加速器拐点(渗透率5-10%)/时光机(人均GDP映射)/稳态仪(人口结构).【R55】每个细分市场必须给海外同细分的规模/渗透率/格局作对照(全球参照),不能只看中国口径
+  evidence_min: 2
+  sub_questions:
+  - TAM总可寻址市场(全球+中国)
+  - SAM可服务市场
+  - SOM可获得市场(公司层面)
+  - 渗透率曲线与饱和点
+  - 加速器拐点判断(渗透率5-10%是否已到？)【戴老板趋势三武器】
+  - 时光机判断(人均GDP对标国家分析)
+  - 量/价/结构三因子增长拆解
+  - 【R55全球参照】各细分市场(汽车/工业/医疗/消费)的海外规模与渗透率作对照,判断中国细分所处相对位置
+  required_sub_elements:
+  - (TAM|总可寻址|市场空间|市场规模)
+  - (SAM|可服务市场|目标市场)
+  - (SOM|可获得市场|份额)
+  - (渗透率|量价|量/价|驱动)
+- id: supply_demand
+  question: 供需平衡--近3年+预测2年平衡表
+  evidence_min: 2
+- id: elasticity_analysis
+  question: 【新增】弹性分析--需求收入弹性(IED)、需求价格弹性(PED)、供给价格弹性(PES)、交叉价格弹性(XED).判断行业是强周期/防御型/中性.用弹性矩阵(王思宇框架)量化行业对经济变量的敏感度
+  evidence_min: 2
+  sub_questions:
+  - 需求收入弹性判断(与经济周期的关系)
+  - 需求价格弹性判断(定价权强弱)
+  - 供给弹性判断(产能调整灵活度)
+  - 行业属性:刚需/投资性需求/非刚需
+  required_sub_elements:
+  - (IED|需求收入弹性|收入弹性)
+  - (PED|需求价格弹性|价格弹性)
+  - (PES|供给弹性|供给价格弹性)
+  - (XED|交叉弹性|交叉价格弹性)
+  - 弹性矩阵:需求收入弹性/价格弹性/供给弹性/交叉弹性的综合判断
+  - 周期属性:强周期/防御型/中性
+- id: signal_chain
+  question: 【新增】信号验证体系--先行指标→同步指标→滞后指标的三级信号链.建立可追踪的判断验证体系(申银万国方法论)
+  evidence_min: 2
+  sub_questions:
+  - 先行指标(1-3个):预测性最强,先于基本面变化
+  - 同步指标(1-3个):与基本面同步变化
+  - 滞后指标(1-3个):确认趋势
+  - 驱动力确认:信号链指向什么方向？
+  - 关键假设表:每个信号的数据来源和更新频率
+- id: peer_benchmarking
+  question: 行业对标：全球/国内主要参与者的系统对比
+  evidence_min: 3
+  counter_evidence: true
+  required_elements:
+  - 全球主要参与者名单与市场份额
+  - 国内外竞争格局对比
+  - 各参与者战略定位差异
+  - 竞争格局演变趋势
+  sub_questions:
+  - 行业集中度如何？CR3/CR5趋势？
+  - 国内外竞争对手的核心优势差异？
+  - 新进入者的威胁程度？
+  - 未来2-3年竞争格局可能如何变化？
+  required_sub_elements:
+  - (对标|可比|同行|竞争对手)
+  - (估值|PE|PB|EV/EBITDA)
+  - (份额|排名|领先)
+- id: profit_pool
+  question: 利润池--利润现在在哪、向哪流动、谁在失去议价权.【增强】杠杆分析--经营杠杆/财务杠杆拆解
+  evidence_min: 3
+  counter_evidence: true
+  required_elements:
+  - 产业链
+  - 利润
+  - 毛利率
+  - 杠杆率
+  sub_questions:
+  - 价值链各环节利润率
+  - 利润迁移方向与速度
+  - 稀缺层变化对利润分配的影响
+  - 进入/退出壁垒变化
+  - 经营杠杆系数(DOL)--固定成本占比判断
+  - 财务杠杆系数(DFL)--负债水平判断
+- id: competitive
+  question: 竞争格局--玩家分层、集中度、进入壁垒量化、反馈回路分析【新增】 【新增】反馈回路分析:是否存在正反馈(强者愈强)或负反馈(供需调节)回路？
+    【新增】幂律分布 vs 正态分布 vs 对数正态分布--竞争格局属于哪种分布形态？
+  evidence_min: 2
+  sub_questions:
+  - 市场集中度CR3/CR5/HHI
+  - 正反馈回路(网络效应/规模效应)
+  - 负反馈回路(价格战/产能过剩)
+  - 竞争格局分布形态(幂律/正态/对数正态)
+  required_sub_elements:
+  - (集中度|CR3|CR5|CR10)
+  - (护城河|壁垒|网络效应|规模效应)
+  - (格局|寡头|垄断|竞争)
+- id: technology
+  question: 技术路线--主流/下一代/颠覆、工程约束(可条件跳过)
+  evidence_min: 2
+  sub_questions:
+  - 主流技术路线与下一代路线
+  - 工程约束(可跳过)
+  - 替代加速因子: 什么变量会让替代在2027年突然加速2倍? (价格/政策/性能突破)
+  - 替代减速因子: 什么变量会显著慢化替代? (认证周期/客户粘性/沉没成本)
+  required_sub_elements:
+  - (技术路线|技术路径|工艺路线)
+  - (替代|迭代|下一代)
+  - (国产替代|自研|研发)
+- id: capital_market
+  question: 资本市场映射--估值口径、一致预期差、催化剂日历.【增强】戴维斯双击/双杀分析
+  evidence_min: 2
+  sub_questions:
+  - 当前估值倍数
+  - 一致预期 vs 我们判断的差距
+  - 催化剂日历(3/6/12个月事件驱动)
+  - 戴维斯双击/双杀判断(盈利增长方向×估值变化方向)
+  required_sub_elements:
+  - 当前估值.*倍
+  - 一致预期.*(差距|差|v[sz])
+  - 催化剂日历|催化剂.*(Q[1-4]|季度|3个月|6个月|12个月)
+  - (戴维斯|双击|双杀)
+  - (赔率|Kelly|涨幅.*跌幅|潜在涨幅.*潜在跌幅)
+  - (均值回归|历史均值|估值分位|PB.*band|PE.*band)
+- id: decision_gate
+  question: '决策门判断: 3个决策门中有几个GO? 是否值得深度分析?'
+  evidence_min: 1
+  position: page_1
+- id: capital_flow
+  question: '资金面: 行业融资/并购/PIPE/IPO节奏 - 资金面是否支持我们的判断?'
+  evidence_min: 2
+- id: industry_chain
+  question: '产业链联动: 上下游传导关系,瓶颈层在哪,利润集中层在哪'
+  evidence_min: 1
+- id: falsification
+  question: '证伪条件: 哪些可观察变化会推翻核心判断? 至少3条. 包含可观察指标+阈值+时间窗口. 【R76 Phase 5.4】系统失效状态(Sustained
+    Failure Mode): 不是单次事件证伪, 而是系统性状态切换(如流动性驱动→基本面驱动→防御模式)——标注当前宏观环境下的系统失效状态'
+  evidence_min: 2
+  counter_evidence: true
+  sub_questions:
+  - 证伪条件1(可观察指标+阈值)
+  - 证伪条件2(可观察指标+阈值)
+  - 证伪条件3(可观察指标+阈值)
+  - 系统失效状态(Sustained Failure Mode): 什么系统性宏观状态会推翻整体判断? (与macro_ctx联动)
+  required_sub_elements:
+  - (证伪|反方|逆向)
+  - (如果.*错|什么.*不成立|失效)
+  - (相反|风险|威胁)
+- id: global_market_sizing
+  question: '全球分区域市场空间【R55全球-区域-细分三段式】: ①全球俯瞰(总量/增速/区域结构/增长引擎) ②区域透视(北美/欧洲/亚太/中国各自规模、增速、渗透率、政策)
+    ③区域渗透率错位判断(谁领先、中国落后几年) + 时光机(人均GDP映射领先国路径)'
+  evidence_min: 2
+  counter_evidence: true
+  sub_questions:
+  - 全球总规模、增速、区域结构(全球俯瞰)
+  - 各区域市场规模与CAGR对比(区域透视)
+  - 中国市场规模占全球比例及趋势
+  - 【R55】区域渗透率错位:海外领先国渗透率 vs 中国渗透率,差距几年→中国成长空间参照
+  - 【R55】时光机:对标人均GDP领先国的行业渗透路径,预测中国未来
+  - 全球市场增长的主要引擎在哪(哪个区域/细分驱动)
+- id: global_competition
+  question: '全球竞争格局: 中国玩家 vs 国际玩家的市场份额、技术代差、成本优势与壁垒对比'
+  evidence_min: 2
+  counter_evidence: true
+  sub_questions:
+  - 全球前5大参与者及份额(含海外)
+  - 中国企业在全球的技术/成本/品牌位置
+  - 国际巨头进入中国市场的威胁
+  - 全球竞争格局演变趋势
+- id: geopolitical_risk
+  question: '地缘政治风险: 中美科技博弈/供应链脱钩/出口管制/关税政策对该行业的影响'
+  evidence_min: 1
+  counter_evidence: true
+  sub_questions:
+  - 中美关系对行业供应链的影响
+  - 出口管制/实体清单/关税的直接冲击
+  - 供应链本土化/去风险化趋势
+  - 全球政策环境(补贴/监管)对行业的机遇与威胁
+- id: investable_standouts
+  question: '【R93重构】上市公司作为行业判断的论据验证——不是孤立介绍公司，而是每个行业判断都用上市公司财务/订单/技术验证。逻辑："行业判断 → 上市公司证据 → 验证或修正判断"。上市公司分析回答：行业景气是否已传导到报表？哪个环节先兑现？'
+  evidence_min: 2
+  sub_questions:
+  - 行业判断 vs 上市公司财报：判断说"某环节最受益"，用上市公司数据验证（营收增速/毛利率/净利率/订单）
+  - 哪个环节先兑现：对比不同环节上市公司财务强度，判断行业传导次序（如"元器件先受益→整机后受益"）
+  - 若上市公司财务与行业判断矛盾：是判断错，还是传导未到？（诚实标注，不硬凑）
+  - 受益标的组合：行业逻辑下最受益的2-3个上市公司，为什么是它们（份额/技术/客户/估值）
+  - 每个标的的受益逻辑排序（弹性/确定性梯度）
+  required_sub_elements:
+  - (标的|个股|投资标的|受益|上市公司)
+  - (验证|验证.*判断|财报|财务|订单|兑现)
+  - (弹性|空间|催化)
+- id: unlisted_players
+  question: '【R93重构】非上市公司作为行业"未来信号"的论据——一级市场融资/技术路线押注/产能布局是行业方向的先行指标。非上市公司分析回答：资本在为行业的哪个方向定价？谁在押注什么路线？这验证还是修正行业判断？只做定性威胁度判断,不假装有财务数据(FP2诚实边界),无可信来源必须显式标注'
+  evidence_min: 3
+  enforcement: must_have_multiple
+  position: mid
+  sub_questions:
+  - 非上市关键玩家名单(3-5家)及融资/估值信号——资本在为行业什么方向定价
+  - 每家押注的技术/商业模式路线，验证还是修正行业判断
+  - 其战略动作(扩产/技术突破/客户绑定)如何改变竞争格局与利润池
+  - 若上市/被并购,对现有上市公司的潜在冲击
+  - 数据来源标注(无权威数据须显式声明)
+  - 非上市玩家总数量级判断（该细分领域大致有多少非上市竞争者）
+  - 【R93】一级市场信号与行业判断的印证：融资热度/估值水位支持还是质疑"成长期"判断
+- id: industry_consolidation
+  question: '【R57投行并购视角】行业整合与并购趋势: 行业是否在整合、谁是整合者/被整合者、并购估值倍数(EV/EBITDA)、资本配置效率(ROIC
+    vs WACC)。判断行业终局'
+  evidence_min: 1
+  counter_evidence: true
+  sub_questions:
+  - 行业集中度趋势(CR3/CR5是否上升→整合进行中)
+  - 谁是整合者(资本实力/并购历史) vs 被整合者(市占下滑/现金流弱)
+  - 近期并购案例与估值倍数(对标EV/EBITDA)
+  - ROIC vs WACC 判断资本配置效率(创造还是毁灭价值)
+  - 行业终局判断(寡头/一超多强/分散)
+  required_sub_elements:
+  - (CR[35]|行业集中度|行业整合)
+  - (EV/EBITDA|并购.*倍数|并购估值)
+  - (ROIC.*WACC|资本配置效率|创造.*价值|毁灭.*价值)
+  - (整合者|被整合者|谁是.*整合)
+- id: esg_materiality
+  question: '【R57四大/国际投行ESG】ESG实质性议题: 该行业最实质性的ESG风险/机遇(碳排/治理/社会), 对标GRI/SASB/TCFD行业标准,
+    判断ESG对估值的影响'
+  evidence_min: 1
+  counter_evidence: true
+  sub_questions:
+  - 行业最实质性ESG议题(按SASB/TCFD行业地图)
+  - 碳排/能源强度(高耗能行业重点)
+  - 治理风险(关联交易/股权结构/合规)
+  - ESG风险对估值的潜在影响(折价/溢价)
+  - 中国政策(双碳/监管)对行业ESG的影响
+  required_sub_elements:
+  - (ESG|环境.*社会.*治理|GRI|SASB|TCFD|碳排|双碳|可持续发展)
+chart_config:
+  min_charts: 12
+  min_tables: 4
+  charts:
+  - id: fig_market_size_global
+    num: 1
+    type: bar
+    caption: 全球{asset}市场规模趋势
+    source: 灼识咨询/公开市场数据
+    maps_to: market_size
+  - id: fig_market_size_china
+    num: 2
+    type: bar
+    caption: 中国{asset}市场规模趋势
+    source: 公开市场数据/行业研究
+    maps_to: market_size
+  - id: fig_supply_demand
+    num: 3
+    type: dual_axis
+    caption: '{asset}供需平衡分析'
+    source: 行业研究/公开数据
+    maps_to: supply_demand
+  - id: fig_industry_chain
+    num: 4
+    type: waterfall
+    caption: '{asset}产业链价值分布'
+    source: 公开资料整理/行业访谈
+    maps_to: industry_chain
+  - id: fig_profit_pool
+    num: 5
+    type: bar
+    caption: '{asset}盈利池分布'
+    source: 公司年报/行业研究
+    maps_to: profit_pool
+  - id: fig_competitive_landscape
+    num: 6
+    type: bar_cluster
+    caption: '{asset}竞争格局'
+    source: 各公司年报/行业研究
+    maps_to: competitive
+  - id: fig_market_share
+    num: 7
+    type: pie
+    caption: '{asset}市场份额分布'
+    source: 各公司年报/行业研究
+    maps_to: competitive
+  - id: fig_tech_trend
+    num: 8
+    type: line
+    caption: '{asset}技术发展趋势'
+    source: Yole/MarketsandMarkets
+    maps_to: technology
+  - id: fig_tech_segments
+    num: 9
+    type: pie
+    caption: '{asset}技术路线份额'
+    source: 行业研究
+    maps_to: technology
+  - id: fig_policy_impact
+    num: 10
+    type: bar
+    caption: '{asset}政策影响分析'
+    source: 政策文件/行业研究
+    maps_to: policy
+  - id: fig_peer_comparison
+    num: 11
+    type: scatter
+    caption: '{asset}同业关键指标对比'
+    source: 各公司年报/公开数据
+    maps_to: peer_benchmarking
+  - id: fig_life_cycle
+    num: 12
+    type: line
+    caption: '{asset}生命周期定位'
+    source: 行业研究/专家访谈
+    maps_to: life_cycle
+  - id: unlisted_threat_map
+    title: 非上市玩家威胁地图
+    type: table
+    caption: 关键非上市玩家概况
+    description: 关键非上市玩家概况表(名称/成立年份/注册资本/技术水平/威胁度/依据)
+    min_items: 5
+evidence_requirements:
+  min_sources: 8
+  primary_source_min: 3
+  counter_evidence_required: true
+forbidden_patterns:
+- SAC
+- 11维
+- 范式路由
+- 研究方法论
+- AI生成
+- AI辅助
+- 本报告由系统生成

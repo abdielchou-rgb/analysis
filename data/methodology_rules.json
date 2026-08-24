@@ -1,0 +1,195 @@
+{
+  "valuation": [
+    {
+      "rule_id": "valuation_dcf_principle",
+      "name": "收益现值法核心逻辑",
+      "source": "MinerU解析-Goldman Sachs 清华MBA估值培训讲座",
+      "inputs": [
+        "未来现金流",
+        "折现率",
+        "期限"
+      ],
+      "rules": [
+        {
+          "condition": "未来收益可量化",
+          "stage": "收益现值法",
+          "implication": "价值=Σ未来收益折现，需合理折现率"
+        },
+        {
+          "condition": "不确定性高",
+          "stage": "实物期权补充",
+          "implication": "NPV低估灵活性价值，期权法修正"
+        }
+      ],
+      "decision_hints": "收益法对折现率敏感，需做敏感性分析"
+    },
+    {
+      "rule_id": "valuation_dcf_principle",
+      "name": "收益现值法核心逻辑",
+      "source": "MinerU解析-中金企业估值方法培训",
+      "inputs": [
+        "未来现金流",
+        "折现率",
+        "期限"
+      ],
+      "rules": [
+        {
+          "condition": "未来收益可量化",
+          "stage": "收益现值法",
+          "implication": "价值=Σ未来收益折现，需合理折现率"
+        },
+        {
+          "condition": "不确定性高",
+          "stage": "实物期权补充",
+          "implication": "NPV低估灵活性价值，期权法修正"
+        }
+      ],
+      "decision_hints": "收益法对折现率敏感，需做敏感性分析"
+    },
+    {
+      "rule_id": "valuation_dcf_principle",
+      "name": "收益现值法核心逻辑",
+      "source": "MinerU解析-中金公司估值方法",
+      "inputs": [
+        "未来现金流",
+        "折现率",
+        "期限"
+      ],
+      "rules": [
+        {
+          "condition": "未来收益可量化",
+          "stage": "收益现值法",
+          "implication": "价值=Σ未来收益折现，需合理折现率"
+        },
+        {
+          "condition": "不确定性高",
+          "stage": "实物期权补充",
+          "implication": "NPV低估灵活性价值，期权法修正"
+        }
+      ],
+      "decision_hints": "收益法对折现率敏感，需做敏感性分析"
+    },
+    {
+      "rule_id": "valuation_dcf_principle",
+      "name": "收益现值法核心逻辑",
+      "source": "MinerU解析-公司价值与公司价值评估",
+      "inputs": [
+        "未来现金流",
+        "折现率",
+        "期限"
+      ],
+      "rules": [
+        {
+          "condition": "未来收益可量化",
+          "stage": "收益现值法",
+          "implication": "价值=Σ未来收益折现，需合理折现率"
+        },
+        {
+          "condition": "不确定性高",
+          "stage": "实物期权补充",
+          "implication": "NPV低估灵活性价值，期权法修正"
+        }
+      ],
+      "decision_hints": "收益法对折现率敏感，需做敏感性分析"
+    },
+    {
+      "rule_id": "valuation_method_comparison",
+      "name": "估值方法三法对比（成本/收益/市场）",
+      "source": "MinerU解析-技术价值评估方法的研究思路",
+      "inputs": [
+        "资产属性",
+        "数据可得性",
+        "可比性"
+      ],
+      "rules": [
+        {
+          "condition": "无市场参照+专有技术",
+          "stage": "成本法",
+          "implication": "成本法：以重置成本为基础，适合无市场参照的专有技术"
+        },
+        {
+          "condition": "未来收益可预测",
+          "stage": "收益法",
+          "implication": "折现估值，公认最佳但假设敏感"
+        },
+        {
+          "condition": "可比交易充分",
+          "stage": "市场法",
+          "implication": "直接反映供需，弱可比性受限"
+        }
+      ],
+      "decision_hints": "估值方法选择取决于资产属性与数据可得性；多方法交叉验证"
+    },
+    {
+      "rule_id": "valuation_dcf_principle",
+      "name": "收益现值法核心逻辑",
+      "source": "MinerU解析-技术价值评估方法的研究思路",
+      "inputs": [
+        "未来现金流",
+        "折现率",
+        "期限"
+      ],
+      "rules": [
+        {
+          "condition": "未来收益可量化",
+          "stage": "收益现值法",
+          "implication": "价值=Σ未来收益折现，需合理折现率"
+        },
+        {
+          "condition": "不确定性高",
+          "stage": "实物期权补充",
+          "implication": "NPV低估灵活性价值，期权法修正"
+        }
+      ],
+      "decision_hints": "收益法对折现率敏感，需做敏感性分析"
+    },
+    {
+      "rule_id": "valuation_dcf_principle",
+      "name": "收益现值法核心逻辑",
+      "source": "MinerU解析-高盛清华MBA估值_完整",
+      "inputs": [
+        "未来现金流",
+        "折现率",
+        "期限"
+      ],
+      "rules": [
+        {
+          "condition": "未来收益可量化",
+          "stage": "收益现值法",
+          "implication": "价值=Σ未来收益折现，需合理折现率"
+        },
+        {
+          "condition": "不确定性高",
+          "stage": "实物期权补充",
+          "implication": "NPV低估灵活性价值，期权法修正"
+        }
+      ],
+      "decision_hints": "收益法对折现率敏感，需做敏感性分析"
+    }
+  ],
+  "industry_framework": [
+    {
+      "rule_id": "industry_auto_framework",
+      "name": "汽车行业分析框架",
+      "source": "MinerU解析-汽车业_完整",
+      "inputs": [
+        "产销量",
+        "区域结构",
+        "渗透率"
+      ],
+      "rules": [
+        {
+          "condition": "全球销量CAGR稳定",
+          "stage": "成熟市场",
+          "implication": "看格局与成本，非总量"
+        },
+        {
+          "condition": "区域渗透率提升",
+          "stage": "成长市场",
+          "implication": "看渗透率天花板"
+        }
+      ],
+      "decision_hints": "汽车分析先分区域看渗透率阶段"
+    }
+  ]
+}

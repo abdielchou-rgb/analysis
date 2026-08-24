@@ -1,0 +1,21 @@
+# Expectations Investing - Chapter Summaries
+# Source: expectationsinvesting.com
+# Downloaded: 2026-07-30
+
+id: mauboussin_expectations
+name: "Expectations Investing"
+source: "expectationsinvesting.com/chapter-summaries"
+sac_target: "valuation_assessment"
+priority: 1
+
+key_concepts:
+  - "Prices encode the market's consensus expectations about future performance"
+  - "The analyst's job is to reverse-engineer those expectations"
+  - "Use DCF as an inverse instrument to solve for price-implied performance"
+  - "Identify the turbo trigger whose change would most alter value"
+  - "Analyze competitive strategy to assess likelihood of expectation revision"
+  - "Apply scenario analysis and demand margin of safety"
+  - "Market expectations are often too extreme — regress to mean"
+  - "Value is created when expectations change, not when earnings change"
+
+core_method: "Reverse DCF: Price -> Implied Growth -> Trigger -> Revision Assessment"

@@ -1,0 +1,433 @@
+{
+  "schema_version": "1.0",
+  "description": "图表 schema 权威定义（2026-08-01 建立）。各组件（SAC chart_config / chart_pipeline / data_enrichment 白名单）必须与本 schema 对齐。",
+  "notes": [
+    "fig_type: 图表类型（bar/line/pie/radar/dual_axis/bar_cluster/waterfall/scatter）",
+    "data_keys: 该图生成所需的数据键（在 chart_data 中查找），任一存在即可",
+    "allowed: 是否允许 agent enrich 注入（enrichment 白名单）",
+    "maps_to: 对应 SAC 分析维度",
+    "aliases: LLM 写的占位符别名 → 规范图 id（chart_assembler 归一化用）"
+  ],
+  "aliases": {
+    "figrevenuetrend": "revenue_structure",
+    "figrevenue": "revenue_structure",
+    "figbusinesssegments": "revenue_structure",
+    "figprofitability": "profit_margin",
+    "figprofit": "profit_margin",
+    "figgrossmargin": "profit_margin",
+    "figpeercomparison": "valuation_peers",
+    "figvaluation": "valuation_peers",
+    "figpeers": "valuation_peers",
+    "figmarketposition": "market_position",
+    "figindustryboard": "market_position",
+    "figmarketshare": "market_position",
+    "figcapitalflow": "financial_trends",
+    "figfinancialtrends": "financial_trends",
+    "figfinancial": "financial_trends",
+    "figmarketsize": "market_size",
+    "figmarketsizeglobal": "market_size",
+    "figmarketsizechina": "market_size",
+    "figmarket": "market_size",
+    "figsize": "market_size",
+    "figcompetitivelandscape": "competitive_landscape",
+    "figcompetition": "competitive_landscape",
+    "figindustrychain": "industry_chain",
+    "figsupplychain": "industry_chain",
+    "figtechtrend": "tech_trend",
+    "figtechnology": "tech_trend",
+    "figpolicyimpact": "policy_impact",
+    "figpolicy": "policy_impact",
+    "figapplications": "market_size",
+    "figgrowthdrivers": "growth_drivers"
+  },
+  "charts": {
+    "fig_business_model": {
+      "fig_type": "bar",
+      "data_keys": [
+        "fig_business_model",
+        "fig_revenue_trend"
+      ],
+      "allowed": true,
+      "maps_to": "business_kpi"
+    },
+    "fig_market_size": {
+      "fig_type": "bar",
+      "data_keys": [
+        "fig_market_size_global",
+        "fig_market_size_china"
+      ],
+      "allowed": true,
+      "maps_to": "industry_chain"
+    },
+    "fig_market_size_global": {
+      "fig_type": "bar",
+      "data_keys": [
+        "fig_market_size_global"
+      ],
+      "allowed": true,
+      "maps_to": "market_size"
+    },
+    "fig_market_size_china": {
+      "fig_type": "bar",
+      "data_keys": [
+        "fig_market_size_china"
+      ],
+      "allowed": true,
+      "maps_to": "market_size"
+    },
+    "fig_market_positioning": {
+      "fig_type": "radar",
+      "data_keys": [
+        "fig_competitive_landscape",
+        "fig_market_positioning",
+        "fig_market_size_global"
+      ],
+      "allowed": true,
+      "maps_to": "competitive_moat"
+    },
+    "fig_growth_drivers": {
+      "fig_type": "line",
+      "data_keys": [
+        "fig_growth_drivers",
+        "fig_revenue_trend"
+      ],
+      "allowed": true,
+      "maps_to": "market_traction"
+    },
+    "fig_competitive_landscape": {
+      "fig_type": "bar_cluster",
+      "data_keys": [
+        "fig_competitive_landscape",
+        "fig_peer_comparison"
+      ],
+      "allowed": true,
+      "maps_to": "competitive_moat"
+    },
+    "fig_financial_trends": {
+      "fig_type": "dual_axis",
+      "data_keys": [
+        "fig_revenue_trend",
+        "fig_profitability"
+      ],
+      "allowed": true,
+      "maps_to": "business_kpi"
+    },
+    "fig_funding_history": {
+      "fig_type": "bar",
+      "data_keys": [
+        "fig_funding_history",
+        "fig_valuation"
+      ],
+      "allowed": true,
+      "maps_to": "funding_history"
+    },
+    "fig_industry_chain": {
+      "fig_type": "waterfall",
+      "data_keys": [
+        "fig_industry_chain",
+        "fig_peer_comparison"
+      ],
+      "allowed": true,
+      "maps_to": "industry_chain"
+    },
+    "fig_production_path": {
+      "fig_type": "flow",
+      "data_keys": [
+        "fig_production_path"
+      ],
+      "allowed": true,
+      "maps_to": "production"
+    },
+    "fig_roadmap": {
+      "fig_type": "timeline",
+      "data_keys": [
+        "fig_roadmap"
+      ],
+      "allowed": true,
+      "maps_to": "roadmap"
+    },
+    "fig_supply_demand": {
+      "fig_type": "dual_axis",
+      "data_keys": [
+        "fig_revenue_trend",
+        "fig_market_size_global"
+      ],
+      "allowed": true,
+      "maps_to": "supply_demand"
+    },
+    "fig_profit_pool": {
+      "fig_type": "bar",
+      "data_keys": [
+        "fig_revenue_trend",
+        "fig_profitability"
+      ],
+      "allowed": true,
+      "maps_to": "profit_pool"
+    },
+    "fig_tech_trend": {
+      "fig_type": "line",
+      "data_keys": [
+        "fig_tech_segments",
+        "fig_growth_drivers"
+      ],
+      "allowed": true,
+      "maps_to": "technology"
+    },
+    "fig_tech_segments": {
+      "fig_type": "pie",
+      "data_keys": [
+        "fig_tech_segments",
+        "fig_market_size_china"
+      ],
+      "allowed": true,
+      "maps_to": "technology"
+    },
+    "fig_policy_impact": {
+      "fig_type": "bar",
+      "data_keys": [
+        "fig_growth_drivers",
+        "fig_market_size_china"
+      ],
+      "allowed": true,
+      "maps_to": "policy"
+    },
+    "fig_peer_comparison": {
+      "fig_type": "scatter",
+      "data_keys": [
+        "fig_peer_comparison",
+        "fig_competitive_landscape"
+      ],
+      "allowed": true,
+      "maps_to": "peer_benchmarking"
+    },
+    "fig_life_cycle": {
+      "fig_type": "line",
+      "data_keys": [
+        "fig_revenue_trend",
+        "fig_market_size_global"
+      ],
+      "allowed": true,
+      "maps_to": "life_cycle"
+    },
+    "unlisted_threat_map": {
+      "fig_type": "table",
+      "data_keys": [
+        "unlisted_threat_map",
+        "fig_players"
+      ],
+      "allowed": false,
+      "maps_to": "unlisted_players"
+    },
+    "fig_market_share": {
+      "fig_type": "pie",
+      "data_keys": [
+        "fig_market_share",
+        "fig_market_size_china"
+      ],
+      "allowed": true,
+      "maps_to": "competitive"
+    },
+    "fig_cash_flow": {
+      "fig_type": "bar",
+      "data_keys": [
+        "fig_revenue_trend",
+        "fig_profitability"
+      ],
+      "allowed": true,
+      "maps_to": "balance_cashflow"
+    },
+    "fig_profit_margin": {
+      "fig_type": "bar_line",
+      "data_keys": [
+        "fig_revenue_trend",
+        "fig_profitability"
+      ],
+      "allowed": true,
+      "maps_to": "key_surprise"
+    },
+    "fig_segment_analysis": {
+      "fig_type": "bar",
+      "data_keys": [
+        "fig_business_segments",
+        "fig_revenue_trend"
+      ],
+      "allowed": true,
+      "maps_to": "segment_analysis"
+    },
+    "decision_gate": {
+      "fig_type": "bar",
+      "data_keys": [
+        "fig_revenue_trend"
+      ],
+      "allowed": false,
+      "maps_to": "decision_gate"
+    },
+    "consensus_vs_deviation": {
+      "fig_type": "bar_line",
+      "data_keys": [
+        "fig_revenue_trend"
+      ],
+      "allowed": false,
+      "maps_to": "core_disagreement"
+    },
+    "revenue_structure": {
+      "fig_type": "bar",
+      "data_keys": [
+        "fig_revenue_trend",
+        "fig_business_segments"
+      ],
+      "allowed": false,
+      "maps_to": "business_model"
+    },
+    "business_segments": {
+      "fig_type": "pie",
+      "data_keys": [
+        "fig_business_segments",
+        "fig_revenue_trend"
+      ],
+      "allowed": false,
+      "maps_to": "business_model"
+    },
+    "financial_trends": {
+      "fig_type": "dual_axis",
+      "data_keys": [
+        "fig_revenue_trend",
+        "fig_profitability"
+      ],
+      "allowed": false,
+      "maps_to": "financial_analysis"
+    },
+    "profit_margin": {
+      "fig_type": "bar_line",
+      "data_keys": [
+        "fig_profitability",
+        "fig_revenue_trend"
+      ],
+      "allowed": false,
+      "maps_to": "financial_analysis"
+    },
+    "cash_flow": {
+      "fig_type": "bar",
+      "data_keys": [
+        "fig_revenue_trend"
+      ],
+      "allowed": false,
+      "maps_to": "financial_analysis"
+    },
+    "balance_sheet": {
+      "fig_type": "bar",
+      "data_keys": [
+        "fig_revenue_trend"
+      ],
+      "allowed": false,
+      "maps_to": "financial_analysis"
+    },
+    "competitive_landscape": {
+      "fig_type": "bar_cluster",
+      "data_keys": [
+        "fig_peer_comparison"
+      ],
+      "allowed": false,
+      "maps_to": "competitive_position"
+    },
+    "market_position": {
+      "fig_type": "pie",
+      "data_keys": [
+        "fig_peer_comparison",
+        "fig_industry_board"
+      ],
+      "allowed": false,
+      "maps_to": "competitive_position"
+    },
+    "moat_analysis": {
+      "fig_type": "radar",
+      "data_keys": [
+        "fig_revenue_trend",
+        "fig_peer_comparison"
+      ],
+      "allowed": false,
+      "maps_to": "competitive_position"
+    },
+    "valuation_peers": {
+      "fig_type": "scatter",
+      "data_keys": [
+        "fig_valuation",
+        "fig_peer_comparison"
+      ],
+      "allowed": false,
+      "maps_to": "valuation_assessment"
+    },
+    "peer_comparison": {
+      "fig_type": "bar_cluster",
+      "data_keys": [
+        "fig_peer_comparison"
+      ],
+      "allowed": false,
+      "maps_to": "peer_benchmarking"
+    },
+    "growth_drivers": {
+      "fig_type": "line",
+      "data_keys": [
+        "fig_revenue_trend"
+      ],
+      "allowed": false,
+      "maps_to": "growth_drivers"
+    },
+    "industry_chain": {
+      "fig_type": "waterfall",
+      "data_keys": [
+        "fig_peer_comparison"
+      ],
+      "allowed": false,
+      "maps_to": "business_model"
+    },
+    "governance_esg": {
+      "fig_type": "radar",
+      "data_keys": [
+        "fig_revenue_trend"
+      ],
+      "allowed": false,
+      "maps_to": "governance_esg"
+    },
+    "management_quality": {
+      "fig_type": "bar",
+      "data_keys": [
+        "fig_revenue_trend"
+      ],
+      "allowed": false,
+      "maps_to": "management_quality"
+    },
+    "valuation_history": {
+      "fig_type": "line",
+      "data_keys": [
+        "fig_valuation"
+      ],
+      "allowed": false,
+      "maps_to": "valuation_assessment"
+    },
+    "dcf_sensitivity": {
+      "fig_type": "bar",
+      "data_keys": [
+        "fig_valuation"
+      ],
+      "allowed": false,
+      "maps_to": "valuation_assessment"
+    },
+    "capital_flow": {
+      "fig_type": "bar",
+      "data_keys": [
+        "fig_capital_flow"
+      ],
+      "allowed": false,
+      "maps_to": "capital_flow"
+    },
+    "catalyst_timeline": {
+      "fig_type": "line",
+      "data_keys": [
+        "fig_revenue_trend"
+      ],
+      "allowed": false,
+      "maps_to": "catalyst"
+    }
+  }
+}

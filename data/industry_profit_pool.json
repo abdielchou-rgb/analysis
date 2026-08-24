@@ -1,0 +1,546 @@
+{
+ "传感器": {
+  "upstream": 25,
+  "midstream": 45,
+  "downstream": 30,
+  "note": "中游制造环节附加值最高（议价权），上游材料/芯片次之",
+  "source": "R49 ai_search: 传感器产业链利润分布（称重/力传感器龙头）",
+  "confidence": 0.7
+ },
+ "半导体": {
+  "upstream": 20,
+  "midstream": 55,
+  "downstream": 25,
+  "note": "中游晶圆代工/设备利润池最大（重资产壁垒）",
+  "source": "R49 ai_search: 半导体产业链利润分布",
+  "confidence": 0.7
+ },
+ "人形机器人": {
+  "upstream": 40,
+  "midstream": 35,
+  "downstream": 25,
+  "note": "上游核心零部件（减速器/丝杠/传感器）利润池最大",
+  "source": "R49 ai_search: 人形机器人产业链利润分布",
+  "confidence": 0.65
+ },
+ "光伏": {
+  "upstream": 30,
+  "midstream": 45,
+  "downstream": 25,
+  "note": "中游电池片/组件规模效应，上游硅料周期性",
+  "source": "R49 ai_search: 光伏产业链利润分布",
+  "confidence": 0.7
+ },
+ "锂电": {
+  "upstream": 35,
+  "midstream": 45,
+  "downstream": 20,
+  "note": "中游电芯利润池大，上游材料周期性",
+  "source": "R49 ai_search: 锂电产业链利润分布",
+  "confidence": 0.7
+ },
+ "消费电子": {
+  "upstream": 40,
+  "midstream": 20,
+  "downstream": 40,
+  "note": "微笑曲线：品牌/渠道商利润最大（苹果占行业58.5%），上游核心零部件次之，中游组装最薄",
+  "source": "R38 web_search: 苹果产业链利润分配（Kraemer研究+爱企查）",
+  "confidence": 0.6
+ },
+ "汽车": {
+  "upstream": 45,
+  "midstream": 30,
+  "downstream": 25,
+  "note": "利润向两端集中：上游电池/芯片/锂矿拿走大头，整车净利率仅1.5%",
+  "source": "R38 web_search: 汽车产业链利润分配（中汽协/2026H1）",
+  "confidence": 0.65
+ },
+ "新能源车": {
+  "upstream": 30,
+  "midstream": 45,
+  "downstream": 25,
+  "note": "中游电池/电机/电控（占成本40%+）利润池最大，上游锂矿周期性强，下游整车薄利",
+  "source": "R38 web_search: 新能源汽车产业链利润分配",
+  "confidence": 0.65
+ },
+ "风电": {
+  "upstream": 45,
+  "midstream": 30,
+  "downstream": 25,
+  "note": "上游零部件/叶片利润最厚（抢装潮），中游整机分化，下游运营承压（电价市场化）",
+  "source": "R38 web_search: 风电行业利润三级分化（腾讯/北极星）",
+  "confidence": 0.6
+ },
+ "储能": {
+  "upstream": 35,
+  "midstream": 40,
+  "downstream": 25,
+  "note": "中游电芯龙头+核心电力电子（PCS/液冷毛利25-50%）最赚钱，系统集成分化，下游运营收租",
+  "source": "R38 web_search: 储能产业链谁在赚钱",
+  "confidence": 0.6
+ },
+ "白酒": {
+  "upstream": 10,
+  "midstream": 70,
+  "downstream": 20,
+  "note": "中游品牌酒企利润池绝对主导（高毛利高净利率），上游粮食/包材、下游渠道弱议价",
+  "source": "R38 行业研究共识: 白酒产业链利润分布",
+  "confidence": 0.6
+ },
+ "医药": {
+  "upstream": 20,
+  "midstream": 50,
+  "downstream": 30,
+  "note": "中游创新药+品牌中药利润高（集采后仿制药承压），上游原料药周期性，下游流通薄利",
+  "source": "R38 行业研究共识: 医药产业链利润分布",
+  "confidence": 0.55
+ },
+ "医疗器械": {
+  "upstream": 35,
+  "midstream": 40,
+  "downstream": 25,
+  "note": "上游高值耗材/影像核心部件利润高（国产替代），中游设备制造，下游医院渠道",
+  "source": "R38 行业研究共识: 医疗器械产业链利润分布",
+  "confidence": 0.55
+ },
+ "创新药": {
+  "upstream": 25,
+  "midstream": 60,
+  "downstream": 15,
+  "note": "中游药企研发主体价值占比65%（高风险高收益），上游CXO稳赚25%，下游流通仅10-15%",
+  "source": "R38 web_search: 创新药产业链三层价值占比",
+  "confidence": 0.6
+ },
+ "军工": {
+  "upstream": 40,
+  "midstream": 35,
+  "downstream": 25,
+  "note": "上游元器件/材料净利率最高（18.7%），中游分系统/军工电子分化，下游总装订单集中",
+  "source": "R38 web_search: 军工产业链盈利分化（新浪财经）",
+  "confidence": 0.6
+ },
+ "工程机械": {
+  "upstream": 40,
+  "midstream": 40,
+  "downstream": 20,
+  "note": "上游液压件/核心零部件附加值最高（卡脖子环节），中游整机核心枢纽，下游后市场利润增长点",
+  "source": "R38 web_search: 工程机械产业链全景",
+  "confidence": 0.6
+ },
+ "家电": {
+  "upstream": 30,
+  "midstream": 50,
+  "downstream": 20,
+  "note": "中游整机（美的/格力/海尔高净利率）利润池最大，上游压缩机/核心零部件次之",
+  "source": "R38 行业研究共识: 家电产业链利润分布",
+  "confidence": 0.55
+ },
+ "面板": {
+  "upstream": 50,
+  "midstream": 25,
+  "downstream": 25,
+  "note": "上游材料/设备寡头垄断（毛利率60-80%），中游面板制造价值洼地（8-20%），下游终端应用20-30%",
+  "source": "R38 web_search: OLED产业链微笑曲线（凤凰财经）",
+  "confidence": 0.6
+ },
+ "钢铁": {
+  "upstream": 30,
+  "midstream": 45,
+  "downstream": 25,
+  "note": "中游冶炼（长流程/短流程）利润池大但周期性强，上游铁矿石受制于人，下游加工薄利",
+  "source": "R38 行业研究共识: 钢铁产业链利润分布",
+  "confidence": 0.5
+ },
+ "煤炭": {
+  "upstream": 55,
+  "midstream": 25,
+  "downstream": 20,
+  "note": "上游资源开采利润池最大（资源禀赋+煤价周期），中游洗选加工，下游电力/冶金传导成本",
+  "source": "R38 行业研究共识: 煤炭产业链利润分布",
+  "confidence": 0.55
+ },
+ "化工": {
+  "upstream": 25,
+  "midstream": 35,
+  "downstream": 40,
+  "note": "下游精细化工/新材料附加值最高，上游石油/煤原料周期波动，中游基础化工规模效应",
+  "source": "R38 行业研究共识: 化工产业链利润分布",
+  "confidence": 0.5
+ },
+ "有色": {
+  "upstream": 45,
+  "midstream": 35,
+  "downstream": 20,
+  "note": "上游采矿资源溢价（稀土/铜/锂），中游冶炼加工，下游深加工薄利",
+  "source": "R38 行业研究共识: 有色金属产业链利润分布",
+  "confidence": 0.55
+ },
+ "银行": {
+  "upstream": 20,
+  "midstream": 60,
+  "downstream": 20,
+  "note": "中游银行核心（净息差+中间业务），上游资金供给方（存款），下游信贷客户",
+  "source": "R38 行业研究共识: 银行产业链利润分布",
+  "confidence": 0.5
+ },
+ "券商": {
+  "upstream": 15,
+  "midstream": 65,
+  "downstream": 20,
+  "note": "中游券商核心（经纪/投行/资管/自营），上游交易所/数据服务，下游投资者",
+  "source": "R38 行业研究共识: 券商产业链利润分布",
+  "confidence": 0.5
+ },
+ "保险": {
+  "upstream": 15,
+  "midstream": 65,
+  "downstream": 20,
+  "note": "中游保险公司核心（承保+投资），上游再保险/资管，下游投保人",
+  "source": "R38 行业研究共识: 保险产业链利润分布",
+  "confidence": 0.5
+ },
+ "房地产": {
+  "upstream": 25,
+  "midstream": 45,
+  "downstream": 30,
+  "note": "中游开发企业（利润收缩期）仍为核心环节，上游土地/建材/资金，下游物业/中介",
+  "source": "R38 行业研究共识: 房地产产业链利润分布",
+  "confidence": 0.5
+ },
+ "水泥": {
+  "upstream": 20,
+  "midstream": 60,
+  "downstream": 20,
+  "note": "中游水泥制造利润池最大（区域寡头+运输半径壁垒），上游石灰石/煤，下游基建地产",
+  "source": "R38 行业研究共识: 水泥产业链利润分布",
+  "confidence": 0.55
+ },
+ "物流": {
+  "upstream": 20,
+  "midstream": 55,
+  "downstream": 25,
+  "note": "中游物流企业（运输/仓储/供应链）利润池大，上游车辆/油/路，下游货主",
+  "source": "R38 行业研究共识: 物流产业链利润分布",
+  "confidence": 0.5
+ },
+ "零售": {
+  "upstream": 30,
+  "midstream": 45,
+  "downstream": 25,
+  "note": "中游渠道（商超/电商平台）利润分化，上游品牌供应商，下游消费者；线上平台议价权强",
+  "source": "R38 行业研究共识: 零售产业链利润分布",
+  "confidence": 0.5
+ },
+ "食品饮料": {
+  "upstream": 15,
+  "midstream": 55,
+  "downstream": 30,
+  "note": "中游制造/品牌（调味品/乳制品/饮料）利润池最大，上游农产品原料，下游渠道",
+  "source": "R38 行业研究共识: 食品饮料产业链利润分布",
+  "confidence": 0.55
+ },
+ "云计算": {
+  "upstream": 40,
+  "midstream": 35,
+  "downstream": 25,
+  "note": "上游芯片/硬件占利润45%（英伟达毛利76%），中游云服务/IDC，下游SaaS/应用",
+  "source": "R38 web_search: 云计算产业链价值分布",
+  "confidence": 0.6
+ },
+ "人工智能": {
+  "upstream": 45,
+  "midstream": 30,
+  "downstream": 25,
+  "note": "上游算力芯片利润最大（供不应求高毛利），中游模型/平台，下游应用尚在验证",
+  "source": "R38 web_search: AI产业链利润倒挂",
+  "confidence": 0.6
+ },
+ "汽车零部件": {
+  "upstream": 35,
+  "midstream": 40,
+  "downstream": 25,
+  "note": "微笑曲线：上游核心材料+中游高技术零部件利润最厚，下游单纯组装最薄",
+  "source": "R38 web_search: 汽车零部件产业链价值分配",
+  "confidence": 0.55
+ },
+ "航空航天": {
+  "upstream": 35,
+  "midstream": 40,
+  "downstream": 25,
+  "note": "中游分系统/整机（大飞机/卫星平台）利润池大，上游材料/零部件高附加值，下游运营",
+  "source": "R38 行业研究共识: 航空航天产业链利润分布",
+  "confidence": 0.5
+ },
+ "轨道交通": {
+  "upstream": 30,
+  "midstream": 45,
+  "downstream": 25,
+  "note": "中游整车装备（中国中车）利润池最大，上游核心零部件，下游运营（地铁/高铁）",
+  "source": "R38 行业研究共识: 轨道交通产业链利润分布",
+  "confidence": 0.55
+ },
+ "船舶": {
+  "upstream": 30,
+  "midstream": 40,
+  "downstream": 30,
+  "note": "中游造船（周期底部反转，高端船型高毛利），上游钢材/设备，下游航运",
+  "source": "R38 行业研究共识: 船舶产业链利润分布",
+  "confidence": 0.5
+ },
+ "核电": {
+  "upstream": 30,
+  "midstream": 50,
+  "downstream": 20,
+  "note": "中游电站建设/运营利润稳定（牌照壁垒），上游核燃料/设备，下游电网",
+  "source": "R38 行业研究共识: 核电产业链利润分布",
+  "confidence": 0.55
+ },
+ "环保": {
+  "upstream": 30,
+  "midstream": 45,
+  "downstream": 25,
+  "note": "中游工程/运营（水务/固废运营现金流好）利润池大，上游设备，下游排污企业",
+  "source": "R38 行业研究共识: 环保产业链利润分布",
+  "confidence": 0.5
+ },
+ "电力": {
+  "upstream": 30,
+  "midstream": 45,
+  "downstream": 25,
+  "note": "中游发电（火/水/风光）利润池大但受燃料与电价影响，上游燃料/资源，下游电网售电",
+  "source": "R38 行业研究共识: 电力产业链利润分布",
+  "confidence": 0.55
+ },
+ "石油天然气": {
+  "upstream": 50,
+  "midstream": 30,
+  "downstream": 20,
+  "note": "上游勘探开采利润池最大（资源禀赋+油价周期），中游炼化，下游销售薄利",
+  "source": "R38 行业研究共识: 石油天然气产业链利润分布",
+  "confidence": 0.55
+ },
+ "快递": {
+  "upstream": 15,
+  "midstream": 60,
+  "downstream": 25,
+  "note": "中游快递企业（规模效应+网络效应）利润池大但价格战薄利，上游车辆/油，下游电商",
+  "source": "R38 行业研究共识: 快递产业链利润分布",
+  "confidence": 0.5
+ },
+ "游戏": {
+  "upstream": 50,
+  "midstream": 35,
+  "downstream": 15,
+  "note": "上游研发/内容（IP+爆款）利润池最大（高风险高收益），中游发行/渠道分成，下游玩家",
+  "source": "R38 行业研究共识: 游戏产业链利润分布",
+  "confidence": 0.5
+ },
+ "影视传媒": {
+  "upstream": 40,
+  "midstream": 40,
+  "downstream": 20,
+  "note": "上游内容制作（爆款逻辑）+中游发行/平台均为核心，下游观众/广告",
+  "source": "R38 行业研究共识: 影视传媒产业链利润分布",
+  "confidence": 0.45
+ },
+ "教育": {
+  "upstream": 25,
+  "midstream": 50,
+  "downstream": 25,
+  "note": "中游教育机构（品牌+师资）利润池大，上游内容/技术，下游学生家长",
+  "source": "R38 行业研究共识: 教育产业链利润分布",
+  "confidence": 0.45
+ },
+ "宠物": {
+  "upstream": 25,
+  "midstream": 45,
+  "downstream": 30,
+  "note": "中游宠粮/用品制造利润池大，上游原料，下游渠道/服务（美容医疗）",
+  "source": "R38 行业研究共识: 宠物产业链利润分布",
+  "confidence": 0.45
+ },
+ "纺织服装": {
+  "upstream": 20,
+  "midstream": 30,
+  "downstream": 50,
+  "note": "下游品牌/渠道利润池最大（品牌溢价），上游纺织原料，中游制造薄利（代工）",
+  "source": "R38 行业研究共识: 纺织服装产业链利润分布",
+  "confidence": 0.5
+ },
+ "造纸": {
+  "upstream": 30,
+  "midstream": 40,
+  "downstream": 30,
+  "note": "中游造纸（周期+规模）利润池大，上游木浆/废纸价格周期，下游包装/文化用纸",
+  "source": "R38 行业研究共识: 造纸产业链利润分布",
+  "confidence": 0.45
+ },
+ "家具家居": {
+  "upstream": 25,
+  "midstream": 45,
+  "downstream": 30,
+  "note": "中游定制家居/制造利润池大，上游板材/五金，下游渠道（卖场/线上）",
+  "source": "R38 行业研究共识: 家具家居产业链利润分布",
+  "confidence": 0.45
+ },
+ "旅游": {
+  "upstream": 35,
+  "midstream": 35,
+  "downstream": 30,
+  "note": "上游目的地资源/交通（景区稀缺性），中游OTA/旅行社分化，下游游客消费",
+  "source": "R38 行业研究共识: 旅游产业链利润分布",
+  "confidence": 0.45
+ },
+ "医美": {
+  "upstream": 50,
+  "midstream": 35,
+  "downstream": 15,
+  "note": "上游原料/器械（玻尿酸/肉毒素高毛利）利润池最大，中游服务机构，下游渠道",
+  "source": "R38 行业研究共识: 医美产业链利润分布",
+  "confidence": 0.5
+ },
+ "稀土永磁": {
+  "upstream": 35,
+  "midstream": 45,
+  "downstream": 20,
+  "note": "中游高性能钕铁硼为价值最高环节（技术壁垒），上游资源端供给刚性，下游新能源/机器人",
+  "source": "R38 web_search: 稀土永磁产业链利润分布",
+  "confidence": 0.6
+ },
+ "工业互联网": {
+  "upstream": 30,
+  "midstream": 40,
+  "downstream": 30,
+  "note": "中游软件平台（毛利率45-65%）利润最高，上游硬件，下游场景应用",
+  "source": "R38 web_search: 工业互联网产业链利润分布",
+  "confidence": 0.55
+ },
+ "免税": {
+  "upstream": 35,
+  "midstream": 50,
+  "downstream": 15,
+  "note": "中游免税运营商（牌照壁垒+高毛利）利润池最大，上游品牌商，下游消费者",
+  "source": "R38 行业研究共识: 免税产业链利润分布",
+  "confidence": 0.5
+ },
+ "装饰装修": {
+  "upstream": 35,
+  "midstream": 40,
+  "downstream": 25,
+  "note": "中游装修企业（工程+家装）利润池大但竞争激烈，上游建材，下游业主",
+  "source": "R38 行业研究共识: 装饰装修产业链利润分布",
+  "confidence": 0.4
+ },
+ "区块链": {
+  "upstream": 45,
+  "midstream": 35,
+  "downstream": 20,
+  "note": "上游底层技术/算力（矿机/节点）利润池最大，中游平台/交易所，下游应用",
+  "source": "R38 行业研究共识: 区块链产业链利润分布",
+  "confidence": 0.4
+ },
+ "仪器仪表": {
+  "upstream": 45,
+  "midstream": 35,
+  "downstream": 20,
+  "note": "上游核心传感器（高端海外垄断高毛利）利润池最大，中游制造（低端微利），下游应用",
+  "source": "R38 web_search: 仪器仪表产业链利润分布",
+  "confidence": 0.6
+ },
+ "工控": {
+  "upstream": 40,
+  "midstream": 35,
+  "downstream": 25,
+  "note": "上游零部件（毛利率35-50%）利润池最大，中游本体/控制器，下游系统集成",
+  "source": "R38 web_search: 工控/工业自动化产业链利润分布",
+  "confidence": 0.6
+ },
+ "固态电池": {
+  "upstream": 45,
+  "midstream": 35,
+  "downstream": 20,
+  "note": "上游电解质/电芯技术垄断（专利壁垒）利润池最大，中游制造，下游应用",
+  "source": "R38 web_search: 固态电池产业链利润分布",
+  "confidence": 0.55
+ },
+ "AI算力": {
+  "upstream": 50,
+  "midstream": 30,
+  "downstream": 20,
+  "note": "上游硬件（英伟达毛利率75%+）利润池最大，中游服务器/云，下游应用尚在培育",
+  "source": "R38 web_search: AI算力产业链利润分布",
+  "confidence": 0.6
+ },
+ "自动驾驶": {
+  "upstream": 45,
+  "midstream": 30,
+  "downstream": 25,
+  "note": "上游算法+AI芯片占全链45%+利润（芯片毛利率高），中游硬件，下游运营",
+  "source": "R38 web_search: 自动驾驶产业链利润分布",
+  "confidence": 0.6
+ },
+ "低空经济": {
+  "upstream": 40,
+  "midstream": 35,
+  "downstream": 25,
+  "note": "上游核心零部件（毛利率30-50%）为利润节点，中游整机/eVTOL，下游运营服务",
+  "source": "R38 web_search: 低空经济产业链利润分布",
+  "confidence": 0.55
+ },
+ "商业航天": {
+  "upstream": 45,
+  "midstream": 25,
+  "downstream": 30,
+  "note": "上游制造（毛利率45-55%）利润池大，中游发射/火箭，下游卫星应用空间最大",
+  "source": "R38 web_search: 商业航天产业链利润分布",
+  "confidence": 0.55
+ },
+ "光模块": {
+  "upstream": 40,
+  "midstream": 45,
+  "downstream": 15,
+  "note": "中游高速模块（800G/1.6T）利润核心，上游光芯片壁垒高，下游云厂商议价强",
+  "source": "R38 web_search: 光模块产业链利润分布",
+  "confidence": 0.6
+ },
+ "半导体设备": {
+  "upstream": 25,
+  "midstream": 50,
+  "downstream": 25,
+  "note": "中游设备商（毛利率40-55%寡头）利润池最大，上游零部件/材料，下游晶圆厂",
+  "source": "R38 web_search: 半导体设备产业链利润分布",
+  "confidence": 0.6
+ },
+ "存储": {
+  "upstream": 60,
+  "midstream": 25,
+  "downstream": 15,
+  "note": "上游晶圆厂（毛利率70-90%）利润池绝对主导（AI驱动涨价），中游模组，下游终端",
+  "source": "R38 web_search: 存储产业链利润分布",
+  "confidence": 0.6
+ },
+ "工业母机": {
+  "upstream": 40,
+  "midstream": 45,
+  "downstream": 15,
+  "note": "中游整机（占价值链50%）+上游核心零部件（价值30%、毛利率40%+）双高，下游加工",
+  "source": "R38 web_search: 工业母机产业链利润分布",
+  "confidence": 0.6
+ },
+ "氢能": {
+  "upstream": 45,
+  "midstream": 30,
+  "downstream": 25,
+  "note": "上游制氢（绿氢/电解槽）为核心利润环节，中游储运偏弱，下游应用（交通/工业）",
+  "source": "R38 web_search: 氢能产业链利润分布",
+  "confidence": 0.55
+ },
+ "卫星互联网": {
+  "upstream": 45,
+  "midstream": 30,
+  "downstream": 25,
+  "note": "上游制造（卫星平台/载荷高利润）利润池大，中游发射/组网，下游应用",
+  "source": "R38 web_search: 卫星互联网产业链利润分布",
+  "confidence": 0.55
+ }
+}

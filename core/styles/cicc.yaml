@@ -1,0 +1,13 @@
+id: style_cicc
+name: CICC Style
+colors: {primary: '#003366', accent: '#C41E3A'}
+typography: {main_font: 'SimSun', heading_font: 'SimHei'}
+writing:
+  conclusion_first: true
+  min_judgment_density: 1.2
+  max_sentence_chars: 130
+  forbidden_terms: ['值得注意的是', '从某种程度上说']
+  citation_style: inline
+charts:
+  preferred_types: ['bar_cluster', 'line', 'pie']
+  colors: ['#003366', '#C41E3A', '#E8C84C']

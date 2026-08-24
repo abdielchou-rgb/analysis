@@ -1,0 +1,230 @@
+{
+  "meta": {
+    "total": 36,
+    "scan_pages": 2,
+    "min_chars": 50,
+    "scanned_count": 0,
+    "error_count": 0,
+    "elapsed_sec": 3.0,
+    "scan_dir": "data/基线/原始文档/【15】宏观分析框架和策略方法论",
+    "workers": 4
+  },
+  "pdfs": {
+    "产业生命周期研究系列五讲_赠送/20210630-长江证券-论出清的四种模式：产业生命周期的进阶.pdf": {
+      "chars": 1584,
+      "scanned": false,
+      "error": null,
+      "size": 6978115
+    },
+    "产业生命周期研究系列五讲_赠送/20220123-长江证券-产业生命周期中，经营杠杆的变化.pdf": {
+      "chars": 1654,
+      "scanned": false,
+      "error": null,
+      "size": 3967289
+    },
+    "产业生命周期研究系列五讲_赠送/20201018-长江证券-市场策略点评：四季度观点，兼论产业生命周期、资产久期与估值溢价.pdf": {
+      "chars": 2431,
+      "scanned": false,
+      "error": null,
+      "size": 792217
+    },
+    "产业生命周期研究系列五讲_赠送/20220530-长江证券-产业生命周期系列（五）：寻找“疫后”胜者为王的机会.pdf": {
+      "chars": 1374,
+      "scanned": false,
+      "error": null,
+      "size": 4331949
+    },
+    "产业生命周期研究系列五讲_赠送/20200407-长江证券-供给侧行业比较系列：产业生命周期视角，看行业比较.pdf": {
+      "chars": 5666,
+      "scanned": false,
+      "error": null,
+      "size": 2234911
+    },
+    "基于商业模式结构的财务研究分析框架系列/基于商业模式解构的财务框架与勾稽择股模型系列一：勇者模型、能者模型、谋者模型、智者模型.pdf": {
+      "chars": 3665,
+      "scanned": false,
+      "error": null,
+      "size": 1658299
+    },
+    "宏观分析方法论12讲/宏观方法论之一：宏观数据测算方法和高频数据体系.pdf": {
+      "chars": 1347,
+      "scanned": false,
+      "error": null,
+      "size": 1881561
+    },
+    "基于商业模式结构的财务研究分析框架系列/基于商业模式解构的财务框架与勾稽择股系列二：挖掘中小市值企业中的深度价值.pdf": {
+      "chars": 4531,
+      "scanned": false,
+      "error": null,
+      "size": 1302494
+    },
+    "宏观分析方法论12讲/宏观方法论之七：固定资产投资全面解析（下篇）.pdf": {
+      "chars": 1671,
+      "scanned": false,
+      "error": null,
+      "size": 2045345
+    },
+    "宏观分析方法论12讲/宏观方法论之三：高频观测体系的构建方法与投资启示.pdf": {
+      "chars": 1584,
+      "scanned": false,
+      "error": null,
+      "size": 1810592
+    },
+    "宏观分析方法论12讲/宏观方法论之九：金融数据的研究要点与技巧.pdf": {
+      "chars": 1630,
+      "scanned": false,
+      "error": null,
+      "size": 1425629
+    },
+    "宏观分析方法论12讲/宏观方法论之二：月度GDP指数的构建与应用.pdf": {
+      "chars": 1643,
+      "scanned": false,
+      "error": null,
+      "size": 1400833
+    },
+    "宏观分析方法论12讲/宏观方法论之八：看懂消费的三个重要视角.pdf": {
+      "chars": 1687,
+      "scanned": false,
+      "error": null,
+      "size": 1254404
+    },
+    "宏观分析方法论12讲/宏观方法论之五：PMI分析方法与资产配置含义.pdf": {
+      "chars": 1633,
+      "scanned": false,
+      "error": null,
+      "size": 1414953
+    },
+    "宏观分析方法论12讲/宏观方法论之六：固定资产投资全面解析（上）.pdf": {
+      "chars": 1562,
+      "scanned": false,
+      "error": null,
+      "size": 2550643
+    },
+    "宏观分析方法论12讲/宏观方法论之十：新一轮设备更新周期可能即将启动.pdf": {
+      "chars": 1710,
+      "scanned": false,
+      "error": null,
+      "size": 2476988
+    },
+    "宏观分析方法论12讲/宏观方法论之十一：CPI的深度拆解与预测逻辑.pdf": {
+      "chars": 1670,
+      "scanned": false,
+      "error": null,
+      "size": 2272316
+    },
+    "宏观分析方法论12讲/宏观方法论之十二：理解PPI的波动原因与信号作用.pdf": {
+      "chars": 1586,
+      "scanned": false,
+      "error": null,
+      "size": 1671865
+    },
+    "宏观分析方法论12讲/宏观方法论之四：公开市场操作解读指南.pdf": {
+      "chars": 1613,
+      "scanned": false,
+      "error": null,
+      "size": 1131964
+    },
+    "宏观分析框架十讲/宏观分析框架第10讲：我国就业，统计和趋势分析.pdf": {
+      "chars": 881,
+      "scanned": false,
+      "error": null,
+      "size": 936839
+    },
+    "宏观分析框架十讲/宏观分析框架第1讲：长期和短期经济分析.pdf": {
+      "chars": 605,
+      "scanned": false,
+      "error": null,
+      "size": 1371001
+    },
+    "宏观分析框架十讲/宏观分析框架第2讲：财富分化和资产配置，与“纸币”赛跑.pdf": {
+      "chars": 612,
+      "scanned": false,
+      "error": null,
+      "size": 1303462
+    },
+    "宏观分析框架十讲/宏观分析框架第3讲：中国宏观经济，如何核算、统计和分析.pdf": {
+      "chars": 782,
+      "scanned": false,
+      "error": null,
+      "size": 1302715
+    },
+    "宏观分析框架十讲/宏观分析框架第4讲：如何跟踪国内经济，高频指标的构建.pdf": {
+      "chars": 817,
+      "scanned": false,
+      "error": null,
+      "size": 1025412
+    },
+    "宏观分析框架十讲/宏观分析框架第5讲：PMI，统计、分析和应用.pdf": {
+      "chars": 961,
+      "scanned": false,
+      "error": null,
+      "size": 1518570
+    },
+    "宏观分析框架十讲/宏观分析框架第6讲：美国经济分析和跟踪.pdf": {
+      "chars": 1357,
+      "scanned": false,
+      "error": null,
+      "size": 1770689
+    },
+    "宏观分析框架十讲/宏观分析框架第7讲：货币，如何创造、如何观测？.pdf": {
+      "chars": 1084,
+      "scanned": false,
+      "error": null,
+      "size": 1076897
+    },
+    "宏观分析框架十讲/宏观分析框架第8讲：如何跟踪和预测中国通胀？.pdf": {
+      "chars": 1535,
+      "scanned": false,
+      "error": null,
+      "size": 1617861
+    },
+    "宏观分析框架十讲/宏观分析框架第9讲：如何跟踪和预测美国通胀？.pdf": {
+      "chars": 1112,
+      "scanned": false,
+      "error": null,
+      "size": 1420920
+    },
+    "授人以渔策略方法论七讲/“授人以渔”策略方法论系列（一）：A股总论，信号与噪声.pdf": {
+      "chars": 3762,
+      "scanned": false,
+      "error": null,
+      "size": 6978996
+    },
+    "授人以渔策略方法论七讲/“授人以渔”策略方法论系列（七）：盈利框架，周期与脉动.pdf": {
+      "chars": 3571,
+      "scanned": false,
+      "error": null,
+      "size": 4184314
+    },
+    "授人以渔策略方法论七讲/“授人以渔”策略方法论系列（六）：新兴产业，重构与衍生.pdf": {
+      "chars": 3085,
+      "scanned": false,
+      "error": null,
+      "size": 4499648
+    },
+    "授人以渔策略方法论七讲/“授人以渔”策略方法论系列（二）：底部框架，否极与泰来.pdf": {
+      "chars": 2655,
+      "scanned": false,
+      "error": null,
+      "size": 4082296
+    },
+    "授人以渔策略方法论七讲/“授人以渔”策略方法论系列（四）：行业比较，景气与预期.pdf": {
+      "chars": 2566,
+      "scanned": false,
+      "error": null,
+      "size": 3566386
+    },
+    "授人以渔策略方法论七讲/“授人以渔”系列报告（五）：大势研判，因子与驱动.pdf": {
+      "chars": 3420,
+      "scanned": false,
+      "error": null,
+      "size": 3903021
+    },
+    "授人以渔策略方法论七讲/“授人以渔”系列报告（八）：估值体系，动态与静态.pdf": {
+      "chars": 2982,
+      "scanned": false,
+      "error": null,
+      "size": 2899213
+    }
+  }
+}

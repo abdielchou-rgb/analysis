@@ -1,0 +1,943 @@
+{
+  "气体传感器": {
+    "players": [
+      {
+        "name": "Honeywell",
+        "ticker": "HON",
+        "country": "US",
+        "segment": "工业安全/医疗健康",
+        "role": "global_leader",
+        "market_share_est": 18.5,
+        "confidence": "E",
+        "public": true,
+        "note": "含City Technology，电化学传感器领导地位"
+      },
+      {
+        "name": "Sensirion",
+        "ticker": "SENSIRION.SW",
+        "country": "CH",
+        "segment": "暖通空调/汽车电子",
+        "role": "challenger",
+        "market_share_est": 8.2,
+        "confidence": "E",
+        "public": true,
+        "note": "MEMS温湿度及气体传感器技术领先"
+      },
+      {
+        "name": "博世",
+        "ticker": "",
+        "country": "DE",
+        "segment": "汽车电子/物联网",
+        "role": "global_leader",
+        "market_share_est": null,
+        "confidence": "E",
+        "public": false,
+        "note": "Sensortec部门为MEMS传感器巨头"
+      },
+      {
+        "name": "汉威科技",
+        "ticker": "300007.SZ",
+        "country": "CN",
+        "segment": "工业安全/智能家居",
+        "role": "china_leader",
+        "market_share_est": 12.0,
+        "confidence": "E",
+        "public": true,
+        "note": "中国气体传感器龙头，电化学/催化燃烧优势"
+      },
+      {
+        "name": "Figaro Engineering",
+        "ticker": "",
+        "country": "JP",
+        "segment": "消费电子/室内空气质量",
+        "role": "challenger",
+        "market_share_est": 5.5,
+        "confidence": "E",
+        "public": false,
+        "note": "TGS系列半导体气体传感器全球知名"
+      },
+      {
+        "name": "Amphenol",
+        "ticker": "APH",
+        "country": "US",
+        "segment": "工业安全/汽车排放",
+        "role": "challenger",
+        "market_share_est": 7.0,
+        "confidence": "E",
+        "public": true,
+        "note": "含SGX Sensortech，NDIR/电化学高端应用"
+      },
+      {
+        "name": "Membrapor",
+        "ticker": "",
+        "country": "CH",
+        "segment": "工业过程控制",
+        "role": "challenger",
+        "market_share_est": null,
+        "confidence": "E",
+        "public": false,
+        "note": "高端电化学传感器，特殊气体检测"
+      }
+    ],
+    "source": "ai_search: Yole/Mordor/华经情报网 气体传感器行业格局",
+    "updated_at": "2026-08-03"
+  },
+  "半导体": {
+    "players": [
+      {
+        "name": "台积电",
+        "ticker": "TSM/2330.TW",
+        "country": "TW",
+        "segment": "晶圆制造",
+        "role": "global_leader",
+        "market_share_est": 61.2,
+        "confidence": "E",
+        "public": true,
+        "note": "全球最大晶圆代工，3nm/5nm先进制程"
+      },
+      {
+        "name": "英伟达",
+        "ticker": "NVDA",
+        "country": "US",
+        "segment": "芯片设计(GPU/AI)",
+        "role": "global_leader",
+        "market_share_est": 80.0,
+        "confidence": "E",
+        "public": true,
+        "note": "数据中心AI训练芯片绝对主导"
+      },
+      {
+        "name": "三星电子",
+        "ticker": "005930.KS",
+        "country": "KR",
+        "segment": "存储/制造",
+        "role": "global_leader",
+        "market_share_est": 43.0,
+        "confidence": "E",
+        "public": true,
+        "note": "DRAM/NAND全球领导者，布局代工"
+      },
+      {
+        "name": "ASML",
+        "ticker": "ASML",
+        "country": "NL",
+        "segment": "半导体设备",
+        "role": "global_leader",
+        "market_share_est": 100.0,
+        "confidence": "E",
+        "public": true,
+        "note": "全球唯一High-NA EUV光刻机供应商"
+      },
+      {
+        "name": "英特尔",
+        "ticker": "INTC",
+        "country": "US",
+        "segment": "芯片设计/制造(IDM)",
+        "role": "challenger",
+        "market_share_est": null,
+        "confidence": "E",
+        "public": true,
+        "note": "传统CPU巨头，转型代工(IFS)"
+      },
+      {
+        "name": "中芯国际",
+        "ticker": "0981.HK/688981.SH",
+        "country": "CN",
+        "segment": "晶圆制造",
+        "role": "china_leader",
+        "market_share_est": 6.0,
+        "confidence": "E",
+        "public": true,
+        "note": "中国大陆最大晶圆代工，主攻成熟制程"
+      },
+      {
+        "name": "韦尔股份",
+        "ticker": "603501.SH",
+        "country": "CN",
+        "segment": "芯片设计(CIS)",
+        "role": "china_leader",
+        "market_share_est": null,
+        "confidence": "E",
+        "public": true,
+        "note": "全球前三图像传感器供应商（豪威）"
+      }
+    ],
+    "source": "ai_search: Gartner/SEMI/BCG 半导体格局",
+    "updated_at": "2026-08-03"
+  },
+  "人形机器人": {
+    "players": [
+      {
+        "name": "Tesla",
+        "ticker": "TSLA",
+        "country": "US",
+        "segment": "整机(Optimus)",
+        "role": "global_leader",
+        "market_share_est": null,
+        "confidence": "E",
+        "public": true,
+        "note": "Optimus项目进度领先，目标2025-2026量产"
+      },
+      {
+        "name": "Boston Dynamics",
+        "ticker": "",
+        "country": "US",
+        "segment": "整机(Atlas)",
+        "role": "global_leader",
+        "market_share_est": null,
+        "confidence": "E",
+        "public": false,
+        "note": "液压/电驱人形技术积淀最深（现代汽车旗下）"
+      },
+      {
+        "name": "优必选",
+        "ticker": "9880.HK",
+        "country": "CN",
+        "segment": "整机(Walker)",
+        "role": "china_leader",
+        "market_share_est": null,
+        "confidence": "E",
+        "public": true,
+        "note": "人形机器人第一股，Walker系列量产"
+      },
+      {
+        "name": "Agility Robotics",
+        "ticker": "",
+        "country": "US",
+        "segment": "整机(Digit)",
+        "role": "challenger",
+        "market_share_est": null,
+        "confidence": "E",
+        "public": false,
+        "note": "物流场景落地最快（GXO合作）"
+      },
+      {
+        "name": "埃斯顿",
+        "ticker": "002747.SZ",
+        "country": "CN",
+        "segment": "伺服/整机",
+        "role": "china_leader",
+        "market_share_est": null,
+        "confidence": "E",
+        "public": true,
+        "note": "国产工业机器人龙头，切入人形伺服关节"
+      },
+      {
+        "name": "哈默纳科",
+        "ticker": "6324.T",
+        "country": "JP",
+        "segment": "减速器",
+        "role": "global_leader",
+        "market_share_est": null,
+        "confidence": "E",
+        "public": true,
+        "note": "谐波减速器全球垄断者，人形机器人核心供应商"
+      }
+    ],
+    "source": "ai_search: 人形机器人行业格局（第一批检索）",
+    "updated_at": "2026-08-03"
+  },
+  "光伏": {
+    "players": [
+      {
+        "name": "隆基绿能",
+        "ticker": "601012.SH",
+        "country": "CN",
+        "segment": "硅片/组件",
+        "role": "global_leader",
+        "market_share_est": 16.0,
+        "confidence": "E",
+        "public": true,
+        "note": "全球最大硅片组件商，2023组件出货第一"
+      },
+      {
+        "name": "通威股份",
+        "ticker": "600438.SH",
+        "country": "CN",
+        "segment": "硅料/电池片",
+        "role": "global_leader",
+        "market_share_est": 28.0,
+        "confidence": "E",
+        "public": true,
+        "note": "全球多晶硅和电池片双料龙头"
+      },
+      {
+        "name": "晶科能源",
+        "ticker": "688223.SH/JKS",
+        "country": "CN",
+        "segment": "组件",
+        "role": "global_leader",
+        "market_share_est": 14.5,
+        "confidence": "E",
+        "public": true,
+        "note": "N型TOPCon量产领导者"
+      },
+      {
+        "name": "天合光能",
+        "ticker": "688599.SH",
+        "country": "CN",
+        "segment": "组件/跟踪支架",
+        "role": "china_leader",
+        "market_share_est": 11.0,
+        "confidence": "E",
+        "public": true,
+        "note": "组件和智慧能源解决方案领先"
+      },
+      {
+        "name": "First Solar",
+        "ticker": "FSLR",
+        "country": "US",
+        "segment": "薄膜组件",
+        "role": "challenger",
+        "market_share_est": 3.2,
+        "confidence": "E",
+        "public": true,
+        "note": "美国最大组件商，CdTe薄膜技术"
+      },
+      {
+        "name": "TCL中环",
+        "ticker": "002129.SZ",
+        "country": "CN",
+        "segment": "硅片",
+        "role": "china_leader",
+        "market_share_est": 18.0,
+        "confidence": "E",
+        "public": true,
+        "note": "全球第二大单晶硅片商，210mm大尺寸"
+      }
+    ],
+    "source": "ai_search: InfoLink/CPIA/Wood Mackenzie 光伏格局",
+    "updated_at": "2026-08-03"
+  },
+  "锂电": {
+    "players": [
+      {
+        "name": "宁德时代",
+        "ticker": "300750.SZ",
+        "country": "CN",
+        "segment": "动力/储能电池",
+        "role": "global_leader",
+        "market_share_est": 36.8,
+        "confidence": "E",
+        "public": true,
+        "note": "全球动力电池绝对龙头（SNE 2024Q1-Q3）"
+      },
+      {
+        "name": "比亚迪",
+        "ticker": "002594.SZ/01211.HK",
+        "country": "CN",
+        "segment": "动力电池(自供)/储能",
+        "role": "china_leader",
+        "market_share_est": 15.8,
+        "confidence": "E",
+        "public": true,
+        "note": "刀片电池成本与安全优势"
+      },
+      {
+        "name": "LG新能源",
+        "ticker": "373220.KS",
+        "country": "KR",
+        "segment": "动力/储能电池",
+        "role": "challenger",
+        "market_share_est": 13.5,
+        "confidence": "E",
+        "public": true,
+        "note": "欧美主要供应商，高镍三元/软包领先"
+      },
+      {
+        "name": "松下",
+        "ticker": "6752.T",
+        "country": "JP",
+        "segment": "动力电池",
+        "role": "challenger",
+        "market_share_est": 6.5,
+        "confidence": "E",
+        "public": true,
+        "note": "特斯拉核心伙伴，4680大圆柱"
+      },
+      {
+        "name": "中创新航",
+        "ticker": "3931.HK",
+        "country": "CN",
+        "segment": "动力电池",
+        "role": "challenger",
+        "market_share_est": 4.5,
+        "confidence": "E",
+        "public": true,
+        "note": "国内第三方主力供应商"
+      },
+      {
+        "name": "三星SDI",
+        "ticker": "006400.KS",
+        "country": "KR",
+        "segment": "动力电池",
+        "role": "challenger",
+        "market_share_est": 4.6,
+        "confidence": "E",
+        "public": true,
+        "note": "PHEV电池市占率较高"
+      }
+    ],
+    "source": "ai_search: SNE Research/CIAPS 锂电格局",
+    "updated_at": "2026-08-03"
+  },
+  "工控自动化": {
+    "players": [
+      {
+        "name": "西门子",
+        "ticker": "SIE",
+        "country": "DE",
+        "segment": "PLC/DCS/数控/驱动",
+        "role": "global_leader",
+        "market_share_est": null,
+        "confidence": "E",
+        "public": true,
+        "note": "工业自动化全产业链龙头，Digital Industries"
+      },
+      {
+        "name": "罗克韦尔自动化",
+        "ticker": "ROK",
+        "country": "US",
+        "segment": "PLC/工业软件/伺服",
+        "role": "global_leader",
+        "market_share_est": null,
+        "confidence": "E",
+        "public": true,
+        "note": "北美最大工业自动化公司"
+      },
+      {
+        "name": "三菱电机",
+        "ticker": "6503.T",
+        "country": "JP",
+        "segment": "PLC/伺服/变频器/CNC",
+        "role": "global_leader",
+        "market_share_est": null,
+        "confidence": "E",
+        "public": true,
+        "note": "亚洲市场主导，伺服/中小PLC份额高"
+      },
+      {
+        "name": "汇川技术",
+        "ticker": "300124.SZ",
+        "country": "CN",
+        "segment": "变频器/伺服/PLC",
+        "role": "china_leader",
+        "market_share_est": null,
+        "confidence": "E",
+        "public": true,
+        "note": "中国工控领军，通用伺服/变频国内第一"
+      },
+      {
+        "name": "中控技术",
+        "ticker": "688777.SH",
+        "country": "CN",
+        "segment": "DCS/工业软件",
+        "role": "china_leader",
+        "market_share_est": null,
+        "confidence": "E",
+        "public": true,
+        "note": "中国流程工业DCS龙头"
+      },
+      {
+        "name": "欧姆龙",
+        "ticker": "6645.T",
+        "country": "JP",
+        "segment": "PLC/传感器/机器视觉",
+        "role": "challenger",
+        "market_share_est": null,
+        "confidence": "E",
+        "public": true,
+        "note": "小型PLC/光电传感器/HMI领先"
+      }
+    ],
+    "source": "ai_search: ARC Advisory/MIR睿工业 工控格局",
+    "updated_at": "2026-08-03"
+  },
+  "医疗器械": {
+    "players": [
+      {
+        "name": "美敦力",
+        "ticker": "MDT",
+        "country": "US",
+        "segment": "心血管/神经调控/外科",
+        "role": "global_leader",
+        "market_share_est": 6.5,
+        "confidence": "E",
+        "public": true,
+        "note": "全球最大器械公司，覆盖150+国家"
+      },
+      {
+        "name": "雅培",
+        "ticker": "ABT",
+        "country": "US",
+        "segment": "心血管/IVD/糖尿病护理",
+        "role": "global_leader",
+        "market_share_est": 4.8,
+        "confidence": "E",
+        "public": true,
+        "note": "CGM连续血糖监测全球领先"
+      },
+      {
+        "name": "西门子医疗",
+        "ticker": "SHL",
+        "country": "DE",
+        "segment": "医学影像/IVD",
+        "role": "global_leader",
+        "market_share_est": 4.2,
+        "confidence": "E",
+        "public": true,
+        "note": "影像设备(MRI/CT)三巨头之一"
+      },
+      {
+        "name": "迈瑞医疗",
+        "ticker": "300760.SZ",
+        "country": "CN",
+        "segment": "监护/影像/IVD",
+        "role": "china_leader",
+        "market_share_est": 1.2,
+        "confidence": "E",
+        "public": true,
+        "note": "中国最大器械供应商，全球监护/麻醉主力"
+      },
+      {
+        "name": "强生医疗科技",
+        "ticker": "JNJ",
+        "country": "US",
+        "segment": "骨科/外科/心血管",
+        "role": "global_leader",
+        "market_share_est": 5.5,
+        "confidence": "E",
+        "public": true,
+        "note": "全球骨科和外科介入领导者"
+      },
+      {
+        "name": "联影医疗",
+        "ticker": "688271.SH",
+        "country": "CN",
+        "segment": "医学影像/放疗",
+        "role": "challenger",
+        "market_share_est": 0.8,
+        "confidence": "E",
+        "public": true,
+        "note": "高端影像设备已具备与GPS竞争实力"
+      },
+      {
+        "name": "GE医疗",
+        "ticker": "GEHC",
+        "country": "US",
+        "segment": "影像/超声/生命关爱",
+        "role": "global_leader",
+        "market_share_est": 4.5,
+        "confidence": "E",
+        "public": true,
+        "note": "超声和CT市场份额极高"
+      }
+    ],
+    "source": "ai_search: Evaluate MedTech/Statista/Frost&Sullivan 器械格局",
+    "updated_at": "2026-08-03"
+  },
+  "消费电子": {
+    "players": [
+      {
+        "name": "Apple",
+        "ticker": "AAPL",
+        "country": "US",
+        "segment": "手机/穿戴/平板",
+        "role": "global_leader",
+        "market_share_est": null,
+        "confidence": "E",
+        "public": true,
+        "note": "高端市场霸主，品牌溢价与利润控制力"
+      },
+      {
+        "name": "三星电子",
+        "ticker": "005930.KS",
+        "country": "KR",
+        "segment": "手机/面板/半导体",
+        "role": "global_leader",
+        "market_share_est": null,
+        "confidence": "E",
+        "public": true,
+        "note": "最大安卓厂商及核心零部件供应商"
+      },
+      {
+        "name": "索尼",
+        "ticker": "SONY",
+        "country": "JP",
+        "segment": "游戏/影像/声学",
+        "role": "global_leader",
+        "market_share_est": null,
+        "confidence": "E",
+        "public": true,
+        "note": "图像传感器/游戏主机技术壁垒"
+      },
+      {
+        "name": "小米集团",
+        "ticker": "1810.HK",
+        "country": "CN",
+        "segment": "手机/AIoT/生态链",
+        "role": "china_leader",
+        "market_share_est": null,
+        "confidence": "E",
+        "public": true,
+        "note": "极致性价比+庞大AIoT生态"
+      },
+      {
+        "name": "联想集团",
+        "ticker": "0992.HK",
+        "country": "CN",
+        "segment": "PC/平板",
+        "role": "global_leader",
+        "market_share_est": null,
+        "confidence": "E",
+        "public": true,
+        "note": "全球PC市场份额连续多年第一"
+      },
+      {
+        "name": "立讯精密",
+        "ticker": "002475.SZ",
+        "country": "CN",
+        "segment": "连接器/模组/代工",
+        "role": "challenger",
+        "market_share_est": null,
+        "confidence": "E",
+        "public": true,
+        "note": "切入苹果核心组装，垂直整合能力强"
+      }
+    ],
+    "source": "ai_search: IDC/Counterpoint/Canalys 消费电子格局",
+    "updated_at": "2026-08-03"
+  },
+  "传感器(大行业)": {
+    "players": [
+      {
+        "name": "Bosch Sensortec",
+        "ticker": "BOSCH",
+        "country": "DE",
+        "segment": "MEMS(加速度/陀螺仪/压力)",
+        "role": "global_leader",
+        "market_share_est": 25.0,
+        "confidence": "C",
+        "public": false,
+        "note": "MEMS惯性传感器全球第一，行业共识份额约25%"
+      },
+      {
+        "name": "Sony Semiconductor",
+        "ticker": "6758.T",
+        "country": "JP",
+        "segment": "图像传感器(CIS)",
+        "role": "global_leader",
+        "market_share_est": 42.0,
+        "confidence": "B",
+        "public": true,
+        "note": "CIS全球第一，高端手机/相机优势显著"
+      },
+      {
+        "name": "STMicroelectronics",
+        "ticker": "STM",
+        "country": "CH/IT",
+        "segment": "MEMS(压力/温度)",
+        "role": "global_leader",
+        "market_share_est": 15.0,
+        "confidence": "C",
+        "public": true,
+        "note": "MEMS及压力/温度多品类全球前列"
+      },
+      {
+        "name": "TE Connectivity",
+        "ticker": "TEL",
+        "country": "US",
+        "segment": "压力/湿度传感器",
+        "role": "global_leader",
+        "market_share_est": 10.0,
+        "confidence": "C",
+        "public": true,
+        "note": "工业及汽车传感器多品类龙头"
+      },
+      {
+        "name": "Sensirion",
+        "ticker": "SENSIRION.SW",
+        "country": "CH",
+        "segment": "湿度/气体传感器",
+        "role": "global_leader",
+        "market_share_est": null,
+        "confidence": "E",
+        "public": true,
+        "note": "高端MEMS温湿度与气体传感器隐形冠军"
+      },
+      {
+        "name": "Allegro MicroSystems",
+        "ticker": "ALGM",
+        "country": "US",
+        "segment": "磁传感器",
+        "role": "global_leader",
+        "market_share_est": null,
+        "confidence": "E",
+        "public": true,
+        "note": "汽车/工业磁传感器全球龙头"
+      },
+      {
+        "name": "Samsung",
+        "ticker": "005930.KS",
+        "country": "KR",
+        "segment": "图像传感器(CIS)",
+        "role": "challenger",
+        "market_share_est": 20.0,
+        "confidence": "C",
+        "public": true,
+        "note": "CIS全球第二，车规CIS发力"
+      },
+      {
+        "name": "Honeywell",
+        "ticker": "HON",
+        "country": "US",
+        "segment": "工业/气体/湿度传感器",
+        "role": "global_leader",
+        "market_share_est": null,
+        "confidence": "C",
+        "public": true,
+        "note": "综合传感器龙头，含City Technology"
+      },
+      {
+        "name": "韦尔股份(豪威科技)",
+        "ticker": "603501.SH",
+        "country": "CN",
+        "segment": "图像传感器(CIS)",
+        "role": "china_leader",
+        "market_share_est": null,
+        "confidence": "E",
+        "public": true,
+        "note": "中国CIS龙头，全球CIS份额第三"
+      },
+      {
+        "name": "敏芯股份",
+        "ticker": "688286.SH",
+        "country": "CN",
+        "segment": "MEMS(压力/声学)",
+        "role": "china_leader",
+        "market_share_est": null,
+        "confidence": "E",
+        "public": true,
+        "note": "国内MEMS压力/麦克风设计头部"
+      },
+      {
+        "name": "歌尔股份",
+        "ticker": "002241.SZ",
+        "country": "CN",
+        "segment": "MEMS(声学)",
+        "role": "china_leader",
+        "market_share_est": null,
+        "confidence": "E",
+        "public": true,
+        "note": "全球MEMS声学传感器出货量第一"
+      },
+      {
+        "name": "瑞声科技",
+        "ticker": "2018.HK",
+        "country": "CN",
+        "segment": "MEMS(声学/触觉)",
+        "role": "china_leader",
+        "market_share_est": null,
+        "confidence": "E",
+        "public": true,
+        "note": "声学MEMS与触觉传感器头部"
+      },
+      {
+        "name": "汉威科技",
+        "ticker": "300007.SZ",
+        "country": "CN",
+        "segment": "气体传感器",
+        "role": "china_leader",
+        "market_share_est": 20.8,
+        "confidence": "B",
+        "public": true,
+        "note": "中国气体传感器龙头(国内份额口径)，旗下炜盛电子"
+      },
+      {
+        "name": "四方光电",
+        "ticker": "688665.SH",
+        "country": "CN",
+        "segment": "气体传感器(光学)",
+        "role": "china_leader",
+        "market_share_est": 8.3,
+        "confidence": "B",
+        "public": true,
+        "note": "中国光学气体传感器龙头(国内份额口径)"
+      },
+      {
+        "name": "保隆科技",
+        "ticker": "603197.SH",
+        "country": "CN",
+        "segment": "汽车传感器(TPMS/压力)",
+        "role": "china_leader",
+        "market_share_est": null,
+        "confidence": "E",
+        "public": true,
+        "note": "中国汽车传感器核心供应商"
+      }
+    ],
+    "source": "WebSearch 交叉验证 Yole/MarketsandMarkets/各公司年报/公开报道",
+    "confidence": "B"
+  },
+  "液位传感器/物位传感器": {
+    "players": [
+      {
+        "name": "Endress+Hauser (E+H)",
+        "ticker": "",
+        "country": "CH",
+        "segment": "物位/流量/压力仪表",
+        "role": "global_leader",
+        "market_share_est": 12.3,
+        "confidence": "C",
+        "public": false,
+        "note": "全球物位测量仪表市占率约12.3%（2024《全球过程自动化仪表市场报告》）；另一来源口径18%"
+      },
+      {
+        "name": "Siemens (西门子)",
+        "ticker": "SIE.DE",
+        "country": "DE",
+        "segment": "超声波/雷达液位计",
+        "role": "global_leader",
+        "market_share_est": 14.0,
+        "confidence": "C",
+        "public": true,
+        "note": "能源领域超声波液位计市占率约14%；过程仪表板块2023全球营收72亿欧元"
+      },
+      {
+        "name": "VEGA (威格)",
+        "ticker": "",
+        "country": "DE",
+        "segment": "物位测量(雷达/超声波/导波)",
+        "role": "global_leader",
+        "market_share_est": 16.0,
+        "confidence": "C",
+        "public": false,
+        "note": "水文监测领域市占率约16%；物位测量专业厂商，量程达60m"
+      },
+      {
+        "name": "Emerson/Rosemount (艾默生/罗斯蒙特)",
+        "ticker": "EMR",
+        "country": "US",
+        "segment": "物位/流量/压力仪表",
+        "role": "global_leader",
+        "market_share_est": 12.0,
+        "confidence": "C",
+        "public": true,
+        "note": "油气行业市占率约12%；物位仪表业务2024同比增长8.7%"
+      },
+      {
+        "name": "Yokogawa (横河电机)",
+        "ticker": "6841.T",
+        "country": "JP",
+        "segment": "液位/流量/分析仪表",
+        "role": "global_leader",
+        "market_share_est": 11.0,
+        "confidence": "C",
+        "public": true,
+        "note": "精细化工领域市占率约11%；高精度与长期稳定性见长"
+      },
+      {
+        "name": "川仪股份",
+        "ticker": "603100.SH",
+        "country": "CN",
+        "segment": "物位仪表/变送器",
+        "role": "china_leader",
+        "market_share_est": null,
+        "confidence": "B",
+        "public": true,
+        "note": "中国过程自动化仪表龙头；2024年工业自动化仪表及装置营收67.5亿元，物位仪表为其品类之一"
+      },
+      {
+        "name": "正星科技",
+        "ticker": "",
+        "country": "CN",
+        "segment": "加油机/液位仪/油气回收",
+        "role": "china_leader",
+        "market_share_est": null,
+        "confidence": "B",
+        "public": false,
+        "note": "中国加油机产销量连续17年行业第一，配套生产液位仪、双层油罐渗漏检测仪、油气回收在线监测"
+      },
+      {
+        "name": "三盈联合科技",
+        "ticker": "",
+        "country": "CN",
+        "segment": "加油机/液位仪/油气回收",
+        "role": "china_challenger",
+        "market_share_est": null,
+        "confidence": "C",
+        "public": false,
+        "note": "国内较早加油机厂商，产品含液位仪、油气回收在线监测"
+      },
+      {
+        "name": "Continental (大陆集团)",
+        "ticker": "CON.DE",
+        "country": "DE",
+        "segment": "汽车燃油油位传感器",
+        "role": "global_leader",
+        "market_share_est": null,
+        "confidence": "C",
+        "public": true,
+        "note": "汽车燃油/油位传感器全球主要供应商，前十供应商占全球出货57%"
+      },
+      {
+        "name": "Denso (电装)",
+        "ticker": "6902.T",
+        "country": "JP",
+        "segment": "汽车燃油油位传感器",
+        "role": "global_leader",
+        "market_share_est": null,
+        "confidence": "C",
+        "public": true,
+        "note": "日本汽车零部件龙头，油位传感器配套日系车企"
+      },
+      {
+        "name": "Franklin Fueling Systems/Varec",
+        "ticker": "FELE",
+        "country": "US",
+        "segment": "加油站液位监测/油品管理",
+        "role": "global_leader",
+        "market_share_est": null,
+        "confidence": "C",
+        "public": true,
+        "note": "富兰克林电气旗下，加油站储罐液位仪与油品管理系统全球龙头"
+      },
+      {
+        "name": "OPW (Dover旗下)",
+        "ticker": "DOV",
+        "country": "US",
+        "segment": "加油站液位/防溢流/油气回收",
+        "role": "global_leader",
+        "market_share_est": null,
+        "confidence": "C",
+        "public": true,
+        "note": "加油站设备综合供应商，含液位监测与防溢流产品"
+      },
+      {
+        "name": "麦克传感",
+        "ticker": "",
+        "country": "CN",
+        "segment": "压力/液位变送器",
+        "role": "china_challenger",
+        "market_share_est": null,
+        "confidence": "C",
+        "public": false,
+        "note": "国内液位/压力变送器主要厂商，性价比路线"
+      },
+      {
+        "name": "汉威科技",
+        "ticker": "300007.SZ",
+        "country": "CN",
+        "segment": "气体/液位传感器",
+        "role": "china_challenger",
+        "market_share_est": null,
+        "confidence": "C",
+        "public": true,
+        "note": "中国气体传感器龙头，亦布局液位/流量仪表"
+      }
+    ],
+    "source": "WebSearch 交叉验证：2024全球过程自动化仪表市场报告/企业官网/同花顺财经/智研咨询",
+    "confidence": "C",
+    "updated_at": "2026-08-04"
+  }
+}

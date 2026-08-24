@@ -1,0 +1,63 @@
+# Signal and the Noise Framework
+# Nate Silver — 概率预测与信号噪声区分
+
+id: signal_noise
+name: "信号与噪声预测框架"
+author: "Nate Silver"
+source: "The Signal and the Noise (2012)"
+
+core_thesis: >
+  预测的质量取决于能否区分信号和噪声。大部分预测失败不是因为模型不够复杂，
+  而是因为把噪声当成了信号。贝叶斯更新、预测校准、预测准确率回溯是提升预测
+  质量的核心方法。好的预测必须有明确的证伪条件和概率赋值。
+
+logic_chain:
+  - step: "信号/噪声分离"
+    description: "识别哪些变化是真实趋势（信号），哪些是随机波动（噪声）"
+    tools: ["signal_noise_ratio", "trend_significance"]
+    output: "signal_list, noise_list"
+
+  - step: "条件概率预测"
+    description: "对每个信号给出条件概率——如果A发生，则B的概率是X"
+    output: "conditional_forecasts, confidence_intervals"
+
+  - step: "预测校准"
+    description: "对照历史预测的准确率校准当前预测——过度自信？信心不足？"
+    tools: ["calibration_curve"]
+    output: "calibration_adjustment"
+
+  - step: "证伪条件更新"
+    description: "关键预测的证伪条件必须预先明确定义——什么数据会让我改变判断？"
+    output: "falsification_triggers, update_points"
+
+analytical_dimensions:
+  signal_identification:
+    question: "哪些变化是真实信号，哪些是随机噪声？"
+    sub_questions:
+      - "这个趋势的数据点够多吗？样本量是否足够排除随机性？"
+      - "这个信号有因果逻辑支撑还是纯统计相关？"
+    evidence_min: 2
+
+  probability_calibration:
+    question: "预测概率是否经过历史校准确认？"
+    sub_questions:
+      - "类似预测的历史准确率是多少？"
+      - "当前预测是否已经过校准调整？"
+    counter_evidence: true
+    evidence_min: 1
+
+  falsification_readiness:
+    question: "关键预测的证伪条件是否已明确？"
+    sub_questions:
+      - "什么数据/事件会推翻这个判断？"
+      - "证伪条件触发后，是否有应对方案？"
+    evidence_min: 2
+
+key_metrics:
+  - "signal_noise_ratio"
+  - "prediction_calibration"
+  - "falsification_trigger_count"
+
+counter_argument:
+  required: true
+  method: "信号与噪声的区分本身就存在主观性；过度依赖历史校准可能忽视结构性变化"

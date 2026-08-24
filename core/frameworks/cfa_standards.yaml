@@ -1,0 +1,79 @@
+# CFA Research Report Standards
+# CFA Institute
+
+id: cfa_standards
+name: "CFA研究报告标准框架"
+author: "CFA Institute"
+source: "CFA Institute Research Objectivity Standards"
+
+core_thesis: >
+  研究报告必须客观、透明、全面。分析师必须披露利益冲突、明确估值方法、
+  说明关键假设、提供反方观点。ESG因素在实质性影响估值时必须纳入分析。
+  报告的格式和内容标准确保了专业水准和可比性。
+
+logic_chain:
+  - step: "合规审查"
+    description: "确保报告符合研究客观性标准"
+    checks:
+      - "利益冲突声明是否充分？"
+      - "薪酬来源是否披露？"
+      - "持仓情况是否说明？"
+    output: "compliance_clearance"
+
+  - step: "估值方法声明"
+    description: "明确说明使用的估值方法和关键假设"
+    required:
+      - "主要估值方法（DCF/可比/NAV等）"
+      - "所有关键假设的参数和来源"
+      - "使用的数据截止日期"
+    output: "valuation_method_statement"
+
+  - step: "风险与反方观点"
+    description: "必须提供关键风险和bear case分析"
+    required:
+      - "至少3个关键风险因素"
+      - "与推荐方向相反的观点"
+      - "情景分析结果"
+    output: "risk_section, bear_case_scenario"
+
+  - step: "ESG实质性分析"
+    description: "ESG因素在实质性影响估值时必须纳入"
+    dimensions:
+      - "环境：监管风险/转型风险/物理风险"
+      - "社会：人力资本/产品安全/社区关系"
+      - "治理：董事会结构/股东权利/高管薪酬"
+    output: "esg_risk_matrix, valuation_impact"
+
+analytical_dimensions:
+  compliance:
+    question: "报告是否符合研究客观性标准？"
+    checks:
+      - "是否充分披露利益冲突？"
+      - "推荐理由是否基于证据而非直觉？"
+    passed: true
+
+  transparency:
+    question: "估值方法是否透明？"
+    sub_questions:
+      - "所有关键假设是否明确列示？"
+      - "假设变化对估值的影响是否量化？"
+    evidence_min: 1
+
+  risk_disclosure:
+    question: "风险和反方观点是否充分？"
+    sub_questions:
+      - "除正向因素外是否列出反向因素？"
+      - "最坏情景的量化评估是什么？"
+    required: true
+
+report_structure:
+  sections:
+    - "摘要与评级"
+    - "投资论点"
+    - "行业分析"
+    - "公司分析（商业模式/竞争位置/管理层）"
+    - "财务分析（历史+预测）"
+    - "估值（方法+假设+敏感性）"
+    - "风险因素"
+    - "ESG分析（如实质相关）"
+    - "披露与声明"

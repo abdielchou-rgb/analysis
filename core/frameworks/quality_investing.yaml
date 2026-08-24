@@ -1,0 +1,67 @@
+# Quality Investing Framework
+# Cunningham, Eide & Hargreaves — 高质量公司的系统性框架
+
+id: quality_investing
+name: "高质量投资框架"
+author: "Cunningham, Eide & Hargreaves"
+source: "Quality Investing (2016)"
+
+core_thesis: >
+  高质量公司具有可识别的共同特征：可持续的竞争优势、优秀的资本配置能力、
+  强大的企业文化、可预测的现金流。买入高质量公司并以合理价格持有是最可靠的超额收益来源。
+  质量因子独立于价值和动量因子，是长期回报的重要驱动因素。
+
+logic_chain:
+  - step: "质量筛选"
+    description: "三重过滤：竞争优势 → 资本配置 → 企业文化"
+    tools: ["quality_scorecard"]
+    output: "quality_score, quality_tier"
+
+  - step: "成长质量评估"
+    description: "区分高质量成长和低质量成长——增长是否消耗资本？边际ROIC是否上升？"
+    tools: ["growth_quality_map"]
+    output: "growth_quality, organic_vs_inorganic"
+
+  - step: "估值合理性检验"
+    description: "质量溢价是否已经被定价？买入高质量公司不等于忽视估值"
+    output: "quality_premium_pct, fair_value_range"
+
+  - step: "持有与退出纪律"
+    description: "什么情况下应该卖出高质量公司——基本面恶化/估值极端/发现更好的机会"
+    output: "hold_signal, exit_triggers"
+
+analytical_dimensions:
+  quality_assessment:
+    question: "公司在多个质量维度上的综合表现如何？"
+    sub_questions:
+      - "可持续竞争优势的宽度和深度？"
+      - "资本配置历史是否明智？(并购/回购/再投资)"
+      - "企业文化是否倡导长期价值创造？"
+    evidence_min: 3
+
+  growth_quality:
+    question: "增长是高质量的还是消耗性的？"
+    sub_questions:
+      - "增长主要来自有机扩张还是并购？"
+      - "边际投资资本回报率(ROIC)趋势？"
+      - "增长是否在消耗竞争优势？"
+    evidence_min: 2
+
+  quality_and_value:
+    question: "当前价格是否反映了质量溢价？是否存在错定价？"
+    sub_questions:
+      - "公司的PE/PB溢价相对于同行是否合理？"
+      - "质量溢价的历史百分位？"
+    counter_evidence: true
+    evidence_min: 2
+
+key_metrics:
+  - "quality_score"
+  - "growth_quality_score"
+  - "quality_premium_pct"
+  - "moat_trend"
+  - "capital_allocation_score"
+
+counter_argument:
+  required: true
+  method: "高质量公司可能已经溢价过高；质量判断可能有滞后性（基本面恶化先于评分变化）"

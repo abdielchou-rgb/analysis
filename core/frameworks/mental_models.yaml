@@ -1,0 +1,82 @@
+# Mental Models Latticework Framework
+# Charlie Munger
+
+id: mental_models
+name: "多学科思维模型格栅"
+author: "Charlie Munger"
+source: "Poor Charlie's Almanack (2005)"
+
+core_thesis: >
+  单一学科视角不足以理解复杂的投资问题。你需要从心理学、经济学、
+  生物学、工程学、物理学等多个学科中提取核心模型，构成一个可以
+  交叉验证的思维格栅。最重要的不是知道更多模型，而是避免犯愚蠢错误。
+
+logic_chain:
+  - step: "模型识别"
+    description: "面对一个分析问题时，识别哪些思维模型相关"
+    models:
+      psychology:
+        - "激励机制的超能力 (Incentives)"
+        - "社会认同倾向 (Social Proof)"
+        - "确认偏误 (Confirmation Bias)"
+        - "锚定效应 (Anchoring)"
+        - "损失厌恶 (Loss Aversion)"
+      economics:
+        - "规模效应 (Scale Economies)"
+        - "供求关系 (Supply/Demand)"
+        - "激励机制设计 (Incentive Design)"
+      engineering:
+        - "反馈回路 (Feedback Loops)"
+        - "冗余系统 (Redundancy)"
+        - "瓶颈分析 (Bottleneck Analysis)"
+      biology:
+        - "进化与适应 (Evolution/Adaptation)"
+        - "生态系统 (Ecosystem)"
+        - "竞争与共生 (Competition/Symbiosis)"
+    output: "relevant_models, cross_references"
+
+  - step: "逆向思维"
+    description: "不追求'如何成功'，而是先想'如何会失败'"
+    method: "列出所有可能导致判断错误的方式，逐一检查是否存在"
+    output: "failure_modes, prevention_strategies"
+
+  - step: "能力圈检查"
+    description: "诚实地判断这个问题是否在自己的能力圈内"
+    checkpoints:
+      - "我真的理解这个行业的价值创造逻辑吗？"
+      - "我对这个判断的置信度来源是什么？"
+    output: "circle_of_competence, knowledge_gaps"
+
+  - step: "多模型交叉验证"
+    description: "用至少3个不同学科的模型验证同一个判断"
+    method: "如果3个以上的模型指向同一结论，置信度提升"
+    output: "convergence_signal, divergence_warnings"
+
+analytical_dimensions:
+  bias_check:
+    question: "我的分析中可能存在什么认知偏差？"
+    check: ["confirmation_bias", "anchoring", "availability", "overconfidence"]
+    evidence_min: 1
+
+  failure_analysis:
+    question: "什么情况下我会错？而且会错得离谱？"
+    sub_questions:
+      - "最糟糕的情景是什么？"
+      - "这个情景的概率虽然低但后果是否灾难性？"
+    evidence_min: 2
+
+  competence:
+    question: "我真的理解这家公司/行业吗？"
+    sub_questions:
+      - "我有没有在这个领域做过成功预测？"
+      - "我的理解与专家的理解差距在哪里？"
+    evidence_min: 1
+
+key_principles:
+  - "反过来想，总是反过来想 (Invert, always invert)"
+  - "知道你不知道什么比知道你知道什么更重要"
+  - "如果不能在5分钟内解释清楚一个观点，说明你不够理解"
+
+counter_argument:
+  required: true
+  method: "用逆向思维找出所有可能被反驳的假设"

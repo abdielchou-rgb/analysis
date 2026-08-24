@@ -1,0 +1,52 @@
+{
+  "generated": "2026-08-01T09:24:32",
+  "total_scanned": 1658,
+  "券商报告": {
+    "count": 46,
+    "avg_chars": 12588.021739130434,
+    "avg_judgment_density": 1.4843478260869563,
+    "avg_counter_density": 0.12021739130434782
+  },
+  "深度报告": {
+    "count": 35,
+    "avg_chars": 14693.914285714285,
+    "avg_judgment_density": 0.3279999999999999,
+    "avg_counter_density": 0.021714285714285714
+  },
+  "行业框架": {
+    "count": 89,
+    "avg_chars": 7826.61797752809,
+    "avg_judgment_density": 1.319887640449438,
+    "avg_counter_density": 0.13000000000000003
+  },
+  "估值模型": {
+    "count": 459,
+    "avg_chars": 7434.132897603486,
+    "avg_judgment_density": 1.0758169934640522,
+    "avg_counter_density": 0.044400871459694985
+  },
+  "回测基线": {
+    "count": 992,
+    "avg_chars": 12258.62802419355,
+    "avg_judgment_density": 2.6263407258064495,
+    "avg_counter_density": 0.20800403225806474
+  },
+  "Excel": {
+    "count": 1,
+    "avg_chars": 1282.0,
+    "avg_judgment_density": 0.0,
+    "avg_counter_density": 0.0
+  },
+  "宏观方法": {
+    "count": 36,
+    "avg_chars": 11515.361111111111,
+    "avg_judgment_density": 1.6775,
+    "avg_counter_density": 0.23944444444444443
+  },
+  "all": {
+    "avg_chars": 40.771215944077774,
+    "avg_judgment_density": 0.005133831837036728,
+    "avg_counter_density": 0.0004606640682634727,
+    "count": 1658
+  }
+}

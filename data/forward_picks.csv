@@ -1,0 +1,13 @@
+asset,code,direction,target_price,horizon,as_of,conviction,basis
+宁德时代,300750.SZ,bull,320.0,12M,2026-08-03,high,eps_ttm=14.8 x 目标PE 21.6（R55快照）
+比亚迪,002594.SZ,bull,420.0,12M,2026-08-03,high,eps_ttm=18.9 x 目标PE 22.2（R55快照）
+迈瑞医疗,300760.SZ,bull,340.0,12M,2026-08-03,medium,eps_ttm=13.2 x 目标PE 25.8（R55快照）
+美的集团,000333.SZ,bull,82.0,12M,2026-08-03,medium,eps_ttm=6.1 x 目标PE 13.4（R55快照）
+格力电器,000651.SZ,bull,60.0,12M,2026-08-03,medium,eps_ttm=5.8 x 目标PE 10.3（R55快照，低估值修复）
+汇川技术,300124.SZ,bull,86.0,12M,2026-08-03,medium,eps_ttm=2.4 x 目标PE 35.8（R55快照）
+立讯精密,002475.SZ,bull,55.0,12M,2026-08-03,medium,eps_ttm=2.2 x 目标PE 25.0（R55快照）
+海康威视,002415.SZ,bull,42.0,12M,2026-08-03,medium,eps_ttm=1.7 x 目标PE 24.7（R55快照）
+药明康德,603259.SS,bull,75.0,12M,2026-08-03,medium,eps_ttm=0.52USD x 目标PE 20（R55快照）
+韦尔股份,603501.SH,bull,160.0,12M,2026-08-03,medium,eps_ttm=4.1 x 目标PE 39.0（R55快照）
+三一重工,600031.SS,bull,20.0,12M,2026-08-03,medium,eps_ttm=0.8 x 目标PE 25.0（R55快照）
+恒瑞医药,600276.SS,bull,75.0,12M,2026-08-03,medium,eps_ttm=1.35 x 目标PE 55.6（R55快照，创新药景气）

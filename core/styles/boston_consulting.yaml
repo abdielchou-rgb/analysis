@@ -1,0 +1,13 @@
+id: style_boston_consulting
+name: BCG Style (中文适配)
+colors: {primary: "#003366", accent: "#00A3E0"}
+typography: {main_font: "SimSun", heading_font: "SimHei"}
+writing:
+  conclusion_first: true
+  min_judgment_density: 1.6
+  max_sentence_chars: 130
+  forbidden_terms: ["值得注意的是", "不可否认的是"]
+  citation_style: footnote_numbered
+charts:
+  preferred_types: ['bar', 'line', 'scatter']
+  colors: ['#003366', '#00A3E0', '#7EC8E3']

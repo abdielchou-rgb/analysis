@@ -1,0 +1,87 @@
+{
+  "goldman_sachs": {
+    "markers": [
+      "我们判断",
+      "我们的观点",
+      "核心分歧"
+    ],
+    "so_what_depth": 4,
+    "data_density": "high",
+    "pre_burttal": 0.85,
+    "sections": [
+      "核心图表",
+      "投资论点",
+      "关键分歧",
+      "风险",
+      "估值"
+    ]
+  },
+  "mckinsey": {
+    "markers": [
+      "我们认为",
+      "基于我们的分析",
+      "关键的发现是"
+    ],
+    "so_what_depth": 5,
+    "data_density": "very_high",
+    "pre_burttal": 0.9,
+    "sections": [
+      "执行摘要",
+      "核心发现",
+      "分析框架",
+      "数据支撑",
+      "建议方案"
+    ]
+  },
+  "cicc": {
+    "markers": [
+      "我们判断",
+      "我们认为",
+      "投资建议"
+    ],
+    "so_what_depth": 3,
+    "data_density": "high",
+    "pre_burttal": 0.75,
+    "sections": [
+      "投资要点",
+      "公司概况",
+      "行业分析",
+      "核心竞争力",
+      "财务分析",
+      "估值"
+    ]
+  },
+  "bcg": {
+    "markers": [
+      "我们的研究发现",
+      "市场洞察",
+      "战略启示"
+    ],
+    "so_what_depth": 5,
+    "data_density": "very_high",
+    "pre_burttal": 0.85,
+    "sections": [
+      "执行摘要",
+      "市场趋势",
+      "竞争动态",
+      "战略选择"
+    ]
+  },
+  "morgan_stanley": {
+    "markers": [
+      "我们超配",
+      "我们的观点",
+      "关键催化剂"
+    ],
+    "so_what_depth": 4,
+    "data_density": "high",
+    "pre_burttal": 0.8,
+    "sections": [
+      "投资论点",
+      "行业背景",
+      "公司分析",
+      "财务预测",
+      "估值"
+    ]
+  }
+}

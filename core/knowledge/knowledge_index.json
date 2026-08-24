@@ -1,0 +1,12 @@
+{
+  "valuation_baselines": {
+    "source": "data/基线/估值模型",
+    "desc": "基于130+估值模型的行业参数基线",
+    "usage": "compute引擎默认参数、IronGate数据合理性检查"
+  },
+  "enhanced_style_profiles": {
+    "source": "data/基线/回测基线库",
+    "desc": "基于96份机构报告的风格指纹",
+    "usage": "SectionWriter系统提示注入、IronGate风格合规检查"
+  }
+}

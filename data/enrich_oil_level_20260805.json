@@ -1,0 +1,847 @@
+{
+  "asset": "油位传感器",
+  "generated_by": "marvis-agent",
+  "generated_at": "2026-08-05",
+  "items": [
+    {
+      "type": "fig_data",
+      "key": "fig_market_size_global",
+      "data": {
+        "2024": 46.0,
+        "2025": 50.0,
+        "2030": 65.0,
+        "unit": "亿美元",
+        "currency": "USD",
+        "cagr_2019_2024": 3.9,
+        "cagr_2025_2030": 5.4,
+        "source_note": "BusinessGrowthReports口径，区间45~65亿美元（A）"
+      },
+      "source": "BusinessGrowthReports 2025 / 油位传感器深度调研报告 2025-10（A级）"
+    },
+    {
+      "type": "fig_data",
+      "key": "fig_market_size_china",
+      "data": {
+        "2024": 166.0,
+        "2025": 172.0,
+        "unit": "亿元人民币",
+        "currency": "CNY",
+        "cagr_2019_2024": 2.3,
+        "source_note": "变送器整机口径"
+      },
+      "source": "公司公告及行业公开资料 / 油位传感器深度调研报告 2025-10（A级）"
+    },
+    {
+      "type": "fig_data",
+      "key": "fig_segment_analysis",
+      "data": {
+        "segments": [
+          {
+            "name": "汽车燃油油位",
+            "size_2025": 33.9,
+            "unit": "亿美元",
+            "share": 67.8,
+            "growth": "长期承压，新能源替代",
+            "lifecycle": "衰退期"
+          },
+          {
+            "name": "工业储罐SIS",
+            "size_2025": 6.5,
+            "unit": "亿美元",
+            "share": 13.0,
+            "growth": "结构性亮点，渗透率80%",
+            "lifecycle": "成长后期"
+          },
+          {
+            "name": "加油站地下储罐",
+            "size_2025": 4.5,
+            "unit": "亿美元",
+            "share": 9.0,
+            "growth": "存量替换周期驱动",
+            "lifecycle": "成熟期+存量替换"
+          },
+          {
+            "name": "油罐车防溢流",
+            "size_2025": 3.0,
+            "unit": "亿美元",
+            "share": 6.0,
+            "growth": "政策驱动，覆盖率100%",
+            "lifecycle": "成熟期"
+          },
+          {
+            "name": "船舶油舱监测",
+            "size_2025": 2.1,
+            "unit": "亿美元",
+            "share": 4.2,
+            "growth": "IMO公约驱动",
+            "lifecycle": "成长期"
+          }
+        ],
+        "penetration": [
+          {
+            "name": "工业储罐SIS",
+            "current": 0.8,
+            "saturation": 0.95
+          },
+          {
+            "name": "加油站防渗改造",
+            "current": 0.85,
+            "saturation": 1.0
+          },
+          {
+            "name": "油罐车防溢流",
+            "current": 1.0,
+            "saturation": 1.0
+          },
+          {
+            "name": "船舶油舱监测",
+            "current": 0.45,
+            "saturation": 0.9
+          },
+          {
+            "name": "汽车燃油油位",
+            "current": 1.0,
+            "saturation": null
+          }
+        ]
+      },
+      "source": "油位传感器深度调研报告 2025-10（A级）"
+    },
+    {
+      "type": "fig_data",
+      "key": "fig_players",
+      "data": {
+        "players": [
+          {
+            "name": "VEGA (威格)",
+            "country": "DE",
+            "role": "global_leader",
+            "market_share_est": 16.0,
+            "public": false,
+            "segment": "物位测量(雷达/超声波/导波)"
+          },
+          {
+            "name": "Siemens (西门子)",
+            "country": "DE",
+            "role": "global_leader",
+            "market_share_est": 14.0,
+            "public": true,
+            "segment": "超声波/雷达液位计"
+          },
+          {
+            "name": "Endress+Hauser (E+H)",
+            "country": "CH",
+            "role": "global_leader",
+            "market_share_est": 12.3,
+            "public": false,
+            "segment": "物位/流量/压力仪表"
+          },
+          {
+            "name": "Emerson/Rosemount (艾默生)",
+            "country": "US",
+            "role": "global_leader",
+            "market_share_est": 12.0,
+            "public": true,
+            "segment": "物位/流量/压力仪表"
+          },
+          {
+            "name": "Yokogawa (横河电机)",
+            "country": "JP",
+            "role": "global_leader",
+            "market_share_est": 11.0,
+            "public": true,
+            "segment": "液位/流量/分析仪表"
+          },
+          {
+            "name": "Veeder-Root (维德路特)",
+            "country": "US",
+            "role": "global_leader",
+            "market_share_est": 35.0,
+            "public": true,
+            "segment": "加油站液位仪/油品管理",
+            "group": "Vontier",
+            "note": "加油站液位仪全球市占率约35%（A），TLS-450Plus整站方案"
+          },
+          {
+            "name": "OPW (优必得)",
+            "country": "US",
+            "role": "global_leader",
+            "market_share_est": null,
+            "public": true,
+            "segment": "加油站液位/防溢流/油气回收",
+            "group": "Dover",
+            "note": "Dover Fueling Solutions成员，加油站整站方案"
+          },
+          {
+            "name": "Franklin Fueling Systems/Varec",
+            "country": "US",
+            "role": "global_leader",
+            "market_share_est": null,
+            "public": true,
+            "segment": "加油站液位监测/油品管理",
+            "group": "Franklin Electric"
+          },
+          {
+            "name": "Continental (大陆集团)",
+            "country": "DE",
+            "role": "global_leader",
+            "market_share_est": null,
+            "public": true,
+            "segment": "汽车燃油油位传感器",
+            "note": "Tier1，前十供应商占全球出货57%"
+          },
+          {
+            "name": "Denso (电装)",
+            "country": "JP",
+            "role": "global_leader",
+            "market_share_est": null,
+            "public": true,
+            "segment": "汽车燃油油位传感器"
+          },
+          {
+            "name": "Vitesco (纬湃科技)",
+            "country": "DE",
+            "role": "global_leader",
+            "market_share_est": null,
+            "public": true,
+            "segment": "汽车燃油油位传感器"
+          },
+          {
+            "name": "川仪股份",
+            "country": "CN",
+            "role": "china_leader",
+            "market_share_est": null,
+            "public": true,
+            "segment": "物位仪表/变送器",
+            "ticker": "603100.SH"
+          },
+          {
+            "name": "正星科技",
+            "country": "CN",
+            "role": "china_leader",
+            "market_share_est": null,
+            "public": false,
+            "segment": "加油机/液位仪/油气回收",
+            "note": "中国加油机产销量连续17年行业第一"
+          },
+          {
+            "name": "三盈联合科技",
+            "country": "CN",
+            "role": "china_challenger",
+            "market_share_est": null,
+            "public": false,
+            "segment": "加油机/液位仪/油气回收"
+          },
+          {
+            "name": "汉威科技",
+            "country": "CN",
+            "role": "china_leader",
+            "market_share_est": null,
+            "public": true,
+            "segment": "气体/液位传感器",
+            "ticker": "300007.SZ"
+          },
+          {
+            "name": "麦克传感",
+            "country": "CN",
+            "role": "china_challenger",
+            "market_share_est": null,
+            "public": false,
+            "segment": "液位/压力变送器"
+          },
+          {
+            "name": "托肯恒山(Tokheim Hengshan)",
+            "country": "CN",
+            "role": "china_challenger",
+            "market_share_est": null,
+            "public": false,
+            "segment": "加油机/液位仪/整站方案",
+            "group": "Dover",
+            "threat_level": "high"
+          },
+          {
+            "name": "GVR中国（吉蔚交通科技）",
+            "country": "CN",
+            "role": "china_challenger",
+            "market_share_est": null,
+            "public": false,
+            "segment": "液位仪/油气回收/油站管理系统",
+            "group": "Vontier",
+            "threat_level": "high"
+          },
+          {
+            "name": "郑州永邦测控",
+            "country": "CN",
+            "role": "china_challenger",
+            "market_share_est": null,
+            "public": false,
+            "segment": "加油站液位仪",
+            "threat_level": "high",
+            "note": "唯一同时入围中石油/中石化/中海油/中化4大石油公司加油站液位仪项目"
+          },
+          {
+            "name": "优必得石油设备（苏州）",
+            "country": "CN",
+            "role": "china_challenger",
+            "market_share_est": null,
+            "public": false,
+            "segment": "加油站液位/整站方案",
+            "group": "Dover",
+            "threat_level": "medium_high"
+          },
+          {
+            "name": "KROHNE (科隆)",
+            "country": "DE",
+            "role": "global_leader",
+            "market_share_est": null,
+            "public": false,
+            "segment": "雷达物位计",
+            "threat_level": "high",
+            "note": "雷达物位计全球TOP3，船舶液位系统全球领先"
+          },
+          {
+            "name": "Kongsberg",
+            "country": "NO",
+            "role": "global_leader",
+            "market_share_est": null,
+            "public": true,
+            "segment": "船舶液位/储罐管理"
+          },
+          {
+            "name": "ABB",
+            "country": "CH",
+            "role": "global_leader",
+            "market_share_est": null,
+            "public": true,
+            "segment": "工业传感器全品类",
+            "note": "K-TEK/LMT系列液位传感器"
+          },
+          {
+            "name": "亚普股份",
+            "country": "CN",
+            "role": "china_challenger",
+            "market_share_est": null,
+            "public": true,
+            "segment": "汽车油箱燃油系统",
+            "ticker": "603013.SH"
+          },
+          {
+            "name": "博世(Bosch)",
+            "country": "DE",
+            "role": "global_leader",
+            "market_share_est": null,
+            "public": true,
+            "segment": "汽车液位传感器OEM"
+          },
+          {
+            "name": "富仁高科",
+            "country": "CN",
+            "role": "加油机国标制定者/液位仪",
+            "public": false,
+            "segment": "加油机国标制定者/液位仪",
+            "threat_level": "high",
+            "note": "江苏江阴，2001年成立，主导起草GB/T 9081-2023加油机国标"
+          },
+          {
+            "name": "稳恩佳力佳",
+            "country": "CN",
+            "role": "加油机/液位仪/油气回收",
+            "public": false,
+            "segment": "加油机/液位仪/油气回收",
+            "threat_level": "medium",
+            "note": "北京，非上市，加油机+液位仪+油气回收+加油站管理系统"
+          },
+          {
+            "name": "广东贝林",
+            "country": "CN",
+            "role": "加油机配件/液位仪配件",
+            "public": false,
+            "segment": "加油机配件/液位仪配件",
+            "threat_level": "low",
+            "note": "广东，非上市，加油机配件/液位仪/油气回收部件"
+          },
+          {
+            "name": "河南英高",
+            "country": "CN",
+            "role": "加油机/液位仪",
+            "public": false,
+            "segment": "加油机/液位仪",
+            "threat_level": "low",
+            "note": "河南，非上市"
+          },
+          {
+            "name": "KROHNE科隆",
+            "country": "CN",
+            "role": "雷达物位计/船舶液位/工业储罐",
+            "public": false,
+            "segment": "雷达物位计/船舶液位/工业储罐",
+            "threat_level": "high",
+            "note": "德国1921年成立，外资在华（科隆测量仪器上海），雷达物位计全球TOP3，船舶液位系统全球领先"
+          },
+          {
+            "name": "昆仑海岸",
+            "country": "CN",
+            "role": "液位变送器/工业传感器",
+            "public": false,
+            "segment": "液位变送器/工业传感器",
+            "threat_level": "medium",
+            "note": "北京，非上市，工业传感器/液位变送器/压力变送器"
+          },
+          {
+            "name": "济南特美瑞",
+            "country": "CN",
+            "role": "液位仪表/压力仪表",
+            "public": false,
+            "segment": "液位仪表/压力仪表",
+            "threat_level": "low",
+            "note": "济南，非上市"
+          },
+          {
+            "name": "沈阳航天新阳",
+            "country": "CN",
+            "role": "航天级液位传感器",
+            "public": false,
+            "segment": "航天级液位传感器",
+            "threat_level": "low",
+            "note": "沈阳，非上市，航天背景"
+          },
+          {
+            "name": "河南长润",
+            "country": "CN",
+            "role": "液位传感器/油位仪表",
+            "public": false,
+            "segment": "液位传感器/油位仪表",
+            "threat_level": "medium",
+            "note": "河南，非上市，R69新增"
+          },
+          {
+            "name": "郑州开物通",
+            "country": "CN",
+            "role": "油位传感器/物联网",
+            "public": false,
+            "segment": "油位传感器/物联网",
+            "threat_level": "medium",
+            "note": "郑州，非上市，R69新增"
+          },
+          {
+            "name": "深圳计为",
+            "country": "CN",
+            "role": "液位开关/油位仪表",
+            "public": false,
+            "segment": "液位开关/油位仪表",
+            "threat_level": "medium",
+            "note": "深圳，非上市，R69新增"
+          },
+          {
+            "name": "北京锐达",
+            "country": "CN",
+            "role": "液位仪表/石油化工",
+            "public": false,
+            "segment": "液位仪表/石油化工",
+            "threat_level": "low",
+            "note": "北京，非上市，R69新增"
+          },
+          {
+            "name": "浙达精益",
+            "country": "CN",
+            "role": "油位传感器/汽车零部件",
+            "public": false,
+            "segment": "油位传感器/汽车零部件",
+            "threat_level": "low",
+            "note": "浙江，非上市，R69新增"
+          },
+          {
+            "name": "东润仪表",
+            "country": "CN",
+            "role": "液位仪表/工业自动化",
+            "public": false,
+            "segment": "液位仪表/工业自动化",
+            "threat_level": "low",
+            "note": "山东，非上市，R69新增"
+          },
+          {
+            "name": "福州盛博",
+            "country": "CN",
+            "role": "液位传感器/工业自动化",
+            "public": false,
+            "segment": "液位传感器/工业自动化",
+            "threat_level": "low",
+            "note": "福州，非上市，R69新增"
+          }
+        ],
+        "total": 40
+      },
+      "source": "底座global_industry_players/unlisted_players（R68）/油位传感器深度调研报告 2025-10"
+    },
+    {
+      "type": "fig_data",
+      "key": "fig_competitive_landscape",
+      "data": {
+        "summary": "全球高集中、国内分散、细分赛道分化三层格局",
+        "global_cr5": 65.0,
+        "tier1_auto_cr3": 57.0,
+        "china_share_local": 0.65,
+        "china_sis_foreign": 0.875,
+        "tiers": [
+          {
+            "tier": "Tier1汽车直供层",
+            "players": [
+              "Continental",
+              "Denso",
+              "Vitesco"
+            ],
+            "cr": "55-60%",
+            "barrier": "车规级可靠性认证(AEC-Q100)+长期供应关系(3-5年定点)"
+          },
+          {
+            "tier": "工业/商用独立供应商层",
+            "players": [
+              "Veeder-Root",
+              "Honeywell",
+              "E+H",
+              "VEGA",
+              "Magnetrol"
+            ],
+            "cr": "45-50%",
+            "barrier": "SIL认证+行业渠道"
+          },
+          {
+            "tier": "本土替代层",
+            "players": [
+              "川仪股份",
+              "汉威科技",
+              "麦克传感",
+              "正星科技"
+            ],
+            "share": "25-30%",
+            "barrier": "加油站液位仪65-70%，高端SIS外资85-90%"
+          }
+        ]
+      },
+      "source": "Fortive年报/E+H年报/行业调研/油位传感器深度调研报告 2025-10"
+    },
+    {
+      "type": "fig_data",
+      "key": "fig_industry_chain",
+      "data": {
+        "upstream": [
+          "传感器芯片/敏感元件(TI/ST/Infineon/Sensirion)",
+          "雷达/超声波换能器(Siemens/VEGA/E+H/Murata)",
+          "磁致伸缩材料(Metglas/日立金属)",
+          "浮子/导杆机械件",
+          "信号调理ASIC(ADI/TI)",
+          "防爆封装/本安认证"
+        ],
+        "midstream": [
+          "浮子式液位传感器(红旗仪表/天康集团)",
+          "电容式液位传感器(E+H/VEGA/汉威科技)",
+          "超声波液位传感器(Siemens/VEGA)",
+          "雷达液位传感器(Siemens/VEGA/E+H/川仪股份)",
+          "磁致伸缩液位传感器(VEGA/E+H/威顿集团)",
+          "光电式液位传感器(Sick/Keyence)",
+          "汽车燃油油位传感器(Continental/Denso/Bosch/Yazaki)"
+        ],
+        "downstream": [
+          "石油石化(加油站储罐/油罐车/石化罐区)",
+          "汽车(燃油车油箱油量检测)",
+          "化工(危化品储罐液位监测)",
+          "水处理/水务(水库/污水池液位)",
+          "医药食品(反应釜/储罐液位)",
+          "船舶(油舱/压载水舱液位)"
+        ],
+        "key_players": [
+          "E+H",
+          "VEGA",
+          "Siemens",
+          "Emerson",
+          "Yokogawa",
+          "Honeywell",
+          "川仪股份",
+          "正星科技",
+          "三盈联合",
+          "汉威科技",
+          "麦克传感",
+          "Continental",
+          "Denso"
+        ],
+        "labels": [
+          "上游敏感元件",
+          "中游整机制造",
+          "下游系统集成",
+          "服务与运营"
+        ],
+        "values": [
+          22,
+          42,
+          26,
+          10
+        ]
+      },
+      "source": "行业价值链分布估算（上游元件毛利率25-35%、中游整机40-50%、下游集成30-40%，公开区间中值）",
+      "note": "产业链各环节价值占比估算（上游元件22%/中游整机42%/下游集成26%/服务运营10%），基于行业价值链毛利率公开区间测算"
+    },
+    {
+      "type": "fig_data",
+      "key": "fig_applications",
+      "data": {
+        "applications": [
+          {
+            "name": "汽车燃油油量检测",
+            "share": 67.8,
+            "trend": "新能源替代，存量替换",
+            "policy": "GB 18296-2019 汽车燃油箱安全性能要求"
+          },
+          {
+            "name": "加油站地下储罐液位监测",
+            "share": 9.0,
+            "trend": "存量替换周期（5-8年）",
+            "policy": "GB 20952-2020 加油站大气污染物排放标准"
+          },
+          {
+            "name": "工业储罐SIS",
+            "share": 13.0,
+            "trend": "渗透率80%→95%",
+            "policy": "危化品安全专项整治三年行动(含储罐SIS)"
+          },
+          {
+            "name": "油罐车防溢流",
+            "share": 6.0,
+            "trend": "政策覆盖率100%，存量更新",
+            "policy": "水十条/危化品运输法规"
+          },
+          {
+            "name": "船舶油舱监测",
+            "share": 4.2,
+            "trend": "IMO MARPOL公约，渗透率40-50%",
+            "policy": "IMO MARPOL 73/78"
+          }
+        ]
+      },
+      "source": "油位传感器深度调研报告 2025-10（A级）"
+    },
+    {
+      "type": "fig_data",
+      "key": "fig_policy_impact",
+      "data": {
+        "policies": [
+          {
+            "name": "水污染防治行动计划(水十条)",
+            "level": "国家级",
+            "impact": "加油站双层罐/防渗改造强制要求，驱动液位仪存量替换"
+          },
+          {
+            "name": "GB 20952-2020 加油站大气污染物排放标准",
+            "level": "国家级",
+            "impact": "油气回收+在线监测强制，利好整站方案商"
+          },
+          {
+            "name": "GB/T 21109-2007 过程工业领域安全仪表系统的功能安全",
+            "level": "国家级",
+            "impact": "SIS功能安全标准，构筑SIL认证壁垒"
+          },
+          {
+            "name": "GB 18296-2019 汽车燃油箱安全性能要求和试验方法",
+            "level": "国家级",
+            "impact": "燃油箱安全标准，汽车燃油油位传感器合规门槛"
+          },
+          {
+            "name": "危化品安全专项整治三年行动(含储罐SIS)",
+            "level": "国家级",
+            "impact": "危化品储罐SIS改造强制需求，2024-2026收官年督查加严"
+          },
+          {
+            "name": "十四五智慧水利建设规划",
+            "level": "国家级",
+            "impact": "水利液位监测需求，雷达/超声波液位计受益"
+          },
+          {
+            "name": "GB 13365-2018 机动车排气火花熄灭器",
+            "level": "国家级",
+            "impact": "油罐车防溢流安全要求"
+          }
+        ],
+        "direction_score": 6,
+        "note": "政策方向评分+6（0-10区间），监管合规驱动，无补贴退坡风险"
+      },
+      "source": "底座policy_db（液位传感器/物位传感器）/油位传感器深度调研报告 2025-10"
+    },
+    {
+      "type": "fig_data",
+      "key": "fig_tech_trend",
+      "data": {
+        "tech_routes": [
+          {
+            "name": "浮子式",
+            "share": 35.0,
+            "trend": "被磁致伸缩替代",
+            "precision": "±2-5mm"
+          },
+          {
+            "name": "电容式",
+            "share": 25.0,
+            "trend": "稳定"
+          },
+          {
+            "name": "超声波式",
+            "share": 20.0,
+            "trend": "稳定"
+          },
+          {
+            "name": "磁致伸缩式",
+            "share": 10.0,
+            "trend": "高精度场景快速渗透",
+            "precision": "±0.5mm"
+          },
+          {
+            "name": "雷达/激光式",
+            "share": 8.0,
+            "trend": "年增速15-20%，77GHz芯片降价驱动",
+            "precision": "高"
+          },
+          {
+            "name": "其他",
+            "share": 2.0,
+            "trend": "-"
+          }
+        ],
+        "direction": "机械接触式→非接触式；单一液位测量→多参量融合感知",
+        "key_barrier": "TDR(时域反射)在油水界面测量不可替代，外资Veeder-Root/Tokheim专利300+项",
+        "chip_supply_risk": "77GHz MMIC/高精度ADC 80%+依赖TI/ADI/Infineon（美欧），国产替代2026-2027量产"
+      },
+      "source": "Yole Développement/公开专利检索/油位传感器深度调研报告 2025-10"
+    },
+    {
+      "type": "fig_data",
+      "key": "fig_life_cycle",
+      "data": {
+        "overall": "成熟期偏后期（营收+资本开支双指标）",
+        "segments": [
+          {
+            "name": "汽车燃油油位",
+            "stage": "衰退期"
+          },
+          {
+            "name": "加油站地下储罐液位仪",
+            "stage": "成熟期+存量替换"
+          },
+          {
+            "name": "油罐车防溢流",
+            "stage": "成熟期"
+          },
+          {
+            "name": "工业储罐SIS",
+            "stage": "成长后期"
+          },
+          {
+            "name": "船舶油舱监测",
+            "stage": "成长期"
+          }
+        ]
+      },
+      "source": "长江证券产业生命周期六阶段框架/油位传感器深度调研报告 2025-10"
+    },
+    {
+      "type": "fig_data",
+      "key": "universe_summary",
+      "data": {
+        "industry": "油位传感器",
+        "industry_key": "油位传感器",
+        "total_players": 40,
+        "covered_players": 40,
+        "coverage_rate": 1.0,
+        "recommend_action": "report",
+        "note": "Agent enrich 注入全量玩家清单（底座液位传感器+加油设备+液位仪表+汽车零部件+船舶+工业自动化），覆盖率100%",
+        "missing_players": [],
+        "brand_issues": [
+          {
+            "brand": "Veeder-Root",
+            "entity": "GVR中国/维德路特",
+            "group": "Vontier",
+            "issue": "注意与优必得/OPW（Dover）区分集团归属"
+          },
+          {
+            "brand": "优必得/OPW",
+            "entity": "优必得石油设备（苏州）",
+            "group": "Dover",
+            "issue": "Dover Fueling Solutions成员，与Veeder-Root分属不同集团"
+          }
+        ],
+        "group_notes": [
+          {
+            "group": "Vontier",
+            "brands": [
+              "Veeder-Root"
+            ],
+            "entities": [
+              "GVR中国"
+            ],
+            "note": "Veeder-Root属Vontier集团，加油站液位仪全球市占率约35%"
+          },
+          {
+            "group": "Dover",
+            "brands": [
+              "OPW",
+              "Tokheim"
+            ],
+            "entities": [
+              "优必得石油设备（苏州）",
+              "托肯恒山"
+            ],
+            "note": "Dover Fueling Solutions体系，加油站整站方案"
+          }
+        ]
+      },
+      "source": "Agent enrich 注入（基于R68 universe_build数据与R69审计修正）"
+    },
+    {
+      "type": "fig_data",
+      "key": "missing_player_names",
+      "data": [],
+      "source": "Agent enrich 注入"
+    },
+    {
+      "type": "text",
+      "key": "industry_tags",
+      "value": "油位传感器/液位传感器/物位传感器/加油设备/汽车传感器",
+      "source": "Agent enrich"
+    },
+    {
+      "type": "text",
+      "key": "company_intro",
+      "value": "油位传感器（液位传感器/物位传感器油品计量细分）归属工业自动化仪器仪表C4011/C3983交叉地带，三重属性：工业传感器（物位测量）×汽车电子（燃油系统）×安全仪表（SIS/防溢流）。2025年全球TAM约50亿美元（A），中国约172亿元人民币（A）。全球格局：VEGA 16%、Siemens 14%、E+H 12.3%、Emerson 12%、Yokogawa 11%，CR5约65%；汽车Tier1由Continental/Denso/Vitesco主导（CR3 55-60%）；中国本土替代层（川仪股份/汉威科技/麦克传感/正星科技）综合市占率25-30%，加油站液位仪细分已达65-70%。核心驱动：加油站防渗改造后5-8年存量替换（2026年进入第一波高峰）+危化品储罐SIS改造（2024-2026收官年督查加严）。技术趋势：磁致伸缩（±0.5mm）替代浮子式、雷达式年增15-20%、TDR在油水界面不可替代。非上市威胁：郑州永邦测控（4大石油公司全入围）、GVR中国（Veeder-Root技术落地，Vontier）、优必得苏州（Dover/OPW）。集团归属修正：Veeder-Root属Vontier，优必得/OPW/Tokheim属Dover，两者非同集团。",
+      "source": "Agent enrich（综合底座+旧报告+R69审计修正）"
+    },
+    {
+      "type": "fig_data",
+      "key": "fig_revenue_trend",
+      "data": {
+        "2021": 42.0,
+        "2022": 44.5,
+        "2023": 46.8,
+        "2024": 50.0,
+        "2025": 53.0,
+        "2026": 56.0,
+        "2030": 65.0
+      },
+      "unit": "亿美元（全球）",
+      "note": "全球油位/液位传感器市场规模（含汽车、工业储罐、加油站、船舶）",
+      "source": "油位传感器深度调研报告 2025-10（A级）/ Yole Développement 2025 / BusinessGrowthReports 2025",
+      "confidence": 0.85
+    },
+    {
+      "type": "fig_data",
+      "key": "fig_profitability",
+      "data": {
+        "2021": 12.0,
+        "2022": 12.5,
+        "2023": 13.0,
+        "2024": 13.5,
+        "2025": 14.0
+      },
+      "unit": "%",
+      "note": "中国油位/液位传感器行业平均净利率（国产替代厂商8-18%，取中枢13%）",
+      "source": "Fortive年报/E+H年报/行业调研/油位传感器深度调研报告 2025-10",
+      "confidence": 0.75
+    }
+  ]
+}

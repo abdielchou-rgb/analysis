@@ -1,0 +1,1085 @@
+"""
+e2e_orchestrator.py V4 - Full integration with all new modules.
+"""
+from __future__ import annotations
+import sys, os, re, json, logging, time, datetime
+from pathlib import Path
+from pipeline.step_manager import StepManager
+
+_ROOT = Path(__file__).resolve().parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
+logger = logging.getLogger("2hao.e2e")
+# === V51 merge: analysis modules (optional, with fallback) ===
+try:
+    from core.argument import ArgumentEngine
+    _HAS_ARGUMENT = True
+except ImportError:
+    _HAS_ARGUMENT = False
+
+try:
+    from core.edit_learn import EditLearner
+    _HAS_EDIT_LEARN = True
+except ImportError:
+    _HAS_EDIT_LEARN = False
+except ImportError:
+    _HAS_ARGUMENT = False
+    logger.warning("V51 import failed: _HAS_ARGUMENT=False, module unavailable")
+try:
+    from core.style import StyleCompiler
+    _HAS_STYLE = True
+except ImportError:
+    _HAS_STYLE = False
+    logger.warning("V51 import failed: _HAS_STYLE=False, module unavailable")
+try:
+    from core.verify import T3Orchestrator
+    _HAS_VERIFY = False  # WIP: not yet wired into pipeline
+except ImportError:
+    _HAS_VERIFY = False
+    logger.warning("V51 import failed: _HAS_VERIFY=False, module unavailable")
+try:
+    from core.scarcity_signals import ScarcitySignalChecker
+    _HAS_SCARCITY = True
+except ImportError:
+    _HAS_SCARCITY = False
+    logger.warning("V51 import failed: _HAS_SCARCITY=False, module unavailable")
+try:
+    from core.cross_validator import CrossValidator
+    _HAS_CROSSVALIDATE = True
+except ImportError:
+    _HAS_CROSSVALIDATE = False
+    logger.warning("V51 import failed: _HAS_CROSSVALIDATE=False, module unavailable")
+try:
+    from export.integrated_exporter import IntegratedExporter
+    _HAS_INTEGRATED_EXPORT = False  # WIP: not yet wired into pipeline
+except ImportError:
+    _HAS_INTEGRATED_EXPORT = False
+    logger.warning("V51 import failed: _HAS_INTEGRATED_EXPORT=False, module unavailable")
+
+# TemporalVerifier + ForwardPicksDB (depend on cognitive_baseline, may fail)
+try:
+    from core.temporal_verifier import TemporalVerifier
+    _HAS_TEMPORAL = False  # WIP: not yet wired into pipeline
+except ImportError:
+    _HAS_TEMPORAL = False
+    logger.warning("V51 import failed: _HAS_TEMPORAL=False, module unavailable")
+try:
+    from core.forward_picks import ForwardPicksDB
+    _HAS_FORWARDPICKS = True
+except ImportError:
+    _HAS_FORWARDPICKS = False
+    logger.warning("V51 import failed: _HAS_FORWARDPICKS=False, module unavailable")
+
+
+
+class E2ENodes:
+    @staticmethod
+    def preflight_check(node_id, context):
+        try:
+            from pipeline.runtime_gate import RuntimeGate
+            gate = RuntimeGate(str(_ROOT))
+            results = gate.check_all()
+            context["runtime_score"] = results["summary"]["runtime_score"]
+            if context["runtime_score"] < 0.5:
+                logger.warning("[PREFLIGHT] runtime score low")
+        except Exception as e:
+            logger.debug("[PREFLIGHT] failed: %s", e)
+        return {"runtime_score": context.get("runtime_score", 0.5)}
+
+
+    @staticmethod
+    def biz_macro_inject(node_id, context):
+        """Inject business model and macro context."""
+        try:
+            from core.tools.business_model_classifier import classify_by_text
+            from core.tools.macro_context import get_current_context
+            from core.data_stager import run_all_stagers, stager_summary
+            from core.web_intel import collect_all, intel_to_context
+            import re
+            asset = context.get("asset", "")
+            report_type = context.get("report_type", "listed_company")
+            # Business model classification
+            biz = classify_by_text(asset, report_type)
+            context["biz_model"] = biz
+            # Macro context
+            ctx = get_current_context()
+            context["macro_ctx"] = ctx
+            # Data staging — extract stock code from asset
+            code_match = re.search(r"(\d{6})", asset)
+            acode = code_match.group(1) if code_match else ""
+            industry = biz.industry_tags[0] if biz and biz.industry_tags else ""
+            stage_ctx = run_all_stagers(asset_code=acode, industry=industry)
+            context["stage_ctx"] = stage_ctx
+            context["stage_summary"] = stager_summary(stage_ctx)
+            logger.info("Stage summary: %s...", context.get("stage_summary", "")[:80])
+            # Web intelligence
+            try:
+                wintel = collect_all(asset=asset, asset_code=acode, industry=industry)
+                wctx = intel_to_context(wintel)
+                context.update(wctx)
+                if wintel.search_count > 0:
+                    logger.info("WebIntel: %d items from %d sources", wintel.search_count, len(wintel.raw_sources))
+            except Exception as e:
+                logger.warning("WebIntel failed: %s", e)
+                context["web_summary"] = ""
+                context["web_search_count"] = 0
+            logger.info("Biz: %s (%s) Macro: %s/%s",
+                     biz.biz_name, biz.biz_type,
+                     ctx.earnings_cycle, ctx.liquidity_cycle)
+        except Exception as e:
+            logger.warning("BizMacro failed: %s", e)
+            context["biz_model"] = None
+            context["macro_ctx"] = None
+        return {"biz_model": context.get("biz_model"),
+                "macro_ctx": context.get("macro_ctx")}
+
+    @staticmethod
+    def hypothesis_check(node_id, context):
+        """T0.5: Check if hypothesis is worth pursuing (block_on_fail via context['force'])"""
+        try:
+            from core.hypothesis_checker import HypothesisChecker
+            hc = HypothesisChecker()
+            force = context.get("force", False)  # --force flag overrides hypothesis gate
+            result = hc.check(
+                asset=context.get("asset", ""),
+                hypothesis=context.get("hypothesis", ""),
+                context=context.get("user_context", ""),
+                block_on_fail=not force  # block if not force
+            )
+            context["hypothesis_result"] = result
+            logger.info("[HYPOTHESIS] score=%.2f pass=%s dir=%s force=%s",
+                       result.score, result.passes_gate, result.suggested_direction, force)
+            if not result.passes_gate and context.get("hypothesis"):
+                if force:
+                    logger.warning("[HYPOTHESIS] Failed gate but --force overrides: %s", result.risks)
+                else:
+                    logger.warning("[HYPOTHESIS] BLOCKED: %s", result.risks)
+                    raise RuntimeError("Hypothesis gate blocked: score=%.2f < threshold, use --force to override" % result.score)
+        except RuntimeError:
+            raise
+        except Exception as e:
+            logger.debug("[HYPOTHESIS] failed: %s", e)
+        return {"hypothesis_result": context.get("hypothesis_result")}
+
+    @staticmethod
+    def data(node_id, context):
+        """data — DataCollectorV5 primary, DataPipeline fallback"""
+        asset = context.get("asset", "")
+        rt = context.get("report_type", "industry_deep")
+        data = None
+        
+        # Primary: DataCollectorV5 (Tavily+yfinance+akshare multi-phase)
+        try:
+            from pipeline.data_collector import DataCollectorV5
+            dc = DataCollectorV5()
+            import os as _os
+            ta_key = _os.environ.get("TAVILY_API_KEY", "")
+            if ta_key:
+                dc._tavily = None  # will re-init with key
+            data = dc.collect(asset, rt, {})
+            if data:
+                logger.info("[DATA] DataCollectorV5: %d keys", len(data))
+        except Exception as e:
+            logger.warning("[DATA] DataCollectorV5 failed: %s", e)
+        
+        # Fallback: DataPipeline
+        if not data or len(data) < 2:
+            try:
+                from pipeline.data_pipeline import DataPipeline
+                dp = DataPipeline()
+                data_fb = dp.collect(asset, rt)
+                if data_fb:
+                    data = {**(data or {}), **data_fb}
+                    logger.info("[DATA] DataPipeline fallback: merged %d keys", len(data_fb))
+            except Exception as e2:
+                logger.warning("[DATA] DataPipeline fallback: %s", e2)
+        
+        if not data:
+            context["degradation_level"] = max(context.get("degradation_level", 0), 2)
+            logger.warning("[L2 DEGRADATION] All data collectors failed")
+            context["collected_data"] = {}
+            return {"collected_data": {}}
+        
+        context["collected_data"] = data
+
+        # Also collect provenance
+        try:
+            from core.data_provenance import DataProvenance
+            dp2 = DataProvenance()
+            dp2.collect(asset=asset, context=str(data)[:3000])
+            context["provenance"] = dp2
+        except Exception as e:
+            logger.debug("Provenance: %s", e)
+        return {"collected_data": data}
+
+    @staticmethod
+    def enrich_data(node_id, context):
+        """数据增强桥接 — 充足性检查 + 本地兜底 + agent补充数据merge
+
+        DataCollectorV5 主采集链路之后执行：
+          1. DataSufficiencyChecker 判定数据充足性
+          2. LocalBackfill 从本地库（financials.db/qlib/历史报告）兜底
+          3. AgentEnricher 把 --enrich-file 的 agent 补充数据 merge 回 collected_data
+          4. 输出 needs_agent / data_enriched 信号（供 scheduler/agent 感知）
+        """
+        try:
+            from pipeline.data_enrichment import enrich_node as _enrich
+            return _enrich(node_id, context)
+        except Exception as e:
+            logger.warning("[ENRICH] 桥接节点失败（不阻断管线）: %s", e)
+            context.setdefault("needs_agent", False)
+            context.setdefault("data_sufficiency", {"sufficient": True, "detail": "enrich skipped"})
+            return {"needs_agent": False, "data_sufficiency": context.get("data_sufficiency")}
+
+    @staticmethod
+    def learning(node_id, context):
+        from pipeline.learning_loop import LearningLoop
+        try:
+            ll = LearningLoop()
+            context["learning_findings"] = ll.before_report(
+                context.get("asset", ""), context.get("report_type", ""))
+        except Exception as e:
+            logger.warning("learning: %s", e)
+            context["learning_findings"] = ""
+        return {"learning_findings": context.get("learning_findings", "")}
+
+
+    @staticmethod
+    def compute(node_id, context):
+        """Compute engine — run DCF, comparable, scenario + knowledge modules"""
+        try:
+            from pipeline.compute_engine import ComputeEngine
+            data = context.get("collected_data", {})
+            engine = ComputeEngine()
+            result = engine.compute(
+                financial_data=data if isinstance(data, dict) else {},
+                report_type=context.get("report_type", "listed_company"),
+            )
+            if result:
+                context["compute_results"] = result
+                logger.info("[COMPUTE] %d modules ran: %s", len(result), list(result.keys())[:5])
+            else:
+                context["compute_results"] = {}
+                logger.warning("[COMPUTE] returned empty")
+        except Exception as e:
+            logger.warning("[COMPUTE] failed: %s", e)
+            context["compute_results"] = {}
+        return {"compute_results": context.get("compute_results", {})}
+
+    @staticmethod
+    def argument_engine(node_id, context):
+        """V51 merge: ArgumentEngine — build logical chain after data collection"""
+        if not _HAS_ARGUMENT:
+            return {"scaffold": None, "note": "ArgumentEngine not available"}
+        try:
+            ae = ArgumentEngine()
+            from core.models import WritingBrief, KnowledgePackage, DataPoint
+            brief = WritingBrief(asset=context.get("asset", ""))
+            kp = KnowledgePackage()
+            # Feed collected data into argument engine (as DataPoint objects)
+            data = context.get("collected_data", {})
+            if isinstance(data, list):
+                data = {"source": "data_pipeline"}
+            if isinstance(data, dict) and data:
+                kp.data_points = [
+                    DataPoint(
+                        name=k,
+                        value=(str(v)[:200] if not isinstance(v, (int, float)) else v),
+                        source="data_pipeline",
+                        confidence="medium",
+                    )
+                    for k, v in list(data.items())[:30]
+                ]
+            scaffold = ae.design(brief, kp)
+            context["scaffold"] = scaffold
+            n_sections = len(scaffold.sections) if hasattr(scaffold, "sections") else len(scaffold.get("sections", []))
+            logger.info("[ARGUMENT] Scaffold built: %d sections", n_sections)
+        except Exception as e:
+            logger.warning("[ARGUMENT] failed: %s", e)
+            context["scaffold"] = None
+        return {"scaffold": context.get("scaffold")}
+
+    @staticmethod
+    def style_compile(node_id, context):
+        """V51 merge: StyleCompiler — apply institution style before gate
+
+        修复（2026-07-31 审计 P0-A）：编译结果必须写回 report_text，
+        否则下游 assemble/validate 读取的仍是未清洗文本，StyleCompiler 形同虚设。
+        """
+        if not _HAS_STYLE:
+            context["report_text"] = context.get("report_text", "")
+            return {"compiled_text": context.get("report_text", ""), "note": "StyleCompiler not available"}
+        try:
+            sc = StyleCompiler()
+            text = context.get("final_text", "") or context.get("report_text", "")
+            style_name = context.get("style", "cicc")
+            result = sc.compile(text, {"style": style_name})
+            compiled = result.compiled if hasattr(result, 'compiled') else result
+            if isinstance(compiled, str) and compiled:
+                # P0-A 修复：原地写回 report_text，让下游消费清洗后的文本
+                context["report_text"] = compiled
+                context["compiled_text"] = compiled
+                logger.info("[STYLE] Compiled with %s style (len=%d→%d)",
+                            style_name, len(text), len(compiled))
+            else:
+                context["compiled_text"] = context.get("report_text", "")
+                logger.warning("[STYLE] compile 返回空，保留原文")
+        except Exception as e:
+            logger.warning("[STYLE] failed: %s", e)
+            context["compiled_text"] = context.get("report_text", "")
+        return {"compiled_text": context.get("compiled_text", "")}
+
+    @staticmethod
+    def scarcity_signals(node_id, context):
+        """V51 merge: ScarcitySignalChecker — detect scarcity signals in data"""
+        if not _HAS_SCARCITY:
+            return {"signals": []}
+        try:
+            ssc = ScarcitySignalChecker()
+            data = context.get("collected_data", {})
+            signals = ssc.check(data)
+            context["scarcity_signals"] = signals
+            logger.info("[SCARCITY] %d signals found", len(signals))
+        except Exception as e:
+            logger.debug("[SCARCITY] %s", e)
+            context["scarcity_signals"] = []
+        return {"scarcity_signals": context.get("scarcity_signals", [])}
+
+    @staticmethod
+    def cross_validate(node_id, context):
+        """CrossValidator — multi-source cross-validation + data credibility (FP2a)"""
+        if not _HAS_CROSSVALIDATE:
+            return {"cross_validation": None, "credibility": None}
+        try:
+            cv = CrossValidator()
+            # Fix: data node writes to "collected_data", not "data"
+            collected = context.get("collected_data", {})
+            financials = collected.get("financials", []) if isinstance(collected, dict) else []
+            sources = collected.get("sources", []) if isinstance(collected, dict) else []
+            tavily_data = collected.get("tavily", []) if isinstance(collected, dict) else []
+            data_points = financials if financials else sources
+            text_data = " ".join(tavily_data[:3]) if tavily_data else ""
+            
+            if data_points:
+                result = cv.validate(data_points, context.get("asset", ""), text_data)
+                cv_result = result if hasattr(result, 'to_dict') else {"passed": True}
+                context["cross_validation"] = cv_result
+                logger.info("[CROSSVALIDATE] Validated %d data points", len(data_points))
+            else:
+                context["cross_validation"] = {"passed": True, "note": "no structured data"}
+            
+            # FP2a: Run data credibility check on whatever data we have
+            try:
+                from core.data_credibility import DataCredibilityEngine
+                dce = DataCredibilityEngine()
+                credibility = dce.evaluate(collected) if hasattr(dce, 'evaluate') else {"score": 0.5}
+                context["data_credibility"] = credibility
+                logger.info("[CREDIBILITY] score=%.2f", credibility.get("score", 0))
+            except Exception as ce:
+                logger.debug("[CREDIBILITY] %s", ce)
+                context["data_credibility"] = {"score": 0.5, "note": "module unavailable"}
+                
+        except Exception as e:
+            logger.debug("[CROSSVALIDATE] %s", e)
+            context["cross_validation"] = {"passed": True, "note": str(e)[:50]}
+            context["data_credibility"] = {"score": 0.5, "note": str(e)[:50]}
+        return {"cross_validation": context.get("cross_validation"), "credibility": context.get("data_credibility")}
+
+    @staticmethod
+    def charts(node_id, context):
+        data = context.get("collected_data", {})
+        if isinstance(data, list):
+            data = {"news": data}
+        elif not isinstance(data, dict):
+            data = {}
+        try:
+            from pipeline.chart_pipeline import ChartPipeline
+            cp = ChartPipeline(context.get("report_type", "industry_deep"),
+                             context.get("style", "cicc"))
+            paths = cp.generate_all(data)
+            context["chart_paths"] = paths
+        except Exception as e:
+            logger.error("charts: %s", e)
+            context["chart_paths"] = {}
+        # FP7b L1 degradation: if charts partially fail, report degradation level
+        chart_count = len(context.get("chart_paths", {}))
+        expected = 5  # minimum expected charts
+        if chart_count < expected:
+            context["degradation_level"] = max(
+                context.get("degradation_level", 0),
+                1  # L1: visual degradation
+            )
+            logger.info("[L1 DEGRADATION] Charts: %d/%d generated (using placeholders)",
+                       chart_count, expected)
+        return {"chart_paths": context.get("chart_paths", {})}
+
+    @staticmethod
+    def write_sections(node_id, context):
+        from pipeline.section_writer import SectionWriter
+        sw = SectionWriter(context.get("report_type", "industry_deep"),
+                          context.get("style", "cicc"))
+        # Get scaffold from ArgumentEngine (V82 merge)
+        scaffold = context.get("scaffold", None)
+        try:
+            text = sw.write(
+                asset=context.get("asset", ""),
+                data_context=context.get("collected_data", {}),
+                chart_paths=context.get("chart_paths", {}),
+                gate_feedback=context.get("gate_feedback", ""),
+                learning_findings=context.get("learning_findings", ""),
+                scaffold=scaffold,
+            )
+        except RuntimeError as e:
+            # L3: LLM 不可用 → 输出明确信号，由 agent 兜底补写重跑
+            msg = str(e)
+            if "LLM" in msg or "empty output" in msg or "call failed" in msg:
+                context["llm_degradation_level"] = 3
+                context["needs_agent"] = True
+                context["llm_gap"] = f"LLM 调用失败（单provider DeepSeek 不可用）: {msg}"
+                logger.warning("[L3] LLM 不可用，needs_agent=True: %s", msg)
+                # 抛出给 AgentGraph 标记节点失败，但保留信号
+                raise
+            raise
+        context["report_text"] = text
+        return {"report_text": text}
+
+    @staticmethod
+    def template_enforce(node_id, context):
+        """Run TemplateEnforcer consistency check after writing and before gate.
+
+        R3（2026-07-31 Marvis 审计）：BLOCK 级 violations（如编号冲突）必须真正阻断管线。
+        检测到 [BLOCK] 时设置 context['template_blocked']，validate 节点据此阻断导出。
+        """
+        try:
+            from pipeline.template_enforcer import TemplateEnforcer
+            text = context.get("final_text", "") or context.get("report_text", "")
+            if text:
+                te = TemplateEnforcer()
+                result = te.enforce(text, report_type=context.get("report_type", "industry_deep"))
+                context["template_result"] = result
+                # 取 BLOCK 级 violations（enforce 返回 violations 列表，不是 issues）
+                violations = result.get("violations", [])
+                block_violations = [v for v in violations if v.startswith('[BLOCK]')]
+                if block_violations:
+                    context["template_blocked"] = True
+                    context["template_block_reasons"] = block_violations
+                    logger.warning("[TEMPLATE] %d BLOCK violations: %s",
+                                   len(block_violations), block_violations[:2])
+                elif result.get("pass", True):
+                    logger.info("[TEMPLATE] All template checks passed")
+                else:
+                    logger.warning("[TEMPLATE] %d non-blocking issues", len(violations))
+        except Exception as e:
+            logger.debug("[TEMPLATE] failed: %s", e)
+        return {"template_result": context.get("template_result", {})}
+
+    @staticmethod
+    def assemble(node_id, context):
+        text = context.get("report_text", "")
+        chart_paths = context.get("chart_paths", {})
+        from pipeline.chart_assembler import ChartAssembler
+        ca = ChartAssembler(context.get("report_type", "industry_deep"),
+                          context.get("style", "cicc"))
+        final = ca.inject_charts_postprocess(text, chart_paths)
+
+        # Inject provenance section
+        provenance = context.get("provenance")
+        if provenance:
+            try:
+                final = provenance.inject_into_report(final)
+            except Exception:
+                pass
+
+        # Inject agent 补充数据来源附录（FP2 合规：agent 兜底数据必须有来源可追溯）
+        enrich = context.get("collected_data", {}).get("enrichment", {}) if isinstance(
+            context.get("collected_data", {}), dict) else {}
+        if enrich and enrich.get("accepted_count"):
+            try:
+                reg = enrich.get("source_registry", {})
+                lines = ["\n\n<!-- AGENT_ENRICH_SOURCES -->",
+                         "### 数据补充来源（agent 兜底）",
+                         "以下数据点由 agent 联网/本地补充，均标注来源："]
+                for key, meta in (reg or {}).items():
+                    src = meta.get("source", "未知")
+                    conf = meta.get("confidence", 0.0)
+                    unit = meta.get("unit", "")
+                    lines.append(
+                        f"- **{key}**: 来源={src}; 置信度={conf:.1f}"
+                        + (f"; 单位={unit}" if unit else ""))
+                lines.append("<!-- /AGENT_ENRICH_SOURCES -->")
+                if not final.rstrip().endswith("</body>"):
+                    final = final.rstrip() + "\n\n" + "\n".join(lines)
+            except Exception as e:
+                logger.debug("[ASSEMBLE] enrich source appendix: %s", e)
+
+        context["final_text"] = final
+        return {"final_text": final}
+
+    @staticmethod
+    def validate(node_id, context):
+        text = context.get("final_text", "") or context.get("report_text", "")
+        tmp_path = os.path.join(context.get("output_dir", str(_ROOT / "output")),
+                               "_gate_check.md")
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            f.write(text)
+        
+        from pipeline.iron_gate import IronGate
+        dl = context.get("degradation_level", 0)
+        ig = IronGate(tmp_path, report_type=context.get("report_type", "industry_deep"),
+                     style=context.get("style", "cicc"),
+                     degradation_level=dl)
+
+        # FP7b: Degradation-aware handling（P2-I 2026-07-31 审计修复）
+        # 不再全局降低 min_score —— 数据质量越差，门禁不应越松。
+        # 降级交给 IronGate 内部的 _allow_placeholder_degradation 精细处理：
+        #   只放宽"丰富度/图表/风格"类检查，数据一致性/数值合理性 hard_fail 永不降级。
+        dl = context.get("degradation_level", 0)
+        if dl >= 1:
+            logger.info("[L%d DEGRADATION] Gate 阈值保持严格，仅放宽丰富度类检查", dl)
+        if dl >= 3:
+            logger.warning("[L3 DEGRADATION] Core LLM unavailable — output blocked")
+            context["gate_result"] = {"passed": False, "score": 0.0, "failures": ["L3: Core LLM unavailable"]}
+            return {"gate_result": context["gate_result"]}
+        
+        result = ig.run_all()
+        context["gate_result"] = result
+        context["ig_report"] = result.to_dict()
+
+        # R3（2026-07-31 Marvis 审计）：template_enforce 的 BLOCK 级 violation（编号冲突）
+        # 必须在 Gate 层面阻断，不能只记录 warning。
+        if context.get("template_blocked"):
+            reasons = context.get("template_block_reasons", [])
+            result.passed = False
+            result.overall_score = min(result.overall_score, 0.4)
+            result.failures = (result.failures or []) + \
+                [f"[BLOCK] template: {r}" for r in reasons[:3]]
+            context["gate_result"] = result
+            logger.warning("[TEMPLATE-BLOCK] %s", reasons[:2])
+
+        msg = "Gate=%s score=%.2f" % ("PASS" if result.passed else "FAIL", result.overall_score)
+        if dl > 0:
+            msg += " [L%d degradation]" % dl
+        logger.info(msg)
+        return {"gate_result": result.to_dict() if hasattr(result, 'to_dict') else {}}
+    @staticmethod
+    def compliance_check(node_id, context):
+        """Run ComplianceChecklist after IronGate passes (advisory, non-blocking)."""
+        try:
+            from core.enforcer.checklist import ComplianceChecklist
+            text = context.get("final_text", "") or context.get("report_text", "")
+            if text:
+                cl = ComplianceChecklist()
+                result = cl.run(text, sac_id=context.get("report_type", ""))
+                passed = result.get("passed", False)
+                items = result.get("items", [])
+                n_failed = sum(1 for i in items if not i.get("passed", False))
+                logger.info("[COMPLIANCE] %d/%d checks passed", len(items)-n_failed, len(items))
+                if not passed:
+                    failed_items = [i for i in items if not i.get("passed", False)]
+                    logger.warning("[COMPLIANCE] %d checks failed: %s",
+                                  n_failed, [i.get("name", "") for i in failed_items[:5]])
+                context["compliance_result"] = result
+        except Exception as e:
+            logger.debug("[COMPLIANCE] failed: %s", e)
+        return {"compliance_result": context.get("compliance_result", {})}
+
+    @staticmethod
+    def export_docx(node_id, context):
+        text = context.get("final_text", "") or context.get("report_text", "")
+        gate = context.get("gate_result", {})
+        if not gate.get("passed", False):
+            logger.warning("[EXPORT] gate blocked")
+            context["_docx_path"] = ""
+            return {"_docx_path": ""}
+        output_dir = Path(context.get("output_dir", str(_ROOT / "output")))
+        output_dir.mkdir(parents=True, exist_ok=True)
+        asset = context.get("asset", "report")
+        style = context.get("style", "cicc")
+        docx_path = str(output_dir / f"{asset}_{style}.docx")
+        # FP7d: Gate 已通过 → 先预写管线指纹，再进入 export_report 校验，
+        # 避免指纹在 PASSED 分支才写导致导出被 PipelineFingerprint 误拦截。
+        try:
+            import json as _json
+            import datetime as _dt
+            safe = re.sub(r"[^\w一-鿿]+", "_", str(asset)).strip("_") or "asset"
+            fp_path = output_dir / f"{safe}_pipeline_fingerprint.json"
+            if not fp_path.exists():
+                fp_path.write_text(_json.dumps({
+                    "asset": asset,
+                    "report_type": context.get("report_type"),
+                    "style": style,
+                    "timestamp": _dt.datetime.now().isoformat(),
+                    "attempt": context.get("attempt", 0),
+                    "gate_score": gate.get("score", 0),
+                    "gate_passed": True,
+                    "via_pipeline": True,
+                    "pipeline": "E2EOrchestratorV2",
+                }, ensure_ascii=False, indent=2), encoding="utf-8")
+        except Exception as e:
+            logger.warning("[FINGERPRINT] 预写失败: %s", e)
+        try:
+            from export.report_gate import export_report
+            # Inject provenance data into text before export
+            provenance = context.get("provenance")
+            enriched_text = text
+            if provenance:
+                try:
+                    prov_summary = provenance.summary()
+                    if prov_summary:
+                        enriched_text = text + "\n\n<!-- DATA_PROVENANCE: " + str(prov_summary)[:2000] + " -->"
+                except Exception:
+                    pass
+            exported = export_report(enriched_text, docx_path,
+                                   report_type=context.get("report_type"),
+                                   style=style, title=asset)
+            context["_docx_path"] = exported
+        except Exception as e:
+            logger.warning("[EXPORT] failed: %s", e)
+            context["_docx_path"] = ""
+        return {"_docx_path": context.get("_docx_path", "")}
+
+    @staticmethod
+    def record_results(node_id, context):
+        try:
+            from pipeline.learning_loop import LearningLoop
+            gate = context.get("gate_result", {})
+            ll = LearningLoop()
+            ll.after_report(context.get("asset", ""), context.get("report_type"), {
+                "iron_gate": gate.get("score", 0),
+                "passed": gate.get("passed", False),
+                "failures": [],
+                "attempt": context.get("attempt", 0),
+            })
+
+            # Extract and register bold calls
+            text = context.get("final_text", "") or context.get("report_text", "")
+            if text:
+                from core.bold_call_extractor import BoldCallExtractor
+                from core.tools.track_record import TrackRecordManager
+                bce = BoldCallExtractor()
+                tm = TrackRecordManager()
+                calls = bce.extract_and_register(
+                    text, context.get("asset", ""),
+                    context.get("report_type"),
+                    tm=tm
+                )
+                logger.info("[RECORD] %d bold calls registered", len(calls))
+
+                # ForwardPicksDB: persistent prediction record (V82 merge)
+                if _HAS_FORWARDPICKS and calls:
+                    try:
+                        from core.forward_picks import ForwardPicksDB
+                        fdb = ForwardPicksDB()
+                        asset_id = context.get("asset_id", {})
+                        for c in calls:
+                            fdb.record_prediction(
+                                asset=asset_id.get("name", context.get("asset", "")),
+                                prediction=c.get("bold_call", str(c)[:200]),
+                                confidence=c.get("confidence", 0.5),
+                                direction=c.get("direction", "neutral"),
+                            )
+                        logger.info("[FORWARDPICKS] %d predictions recorded", len(calls))
+                    except Exception as e:
+                        logger.debug("[FORWARDPICKS] failed: %s", e)
+            
+            # FP5: Validate expired predictions against market data
+            try:
+                from core.prediction_validator import validate_expired_predictions
+                pv_result = validate_expired_predictions()
+                if pv_result:
+                    context["prediction_validation"] = str(pv_result)[:500]
+                    logger.info("[RECORD] Prediction validation: %s", str(pv_result)[:80])
+            except Exception as e:
+                logger.debug("[RECORD] PredictionValidator: %s", e)
+            
+            # FP5: Wire EditClassifier — absorb edits from case DB
+            try:
+                from core.edit import EditClassifier
+                text = context.get("final_text", "") or context.get("report_text", "")
+                edit_type = EditClassifier.classify(text) if hasattr(EditClassifier, 'classify') else None
+                if edit_type:
+                    context["edit_type"] = str(edit_type)
+                    logger.info("[RECORD] Edit classified as: %s", edit_type)
+            except Exception as e:
+                logger.debug("[RECORD] EditClassifier: %s", e)
+            
+            # FP5: Wire ReportCalibrator — auto-fix gate failures
+            gate_passed = gate.get("passed", False)
+            gate_score = gate.get("score", 0) if isinstance(gate.get("score"), (int,float)) else 0
+            if not gate_passed and gate_score < 0.7:
+                try:
+                    from core.report_calibrator import ReportCalibrator
+                    rc = ReportCalibrator()
+                    if hasattr(rc, 'analyze'):
+                        fix_plan = rc.analyze(
+                            failures=gate.get("failures", []),
+                            report_type=context.get("report_type", ""),
+                        )
+                        if fix_plan:
+                            context["calibration_plan"] = fix_plan
+                            logger.info("[RECORD] Calibration plan: %d fixes", len(fix_plan))
+                except Exception as e:
+                    logger.debug("[RECORD] CalibrationPlan: %s", e)
+                    
+        except Exception as e:
+            logger.debug("[RECORD] failed: %s", e)
+        return {"_recorded": True}
+
+    @staticmethod
+    def data_feeds(node_id, context):
+        """Run data feeds (RSS/PDF/patents/basics)."""
+        try:
+            from pipeline.data_feeds_node import data_feeds_node
+            return data_feeds_node(node_id, context)
+        except Exception as e:
+            logger.warning("DataFeeds failed: %s", e)
+            return {"feeds_loaded": False}
+
+    @staticmethod
+    def critic_review(node_id, context):
+        """Multi-critic panel after gate passes."""
+        try:
+            from core.tools.critic_panel import critic_panel_node
+            return critic_panel_node(node_id, context)
+        except Exception as e:
+            logger.warning("CriticPanel failed: %s", e)
+            return {"critic_passed": False}
+
+
+class E2EOrchestratorV2:
+    MAX_ATTEMPTS = 3
+
+    def __init__(self, asset, report_type="listed_company", style="cicc",
+                 output_dir=None, hypothesis="", user_context="", force=False,
+                 enrich_file=None):
+        self.asset = asset
+        self.report_type = report_type
+        self.style = style
+        self.output_dir = output_dir or str(_ROOT / "output")
+        self.hypothesis = hypothesis
+        self.user_context = user_context
+        self.force = force
+        self.enrich_file = enrich_file
+        self.asset_id = self._normalize_asset(asset)
+
+    def _normalize_asset(self, raw: str) -> dict:
+        """Return standardized asset identity (IB建议的三字段方案)."""
+        code_match = re.search(r'(\d{6}\.\w{2}|\d{6})', raw)
+        code = code_match.group(1) if code_match else ''
+        name = raw.split()[0] if ' ' in raw else raw
+        return {"name": name, "code": code, "display": raw}
+
+    def _write_pipeline_fingerprint(self, ctx: dict, gate: dict) -> str:
+        """写管线指纹文件 — 证明报告经由完整管线产出。
+
+        export_report 会校验该指纹存在才放行。
+        agent 绕过管线直接生成的报告文件（MD/DOCX）无对应指纹 → GateBlockedError。
+        """
+        import json as _json
+        import datetime as _dt
+        output_dir = Path(ctx.get("output_dir", str(_ROOT / "output")))
+        output_dir.mkdir(parents=True, exist_ok=True)
+        safe = re.sub(r"[^\w一-鿿]+", "_", str(self.asset)).strip("_") or "asset"
+        fp_path = output_dir / f"{safe}_pipeline_fingerprint.json"
+
+        # 收集 StepManager 标记（哪些步骤确实执行了）
+        step_status = {}
+        try:
+            sm = ctx.get("_step_manager")
+            if sm:
+                step_status = sm.get_status()
+        except Exception:
+            pass
+
+        fingerprint = {
+            "asset": self.asset,
+            "asset_id": self.asset_id,
+            "report_type": self.report_type,
+            "style": self.style,
+            "timestamp": _dt.datetime.now().isoformat(),
+            "attempt": ctx.get("attempt", 0),
+            "gate_score": gate.get("score", 0) if isinstance(gate, dict) else 0,
+            "gate_passed": gate.get("passed", False) if isinstance(gate, dict) else False,
+            "steps": step_status,
+            "needs_agent": ctx.get("needs_agent", False),
+            "data_enriched": ctx.get("data_enriched", False),
+            "data_sufficiency": ctx.get("data_sufficiency", {}),
+            # FP7d: 证明经由 E2EOrchestratorV2 完整管线
+            "via_pipeline": True,
+            "pipeline": "E2EOrchestratorV2",
+        }
+        fp_path.write_text(_json.dumps(fingerprint, ensure_ascii=False, indent=2),
+                          encoding="utf-8")
+        logger.info("[FINGERPRINT] 管线指纹已写入: %s", fp_path)
+        # FP6/FP7d: 血缘追踪 — 结构化记录数据从哪来、补了什么、怎么到报告
+        try:
+            self._write_lineage(ctx, gate)
+        except Exception as e:
+            logger.debug("[LINEAGE] 写入失败: %s", e)
+        return str(fp_path)
+
+    def _write_lineage(self, ctx: dict, gate: dict) -> str:
+        """写血缘追踪 lineage.json — 记录报告的数据来源与变换链。
+
+        供 FP6 推理透明审计：能回答"这份报告的数据来自哪些源、
+        agent 补了什么、经过哪些阶段"。
+        """
+        import json as _json
+        output_dir = Path(ctx.get("output_dir", str(_ROOT / "output")))
+        output_dir.mkdir(parents=True, exist_ok=True)
+        safe = re.sub(r"[^\w一-鿿]+", "_", str(self.asset)).strip("_") or "asset"
+        lg_path = output_dir / f"{safe}_lineage.json"
+
+        # 数据源层：从 collected_data 提取
+        data = ctx.get("collected_data", {}) or {}
+        sources = []
+        if isinstance(data, dict):
+            cd = data.get("chart_data", {}) or {}
+            if cd.get("_local_backfill"):
+                sources.append({"kind": "local_backfill",
+                                "detail": cd["_local_backfill"].get("keys", [])})
+            if data.get("enrichment", {}).get("accepted_count"):
+                src_reg = data["enrichment"].get("source_registry", {})
+                for key, meta in (src_reg or {}).items():
+                    sources.append({"kind": "agent_enrich", "key": key,
+                                    "source": meta.get("source", ""),
+                                    "confidence": meta.get("confidence", 0)})
+            if data.get("akshare_financials"):
+                sources.append({"kind": "akshare", "detail": "akshare_financials"})
+            if cd:
+                non_backfill = [k for k in cd if not k.startswith("_")
+                                and k not in ("agent_news",)]
+                if non_backfill:
+                    sources.append({"kind": "data_collector",
+                                    "detail": non_backfill[:10]})
+
+        # enrich/compute/write 各阶段信号
+        lineage = {
+            "asset": self.asset,
+            "report_type": self.report_type,
+            "timestamp": datetime.datetime.now().isoformat(),
+            "stages": [
+                {"stage": "data_collect", "output_keys":
+                 list((data.get("chart_data") or {}).keys())[:15] if isinstance(data, dict) else []},
+                {"stage": "enrich", "needs_agent": ctx.get("needs_agent", False),
+                 "data_enriched": ctx.get("data_enriched", False),
+                 "sufficient": ctx.get("data_sufficiency", {}).get("sufficient")},
+                {"stage": "compute", "has_results":
+                 bool(ctx.get("compute_results"))},
+                {"stage": "write", "llm_provider":
+                 "agent_provider" if ctx.get("llm_degradation_level") == 3 else "deepseek",
+                 "text_len": len(ctx.get("final_text", "") or ctx.get("report_text", ""))},
+                {"stage": "gate", "score":
+                 gate.get("score", 0) if isinstance(gate, dict) else 0,
+                 "passed": gate.get("passed", False) if isinstance(gate, dict) else False},
+            ],
+            "sources": sources,
+            # FP7d: 若 agent 兜底发生，记录兜底性质（数据/LLM）
+            "agent_backfill": {
+                "data_backfilled": bool(ctx.get("data_enriched")),
+                "llm_backfilled": ctx.get("llm_degradation_level") == 3,
+                "backlog_path": ctx.get("backlog_path", ""),
+            },
+        }
+        lg_path.write_text(_json.dumps(lineage, ensure_ascii=False, indent=2),
+                           encoding="utf-8")
+        logger.info("[LINEAGE] 血缘已写入: %s", lg_path)
+        return str(lg_path)
+
+    def _build_context(self):
+        return {
+            "asset": self.asset,
+            "asset_id": self.asset_id,
+            "report_type": self.report_type,
+            "style": self.style,
+            "output_dir": self.output_dir,
+            "hypothesis": self.hypothesis,
+            "user_context": self.user_context,
+            "force": self.force,
+            "enrich_file": self.enrich_file,
+            "runtime_score": 0.5,
+            "hypothesis_result": None,
+            "collected_data": {},
+            "chart_paths": {},
+            "report_text": "",
+            "final_text": "",
+            "learning_findings": "",
+            "gate_feedback": "",
+            "provenance": None,
+            "gate_result": {},
+            "attempt": 0,
+        }
+
+    def run(self):
+        from pipeline.agent_graph import AgentGraph
+        last_error = None
+        last_gate_feedback = ""
+        for attempt in range(self.MAX_ATTEMPTS):
+            logger.info("Attempt %d/%d: %s (%s)", attempt+1, self.MAX_ATTEMPTS,
+                       self.asset, self.report_type)
+            ctx = self._build_context()
+            ctx["attempt"] = attempt
+            # 写改循环：把上一轮 Gate 失败反馈带给本轮写作（FP5 学习闭环）
+            if attempt > 0 and last_gate_feedback:
+                ctx["gate_feedback"] = last_gate_feedback
+                ctx["learning_findings"] = (ctx.get("learning_findings", "")
+                                            + "\n" + last_gate_feedback[:2000])
+                logger.info("[REVISE] Passing Gate feedback to attempt %d: %s",
+                           attempt+1, last_gate_feedback[:100])
+            # StepManager: track pipeline execution with marker files
+            try:
+                output_dir = self.output_dir or "output"
+                sm = StepManager(output_dir)
+                sm.reset()
+                ctx["_step_manager"] = sm
+                sm.mark_start("pipeline")
+            except Exception:
+                pass
+            g = AgentGraph(f"{self.asset} attempt {attempt+1}")
+
+            g.add_node("preflight", E2ENodes.preflight_check, deps=[], desc="runtime health")
+            g.add_node("biz_macro", E2ENodes.biz_macro_inject,
+                      deps=["preflight"], desc="biz model + macro context",
+                      )
+            g.add_node("data_feeds", E2ENodes.data_feeds,
+                      deps=["biz_macro"], desc="RSS/PDF/patent feeds",
+                      )
+            g.add_node("hypothesis", E2ENodes.hypothesis_check, deps=[], desc="hypothesis T0.5")
+            g.add_node("data", E2ENodes.data, deps=[], desc="data + provenance")
+            g.add_node("enrich", E2ENodes.enrich_data,
+                      deps=["data"], desc="data sufficiency + local/agent backfill")
+            g.add_node("scarcity", E2ENodes.scarcity_signals, deps=["enrich"], desc="scarcity signals")
+            g.add_node("cross_validate", E2ENodes.cross_validate, deps=["enrich"], desc="cross validate")
+            g.add_node("argument", E2ENodes.argument_engine, deps=["enrich"], desc="argument engine")
+            g.add_node("learning", E2ENodes.learning, deps=[], desc="learning loop")
+            g.add_node("compute", E2ENodes.compute, deps=["enrich"], desc="compute engine (DCF/comparable/knowledge modules)")
+            g.add_node("charts", E2ENodes.charts, deps=["enrich"], desc="charts")
+            g.add_node("write_sections", E2ENodes.write_sections,
+                      deps=["enrich", "charts", "compute", "learning", "hypothesis", "argument",
+                            "scarcity", "cross_validate"], desc="write")
+            g.add_node("style", E2ENodes.style_compile,
+                      deps=["write_sections", "charts"], desc="style compile")
+            g.add_node("template", E2ENodes.template_enforce,
+                      deps=["style"], desc="template enforcer")
+            g.add_node("assemble", E2ENodes.assemble,
+                      deps=["template", "charts"], desc="assemble")
+            g.add_node("validate", E2ENodes.validate, deps=["assemble"], desc="gate")
+            g.add_node("critic", E2ENodes.critic_review,
+                      deps=["validate"], desc="multi-critic panel")
+            g.add_node("compliance", E2ENodes.compliance_check, deps=["validate", "critic"], desc="compliance")
+            g.add_node("export_docx", E2ENodes.export_docx, deps=["compliance"], desc="export")
+            g.add_node("record_results", E2ENodes.record_results,
+                      deps=["validate"], desc="record + bold calls")
+
+
+            # 注入输出契约
+            contracts = _build_output_contracts()
+            for node_id, contract in contracts.items():
+                if node_id in g._nodes:
+                    g._nodes[node_id]["output_contract"] = contract
+            result = g.run(ctx)
+            # StepManager: mark completion for key pipeline steps
+            try:
+                sm = ctx.get("_step_manager")
+                if sm:
+                    for completed in ["data", "enrich", "charts", "write_sections", "validate"]:
+                        if g._results.get(completed) and g._results[completed].duration_ms > 0:
+                            try: sm.mark_done(completed)
+                            except Exception: pass
+            except Exception:
+                pass
+            # Node profiling
+            for nid, nr in g._results.items():
+                if nr.duration_ms > 1000:
+                    logger.info("  [PROFILE] %s: %.0fms", nid, nr.duration_ms)
+            gate = ctx.get("gate_result", {})
+            ig_passed = gate.get("passed", False)
+            ig_score = gate.get("score", 0)
+
+            if result.passed and ig_passed:
+                logger.info("PASSED (attempt %d, score=%.2f)", attempt+1, ig_score)
+                # FP7d: 管线指纹 —— 证明报告经由完整管线产出
+                # export_report 校验该指纹存在才放行；agent 绕过管线直接生成的文件无指纹 → 阻断
+                try:
+                    self._write_pipeline_fingerprint(ctx, gate)
+                except Exception as e:
+                    logger.warning("[FINGERPRINT] 写入失败: %s", e)
+                return {
+                    "passed": True,
+                    "attempt": attempt+1,
+                    "report_text": ctx.get("final_text", ctx.get("report_text", "")),
+                    "chart_paths": list(ctx.get("chart_paths", {}).values()),
+                    "gate_result": gate,
+                    "docx": ctx.get("_docx_path", ""),
+                    "hypothesis_result": ctx.get("hypothesis_result"),
+                    "runtime_score": ctx.get("runtime_score", 0.5),
+                    # 数据桥接信号（供 scheduler/agent 感知兜底是否发生）
+                    "needs_agent": ctx.get("needs_agent", False),
+                    "data_enriched": ctx.get("data_enriched", False),
+                    "data_sufficiency": ctx.get("data_sufficiency", {}),
+                }
+            last_error = ["Gate blocked"] if result.passed else result.failed_nodes
+            if attempt < self.MAX_ATTEMPTS - 1:
+                # FP5 写改循环：把 Gate 失败明细传给下一轮写作
+                if isinstance(gate, dict) and not gate.get("passed", False):
+                    fails = gate.get("failures", [])
+                    if isinstance(fails, list) and fails:
+                        last_gate_feedback = "上一轮质量门禁未通过，请针对以下问题修订：\n- " + "\n- ".join(str(f)[:120] for f in fails[:5])
+                    elif "score" in gate:
+                        last_gate_feedback = f"上一轮质量门禁 score={gate.get('score',0):.2f}，请提升报告质量。"
+                try:
+                    from pipeline.learning_loop import LearningLoop
+                    LearningLoop().after_report(self.asset, self.report_type, {
+                        "failures": [f"Attempt {attempt+1}: {last_error}"],
+                    })
+                except Exception:
+                    pass
+                time.sleep(2)
+
+        # 全部尝试失败后：如果 L3 LLM 兜底信号存在，返回明确结构供 agent 感知
+        if ctx.get("llm_degradation_level") == 3 or ctx.get("needs_agent") and ctx.get("llm_gap"):
+            return {
+                "passed": False,
+                "attempt": self.MAX_ATTEMPTS,
+                "report_text": "",
+                "status": "needs_agent",
+                "error": "LLM 不可用（单provider DeepSeek）",
+                "needs_agent": True,
+                "llm_degradation_level": 3,
+                "llm_gap": ctx.get("llm_gap", "DeepSeek API 调用失败"),
+                "data_sufficiency": ctx.get("data_sufficiency", {}),
+                "data_enriched": ctx.get("data_enriched", False),
+            }
+        raise RuntimeError(f"E2E failed after {self.MAX_ATTEMPTS} attempts: {last_error}")
+
+
+def _build_output_contracts():
+    contracts = {
+        "preflight": {"runtime_score": {"type": float, "required": True, "severity": "warning"}},
+        "hypothesis": {"hypothesis_result": {"type": type(None), "required": False, "severity": "warning"}},
+        "data": {"collected_data": {"type": dict, "required": True, "severity": "error"}},
+        "scarcity": {"scarcity_signals": {"type": list, "required": False, "severity": "warning"}},
+        "cross_validate": {"cross_validation": {"type": type(None), "required": False, "severity": "warning"}},
+        "compute": {"compute_results": {"type": dict, "required": False, "severity": "warning"}},
+        "argument": {"scaffold": {"type": type(None), "required": False, "severity": "warning"}},
+        "learning": {"learning_findings": {"type": str, "required": False, "severity": "warning"}},
+        "charts": {"chart_paths": {"type": dict, "required": True, "severity": "warning"}},
+        "write_sections": {"report_text": {"type": str, "required": True, "severity": "error"}},
+        "style": {"compiled_text": {"type": str, "required": True, "severity": "error"}},
+        "template": {"template_result": {"type": dict, "required": False, "severity": "warning"}},
+        "assemble": {"final_text": {"type": str, "required": True, "severity": "error"}},
+        "validate": {"gate_result": {"type": dict, "required": True, "severity": "error"}},
+        "compliance": {"compliance_result": {"type": dict, "required": False, "severity": "warning"}},
+        "export_docx": {"_docx_path": {"type": str, "required": False, "severity": "warning"}},
+        "data_feeds": {"feeds_loaded": {"type": bool, "required": False, "severity": "warning"}},
+        "biz_macro": {"biz_model": {"type": type(None), "required": False, "severity": "warning"},
+                      "stage_ctx": {"type": type(None), "required": False, "severity": "warning"},
+                      "stage_summary": {"type": str, "required": False, "severity": "warning"},
+                      "macro_ctx": {"type": type(None), "required": False, "severity": "warning"}},
+        "critic": {"critic_report": {"type": type(None), "required": False, "severity": "warning"},
+                   "critic_passed": {"type": bool, "required": False, "severity": "warning"}},
+    }
+    return contracts
+
+

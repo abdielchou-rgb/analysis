@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2号分析师 AgentGraph 架构可视化</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+    background: #fafaf9;
+    color: #1c1917;
+    padding: 20px;
+  }
+  .wrap { max-width: 1560px; margin: 0 auto; }
+
+  header { margin-bottom: 16px; }
+  h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+  h1 .mono { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-weight: 600; color: #0f766e; }
+  .sub { color: #78716c; font-size: 13px; margin-top: 4px; }
+  .sub b { color: #44403c; }
+
+  .stats { display: flex; gap: 12px; flex-wrap: wrap; margin: 14px 0; }
+  .stat {
+    background: #fff; border: 1px solid #e7e5e4; border-radius: 10px;
+    padding: 10px 16px; min-width: 130px; box-shadow: 0 1px 2px rgba(0,0,0,.03);
+  }
+  .stat .num { font-size: 22px; font-weight: 700; color: #0f766e; }
+  .stat .lbl { font-size: 12px; color: #78716c; margin-top: 2px; }
+
+  .legend { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; }
+  .lg {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; color: #57534e; background: #fff;
+    border: 1px solid #e7e5e4; border-radius: 999px; padding: 3px 10px;
+  }
+  .lg .dot { width: 10px; height: 10px; border-radius: 3px; }
+
+  .layout { display: grid; grid-template-columns: 1fr 320px; gap: 14px; align-items: start; }
+
+  .graph-card {
+    background: #fff; border: 1px solid #e7e5e4; border-radius: 14px;
+    overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  }
+  .graph-scroll { overflow: auto; }
+  .graph {
+    position: relative; min-width: 1400px; min-height: 780px;
+    background:
+      linear-gradient(#f5f5f4 1px, transparent 1px) 0 0/100% 48px,
+      linear-gradient(90deg, #f5f5f4 1px, transparent 1px) 0 0/48px 100%,
+      #fff;
+  }
+  svg.edges { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  svg.edges path { fill: none; stroke: #a8a29e; stroke-width: 1.4; opacity: .5; transition: all .2s; }
+  svg.edges path.hot { stroke: #0f766e; stroke-width: 2.2; opacity: .9; }
+  svg.edges path.dim { opacity: .12; }
+
+  .band {
+    position: absolute; top: 14px; font-size: 11px; font-weight: 600;
+    letter-spacing: .08em; text-transform: uppercase; color: #a8a29e;
+  }
+
+  .node {
+    position: absolute; width: 180px; height: 70px; border-radius: 10px;
+    border: 1.5px solid; display: flex; flex-direction: column;
+    justify-content: center; padding: 6px 10px; cursor: pointer;
+    transition: transform .15s, box-shadow .15s, border-color .15s;
+    user-select: none;
+  }
+  .node:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,.08); }
+  .node.sel { box-shadow: 0 0 0 3px rgba(15,118,110,.35); transform: translateY(-2px); }
+  .node .pid { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12px; font-weight: 700; }
+  .node .pdesc { font-size: 10.5px; line-height: 1.25; margin-top: 2px; opacity: .85; }
+  .node .tag {
+    position: absolute; top: 6px; right: 8px; font-size: 9px; font-weight: 700;
+    letter-spacing: .05em; padding: 1px 6px; border-radius: 999px;
+    background: rgba(0,0,0,.06);
+  }
+  .node .flag { position: absolute; bottom: 5px; right: 8px; font-size: 9px; font-weight: 700; }
+
+  .ph-init   { background:#f5f5f4; border-color:#a8a29e; }
+  .ph-init .pid{ color:#44403c; }
+  .ph-collect{ background:#eff6ff; border-color:#60a5fa; }
+  .ph-collect .pid{ color:#1d4ed8; }
+  .ph-enrich { background:#ecfeff; border-color:#22d3ee; }
+  .ph-enrich .pid{ color:#0e7490; }
+  .ph-analyze{ background:#ecfdf5; border-color:#34d399; }
+  .ph-analyze .pid{ color:#047857; }
+  .ph-chart  { background:#f5f3ff; border-color:#a78bfa; }
+  .ph-chart .pid{ color:#6d28d9; }
+  .ph-write  { background:#fffbeb; border-color:#fbbf24; }
+  .ph-write .pid{ color:#b45309; }
+  .ph-gate   { background:#fef2f2; border-color:#f87171; }
+  .ph-gate .pid{ color:#b91c1c; }
+  .ph-export { background:#fdf2f8; border-color:#f472b6; }
+  .ph-export .pid{ color:#be185d; }
+
+  .loop {
+    margin-top: 12px; background: #fff; border: 1px solid #e7e5e4;
+    border-left: 4px solid #0f766e; border-radius: 10px; padding: 12px 16px;
+    font-size: 13px; color: #44403c; display: flex; gap: 14px; align-items: center; flex-wrap: wrap;
+  }
+  .loop .k { font-weight: 700; color: #0f766e; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+
+  .detail {
+    background: #fff; border: 1px solid #e7e5e4; border-radius: 14px; padding: 18px;
+    position: sticky; top: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  }
+  .detail h2 { font-size: 14px; font-weight: 700; color: #292524; margin-bottom: 12px; }
+  .detail .d-none { color: #a8a29e; font-size: 13px; line-height: 1.6; }
+  .d-node .d-pid { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 18px; font-weight: 700; }
+  .d-node .d-phase {
+    display: inline-block; font-size: 11px; font-weight: 700; border-radius: 999px;
+    padding: 2px 8px; margin: 6px 0 10px;
+  }
+  .d-node .d-desc { font-size: 13px; color: #57534e; line-height: 1.6; margin-bottom: 12px; }
+  .d-node .d-sec { font-size: 11px; font-weight: 700; letter-spacing: .06em; color: #a8a29e; margin: 10px 0 4px; }
+  .d-node ul { list-style: none; }
+  .d-node li {
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12px;
+    background: #f5f5f4; border-radius: 6px; padding: 4px 8px; margin: 3px 0; color: #44403c;
+  }
+  .d-node li.err { background: #fef2f2; color: #b91c1c; }
+  .d-node li.warn { background: #fffbeb; color: #92400e; }
+  .d-node .deps a { color: #0f766e; text-decoration: none; border-bottom: 1px dotted; cursor: pointer; }
+  .d-node .deps a:hover { color: #115e59; }
+
+  @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } .detail { position: static; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>2号分析师 · <span class="mono">AgentGraph</span> 架构可视化</h1>
+    <div class="sub">自研 <b>确定性 DAG 工作流引擎</b> · 18 类节点 / 21 个实例 · 图外包裹 <b>写改循环</b> + <b>IronGate 门禁</b></div>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><div class="num">21</div><div class="lbl">节点实例</div></div>
+    <div class="stat"><div class="num">27</div><div class="lbl">依赖边</div></div>
+    <div class="stat"><div class="num">8</div><div class="lbl">阶段分类</div></div>
+    <div class="stat"><div class="num">3</div><div class="lbl">最大尝试次数</div></div>
+    <div class="stat"><div class="num">✓</div><div class="lbl">拓扑排序 + 环检测</div></div>
+  </div>
+
+  <div class="legend">
+    <span class="lg"><span class="dot" style="background:#a8a29e"></span>初始化/输入</span>
+    <span class="lg"><span class="dot" style="background:#60a5fa"></span>数据采集</span>
+    <span class="lg"><span class="dot" style="background:#22d3ee"></span>数据增强</span>
+    <span class="lg"><span class="dot" style="background:#34d399"></span>分析计算</span>
+    <span class="lg"><span class="dot" style="background:#a78bfa"></span>图表</span>
+    <span class="lg"><span class="dot" style="background:#fbbf24"></span>写作生成</span>
+    <span class="lg"><span class="dot" style="background:#f87171"></span>质量门禁</span>
+    <span class="lg"><span class="dot" style="background:#f472b6"></span>导出/记录</span>
+  </div>
+
+  <div class="layout">
+    <div class="graph-card">
+      <div class="graph-scroll">
+        <div class="graph" id="graph"></div>
+      </div>
+    </div>
+
+    <div class="detail" id="detail">
+      <h2>节点详情</h2>
+      <div class="d-none">点击图中任意节点查看该节点的职责、依赖与输出契约。鼠标悬停可高亮相连的边。</div>
+    </div>
+  </div>
+
+  <div class="loop">
+    <span class="k">图外闭环</span>
+    <span>写改循环 <code>MAX_ATTEMPTS=3</code>：IronGate 失败 → 失败明细回传 <code>gate_feedback</code> → 下一轮 <code>write_sections</code> 带着反馈重写。</span>
+    <span style="opacity:.55; font-size:12px">FP5 学习闭环 / FP7d 兜底回流</span>
+  </div>
+
+</div>
+
+<script>
+const PHASES = {
+  init:    { label: '初始化',     bg: '#f5f5f4', fg: '#44403c', cls: 'ph-init' },
+  collect: { label: '数据采集',   bg: '#eff6ff', fg: '#1d4ed8', cls: 'ph-collect' },
+  enrich:  { label: '数据增强',   bg: '#ecfeff', fg: '#0e7490', cls: 'ph-enrich' },
+  analyze: { label: '分析计算',   bg: '#ecfdf5', fg: '#047857', cls: 'ph-analyze' },
+  chart:   { label: '图表',       bg: '#f5f3ff', fg: '#6d28d9', cls: 'ph-chart' },
+  write:   { label: '写作生成',   bg: '#fffbeb', fg: '#b45309', cls: 'ph-write' },
+  gate:    { label: '质量门禁',   bg: '#fef2f2', fg: '#b91c1c', cls: 'ph-gate' },
+  export:  { label: '导出/记录', bg: '#fdf2f8', fg: '#be185d', cls: 'ph-export' },
+};
+
+// nodeId -> {phase, desc, contract:[{k,sev}], deps:[]}
+const NODES = {
+  preflight:       { phase:'init',    desc:'RuntimeGate 运行时健康检查', contract:[{k:'runtime_score', sev:'warn'}], deps:[] },
+  hypothesis:      { phase:'gate',    desc:'T0.5 假设门禁（--force 可覆盖，不达标阻断）', contract:[{k:'hypothesis_result', sev:'warn'}], deps:[] },
+  data:            { phase:'collect', desc:'DataCollectorV5 主采集 + DataPipeline 兜底', contract:[{k:'collected_data', sev:'err'}], deps:[] },
+  learning:        { phase:'collect', desc:'LearningLoop before_report 学习发现', contract:[{k:'learning_findings', sev:'warn'}], deps:[] },
+  biz_macro:       { phase:'collect', desc:'商业模式分类 + 宏观上下文 + 数据预暂存 + WebIntel', contract:[{k:'biz_model', sev:'warn'},{k:'macro_ctx', sev:'warn'},{k:'stage_ctx', sev:'warn'}], deps:['preflight'] },
+  data_feeds:      { phase:'collect', desc:'RSS / PDF / 专利等数据源 feeds', contract:[{k:'feeds_loaded', sev:'warn'}], deps:['biz_macro'] },
+  enrich:          { phase:'enrich',  desc:'充足性检查 + 本地兜底 + agent enrich-file 回流（桥接）', contract:[], deps:['data'] },
+  scarcity:        { phase:'analyze', desc:'ScarcitySignalChecker 稀缺信号检测', contract:[{k:'scarcity_signals', sev:'warn'}], deps:['enrich'] },
+  cross_validate:  { phase:'analyze', desc:'CrossValidator 多源交叉验证 + DataCredibility (FP2a)', contract:[{k:'cross_validation', sev:'warn'},{k:'credibility', sev:'warn'}], deps:['enrich'] },
+  argument:        { phase:'analyze', desc:'ArgumentEngine 论证骨架 scaffold 构建', contract:[{k:'scaffold', sev:'warn'}], deps:['enrich'] },
+  compute:         { phase:'analyze', desc:'ComputeEngine：DCF / 可比公司 / 情景分析', contract:[{k:'compute_results', sev:'warn'}], deps:['enrich'] },
+  charts:          { phase:'chart',   desc:'ChartPipeline 批量生成图表（最低 5 张）', contract:[{k:'chart_paths', sev:'warn'}], deps:['enrich'] },
+  write_sections:  { phase:'write',   desc:'SectionWriter 逐节写作（DeepSeek LLM，单 provider）', contract:[{k:'report_text', sev:'err'}], deps:['enrich','charts','compute','learning','hypothesis','argument','scarcity','cross_validate'] },
+  style:           { phase:'write',   desc:'StyleCompiler 机构风格编译（CICC），结果写回 report_text', contract:[{k:'compiled_text', sev:'err'}], deps:['write_sections','charts'] },
+  assemble:        { phase:'write',   desc:'ChartAssembler 插图 + provenance + agent 补充来源附录', contract:[{k:'final_text', sev:'err'}], deps:['style','charts'] },
+  template:        { phase:'write',   desc:'TemplateEnforcer 模板一致性，[BLOCK] 级阻断导出', contract:[{k:'template_result', sev:'warn'}], deps:['assemble'] },
+  validate:        { phase:'gate',    desc:'IronGate 质量门禁（降级感知，不降低数据标准）', contract:[{k:'gate_result', sev:'err'}], deps:['assemble'] },
+  critic:          { phase:'gate',    desc:'多评论家小组 critic panel（Gate 通过后评审）', contract:[{k:'critic_passed', sev:'warn'}], deps:['validate'] },
+  record_results:  { phase:'gate',    desc:'BoldCall 记录 + ForwardPicks + 预测校验 + 校准计划', contract:[], deps:['validate'] },
+  compliance:      { phase:'gate',    desc:'ComplianceChecklist 合规清单（advisory）', contract:[{k:'compliance_result', sev:'warn'}], deps:['validate','critic'] },
+  export_docx:     { phase:'export',  desc:'export_report：校验管线指纹，Gate 通过才放行导出', contract:[{k:'_docx_path', sev:'warn'}], deps:['compliance'] },
+};
+
+// nodeId -> [x, y]  top-left, node size 180x70
+const POS = {
+  preflight:      [ 30,  60],
+  hypothesis:     [ 30, 165],
+  data:           [ 30, 270],
+  learning:       [ 30, 375],
+  biz_macro:      [250,  60],
+  data_feeds:     [250, 165],
+  enrich:         [250, 300],
+  scarcity:       [470,  60],
+  cross_validate: [470, 165],
+  argument:       [470, 270],
+  compute:        [470, 375],
+  charts:         [470, 480],
+  write_sections: [690, 200],
+  style:          [690, 320],
+  assemble:       [690, 440],
+  template:       [690, 570],
+  validate:       [920, 220],
+  critic:         [920, 350],
+  record_results: [920, 480],
+  compliance:     [920, 610],
+  export_docx:    [1150, 300],
+};
+
+const BANDS = [
+  [ '阶段① 输入', 0 ],
+  [ '阶段② 采集/增强', 230 ],
+  [ '阶段③ 分析/图表', 450 ],
+  [ '阶段④ 写作/组装', 680 ],
+  [ '阶段⑤ 门禁', 905 ],
+  [ '阶段⑥ 导出', 1130 ],
+];
+
+// edges: [from, to]
+const EDGES = [
+  ['preflight','biz_macro'],
+  ['biz_macro','data_feeds'],
+  ['data_feeds','write_sections'],
+  ['hypothesis','write_sections'],
+  ['data','enrich'],
+  ['learning','write_sections'],
+  ['enrich','scarcity'],
+  ['enrich','cross_validate'],
+  ['enrich','argument'],
+  ['enrich','compute'],
+  ['enrich','charts'],
+  ['scarcity','write_sections'],
+  ['cross_validate','write_sections'],
+  ['argument','write_sections'],
+  ['compute','write_sections'],
+  ['charts','write_sections'],
+  ['write_sections','style'],
+  ['charts','style'],
+  ['style','assemble'],
+  ['charts','assemble'],
+  ['assemble','template'],
+  ['assemble','validate'],
+  ['validate','critic'],
+  ['validate','record_results'],
+  ['validate','compliance'],
+  ['critic','compliance'],
+  ['compliance','export_docx'],
+];
+
+function center(id){ const [x,y] = POS[id]; return [x+90, y+35]; }
+
+function pathFor(e){
+  const [sx,sy] = center(e[0]), [tx,ty] = center(e[1]);
+  // same column -> vertical-ish; else horizontal bezier
+  if (Math.abs(sx-tx) < 30) {
+    const mid = (sy+ty)/2;
+    return `M ${sx} ${sy} C ${sx+20} ${mid}, ${sx-20} ${mid}, ${tx} ${ty}`;
+  }
+  const dx = Math.max(40, (tx-sx)*0.5);
+  return `M ${sx} ${sy} C ${sx+dx} ${sy}, ${tx-dx} ${ty}, ${tx} ${ty}`;
+}
+
+const graph = document.getElementById('graph');
+const detail = document.getElementById('detail');
+
+// ---- SVG edges ----
+const NS = 'http://www.w3.org/2000/svg';
+const svg = document.createElementNS(NS,'svg');
+svg.setAttribute('class','edges');
+svg.setAttribute('viewBox','0 0 1400 780');
+const defs = document.createElementNS(NS,'defs');
+const mk = document.createElementNS(NS,'marker');
+mk.setAttribute('id','arrow');
+mk.setAttribute('viewBox','0 0 10 10');
+mk.setAttribute('refX','9'); mk.setAttribute('refY','5');
+mk.setAttribute('markerWidth','7'); mk.setAttribute('markerHeight','7');
+mk.setAttribute('orient','auto-start-reverse');
+const mp = document.createElementNS(NS,'path');
+mp.setAttribute('d','M 0 0 L 10 5 L 0 10 z');
+mp.setAttribute('fill','#a8a29e');
+mk.appendChild(mp); defs.appendChild(mk); svg.appendChild(defs);
+
+const edgeEls = EDGES.map((e,i)=>{
+  const p = document.createElementNS(NS,'path');
+  p.setAttribute('d', pathFor(e));
+  p.setAttribute('marker-end','url(#arrow)');
+  p.dataset.src = e[0]; p.dataset.tgt = e[1];
+  svg.appendChild(p);
+  return p;
+});
+graph.appendChild(svg);
+
+// ---- Nodes ----
+const nodeEls = {};
+for (const [id, n] of Object.entries(NODES)) {
+  const [x,y] = POS[id];
+  const el = document.createElement('div');
+  el.className = `node ${PHASES[n.phase].cls}`;
+  el.style.left = x+'px'; el.style.top = y+'px';
+  const hasErr = n.contract.some(c=>c.sev==='err');
+  el.innerHTML =
+    `<span class="tag">${PHASES[n.phase].label}</span>` +
+    `<div class="pid">${id}</div>` +
+    `<div class="pdesc">${n.desc}</div>` +
+    (hasErr ? `<span class="flag">硬契约</span>` : '');
+  el.dataset.id = id;
+  el.addEventListener('mouseenter', ()=>{ hover(id); });
+  el.addEventListener('mouseleave', ()=>{ clearHover(); });
+  el.addEventListener('click', ()=>{ select(id); });
+  graph.appendChild(el);
+  nodeEls[id] = el;
+}
+
+// ---- Band labels ----
+for (const [label, x] of BANDS) {
+  const b = document.createElement('div');
+  b.className = 'band';
+  b.style.left = x+'px';
+  b.textContent = label;
+  graph.appendChild(b);
+}
+
+// ---- Interaction ----
+function setEdges(hotId){
+  edgeEls.forEach(p=>{
+    const hit = hotId && (p.dataset.src===hotId || p.dataset.tgt===hotId);
+    p.classList.toggle('hot', !!hit);
+    p.classList.toggle('dim', !!hotId && !hit);
+  });
+}
+function hover(id){
+  Object.entries(nodeEls).forEach(([k,el])=> el.style.opacity = (k===id)?'1':'0.45');
+  setEdges(id);
+}
+function clearHover(){
+  Object.entries(nodeEls).forEach(([,el])=> el.style.opacity = '1');
+  setEdges(null);
+}
+function select(id){
+  const n = NODES[id];
+  const ph = PHASES[n.phase];
+  Object.entries(nodeEls).forEach(([k,el])=> el.classList.toggle('sel', k===id));
+
+  const deps = n.deps.length
+    ? '<ul class="deps">'+n.deps.map(d=>`<li><a data-jump="${d}">↩ ${d}</a></li>`).join('')+'</ul>'
+    : '<div style="color:#a8a29e;font-size:12px">无（入口节点）</div>';
+
+  const ctr = n.contract.length
+    ? '<ul>'+n.contract.map(c=>`<li class="${c.sev}">${c.k}${c.sev==='err'?' · ERROR(阻断)':''}${c.sev==='warn'?' · warning':''}</li>`).join('')+'</ul>'
+    : '<div style="color:#a8a29e;font-size:12px">无显式输出契约</div>';
+
+  detail.innerHTML =
+    `<div class="d-node">
+      <div class="d-pid">${id}</div>
+      <div class="d-phase" style="background:${ph.bg};color:${ph.fg}">${ph.label}</div>
+      <div class="d-desc">${n.desc}</div>
+      <div class="d-sec">依赖（deps）</div>${deps}
+      <div class="d-sec">输出契约（output_contract）</div>${ctr}
+    </div>`;
+  detail.querySelectorAll('[data-jump]').forEach(a=>{
+    a.addEventListener('click', ()=>select(a.dataset.jump));
+  });
+  setEdges(id);
+}
+
+// default select
+select('validate');
+</script>
+</body>
+</html>

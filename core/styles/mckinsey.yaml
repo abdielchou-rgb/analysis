@@ -1,0 +1,13 @@
+id: style_mckinsey
+name: McKinsey Style (中文适配)
+colors: {primary: "#003D2F", accent: "#00A86B"}
+typography: {main_font: "SimSun", heading_font: "SimHei"}
+writing:
+  conclusion_first: true
+  min_judgment_density: 1.8
+  max_sentence_chars: 140
+  forbidden_terms: ["值得注意的是", "从某种程度上说", "不可否认的是", "综上所述"]
+  citation_style: inline
+charts:
+  preferred_types: ['bar', 'waterfall', 'scatter']
+  colors: ['#003D2F', '#00A86B', '#7ED321']

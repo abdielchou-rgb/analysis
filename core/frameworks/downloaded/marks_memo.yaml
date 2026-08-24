@@ -1,0 +1,23 @@
+# Howard Marks Memos - Key Principles
+# Source: Oaktree Capital
+# Downloaded: 2026-07-30
+
+id: marks_memo
+name: "Howard Marks Investment Memos"
+source: "oaktreecapital.com/insights"
+sac_target: "decision_gate"
+priority: 1
+
+key_concepts:
+  - "First-level thinking: 'It's a good company, buy it'"
+  - "Second-level thinking: 'It's a good company, but everyone knows it, so it's overpriced'"
+  - "The pendulum of market psychology swings between greed and fear"
+  - "Risk is not volatility — risk is the possibility of permanent loss"
+  - "You can't predict the future, but you can prepare for it"
+  - "Being too far ahead of your time is indistinguishable from being wrong"
+  - "The biggest investing errors come from buying when optimism is highest"
+  - "Market cycles are inevitable: what goes up must come down"
+  - "Know what you don't know — and act accordingly"
+  - "The most important thing is to be defensively strong when offense is called for"
+
+core_method: "Cycle Position -> Second-Level Thinking -> Risk Assessment -> Action"

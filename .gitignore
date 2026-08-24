@@ -1,0 +1,138 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# API Keys - NEVER commit
+.env
+*.env.local
+.env.bak
+.env.bak_*
+api_key.txt
+secrets.json
+
+# Output - generated reports
+output/*.docx
+output/*.pdf
+output/*.pptx
+output/charts/*.png
+outputs/*.docx
+outputs/*.pdf
+outputs/*.pptx
+outputs/charts/*.png
+
+# Logs
+logs/
+*.log
+
+# Temp
+temp/
+*.tmp
+
+# Keep empty directories
+!output/.gitkeep
+!outputs/.gitkeep
+
+# Generated report text files — 只忽略产出目录内的 md，不全局忽略（README/CLAUDE/docs 需纳入版本管理）
+output/*.md
+outputs/*.md
+output/**/*.md
+export/*.md
+*.docx
+*.pptx
+
+# All generated output
+output/**/*
+!output/**/.gitkeep
+
+# API key protection
+scripts/_run_report.*
+run_xinlian.bat
+
+# Data - generated runtime artifacts (databases, caches, queues, backfills)
+data/*.db
+data/*.db-*
+data/*.db-wal
+data/*.db-shm
+data/*.db.bak
+data/*.bak
+data/agent_llm_queue/
+data/backlog/
+data/backups/
+data/cache/
+data/*.log
+data/.fuse_hidden*
+data/module_versions/
+data/reviewer_reputation.db
+data/edit_learning.db
+data/fact_base.json
+# 保留 data/ 下人工维护的数据源（如资产映射/基线）——白名单模式
+!data/a_stock_name_map.json
+!data/asset_alias.json
+!data/__init__.py
+!data/*.py
+
+# Debug scratch files (root-level debugging leftovers)
+gate_*.txt
+gate_*.out
+gate_*.raw
+fixgate*.py
+sacdump*.py
+sacdump*.txt
+scan_*.py
+scan_*.txt
+qfix*.py
+verify*.py
+verify2*.py
+verify3*.py
+listfig.py
+socheck.py
+chart_out.txt
+import_check.log
+_temp*.py
+
+# Runtime databases (observability, learned edits — generated, not source)
+core/observability.db
+core/edit_learning.db
+core/*.db-wal
+core/*.db-shm
+
+
+# Test reports / analysis plans (generated)
+output_r81_train/
+benchmark_results.csv
+
+# P0 audit 2026-08-24 additions
+=
+temp_*.py
+temp_err*.txt
+temp_out.txt
+cloudflare_browser_mcp_config.json
+*.exe
+
+# Heavy binary corpora — stay on disk, out of VCS (use git-lfs later if needed)
+data/qlib_bin/
+data/基线/
+data/知识库/
+data/llm_cache/
+assets/models/
+assets/deep_reports/
+assets/valuation/

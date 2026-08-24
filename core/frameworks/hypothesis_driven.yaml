@@ -1,0 +1,33 @@
+name: Hypothesis-Driven Analysis
+author: McKinsey / BCG
+source: Consulting hypothesis-driven problem solving
+core_thesis: 先假设结论，再找证据验证或推翻，而非先收集再归纳——假设先行让分析聚焦，避免"信息过载后给不出结论"
+tags:
+- 假设驱动
+- 验证优先
+- 聚焦
+sac_dimension_mapping:
+- core_disagreement
+- hypothesis
+- decision_gate
+- falsification
+priority: 1
+logic_chain:
+- step: 形成假设
+  dimensions:
+  - 基于已有线索先给出初步结论假设（如"建议进入，卡位关键"）
+  - 假设来自决策引擎初步测算，非凭空
+- step: 设计验证路径
+  dimensions:
+  - 每条假设列"什么证据会证明/推翻"
+  - 验证路径要可执行（数据/访谈/模型）
+- step: 收集证据
+  dimensions:
+  - 只收集与假设相关的证据（聚焦）
+  - 主动找反证（专业怀疑）
+- step: 假设收敛
+  dimensions:
+  - 证据支持 → 强化假设
+  - 证据矛盾 → 修正假设
+  - 收敛到可拍板的结论
+apply_instruction: 分析先让决策引擎出初步假设（卡位/投入/最坏损失），写手围绕验证组织，不先铺开全部数据。

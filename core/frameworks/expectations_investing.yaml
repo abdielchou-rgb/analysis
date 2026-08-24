@@ -1,0 +1,73 @@
+# Expectations Investing Framework
+# Michael Mauboussin & Alfred Rappaport
+
+id: expectations_investing
+name: "预期投资框架"
+author: "Michael Mauboussin & Alfred Rappaport"
+source: "Expectations Investing (2001, 2021)"
+url: "https://expectationsinvesting.com"
+
+core_thesis: >
+  股价编码了市场对公司未来的共识预期。分析师的工作不是预测未来，
+  而是逆向推导当前价格所隐含的预期，然后判断这些预期是否合理、
+  是否有修正空间。核心方法是用DCF反解市场隐含的增长假设。
+
+logic_chain:
+  - step: "价格隐含预期（PIE）"
+    description: "用DCF逆推当前股价隐含的未来现金流假设"
+    tools: ["reverse_dcf", "implied_growth_calc"]
+    output: "implied_growth_rate, implied_margins"
+
+  - step: "识别价值触发器"
+    description: "找到最能改变公司价值的1-2个关键变量（turbo trigger）"
+    dimensions: ["sales_volume", "price_mix", "cost_efficiency", "investment_efficiency"]
+    output: "turbo_trigger_id, impact_sensitivity"
+
+  - step: "竞争战略分析"
+    description: "分析行业结构、进入壁垒、竞争动态以判断预期修正的可能性"
+    tools: ["five_forces", "industry_map", "entry_exit_dynamics"]
+    output: "revision_likelihood, revision_direction"
+
+  - step: "情景与安全边际"
+    description: "对关键驱动变量做情景分析，计算安全边际"
+    tools: ["scenario_analysis", "probability_weighting"]
+    output: "margin_of_safety, expected_value_range"
+
+analytical_dimensions:
+  price_implied_expectations:
+    question: "当前股价隐含了什么未来业绩假设？"
+    sub_questions:
+      - "隐含营收增速是多少？可持续吗？"
+      - "隐含利润率是多少？与历史/同行对比如何？"
+    evidence_min: 2
+
+  value_triggers:
+    question: "哪些变量的变化会最大程度改变公司价值？"
+    sub_questions:
+      - "是收入端驱动还是成本端驱动？"
+      - "这些变量的敏感度如何？"
+    evidence_min: 1
+
+  revision_assessment:
+    question: "市场预期修正的概率和方向是什么？"
+    sub_questions:
+      - "竞争动态支持预期上修还是下修？"
+      - "管理层激励与预期修正方向一致吗？"
+    counter_evidence: true
+    evidence_min: 2
+
+key_metrics:
+  - "implied_growth_rate"
+  - "implied_operating_margin"
+  - "turbo_trigger_sensitivity"
+  - "margin_of_safety"
+
+uncertainty_handling:
+  method: "scenario_analysis + probability_weighting"
+  margin_of_safety: true
+  sensitivity_drivers: ["revenue_growth", "operating_margin", "discount_rate"]
+
+counter_argument:
+  required: true
+  method: "reverse_turbo_trigger — 找可能杀估值的变量"
+  bear_case: "必须构建至少一个合理的bear case"

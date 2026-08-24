@@ -1,0 +1,63 @@
+# The Strategy Engine Framework
+# 商业模式+单位经济+护城河的系统框架
+
+id: strategy_engine
+name: "企业战略引擎框架"
+author: "Hamilton Helmer / 七步战略"
+source: "The Strategy Engine (综合)"
+
+core_thesis: >
+  企业的长期价值创造来自战略引擎——商业模式、单位经济和护城河的协同。
+  商业模式决定收入逻辑，单位经济验证可复制性，护城河决定持续时间。
+  三者缺一不可，且必须形成正向反馈循环。
+
+logic_chain:
+  - step: "商业模式诊断"
+    description: "价值主张→收入模式→成本结构→利润杠杆的四层拆解"
+    output: "business_model_type, revenue_logic"
+
+  - step: "单位经济验证"
+    description: "CAC vs LTV、单位利润率、边际成本曲线——判断模式是否可复制"
+    tools: ["ltv_cac_ratio", "unit_margin_analysis"]
+    output: "unit_economics_score, scalability"
+
+  - step: "护城河类型与强度"
+    description: "品牌/转换成本/网络效应/成本优势/有效规模——护城河的质量评估"
+    output: "moat_type, moat_width, moat_trend"
+
+  - step: "战略反馈循环"
+    description: "三个要素是否形成正向循环？护城河是否在加宽？"
+    output: "flywheel_status, strategic_score"
+
+analytical_dimensions:
+  business_model:
+    question: "公司的商业模式是什么？收入从哪来？成本结构如何？"
+    sub_questions:
+      - "价值主张是什么？解决谁的什么问题？"
+      - "收入模式是交易型/订阅型/平台型/还是混合型？"
+    evidence_min: 2
+
+  unit_economics:
+    question: "单位经济模型是否可复制、可规模化？"
+    sub_questions:
+      - "CAC（客户获取成本）与LTV（客户生命周期价值）的比值是多少？"
+      - "边际成本是否随规模递减？"
+    evidence_min: 2
+
+  strategic_moat:
+    question: "护城河的类型、宽度和趋势是什么？"
+    sub_questions:
+      - "属于五种护城河中的哪一种？"
+      - "护城河是在变宽还是变窄？"
+    counter_evidence: true
+    evidence_min: 2
+
+key_metrics:
+  - "ltv_cac_ratio"
+  - "unit_margin"
+  - "moat_score"
+  - "strategic_flywheel_status"
+
+counter_argument:
+  required: true
+  method: "战略引擎的任何一个齿轮卡住——商业模式可复制性被证伪、单位经济恶化、护城河被侵蚀"

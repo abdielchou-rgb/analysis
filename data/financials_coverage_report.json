@@ -1,0 +1,3131 @@
+{
+  "total_codes": 5259,
+  "field_coverage": {
+    "CAToAsset": {
+      "codes": 2291,
+      "pct": 43.56
+    },
+    "FCF": {
+      "codes": 5153,
+      "pct": 97.98
+    },
+    "ICF": {
+      "codes": 5153,
+      "pct": 97.98
+    },
+    "MBRevenue": {
+      "codes": 1579,
+      "pct": 30.02
+    },
+    "NCAToAsset": {
+      "codes": 2291,
+      "pct": 43.56
+    },
+    "OCF": {
+      "codes": 5153,
+      "pct": 97.98
+    },
+    "OCFToAsset": {
+      "codes": 2364,
+      "pct": 44.95
+    },
+    "OCFToNetprofit": {
+      "codes": 2370,
+      "pct": 45.07
+    },
+    "OCFToOR": {
+      "codes": 2302,
+      "pct": 43.77
+    },
+    "accountsPayable": {
+      "codes": 1232,
+      "pct": 23.43
+    },
+    "accountsReceivable": {
+      "codes": 1231,
+      "pct": 23.41
+    },
+    "advanceReceived": {
+      "codes": 9,
+      "pct": 0.17
+    },
+    "capex": {
+      "codes": 1232,
+      "pct": 23.43
+    },
+    "cashAssets": {
+      "codes": 5232,
+      "pct": 99.49
+    },
+    "ebitToInterest": {
+      "codes": 1964,
+      "pct": 37.35
+    },
+    "epsTTM": {
+      "codes": 5259,
+      "pct": 100.0
+    },
+    "financeExpense": {
+      "codes": 1232,
+      "pct": 23.43
+    },
+    "fixedAssets": {
+      "codes": 1232,
+      "pct": 23.43
+    },
+    "goodwill": {
+      "codes": 879,
+      "pct": 16.71
+    },
+    "gpMargin": {
+      "codes": 2789,
+      "pct": 53.03
+    },
+    "incomeTax": {
+      "codes": 1298,
+      "pct": 24.68
+    },
+    "intangibleAssets": {
+      "codes": 1231,
+      "pct": 23.41
+    },
+    "inventory": {
+      "codes": 1226,
+      "pct": 23.31
+    },
+    "liqaShare": {
+      "codes": 2302,
+      "pct": 43.77
+    },
+    "longLoan": {
+      "codes": 1080,
+      "pct": 20.54
+    },
+    "manageExpense": {
+      "codes": 1300,
+      "pct": 24.72
+    },
+    "netProfit": {
+      "codes": 1717,
+      "pct": 32.65
+    },
+    "notesPayable": {
+      "codes": 3,
+      "pct": 0.06
+    },
+    "notesReceivable": {
+      "codes": 1163,
+      "pct": 22.11
+    },
+    "npMargin": {
+      "codes": 184,
+      "pct": 3.5
+    },
+    "operateProfit": {
+      "codes": 1300,
+      "pct": 24.72
+    },
+    "operatingCost": {
+      "codes": 1300,
+      "pct": 24.72
+    },
+    "roeAvg": {
+      "codes": 4737,
+      "pct": 90.07
+    },
+    "sellExpense": {
+      "codes": 1217,
+      "pct": 23.14
+    },
+    "shortLoan": {
+      "codes": 1186,
+      "pct": 22.55
+    },
+    "tangibleAssetToAsset": {
+      "codes": 2296,
+      "pct": 43.66
+    },
+    "totalAssets": {
+      "codes": 5158,
+      "pct": 98.08
+    },
+    "totalCurrentLiab": {
+      "codes": 1232,
+      "pct": 23.43
+    },
+    "totalEquity": {
+      "codes": 5232,
+      "pct": 99.49
+    },
+    "totalLiab": {
+      "codes": 5232,
+      "pct": 99.49
+    },
+    "totalNonCurrentLiab": {
+      "codes": 1232,
+      "pct": 23.43
+    },
+    "totalProfit": {
+      "codes": 1300,
+      "pct": 24.72
+    },
+    "totalShare": {
+      "codes": 2302,
+      "pct": 43.77
+    }
+  },
+  "hs300_missing_real": [
+    {
+      "code": "000568",
+      "name": "泸州老窖",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "000617",
+      "name": "中油资本",
+      "missing": [
+        "sellExpense",
+        "inventory"
+      ]
+    },
+    {
+      "code": "000768",
+      "name": "中航西飞",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "000807",
+      "name": "云铝股份",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "000858",
+      "name": "五 粮 液",
+      "missing": [
+        "shortLoan",
+        "longLoan"
+      ]
+    },
+    {
+      "code": "000895",
+      "name": "双汇发展",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "001391",
+      "name": "国货航",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002463",
+      "name": "沪电股份",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002493",
+      "name": "荣盛石化",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002558",
+      "name": "巨人网络",
+      "missing": [
+        "longLoan"
+      ]
+    },
+    {
+      "code": "002714",
+      "name": "牧原股份",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "300033",
+      "name": "同花顺",
+      "missing": [
+        "inventory",
+        "shortLoan",
+        "longLoan"
+      ]
+    },
+    {
+      "code": "300251",
+      "name": "光线传媒",
+      "missing": [
+        "shortLoan"
+      ]
+    },
+    {
+      "code": "300316",
+      "name": "晶盛机电",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "300413",
+      "name": "芒果超媒",
+      "missing": [
+        "longLoan"
+      ]
+    },
+    {
+      "code": "300502",
+      "name": "新易盛",
+      "missing": [
+        "longLoan"
+      ]
+    },
+    {
+      "code": "300628",
+      "name": "亿联网络",
+      "missing": [
+        "longLoan",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "300803",
+      "name": "指南针",
+      "missing": [
+        "longLoan"
+      ]
+    },
+    {
+      "code": "300832",
+      "name": "新产业",
+      "missing": [
+        "shortLoan",
+        "longLoan",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "300866",
+      "name": "安克创新",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "300896",
+      "name": "爱美客",
+      "missing": [
+        "shortLoan"
+      ]
+    },
+    {
+      "code": "301165",
+      "name": "锐捷网络",
+      "missing": [
+        "longLoan",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "600009",
+      "name": "上海机场",
+      "missing": [
+        "longLoan",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "600010",
+      "name": "包钢股份",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "600025",
+      "name": "华能水电",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "600029",
+      "name": "南方航空",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "600061",
+      "name": "国投资本",
+      "missing": [
+        "sellExpense"
+      ]
+    },
+    {
+      "code": "600118",
+      "name": "中国卫星",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "600219",
+      "name": "南山铝业",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "600276",
+      "name": "恒瑞医药",
+      "missing": [
+        "longLoan",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "600426",
+      "name": "华鲁恒升",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "600482",
+      "name": "中国动力",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "600519",
+      "name": "贵州茅台",
+      "missing": [
+        "shortLoan",
+        "longLoan",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "600760",
+      "name": "中航沈飞",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "600809",
+      "name": "XD山西汾",
+      "missing": [
+        "shortLoan",
+        "longLoan",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "600893",
+      "name": "航发动力",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "600930",
+      "name": "华电新能",
+      "missing": [
+        "sellExpense"
+      ]
+    },
+    {
+      "code": "601021",
+      "name": "春秋航空",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "601088",
+      "name": "中国神华",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "601319",
+      "name": "XD中国人",
+      "missing": [
+        "totalAssets",
+        "sellExpense",
+        "financeExpense",
+        "gpMargin",
+        "OCF",
+        "ICF",
+        "FCF",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "601698",
+      "name": "中国卫通",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "601816",
+      "name": "京沪高铁",
+      "missing": [
+        "sellExpense",
+        "inventory",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "603369",
+      "name": "今世缘",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "603893",
+      "name": "瑞芯微",
+      "missing": [
+        "shortLoan",
+        "longLoan",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "605117",
+      "name": "德业股份",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "605499",
+      "name": "东鹏饮料",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "688008",
+      "name": "澜起科技",
+      "missing": [
+        "shortLoan",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "688012",
+      "name": "中微公司",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "688036",
+      "name": "传音控股",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "688041",
+      "name": "海光信息",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "688047",
+      "name": "龙芯中科",
+      "missing": [
+        "longLoan",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "688072",
+      "name": "拓荆科技",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "688082",
+      "name": "XD盛美上",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "688111",
+      "name": "金山办公",
+      "missing": [
+        "shortLoan",
+        "longLoan"
+      ]
+    },
+    {
+      "code": "688183",
+      "name": "生益电子",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "688223",
+      "name": "晶科能源",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "688256",
+      "name": "寒武纪",
+      "missing": [
+        "longLoan",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "688303",
+      "name": "大全能源",
+      "missing": [
+        "goodwill"
+      ]
+    },
+    {
+      "code": "688506",
+      "name": "百利天恒",
+      "missing": [
+        "goodwill"
+      ]
+    }
+  ],
+  "all_missing_real_top": [
+    {
+      "code": "001225",
+      "name": "和泰机电",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "001288",
+      "name": "运机集团",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "001298",
+      "name": "好上好",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "001299",
+      "name": "美能能源",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "001317",
+      "name": "三羊马",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "001333",
+      "name": "光华股份",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "001338",
+      "name": "永顺泰",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "001373",
+      "name": "翔腾新材",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "001396",
+      "name": "誉帆科技",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002313",
+      "name": "日海智能",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002465",
+      "name": "海格通信",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002479",
+      "name": "富春环保",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002521",
+      "name": "齐峰新材",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002533",
+      "name": "金杯电工",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002546",
+      "name": "新联电子",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002548",
+      "name": "金新农",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002556",
+      "name": "辉隆股份",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002571",
+      "name": "德力股份",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002592",
+      "name": "ST八菱",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002624",
+      "name": "完美世界",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002627",
+      "name": "三峡旅游",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002629",
+      "name": "仁智股份",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002640",
+      "name": "跨境通",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002641",
+      "name": "公元股份",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002642",
+      "name": "荣联科技",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002646",
+      "name": "天佑德酒",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002650",
+      "name": "ST加加",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002653",
+      "name": "海思科",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002682",
+      "name": "龙洲股份",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002685",
+      "name": "华东重机",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002696",
+      "name": "百洋股份",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002703",
+      "name": "浙江世宝",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002708",
+      "name": "光洋股份",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002724",
+      "name": "海洋王",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002749",
+      "name": "国光股份",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002750",
+      "name": "龙津退",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002788",
+      "name": "鹭燕医药",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002790",
+      "name": "瑞尔特",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002791",
+      "name": "坚朗五金",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002792",
+      "name": "通宇通讯",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002816",
+      "name": "*ST和科",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002818",
+      "name": "富森美",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002819",
+      "name": "东方中科",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002820",
+      "name": "桂发祥",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002821",
+      "name": "凯莱英",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002822",
+      "name": "ST中装",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002824",
+      "name": "和胜股份",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002825",
+      "name": "纳尔股份",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002828",
+      "name": "贝肯能源",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002829",
+      "name": "星网宇达",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002833",
+      "name": "弘亚数控",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002836",
+      "name": "新宏泽",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002841",
+      "name": "视源股份",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002843",
+      "name": "泰嘉股份",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002845",
+      "name": "同兴达",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002846",
+      "name": "英联股份",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002852",
+      "name": "道道全",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002857",
+      "name": "三晖电气",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002864",
+      "name": "盘龙药业",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002907",
+      "name": "华森制药",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002908",
+      "name": "德生科技",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002909",
+      "name": "集泰股份",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002910",
+      "name": "庄园牧场",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002917",
+      "name": "金奥博",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002918",
+      "name": "蒙娜丽莎",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002940",
+      "name": "昂利康",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002942",
+      "name": "新农股份",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002950",
+      "name": "奥美医疗",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002952",
+      "name": "亚世光电",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002963",
+      "name": "豪尔赛",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002968",
+      "name": "新大正",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002971",
+      "name": "和远气体",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "002973",
+      "name": "侨银股份",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "003013",
+      "name": "地铁设计",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "003016",
+      "name": "欣贺股份",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "003019",
+      "name": "宸展光电",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "003021",
+      "name": "兆威机电",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "003022",
+      "name": "联泓新科",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "003023",
+      "name": "彩虹集团",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "003027",
+      "name": "同兴科技",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "003029",
+      "name": "吉大正元",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "003033",
+      "name": "征和工业",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "300154",
+      "name": "瑞凌股份",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "300161",
+      "name": "华中数控",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "300164",
+      "name": "通源石油",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "300179",
+      "name": "四方达",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "300187",
+      "name": "永清环保",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "300189",
+      "name": "神农种业",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "300197",
+      "name": "节能铁汉",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "300204",
+      "name": "舒泰神",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "300225",
+      "name": "金力泰",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "300279",
+      "name": "和晶科技",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "300304",
+      "name": "云意电气",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "300314",
+      "name": "戴维医疗",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "300339",
+      "name": "润和软件",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "300343",
+      "name": "联创股份",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "300344",
+      "name": "立方退",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "300366",
+      "name": "ST创意",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "300371",
+      "name": "汇中股份",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    },
+    {
+      "code": "300373",
+      "name": "扬杰科技",
+      "missing": [
+        "netProfit",
+        "MBRevenue",
+        "operateProfit",
+        "totalProfit",
+        "operatingCost",
+        "manageExpense",
+        "sellExpense",
+        "financeExpense",
+        "incomeTax",
+        "roeAvg",
+        "gpMargin",
+        "capex",
+        "inventory",
+        "accountsReceivable",
+        "accountsPayable",
+        "shortLoan",
+        "longLoan",
+        "fixedAssets",
+        "goodwill"
+      ]
+    }
+  ],
+  "generated": "2026-08-02 R36 B-2"
+}

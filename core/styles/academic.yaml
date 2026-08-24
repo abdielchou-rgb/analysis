@@ -1,0 +1,13 @@
+id: style_academic
+name: Academic Paper Style
+colors: {primary: "#1A1A1A", accent: "#003366"}
+typography: {main_font: "Times New Roman", heading_font: "Times New Roman"}
+writing:
+  conclusion_first: false
+  min_judgment_density: 0.6
+  max_sentence_chars: 140
+  forbidden_terms: ["值得注意的是", "不可否认的是"]
+  citation_style: apa
+charts:
+  preferred_types: ['line', 'bar', 'scatter']
+  colors: ['#1A1A1A', '#003366', '#666666']

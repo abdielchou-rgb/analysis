@@ -1,0 +1,9 @@
+id: style_goldman
+name: Goldman Sachs Style
+colors: {primary: '#051C2C', accent: '#009688'}
+writing:
+  conclusion_first: true
+  min_judgment_density: 1.5
+  max_sentence_chars: 120
+  forbidden_terms: ['arguably', 'it is worth noting']
+  citation_style: footnote_numbered

@@ -1,0 +1,64 @@
+# Security Analysis Framework
+# Benjamin Graham & David Dodd — 安全边际与基本面分析
+
+id: security_analysis
+name: "证券分析框架"
+author: "Benjamin Graham & David Dodd"
+source: "Security Analysis (1934, 6th ed 2008)"
+
+core_thesis: >
+  投资的第一原则是不要亏钱，第二原则是不要忘记第一原则。
+  安全边际是价值投资的核心——以低于内在价值的价格买入，为判断错误留出缓冲空间。
+  内在价值不是精确数字，而是基于保守假设的合理估值区间。
+
+logic_chain:
+  - step: "资产价值评估"
+    description: "净流动资产价值、重置成本、清算价值——最保守的价值锚点"
+    tools: ["ncaV", "replacement_cost", "liquidation_value"]
+    output: "asset_value_floor"
+
+  - step: "盈利能力价值"
+    description: "基于正常化盈利的估值——用过去5-10年平均盈利过滤周期影响"
+    tools: ["normalized_earnings", "owner_earnings"]
+    output: "earning_power_value"
+
+  - step: "安全边际计算"
+    description: "市场价格 vs 内在价值下限——安全边际足够宽吗？"
+    output: "margin_of_safety, risk_of_permanent_loss"
+
+  - step: "管理层与治理评估"
+    description: "管理层是否诚实？资本配置是否理性？是否善待股东？"
+    output: "management_quality, governance_score"
+
+analytical_dimensions:
+  asset_backed_value:
+    question: "公司的最保守价值是多少？（净流动资产/清算价值）"
+    sub_questions:
+      - "净流动资产价值（NCAV）是多少？"
+      - "重置成本法和清算价值法给出什么区间？"
+    evidence_min: 2
+
+  earning_power:
+    question: "公司的正常化盈利能力是多少？"
+    questions:
+      - "过去5-10年的平均ROE/ROIC是多少？排除异常年份"
+      - "owner earnings（所有者盈余）与报告净利润的差距？"
+    evidence_min: 2
+
+  margin_of_safety:
+    question: "当前价格提供了多少安全边际？"
+    sub_questions:
+      - "内在价值下限与当前价格的差距？"
+      - "如果判断错误，最大永久损失风险？"
+    counter_evidence: true
+    evidence_min: 2
+
+key_metrics:
+  - "ncaV_ratio"
+  - "earning_power_value"
+  - "margin_of_safety_pct"
+  - "management_score"
+
+counter_argument:
+  required: true
+  method: "资产价值法在轻资产公司中失效；安全边际本身可能是一种错觉（价值陷阱）"

@@ -1,0 +1,62 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.0
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-added-large-files
+        args: [--maxkb=500]
+      - id: detect-private-key
+
+  - repo: local
+    hooks:
+      - id: harness-validator
+        name: Harness — Import Chain + Syntax + API Key Scan
+        entry: python -m harness.validator
+        language: system
+        files: '\.py$'
+        pass_filenames: false
+        verbose: true
+
+      - id: harness-p0-block
+        name: Harness — P0 Block (entry point integrity)
+        entry: python -c "
+import sys; sys.path.insert(0, '.');
+from harness.validator import run_all;
+r = run_all();
+p0_fail = [c for c in r.checks if not c.passed and c.severity == 'P0'];
+print(f'Harness: {len(p0_fail)} P0 failures');
+exit(1 if p0_fail else 0)
+"
+        language: system
+        files: '^(pipeline/|core/|export/|main\.py)'
+        pass_filenames: false
+        verbose: true
+
+      - id: sdd-docs-sync
+        name: SDD — Check docs are in sync with code
+        entry: python -c "
+import sys; sys.path.insert(0, '.');
+from pathlib import Path;
+from harness.generate_docs import generate_claude_md;
+current = Path('CLAUDE.md').read_text(encoding='utf-8');
+fresh = generate_claude_md();
+if current[:500] != fresh[:500]:
+    print('CLAUDE.md out of sync — run: python -m harness.generate_docs');
+    exit(1)
+print('CLAUDE.md is up to date');
+exit(0)
+"
+        language: system
+        files: '^(harness/|pipeline/|core/)'
+        pass_filenames: false
+        verbose: true

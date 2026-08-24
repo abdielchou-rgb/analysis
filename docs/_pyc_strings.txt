@@ -1,0 +1,170 @@
+
+2号分析师 SectionWriter — 三段式写作引擎
+
+核心设计:
+1. 将SAC逻辑链按因果推理分组为3段（战略层/竞争层/前瞻层）
+2. 每段独立调用DeepSeek，注入新鲜SAC维度定义
+3. 每段prompt包含：该段维度定义+数据上下文+图表引用+前一段摘要
+4. 3段写完后组装为完整报告
+5. 支持注入gate_feedback（来自WriteReviseLoop的评审反馈）
+
+分段策略:
+  - 由SAC logic_chain自动推导，不是硬编码
+  - industry_deep:    steps[0:2]=战略层, steps[2:4]=竞争层, steps[4:7]=前瞻层
+  - listed_company:   steps[0:3]=战略层, steps[3:6]=竞争层, steps[6:9]=前瞻层
+  - unlisted_company: steps[0:3]=战略层, steps[3:6]=竞争层, steps[6:9]=前瞻层
+  - earnings_notes:   steps[0:2]=战略层, steps[2:4]=竞争层, steps[4:5]=前瞻层
+
+每段调用 core.deepseek_client.call_deepseek() 独立完成。
+
+---SEPARATOR---
+三段式写作引擎
+
+    用法:
+        writer = SectionWriter("industry_deep", style="cicc")
+        report = writer.write(
+            asset="气体传感器",
+            data_context=data_dict,
+            chart_paths=chart_dict,
+            gate_feedback="上一轮评审摘要"
+        )
+    
+---SEPARATOR---
+从SAC逻辑链自动推导三段分组
+
+        SAC industry_deep 有 11 步 logic_chain（含 3 个新增步骤）:
+          段1: [0:4] — 决策门+稀缺定位+利润迁移+竞争重构
+          段2: [4:8] — 技术验证+市场校准+弹性信号+政策传导
+          段3: [8:11] — 资本市场+资金链+证伪
+
+        如果 SAC 逻辑链步数与 _SEGMENT_SPLITS 不匹配，自动适应。
+        
+---SEPARATOR---
+SAC logic_chain has %d steps (expected %d), auto-adjusted splits: %s
+---SEPARATOR---
+依次写3段，每段有独立prompt，返回完整报告文本
+---SEPARATOR---
+Writing segment %d/3: %s (%d steps, %d dimensions)
+---SEPARATOR---
+构建聚焦的prompt，告诉DeepSeek只写这一段
+---SEPARATOR---
+这是报告的开篇部分。你的任务是建立核心判断（Bold Call），为全文的因果推演奠定基础。
+建议字数：400-600字。每个分析维度 200-400字的深度分析。
+---SEPARATOR---
+这是报告的收尾部分。你的任务是完成因果推演的最后环节，给出投资含义和风险提示。
+建议字数：300-500字。
+---SEPARATOR---
+这是报告的中间部分。你的任务是在前一部分的基础上，深化竞争格局和技术分析，连接战略判断与市场映射。
+建议字数：400-600字。每个分析维度 200-400字的深度分析。
+---SEPARATOR---
+
+## 禁止使用的表述
+以下表述严禁出现在报告中：
+
+---SEPARATOR---
+counter_evidence_required
+---SEPARATOR---
+
+## 数据引用规则（必须严格执行）
+当你引用上方「可用数据上下文」中的数据时，必须遵守以下规则：
+1. 每个关键数字必须标注其来源。标注格式：使用数据块标题中的「来源」字段值。
+2. 标注示例（必须照做）：
+   - 正确：「据akshare数据（已验证），2024年营收达XX亿元」
+   - 正确：「据web搜索数据（网络采样），全球市场规模2026年达XX亿美元」
+   - 正确：「据公司公告数据（年报2024），毛利率为XX%」
+   - 错误：「数据来源：Wind」——必须写具体来源名称和可信度标记
+3. 来源置信度标记对照：verified=已验证, estimated=估算, web_sample=网络采样
+4. 【禁止编造来源】——只能使用数据上下文中实际标注的source字段值
+5. 如果你不知道某个数字的具体来源，标注「需核实」而非编造一个来源
+6. 测算类数字必须附带方法说明，格式：「我们测算（假设条件：XXX，公式：XXX）」
+7. 第三方预测数据必须标注「此为XX券商预测，非公司事实」
+8. 每个数据点必须标注查询日期或数据截止日期，格式：
+   - 「2024年营收XX亿元（公司2024年年报，查询日期2026-07-27）」
+
+---SEPARATOR---
+
+## 前一段核心结论（请在此段内延续因果链）
+
+---SEPARATOR---
+
+## 分析工具输出（数据驱动结论，请在写作中引用）
+
+---SEPARATOR---
+
+## 上一轮门禁评审反馈（请针对性改进）
+
+---SEPARATOR---
+本段无需引用图表，但可以通过数据表格支撑论点。
+---SEPARATOR---
+
+## 写作规则
+1. 因果推理链要求：每个论点必须有「因为→所以→因此」的推理链。
+2. So What 链：每个分析板块末尾必须给出「这意味着…」的投资含义。
+3. 数据来源标注：每个关键数字必须标注来源。
+4. 判断词前置：每节开头100字符内出现「我们认为」「我们判断」「核心判断」「核心分歧在于」之一。
+5. 人感写作：使用「我从业15年来首次看到…」「这与2019年XX行业的情况类似…」等经验引用。
+6. 反方论证：在合理位置引入反方观点并回应。
+7. 图表嵌入：你必须嵌入所有可用图表，每张图单独成段，格式为「如图X所示：图表标题」。确保报告全文至少有4张嵌入图。
+8. 纯文本输出：直接输出Markdown格式正文，不要包含「好的」「收到」等AI痕迹开头。
+9. 表格要求：本部分至少包含1个数据对比表格（Markdown格式）。 报告全文至少有2个表格。
+
+---SEPARATOR---
+本段建议字数：1200-2500字。每个SAC步骤分配约300-600字。
+---SEPARATOR---
+从SAC为dimension_ids构建定义文本
+---SEPARATOR---
+构建图表元数据列表（从SAC加载器获取图表配置）
+---SEPARATOR---
+[全量优化] 运行核心分析工具，产出结构化分析结果供 DeepSeek 使用
+
+        通过 ToolOrchestrator 统一调用 8 个分析工具：
+        - elasticity_analyzer: 弹性分析（SAC elasticity_analysis 维度）
+        - signal_chain: 信号链分析（SAC signal_chain 维度）
+        - life_cycle_mapper: 生命周期映射（SAC life_cycle 维度）
+        - moat_analyzer: 护城河分析（SAC competitive 维度）
+        - multi_model_validator: 多模型校验
+        - decision_gate: 决策门判断（SAC decision_gate 维度）
+        - capital_flow_analyzer: 资金面分析（SAC capital_flow 维度）
+        - industry_chain_analyzer: 产业链分析（SAC industry_chain 维度）
+        - policy_scorer: 政策评分（SAC policy 维度）
+        - accounting_analyzer: 会计分析
+
+        所有工具调用被 try/except 包裹，失败不阻断写作流程。
+        
+---SEPARATOR---
+ToolOrchestrator not available, trying individual tools
+---SEPARATOR---
+ToolOrchestrator failed: %s
+---SEPARATOR---
+core.tools.signal_chain
+---SEPARATOR---
+core.tools.life_cycle_mapper
+---SEPARATOR---
+core.tools.moat_analyzer
+---SEPARATOR---
+格式化 ToolOrchestrator 的输出
+---SEPARATOR---
+序列化数据上下文，保留数据来源锚点供LLM精确引用
+---SEPARATOR---
+你是资深行业分析师周力，拥有15年行业研究经验，写作风格参考中金/高盛/McKinsey等顶级机构研报。
+你只写完整的一段研究报告正文，不写完整的报告（其他段由其他分析师撰写）。
+图表必须嵌入正文对应位置。输出直接是Markdown格式正文。
+不要以「好的」「收到」「我将为您」等AI痕迹开头，直接输出报告正文。
+不要在正文中提及「SAC」「11维」「范式路由」等系统内部术语。
+禁止使用「AI生成」「AI辅助」等表述。
+---SEPARATOR---
+Segment %d DeepSeek call failed: %s
+---SEPARATOR---
+
+
+（本段因API调用失败未能生成。错误: 
+---SEPARATOR---
+[^。]*?(?:我们认为|我们判断|核心判断|核心结论|我们预计)[^。]*。
+---SEPARATOR---
+本报告基于公开信息和可靠数据源编制，仅供参考，不构成投资建议。报告中的观点和预测可能因市场变化而调整，投资者应独立做出投资决策。本报告由周力撰写，作者持有中国证券业执业资格。
+---SEPARATOR---
+============================================================
+---SEPARATOR---
+
+OK SectionWriter 初始化正常
+---SEPARATOR---

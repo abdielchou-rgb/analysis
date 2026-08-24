@@ -1,0 +1,30 @@
+name: Issue Tree
+author: McKinsey & Company
+source: Consulting problem-solving methodology
+core_thesis: 把大问题拆成互斥穷尽（MECE）的子问题树，每个节点可单独验证，确保结论覆盖所有可能
+tags:
+- 问题拆解
+- MECE
+- 结构化
+sac_dimension_mapping:
+- core_disagreement
+- falsification
+- decision_gate
+priority: 2
+logic_chain:
+- step: 定义主问题
+  dimensions:
+  - 委托方要回答的核心问题是什么（FP0 必答问题）
+  - 决策点是什么
+- step: 拆第一层子问题
+  dimensions:
+  - 按 MECE 拆 3-5 个互斥子问题（如：市场/能力/财务/风险/路径）
+- step: 继续下拆
+  dimensions:
+  - 每个子问题递归拆到"可收集数据验证"粒度
+  - 子问题必须覆盖主问题的全部维度（穷尽性检查）
+- step: 按树组织报告
+  dimensions:
+  - 报告章节 = 问题树的主要分支
+  - 每章回答对应子问题，验证或推翻假设
+apply_instruction: 分析开始前先画问题树（从必答问题出发），报告结构按问题树分支组织，禁止跳过分支。

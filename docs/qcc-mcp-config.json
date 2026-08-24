@@ -1,0 +1,68 @@
+{
+  "mcpServers": {
+    "qcc-company": {
+      "url": "https://agent.qcc.com/mcp/company/stream",
+      "headers": {
+        "Authorization": "Bearer MkxW3yHbtr41ts0MYc678r8y3dN95gW4UA3NOPnItJn5CxBL"
+      }
+    },
+    "qcc-risk": {
+      "url": "https://agent.qcc.com/mcp/risk/stream",
+      "headers": {
+        "Authorization": "Bearer MkxW3yHbtr41ts0MYc678r8y3dN95gW4UA3NOPnItJn5CxBL"
+      }
+    },
+    "qcc-ipr": {
+      "url": "https://agent.qcc.com/mcp/ipr/stream",
+      "headers": {
+        "Authorization": "Bearer MkxW3yHbtr41ts0MYc678r8y3dN95gW4UA3NOPnItJn5CxBL"
+      }
+    },
+    "qcc-operation": {
+      "url": "https://agent.qcc.com/mcp/operation/stream",
+      "headers": {
+        "Authorization": "Bearer MkxW3yHbtr41ts0MYc678r8y3dN95gW4UA3NOPnItJn5CxBL"
+      }
+    },
+    "qcc-history": {
+      "url": "https://agent.qcc.com/mcp/history/stream",
+      "headers": {
+        "Authorization": "Bearer MkxW3yHbtr41ts0MYc678r8y3dN95gW4UA3NOPnItJn5CxBL"
+      }
+    },
+    "qcc-executive": {
+      "url": "https://agent.qcc.com/mcp/executive/stream",
+      "headers": {
+        "Authorization": "Bearer MkxW3yHbtr41ts0MYc678r8y3dN95gW4UA3NOPnItJn5CxBL"
+      }
+    },
+    "qcc-legal-regulation": {
+      "url": "https://agent.qcc.com/mcp/regulation/stream",
+      "headers": {
+        "Authorization": "Bearer MkxW3yHbtr41ts0MYc678r8y3dN95gW4UA3NOPnItJn5CxBL"
+      }
+    },
+    "qcc-legal-case": {
+      "url": "https://agent.qcc.com/mcp/case/stream",
+      "headers": {
+        "Authorization": "Bearer MkxW3yHbtr41ts0MYc678r8y3dN95gW4UA3NOPnItJn5CxBL"
+      }
+    },
+    "qcc-document": {
+      "url": "https://agent.qcc.com/mcp/document/stream",
+      "headers": {
+        "Authorization": "Bearer MkxW3yHbtr41ts0MYc678r8y3dN95gW4UA3NOPnItJn5CxBL"
+      }
+    },
+    "qcc-document-mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "qcc-document-mcp"
+      ],
+      "env": {
+        "QCC_DOCUMENT_AUTHORIZATION": "Bearer MkxW3yHbtr41ts0MYc678r8y3dN95gW4UA3NOPnItJn5CxBL"
+      }
+    }
+  }
+}

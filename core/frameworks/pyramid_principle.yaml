@@ -1,0 +1,31 @@
+name: Pyramid Principle
+author: Barbara Minto
+source: The Minto Pyramid Principle (1987, McKinsey)
+core_thesis: 结论先行，论据分层——从塔尖（核心结论）到塔基（支撑论据），读者先看到结论再看到理由
+tags:
+- 结论先行
+- 逻辑分层
+- 表达结构
+sac_dimension_mapping:
+- exec_summary
+- core_disagreement
+- so_what
+priority: 1
+logic_chain:
+- step: 塔尖结论
+  dimensions:
+  - 一句话回答必答问题（进/不进/条件性进）
+  - 结论必须是决策点答案，不是描述
+- step: 第一层论据
+  dimensions:
+  - 3-5 个互斥穷尽的大论据（为什么进/不进）
+  - 每个论据可独立成立
+- step: 第二层支撑
+  dimensions:
+  - 每个大论据下挂数据/事实/分析支撑
+  - 支撑必须能回溯到数据源（双向溯源）
+- step: So What 链
+  dimensions:
+  - 每层论据回答"所以呢"
+  - 塔尖结论与塔基论据逻辑一致
+apply_instruction: 全文用金字塔结构——执行摘要给塔尖结论，正文按论据分层展开，每层逻辑一致。

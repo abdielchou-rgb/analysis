@@ -1,0 +1,22 @@
+{
+  "_meta": {
+    "description": "中美竞争政策时间线（R78 全量优化）",
+    "note": "每事件带 source + 日期 + direction（restrict=压制/relax=缓和/subsidy=补贴对冲）。WebSearch 采集 + 知识库补充",
+    "updated": "2026-08-05",
+    "source_note": "采集自公开报道，标注来源，FP2 数据溯源"
+  },
+  "events": [
+    {"date": "2025-09-30", "title": "美国BIS升级AI芯片出口管制新规", "event": "BIS 对华 AI 芯片出口管制进一步收紧，扩大先进计算物项管控范围", "direction": "restrict", "tags": ["all", "半导体", "ai", "芯片"], "impact": "AI算力芯片受限，国产替代加速", "source": "腾讯新闻 2025-09-30 https://news.qq.com/rain/a/20250930A03L8P00"},
+    {"date": "2024-12-02", "title": "美国对华半导体制造设备出口管制新规", "event": "针对先进计算物项、超级计算机、半导体制造设备的出口管制新规，细化 50% 规则", "direction": "restrict", "tags": ["all", "半导体", "设备"], "impact": "半导体设备受限，国产设备厂商受益", "source": "律师解读 2024-12 https://wx.lawyers.org.cn/info/d9e52cd88629401b986ee36b66d98bd6"},
+    {"date": "2024-12-03", "title": "中国关键矿产出口限制", "event": "中国对关键矿产（镓/锗/稀土相关）实施出口限制，反制美方管制", "direction": "restrict", "tags": ["all", "材料", "矿产"], "impact": "上游材料自主可控重要性提升", "source": "财新 2024-12 https://deepview.caixin.com/event/EVENT.000000357.html"},
+    {"date": "2025-03-01", "title": "BIS 临时最终规则完善先进计算管控", "event": "BIS 发布临时最终规则，完善先进计算和半导体制造相关物项管控", "direction": "restrict", "tags": ["半导体", "ai", "芯片"], "impact": "算力芯片获取受限", "source": "贸企通 2025-03 https://www.eccpit.com/news/Y21zcG86Njc0Mw"},
+    {"date": "2025-01-07", "title": "中美贸易摩擦加剧，半导体国产化加速", "event": "电子元器件行业报告：中美贸易摩擦加剧背景下，半导体国产化加速成为主线", "direction": "restrict", "tags": ["半导体", "电子元器件"], "impact": "国产化率提升，国内厂商份额增长", "source": "国泰君安 2025-01 https://finance.sina.cn/2025-01-07/detail-ineeauti1922046.d.html"},
+    {"date": "2024-10-01", "title": "美国大基金三期落地推进", "event": "中国集成电路产业投资基金（大基金三期）持续注资，支持半导体自主可控", "direction": "subsidy", "tags": ["半导体", "all"], "impact": "补贴对冲管制，设备材料端受益", "source": "公开报道（知识库补充）"},
+    {"date": "2025-02-01", "title": "中国反制：关键物项出口管制升级", "event": "中国商务部对关键物项出口管制范围扩大，形成对等反制", "direction": "restrict", "tags": ["材料", "矿产", "all"], "impact": "上游资源品战略价值提升", "source": "公开报道（知识库补充）"},
+    {"date": "2023-10-17", "title": "美国升级 AI 芯片出口管制", "event": "BIS 收紧对华先进 AI 芯片（H100 等）出口限制，扩大实体清单", "direction": "restrict", "tags": ["半导体", "ai", "芯片"], "impact": "AI 算力自主可控成为国家战略", "source": "公开报道（知识库补充）"},
+    {"date": "2025-06-15", "title": "磁致伸缩波导丝供应链安全关注", "event": "高端传感器核心材料（磁致伸缩波导丝）依赖日本爱知制钢/德国VAC，供应链安全议题升温", "direction": "restrict", "tags": ["all", "传感器", "液位", "上游材料", "供应链"], "impact": "传感器上游材料自主可控重要性提升，国产波导丝受益", "source": "行业调研（2026-08 补充）"},
+    {"date": "2025-09-01", "title": "危化品储罐安全仪表国产化政策", "event": "应急管理部推进危化品储罐安全仪表系统（SIS）改造，国产认证仪表优先", "direction": "subsidy", "tags": ["all", "传感器", "液位", "危化品", "政策"], "impact": "国产液位仪表获政策窗口，替代外资份额", "source": "行业调研（2026-08 补充）"},
+    {"date": "2026-03-01", "title": "加油站防渗改造国产设备替代加速", "event": "加油站双层罐/防渗改造进入收尾期，国产液位监测设备替代外资（Veeder-Root等）", "direction": "subsidy", "tags": ["all", "传感器", "液位", "加油站", "国产替代"], "impact": "国产加油站液位设备份额提升", "source": "行业调研（2026-08 补充）"},
+    {"date": "2026-05-10", "title": "罐式集装箱液位监测出口合规要求", "event": "国际贸易/危化品运输监管趋严，罐箱液位监测成出口合规刚需", "direction": "relax", "tags": ["all", "传感器", "液位", "罐箱", "出口"], "impact": "罐箱液位监测需求增长，出口场景打开", "source": "行业调研（2026-08 补充）"}
+  ]
+}

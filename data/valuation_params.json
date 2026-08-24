@@ -1,0 +1,364 @@
+{
+  "紫光国微": {
+    "risk_free": 0.0284,
+    "market_risk": 0.0663,
+    "beta": 0.84,
+    "wacc": 0.0841,
+    "growth": 0.0691
+  },
+  "闻泰科技": {
+    "risk_free": 0.0305,
+    "market_risk": 0.0626,
+    "beta": 0.93,
+    "wacc": 0.0846,
+    "growth": 0.0696
+  },
+  "万科A": {
+    "wacc": 0.08,
+    "growth": -0.005
+  },
+  "三只松鼠": {
+    "growth": 0.025,
+    "wacc": 0.015
+  },
+  "上海机场": {
+    "risk_free": 0.0305,
+    "market_risk": 0.0663,
+    "beta": 0.88,
+    "wacc": 0.0984,
+    "growth": 0.0562
+  },
+  "中国国旅": {
+    "wacc": 0.0795,
+    "growth": 0.007
+  },
+  "中芯国际": {
+    "growth": 0.03,
+    "risk_free": 0.02,
+    "market_risk": 0.0675,
+    "beta": 0.96,
+    "wacc": 0.0826
+  },
+  "五粮液财务预测建模": {
+    "wacc": 0.1013,
+    "growth": 0.0042
+  },
+  "京东方A财务预测建模": {
+    "risk_free": 0.0313,
+    "market_risk": 0.0663,
+    "beta": 1.11,
+    "wacc": 0.075,
+    "growth": 0.06
+  },
+  "伊利股份": {
+    "growth": 0.025,
+    "wacc": 0.015
+  },
+  "兆易创新": {
+    "risk_free": 0.0328,
+    "market_risk": 0.0663,
+    "beta": 1.0,
+    "wacc": 0.0988,
+    "growth": 0.015
+  },
+  "分众传媒": {
+    "risk_free": 0.0189,
+    "market_risk": 0.0663,
+    "beta": 1.0,
+    "wacc": 0.0975,
+    "growth": 0.015
+  },
+  "华兰生物": {
+    "risk_free": 0.0305,
+    "market_risk": 0.04,
+    "beta": 0.86,
+    "wacc": 0.0928,
+    "growth": 0.0771
+  },
+  "宁德时代": {
+    "wacc": 0.0957,
+    "growth": 0.015
+  },
+  "恒瑞医药": {
+    "wacc": 0.08,
+    "growth": 0.065
+  },
+  "智飞生物财务预测建模": {
+    "wacc": 0.0844,
+    "growth": 0.0,
+    "risk_free": 0.0273,
+    "market_risk": 0.0663,
+    "beta": 0.872
+  },
+  "格力电器": {
+    "growth": 0.02,
+    "wacc": 0.01
+  },
+  "海天味业": {
+    "growth": 0.025,
+    "wacc": 0.015
+  },
+  "海康威视": {
+    "growth": 0.025,
+    "wacc": 0.015
+  },
+  "海螺水泥": {
+    "wacc": 0.1,
+    "growth": 0.0
+  },
+  "爱美客": {
+    "growth": 0.01,
+    "risk_free": 0.0313,
+    "beta": 0.9455,
+    "wacc": 0.01
+  },
+  "片仔癀": {
+    "wacc": 0.08,
+    "growth": 0.03
+  },
+  "用友网络": {
+    "risk_free": 0.0318,
+    "market_risk": 0.0663,
+    "beta": 0.8,
+    "wacc": 0.0947,
+    "growth": 0.0
+  },
+  "石头科技": {
+    "risk_free": 0.0316,
+    "market_risk": 0.0663,
+    "beta": 1.1,
+    "wacc": 0.1045,
+    "growth": 0.0
+  },
+  "立讯精密": {
+    "risk_free": 0.0322,
+    "market_risk": 0.0663,
+    "beta": 0.79,
+    "wacc": 0.0898,
+    "growth": 0.0
+  },
+  "美的集团": {
+    "wacc": 0.1005,
+    "growth": 0.0,
+    "risk_free": 0.0305,
+    "market_risk": 0.066,
+    "beta": 0.95
+  },
+  "老板电器": {
+    "growth": 0.025,
+    "wacc": 0.015
+  },
+  "苏宁易购": {
+    "growth": 0.025,
+    "wacc": 0.015
+  },
+  "药明康德": {
+    "wacc": 0.09,
+    "growth": 0.03
+  },
+  "长春高新（永久）": {
+    "risk_free": 0.0328,
+    "market_risk": 0.0663,
+    "beta": 0.89,
+    "wacc": 0.0986,
+    "growth": 0.083
+  },
+  "长江电力": {
+    "wacc": 0.0682,
+    "growth": -0.015
+  },
+  "隆基股份": {
+    "risk_free": 0.0305,
+    "market_risk": 0.0663,
+    "beta": 1.2176,
+    "wacc": 0.1087,
+    "growth": 0.0
+  },
+  "顺丰控股": {
+    "risk_free": 0.0316,
+    "market_risk": 0.0663,
+    "beta": 0.97,
+    "wacc": 0.0881,
+    "growth": 0.015
+  },
+  "香飘飘": {
+    "risk_free": 0.027,
+    "market_risk": 0.0663,
+    "beta": 0.94,
+    "wacc": 0.0893,
+    "growth": 0.0743
+  },
+  "金蝶国际": {
+    "risk_free": 0.02,
+    "market_risk": 0.0675,
+    "beta": 0.95,
+    "wacc": 0.0838,
+    "growth": 0.0601
+  },
+  "石药集团": {
+    "risk_free": 0.02,
+    "market_risk": 0.0675,
+    "beta": 0.84,
+    "wacc": 0.0767,
+    "growth": 0.0617
+  },
+  "心动公司": {
+    "risk_free": 0.02,
+    "market_risk": 0.0675,
+    "beta": 1.01,
+    "wacc": 0.0882,
+    "growth": 0.073
+  },
+  "中国生物": {
+    "risk_free": 0.0121,
+    "market_risk": 0.0675,
+    "beta": 1.0615,
+    "wacc": 0.0827,
+    "growth": 0.0677
+  },
+  "旷视科技": {
+    "risk_free": 0.0305,
+    "market_risk": 0.0407,
+    "beta": 0.94,
+    "wacc": 0.0966,
+    "growth": 0.015
+  },
+  "中国财险-永久用户": {
+    "risk_free": 0.0316,
+    "market_risk": 0.0675,
+    "beta": 1.12,
+    "wacc": 0.1088,
+    "growth": 0.0938
+  },
+  "中国铁塔": {
+    "risk_free": 0.02,
+    "market_risk": 0.0675,
+    "beta": 0.9278,
+    "wacc": 0.0686,
+    "growth": 0.05
+  },
+  "小米集团": {
+    "growth": 0.025,
+    "wacc": 0.015
+  },
+  "海底捞": {
+    "growth": 0.025,
+    "wacc": 0.015
+  },
+  "港交所": {
+    "wacc": 0.1,
+    "growth": 0.0
+  },
+  "美团": {
+    "growth": 0.025,
+    "wacc": 0.015
+  },
+  "腾讯控股": {
+    "growth": 0.025,
+    "wacc": 0.015
+  },
+  "吉利德": {
+    "risk_free": 0.018,
+    "market_risk": 0.0626,
+    "beta": 0.87,
+    "wacc": 0.0834,
+    "growth": 0.0684
+  },
+  "谷歌": {
+    "risk_free": 0.0159,
+    "market_risk": 0.0626,
+    "beta": 0.95,
+    "wacc": 0.0751,
+    "growth": 0.0601
+  },
+  "JP-Tesla": {
+    "beta": 0.78,
+    "wacc": 0.0572,
+    "market_risk": 0.02
+  },
+  "英伟达": {
+    "market_risk": 0.0596,
+    "beta": 1.43,
+    "wacc": 0.0844,
+    "growth": 0.0666
+  },
+  "亚马逊": {
+    "growth": 0.025,
+    "wacc": 0.015
+  },
+  "京东": {
+    "growth": 0.025,
+    "wacc": 0.015
+  },
+  "伯克希尔哈撒韦": {
+    "market_risk": 0.0626,
+    "beta": 0.9237,
+    "wacc": 0.0845
+  },
+  "华住酒店": {
+    "growth": 0.025,
+    "wacc": 0.015
+  },
+  "哔哩哔哩": {
+    "growth": 0.025,
+    "wacc": 0.015
+  },
+  "唯品会": {
+    "growth": 0.025,
+    "wacc": 0.015
+  },
+  "德州仪器": {
+    "wacc": 0.0831,
+    "growth": 0.0,
+    "risk_free": 0.0185,
+    "market_risk": 0.0626,
+    "beta": 1.06
+  },
+  "新浪微博": {
+    "growth": 0.025,
+    "wacc": 0.015
+  },
+  "星巴克": {
+    "risk_free": 0.0176,
+    "market_risk": 0.0626,
+    "beta": 0.87,
+    "wacc": 0.0682,
+    "growth": 0.0532
+  },
+  "爱奇艺": {
+    "growth": 0.025,
+    "wacc": 0.015
+  },
+  "百度": {
+    "growth": 0.025,
+    "wacc": 0.015
+  },
+  "网易": {
+    "risk_free": 0.0185,
+    "market_risk": 0.09,
+    "beta": 0.85,
+    "wacc": 0.0894,
+    "growth": 0.0744
+  },
+  "腾讯音乐": {
+    "growth": 0.03,
+    "wacc": 0.02
+  },
+  "阿里巴巴": {
+    "growth": 0.025,
+    "wacc": 0.015
+  },
+  "麦当劳": {
+    "risk_free": 0.0189,
+    "market_risk": 0.0626,
+    "beta": 0.5,
+    "wacc": 0.0451,
+    "growth": 0.0301
+  },
+  "拼多多- 财务": {
+    "wacc": 0.1413,
+    "risk_free": 0.03,
+    "beta": 1.1977,
+    "growth": -0.03
+  }
+}

@@ -1,0 +1,206 @@
+id: sac_decision_memo
+name: 决策备忘录 - 委托方决策情报框架(V1 R83)
+applies_to:
+- decision_memo
+
+# R83（2026-08-07）：给委托方（董事长/CEO/事业部负责人）的决策情报报告
+# 定位：只写委托方不知道的增量信息；本组织基本面已知，不赘述
+# 区分：禁评级/目标价（面向二级市场）；强制执行摘要/决策建议/最坏损失/路线图
+# 来源：油位 v0.89 事故诊断（写成了投资评级报告而非董事长决策备忘录）
+
+logic_chain:
+- step: 委托方问题解析
+  description: 先明确报告读者是谁、要做什么决策、必答问题是什么。委托方问题清单为顶层约束
+  maps_to:
+  - client_questions
+- step: 执行摘要
+  description: 一页拍板——进/不进/条件性进 + 依据 + 投入 + 回报 + 最坏损失。金字塔顶部
+  maps_to:
+  - exec_summary
+- step: 行业真相
+  description: 委托方不知道的增量信息——市场规模(三角验证)/竞争真相/卡脖子环节/政策节奏窗口
+  maps_to:
+  - market_size
+  - competitive
+  - industry_chain
+  - policy
+- step: 禀赋匹配度
+  description: 我方现有能力能否承接？技术栈适配/生产主体/渠道真伪——不赘述本公司基本面
+  maps_to:
+  - capability_gap
+  - production_subject
+- step: 路径决策
+  description: 怎么进——生产主体三选(自制/外协/子公司承接) + 转移定价合规
+  maps_to:
+  - production_subject
+  - transfer_pricing
+- step: 财务测算
+  description: 收入三浪/投入/敏感性——当期利润 vs 战略期权价值
+  maps_to:
+  - financial_projection
+  - sensitivity
+- step: 最坏损失
+  description: 投入沉没后的最大损失，用金额锚定（非模糊定性）——低沉没成本+高战略期权
+  maps_to:
+  - worst_case_loss
+- step: 执行路线图
+  description: 分季度里程碑 + 验收标准——可执行、可跟踪
+  maps_to:
+  - roadmap
+- step: 延伸产业
+  description: 能否进入相邻品类/上游卡位（可选维度，数据支撑时展开）
+  maps_to:
+  - adjacent_expansion
+  - bottleneck
+
+pre_workflow:
+- step: 委托方问题清单确认
+  description: 确认读者身份、决策点、必答问题——缺此步则报告对象错位
+- step: 增量信息盘点
+  description: 列出委托方已知 vs 未知——只写未知，已知不赘述
+- step: 结论先行
+  description: 先把结论(进/不进/怎么进)放在最前面，证据在后
+
+writing_rhythm:
+  name: 决策备忘录写作节奏(V1)
+  description: 金字塔结构——结论先行，行业调研为重头戏，战略分析附带
+  flow_diagram: 一句话结论 -> 行业真相(60%) -> 禀赋匹配(25%) -> 路径决策(15%) -> 财务测算 -> 最坏损失 -> 路线图
+  principles:
+  - '【R83】结论先行: 第一段必须给出"进/不进/条件性进"的明确建议，禁止从行业背景开始'
+  - '【R83】只写增量: 委托方已知的本组织基本面(营收/净利/战略)不赘述，只写"进入此赛道的禀赋匹配度"判断'
+  - '【R83】禁评级目标价: 本类型面向委托方决策，不输出二级市场评级/12个月目标价'
+  - '【R83】金额锚定风险: 最坏损失必须用金额(如"约1.7亿=半年利润")，禁止"有一定风险"式模糊定性'
+  - '【R83】行业调研为重头戏: 行业真相部分(市场/竞争/卡脖子/政策窗口)占全文约60%'
+  - '【R83】必答问题逐条回答: 委托方问题清单中的每个问题必须有明确结论，禁止回避'
+  - '【R83】每段收束: 每个分析板块结尾回答"这对我们的决策意味着什么"'
+  - '【R83】可执行路线图: 结尾必须给分季度里程碑+验收标准，让委托方能立即落地执行'
+  - 数据不足时诚实标注(E)并说明获取路径，不硬凑
+
+required_dimensions:
+- id: client_questions
+  question: 委托方必答问题清单——读者+决策点+必答问题逐条回答
+  evidence_min: 1
+  position: page_1
+  answers_question: "委托方要回答什么问题"
+  required_sub_elements:
+  - (委托方|决策|必答|是否值得|能否|可行性|最坏)
+- id: exec_summary
+  question: 执行摘要——一句话结论(进/不进/条件性进)+依据+投入+回报+最坏损失
+  evidence_min: 2
+  position: page_1
+  answers_question: "进/不进/条件性进？"
+  required_sub_elements:
+  - (结论|建议|值得|投入|最坏损失|回报)
+- id: market_size
+  question: 市场规模——三角验证(多口径交叉)，明确口径边界与增速
+  evidence_min: 2
+  counter_evidence: true
+  position: body
+  answers_question: "市场规模多大？空间与节奏？"
+  required_sub_elements:
+  - (市场规模|市场空间|TAM|SAM|SOM|CAGR)
+- id: competitive
+  question: 竞争真相——真正的对手是谁、份额格局、进入壁垒本质
+  evidence_min: 2
+  counter_evidence: true
+  position: body
+  answers_question: "竞争格局与卡位是否关键？"
+  required_sub_elements:
+  - (竞争|份额|壁垒|集中度|对手)
+- id: industry_chain
+  question: 卡脖子环节——产业链瓶颈/上游自主率/核心材料依赖
+  evidence_min: 1
+  position: body
+  answers_question: "上游卡脖子是否有衍生机会？"
+  required_sub_elements:
+  - (产业链|卡脖子|上游|自主率|瓶颈|依赖)
+- id: policy
+  question: 政策节奏——政策驱动窗口/执行率/时间窗口
+  evidence_min: 1
+  position: body
+  answers_question: "政策窗口与节奏如何？"
+  required_sub_elements:
+  - (政策|窗口|执行率|合规|监管)
+- id: capability_gap
+  question: 禀赋匹配度——我方技术栈能否承接/差距在哪/需补什么
+  evidence_min: 1
+  position: body
+  answers_question: "我方能力能否承接？"
+  required_sub_elements:
+  - (适配|差距|技术栈|能力|承接)
+- id: production_subject
+  question: 生产主体决策——自制/外协/子公司承接三选 + 推荐路径
+  evidence_min: 1
+  position: body
+  answers_question: "怎么进：自制/外协/子公司？"
+  required_sub_elements:
+  - (生产|自制|外协|承接|主体|子公司)
+- id: transfer_pricing
+  question: 内部转移定价合规——关联交易公允性
+  evidence_min: 1
+  position: body
+  answers_question: "转移定价是否合规？"
+  required_sub_elements:
+  - (转移定价|关联交易|公允|定价)
+- id: financial_projection
+  question: 财务测算——收入三浪/投入/敏感性
+  evidence_min: 1
+  position: body
+  answers_question: "投入产出比如何？多久回本？"
+  required_sub_elements:
+  - (收入|测算|投入|敏感性|三浪|回报)
+- id: worst_case_loss
+  question: 最坏损失上限——投入沉没后最大损失金额锚定
+  evidence_min: 1
+  position: body
+  answers_question: "最坏损失多少？能否承受？"
+  required_sub_elements:
+  - (最坏|损失|沉没|上限|最大)
+- id: roadmap
+  question: 执行路线图——分季度里程碑+验收标准
+  evidence_min: 1
+  position: end
+  answers_question: "怎么落地？分几步？"
+  required_sub_elements:
+  - (路线图|里程碑|季度|Q1|Q2|Q3|Q4|验收|第一步)
+
+chart_config:
+  min_charts: 4
+  min_tables: 3
+  charts:
+  - id: fig_market_size_global
+    num: 1
+    type: bar
+    caption: 全球{asset}市场规模趋势(三角验证口径)
+    source: 行业研究/公开数据
+    maps_to: market_size
+  - id: fig_market_size_china
+    num: 2
+    type: bar
+    caption: 中国{asset}市场规模趋势
+    source: 行业研究/公开数据
+    maps_to: market_size
+  - id: fig_industry_chain
+    num: 3
+    type: waterfall
+    caption: '{asset}产业链价值分布与卡脖子环节'
+    source: 公开资料整理/行业访谈
+    maps_to: industry_chain
+  - id: fig_competitive_landscape
+    num: 4
+    type: bar_cluster
+    caption: '{asset}竞争格局(委托方视角)'
+    source: 各公司年报/行业研究
+    maps_to: competitive
+  - id: fig_production_path
+    num: 5
+    type: flow
+    caption: 生产主体三选决策图
+    source: 内部测算
+    maps_to: production_subject
+  - id: fig_roadmap
+    num: 6
+    type: timeline
+    caption: 执行路线图(Q1-Q4里程碑)
+    source: 内部规划
+    maps_to: roadmap

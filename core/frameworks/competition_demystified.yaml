@@ -1,0 +1,66 @@
+# Competition Demystified Framework
+# Bruce Greenwald — 竞争优势的三维判断
+
+id: competition_demystified
+name: "竞争优势三维框架"
+author: "Bruce Greenwald"
+source: "Competition Demystified (2005)"
+
+core_thesis: >
+  大多数公司的竞争分析过于复杂。竞争优势本质上只有三种：供应优势（技术/资源）、
+  需求优势（客户锁定/转换成本）、规模经济（固定成本分摊）。一家公司只要拥有
+  其中一种就能获得超额利润，拥有两种以上则几乎不可战胜。
+  竞争战略的核心是识别你所拥有的优势类型并最大化它。
+
+logic_chain:
+  - step: "进入壁垒判断"
+    description: "是否存在有效的进入壁垒？——没有壁垒的行业没有超额利润"
+    tools: ["barrier_assessment"]
+    output: "has_barrier, barrier_type"
+
+  - step: "竞争优势三维诊断"
+    description: "供应优势/需求优势/规模经济——至少占一种才算有护城河"
+    tools: ["competitive_advantage_matrix"]
+    output: "advantage_profile, advantage_strength"
+
+  - step: "竞争动态评估"
+    description: "优势在加强还是削弱？竞争对手在做什么？替代威胁？"
+    output: "competitive_trend, response_capacity"
+
+  - step: "战略定位建议"
+    description: "基于优势类型的战略选择——防御/扩张/收缩/退出"
+    output: "strategic_recommendation, priority_actions"
+
+analytical_dimensions:
+  barrier_assessment:
+    question: "行业是否存在有效的进入壁垒？"
+    sub_questions:
+      - "过去5年有新进入者吗？他们成功了吗？"
+      - "在位企业的利润率是否高于资本成本？"
+    evidence_min: 1
+
+  advantage_profile:
+    question: "公司拥有哪种竞争优势？强度如何？"
+    sub_questions:
+      - "供应优势：是否有独特技术/资源/许可？"
+      - "需求优势：客户转换成本高吗？品牌锁定强吗？"
+      - "规模经济：固定成本占比高吗？规模壁垒强吗？"
+    evidence_min: 2
+    counter_evidence: true
+
+  competitive_trend:
+    question: "竞争优势是在加强还是削弱？"
+    sub_questions:
+      - "技术变化是否在侵蚀现有优势？"
+      - "竞争对手的模仿速度如何？"
+    evidence_min: 1
+
+key_metrics:
+  - "has_barrier"
+  - "advantage_types_count"
+  - "advantage_strength_score"
+  - "competitive_trend"
+
+counter_argument:
+  required: true
+  method: "竞争优势是动态的——今天的技术优势可能被明天的新技术颠覆；规模经济在数字化时代可能被平台模式绕过"

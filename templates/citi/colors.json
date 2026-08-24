@@ -1,0 +1,15 @@
+{
+  "primary": "#003B71",
+  "secondary": "#ED1C24",
+  "accent": "#6CACE4",
+  "text": "#333333",
+  "background": "#FFFFFF",
+  "chart_palette": [
+    "#003B71",
+    "#ED1C24",
+    "#6CACE4",
+    "#A2C8F0",
+    "#F4A3A8",
+    "#7D8C95"
+  ]
+}
