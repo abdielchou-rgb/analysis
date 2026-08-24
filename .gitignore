@@ -136,3 +136,7 @@ data/llm_cache/
 assets/models/
 assets/deep_reports/
 assets/valuation/
+
+# Coverage artifacts
+.coverage
+benchmark/coverage_baseline.json
