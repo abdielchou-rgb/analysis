@@ -1540,63 +1540,13 @@ class AnalysisChecksMixin:
             det = 'All charts are real'
         return GateCheckResult(name='placeholder_charts', passed=passed, score=score, details=det, severity=severity)
 
-    def _check_cross_section_consistency(self) -> GateCheckResult:
-        """P0-跨节核心指标一致性检查（2026-08-05 新增）。
 
-        从报告全文提取关键数字（目标价、投资评级、净利率、EPS），
-        对同一指标在全文出现的多个值做比对，发现冲突则阻断/告警。
-        防止 LLM 在不同章节给出矛盾的估值数字（铁证如山的 P0 级错误）。
-        """
-        import re as _re
-        text = self.report_text or ""
-        if len(text) < 300:
-            return GateCheckResult("cross_section_consistency", True, 1.0,
-                                   "text too short, skipped", severity="warning")
-
-        conflicts = []
-
-        # ── 1. 目标价一致性 ──
-        # R88（2026-08-06）：排除"情景目标价"——悲观/乐观/下行/上行/基准 等
-        # 双情景披露（如"悲观情景目标价27元 vs 基准38.48元"）是合法分析产出，
-        # 仅保留"主目标价"（投资评级段/核心判断段）做一致性比对，防误杀。
-        target_prices = []
-        # R88b（2026-08-06）：检查窗口向前扩展到"目标价"前 40 字符，
-        # 防止"悲观情景（PE压缩至20x）对应目标价27元"中情景词在目标价之前被漏检。
-        for m in _re.finditer(r'([^。\n]{0,40}?目标价[^。\n]{0,40}?(\d+\.?\d*)\s*元)', text):
-            ctx = m.group(0)
-            if _re.search(r'(悲观|乐观|下行|上行|基准情景|压力|熊市|牛市|情景)', ctx):
-                continue
-            target_prices.append(m.group(2))
-        if len(target_prices) >= 2:
-            unique_tp = set(target_prices)
-            if len(unique_tp) >= 2:
-                conflicts.append("目标价冲突: %s" % ", ".join(sorted(unique_tp)))
-
-        # ── 2. 净利率一致性 ──
-        net_margins = _re.findall(r'(?:净利率|净利润率)[^。]*?(\d+\.?\d*)\s*%', text)
-        if len(net_margins) >= 2:
-            nums = [float(x) for x in net_margins]
-            if max(nums) - min(nums) > 5.0:
-                conflicts.append("净利率不一致(差异>5pp): %s" %
-                                 ", ".join(f"{v:.1f}%" for v in sorted(nums)))
-
-        # ── 3. EPS 一致性 ──
-        eps_values = _re.findall(r'EPS[^。]*?(\d+\.?\d*)\s*元', text)
-        if len(eps_values) >= 2:
-            unique_eps = set(eps_values)
-            if len(unique_eps) >= 2:
-                conflicts.append("EPS冲突: %s" % ", ".join(sorted(unique_eps)))
-
-        # ── 判定 ──
-        if not conflicts:
-            return GateCheckResult("cross_section_consistency", True, 1.0,
-                                   "目标价/净利率/EPS跨节一致")
-
-        # 目标价冲突 → 阻断(error)；净利率/EPS冲突 → 告警(warning)
-        has_tp_conflict = any("目标价" in c for c in conflicts)
-        severity = "error" if has_tp_conflict else "warning"
-        passed = not has_tp_conflict
-        score = 0.0 if has_tp_conflict else max(0.3, 1.0 - 0.35 * len(conflicts))
-
-        return GateCheckResult("cross_section_consistency", passed, score,
-                               details="; ".join(conflicts), severity=severity)
+    def _check_methodology_compliance(self):
+        # P1-audit 2026-08-24：从 iron_gate.py 本体迁入 checks mixin——
+        # r61 迁移完整性测试只扫 checks/*.py 的 _check_* 定义，
+        # 留在 iron_gate 本体会被判为 run_all 执行了未定义方法。
+        from pipeline.checks.base import GateCheckResult
+        from pipeline.checks.methodology_compliance import check_methodology_compliance
+        r = check_methodology_compliance(self.report_text or '', self.report_type or '')
+        det = '; '.join(r['issues'][:3]) if r['issues'] else '无'
+        return GateCheckResult('methodology_compliance', r['passed'], r['score'], det, severity='warning')

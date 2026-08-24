@@ -424,19 +424,8 @@ class IronGate(ContentFormatChecksMixin, DataQualityChecksMixin, AnalysisChecksM
                            for c in checks if not c.passed]
         # FP7a: Register gate failures with LearningLoop for evolution
         # FP5: Gate回馈 — 失败模式自动注册+优先级提升
-        if not report.passed:
-            _fail_names = [c.name for c in report.checks if not c.passed]
-            if hasattr(self, '_fail_counter'):
-                for fn in _fail_names:
-                    self._fail_counter[fn] = self._fail_counter.get(fn, 0) + 1
-            else:
-                self._fail_counter = {fn: 1 for fn in _fail_names}
-            # 连续失败3次的检查项 → 标记为"需prompt调整" + 自动降级约束方式
-            _hot_fails = [fn for fn, cnt in self._fail_counter.items() if cnt >= 3]
-            if _hot_fails:
-                report.suggestions.append(f"[HOT] 连续失败: {', '.join(_hot_fails[:3])}")
-        # FP7a: Register gate failures with LearningLoop for evolution
-        # FP5: Gate回馈 — 失败模式自动注册+优先级提升
+        # P2-audit 2026-08-24：此块曾被整段复制两遍 → 同一失败计数 +2，
+        # hot-fail 阈值(3次)实际 1.5 轮就触发，且 [HOT] 建议重复 append。已去重。
         if not report.passed:
             _fail_names = [c.name for c in report.checks if not c.passed]
             if hasattr(self, '_fail_counter'):
@@ -596,14 +585,9 @@ class IronGate(ContentFormatChecksMixin, DataQualityChecksMixin, AnalysisChecksM
     # R55（2026-08-03 方法论升级）：行业报告质量护栏
     # ══════════════════════════════════════════════════════════
 
-
-
-    def _check_methodology_compliance(self):
-        from pipeline.checks.base import GateCheckResult
-        from pipeline.checks.methodology_compliance import check_methodology_compliance
-        r = check_methodology_compliance(self.report_text or "", self.report_type or "")
-        det = "; ".join(r["issues"][:3]) if r["issues"] else "无"
-        return GateCheckResult("methodology_compliance", r["passed"], r["score"], det, severity="warning")
+    # P1-audit 2026-08-24：_check_methodology_compliance 已迁入
+    # pipeline/checks/analysis_mixin.py（r61 迁移完整性要求检查方法
+    # 统一存放于 checks/，此处保留会破坏 AST 扫描的 defined==executed 断言）
 
 def _detect_value_conflicts(report_text: str, data_dict: dict) -> list:
     """检测正文与数据字典的数值冲突（数据打架）。
