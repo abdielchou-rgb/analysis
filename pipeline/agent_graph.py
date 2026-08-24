@@ -93,7 +93,23 @@ class AgentGraph:
                     _trace_id or "-", node_id, node["description"][:60])
         t0 = time.time()
         try:
-            output = node["fn"](node_id, context)
+            # P2-audit 2026-08-24：timeout_s 此前存入 dict 后从未使用——
+            # 节点挂死即挂死整条管线。现用单发线程池 + future.result(timeout)
+            # 实装。注意：超时后工作线程无法被杀死（Python 线程不可中断），
+            # 但管线可立即按失败处理并 SKIP 下游节点。
+            _timeout_s = int(node.get("timeout_s") or 0)
+            if _timeout_s > 0:
+                from concurrent.futures import ThreadPoolExecutor
+                from concurrent.futures import TimeoutError as _FutureTimeout
+                with ThreadPoolExecutor(max_workers=1, thread_name_prefix=f"ag-{node_id}") as _ex:
+                    _fut = _ex.submit(node["fn"], node_id, context)
+                    try:
+                        output = _fut.result(timeout=_timeout_s)
+                    except _FutureTimeout:
+                        raise TimeoutError(
+                            f"node '{node_id}' exceeded timeout_s={_timeout_s}s") from None
+            else:
+                output = node["fn"](node_id, context)
             # R78：节点完成 trace
             logger.info("  [TRACE %s] AgentGraph done: %s (%.1fs)",
                         _trace_id or "-", node_id, time.time() - t0)

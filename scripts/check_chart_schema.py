@@ -89,6 +89,11 @@ def check_enrich_whitelist(schema: dict) -> list[str]:
 
 
 def main() -> int:
+    # P1-audit 2026-08-24: Windows GBK 控制台无法编码 ✓/⚠️ → 强制 UTF-8
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
     strict = "--strict" in sys.argv
     schema = load_schema()
     all_issues = []

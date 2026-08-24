@@ -1519,7 +1519,8 @@ class SectionWriter:
             return self._clean(r["choices"][0]["message"]["content"])
         except Exception as e:
             logger.error("Seg %d failed: %s", seg_idx, e)
-            raise RuntimeError("LLM call failed for section %d" % (seg_idx+1))
+            # P2-audit 2026-08-24: raise from e 保住根因链（此前根因被切断）
+            raise RuntimeError("LLM call failed for section %d" % (seg_idx+1)) from e
 
     @staticmethod
     def _clean(text):
