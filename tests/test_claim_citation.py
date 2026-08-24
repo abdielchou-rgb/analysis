@@ -13,6 +13,7 @@ if str(_ROOT) not in sys.path:
 import pytest
 
 from core.claim_citation import (
+    annotate_inline,
     append_citation_appendix,
     build_claim_citation_map,
 )
@@ -80,3 +81,24 @@ def test_tolerance_boundary():
     outside = append_citation_appendix("数值为102.0个单位。", cd)
     assert "附录：关键数据溯源" in inside
     assert "附录：关键数据溯源" not in outside
+
+
+class TestInlineMode:
+    @pytest.mark.unit
+    def test_inline_markers_and_numbered_appendix(self):
+        out, claims = annotate_inline(REPORT, COLLECTED)
+        assert len(claims) >= 2
+        assert "[注1]" in out and "[注2]" in out
+        assert "## 附录：数据溯源注释" in out
+        assert "[注1] 数据键" in out
+
+    @pytest.mark.unit
+    def test_inline_no_match_returns_original(self):
+        out, claims = annotate_inline(REPORT, {"chart_data": {}})
+        assert out == REPORT and claims == []
+
+    @pytest.mark.unit
+    def test_delimiters_preserved(self):
+        """标记不得吞掉句号——句子完整性保持（脚注标在标点前）。"""
+        out, _ = annotate_inline("全球市场规模2025年34.8亿美元，行业稳态。", COLLECTED)
+        assert "行业稳态[注1]。" in out

@@ -129,3 +129,47 @@ def append_citation_appendix(report_text: str, collected_data: dict) -> str:
     if not appendix:
         return report_text
     return report_text.rstrip() + "\n" + appendix
+
+
+# ── 内联脚注模式（P3-audit 2026-08-24，env REPORT_CITATION_INLINE 门控）──
+# STORM 式 claim-level citation 的正文形态：命中句尾追加 [注N] 标记，
+# 附录同步编号。默认关——内联标记改变报告版面，由调用方按交付形态选择。
+
+
+def render_numbered_appendix(claims: list[dict], max_rows: int = 30) -> str:
+    if not claims:
+        return ""
+    lines = ["", "## 附录：数据溯源注释", ""]
+    for i, c in enumerate(claims[:max_rows], 1):
+        src = "；".join(c["sources"]) or "—"
+        lines.append(f"[注{i}] 数据键 {', '.join(c['refs'])}｜来源：{src}｜论断：{c['claim']}")
+    if len(claims) > max_rows:
+        lines.append(f"…（其余 {len(claims) - max_rows} 条略）")
+    lines.append("")
+    lines.append("*本附录由管线确定性生成：正文数值与数据字典 ±0.5% 容差匹配。*")
+    return "\n".join(lines)
+
+
+def annotate_inline(report_text: str, collected_data: dict, max_markers: int = 40) -> tuple[str, list[dict]]:
+    """命中句尾追加 [注N] 脚注标记 + 返回编号后的完整文本与 claims。
+
+    与 append_citation_appendix 二选一；无命中时原文返回。
+    """
+    claims = build_claim_citation_map(report_text, collected_data)
+    if not claims:
+        return report_text, []
+    id_by_claim = {c["claim"]: i + 1 for i, c in enumerate(claims)}
+    # 以保留分隔符的方式切分（与 build 的句子边界一致：句末标点+换行）
+    parts = re.split(r"([。！？]|\n)", report_text)
+    n_marked = 0
+    out: list[str] = []
+    for seg in parts:
+        out.append(seg)
+        key = seg.strip()[:100]
+        if seg.strip() and len(seg.strip()) >= 8 and key in id_by_claim and n_marked < max_markers:
+            # 仅在非分隔符段后加标记
+            out.append(f"[注{id_by_claim[key]}]")
+            n_marked += 1
+    marked_text = "".join(out).rstrip()
+    appendix = render_numbered_appendix(claims)
+    return marked_text + "\n" + appendix, claims

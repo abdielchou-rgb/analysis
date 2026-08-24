@@ -188,12 +188,18 @@ def run_pipeline(
     cleaned_md = _re.sub(r"<!--.*?-->", "", cleaned_md, flags=_re.DOTALL)
     cleaned_md = _re.sub(r"\n{3,}", "\n\n", cleaned_md).strip()
     # P3-audit 2026-08-24：claim 级溯源附录（STORM 式数字→数据键→来源）。
-    # 纯确定性匹配，env REPORT_CITATION_APPENDIX=0 可关。
+    # 纯确定性匹配，env REPORT_CITATION_APPENDIX=0 可关；
+    # REPORT_CITATION_INLINE=1 切换为内联脚注形态（[注N] 标记+编号附录）。
     if os.environ.get("REPORT_CITATION_APPENDIX", "1") != "0":
         try:
-            from core.claim_citation import append_citation_appendix
+            if os.environ.get("REPORT_CITATION_INLINE", "0") == "1":
+                from core.claim_citation import annotate_inline
 
-            cleaned_md = append_citation_appendix(cleaned_md, pipe_result.get("collected_data", {}) or {})
+                cleaned_md, _claims = annotate_inline(cleaned_md, pipe_result.get("collected_data", {}) or {})
+            else:
+                from core.claim_citation import append_citation_appendix
+
+                cleaned_md = append_citation_appendix(cleaned_md, pipe_result.get("collected_data", {}) or {})
         except Exception as _cc_err:
             logger.warning("[CITATION] 溯源附录生成失败: %s", str(_cc_err)[:80])
     md_path.write_text(cleaned_md, encoding="utf-8")
