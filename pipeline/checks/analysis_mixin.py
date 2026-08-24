@@ -825,6 +825,17 @@ class AnalysisChecksMixin:
 
         # FP7b L1 降级：非上市/降级场景 DCF 敏感性属锦上添花（非上市无公开 DCF 数据），
         # 降为 advisory；正常模式保持硬阻断
+        # P3-audit 2026-08-24：earnings_notes（业绩快评）以 PE/EPS 快速定价为主，
+        # 完整 DCF 敏感性矩阵非常规配置——与 industry/unlisted 豁免同理降为
+        # advisory，防类型错配把快评卡死在 0.5 分档（宁德时代 E2E 实测触发）。
+        if self.report_type == "earnings_notes":
+            return GateCheckResult(
+                name="dcf_sensitivity",
+                passed=score >= 0.3,
+                score=min(score, 1.0),
+                details="DCF sensitivity: %.2f (patterns: %d/6, matrix: %s) [advisory]" % (score, hits, has_matrix),
+                severity="warning",
+            )
         severity = "warning" if self._allow_placeholder_degradation else "error"
         return GateCheckResult(
             name="dcf_sensitivity",

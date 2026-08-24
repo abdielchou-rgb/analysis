@@ -1072,6 +1072,20 @@ class E2ENodes:
             return {"critic_passed": False}
 
 
+def _record_predictions_safe(report_text: str, asset: str) -> int:
+    """P3-A：Gate 通过的硬结论写入预测问责账本（失败静默，绝不阻塞交付）。"""
+    try:
+        from core.prediction_extract import record_predictions
+
+        n = record_predictions(report_text, asset)
+        if n:
+            logger.info("[PREDICTION-LEDGER] %s 写入 %d 条可问责预测", asset, n)
+        return n
+    except Exception as e:
+        logger.debug("[PREDICTION-LEDGER] %s", str(e)[:60])
+        return 0
+
+
 class E2EOrchestratorV2:
     # R48（2026-08-02）：迭代上限支持环境变量 MAX_ATTEMPTS
     # 性能模式默认 3（快速收敛）；训练模式可设 5-10（自迭代打磨）
@@ -1550,6 +1564,11 @@ class E2EOrchestratorV2:
                     "data_sufficiency": ctx.get("data_sufficiency", {}),
                     # P3-audit: claim 级溯源附录的数据源（main.py 消费）
                     "collected_data": ctx.get("collected_data", {}),
+                    # P3-A: 预测账本——Gate 通过的硬结论写入问责账本（失败静默）
+                    "predictions_recorded": _record_predictions_safe(
+                        ctx.get("final_text", ctx.get("report_text", "")),
+                        self.asset,
+                    ),
                 }
             last_error = ["Gate blocked"] if result.passed else result.failed_nodes
             # R8 跨轮质量退化报警：记录每轮 Gate score，比上一轮显著下降 → 报警。
@@ -1876,6 +1895,17 @@ def _revision_targets_from_gate(gate_feedback: str) -> list:
         ("so_what_chain", "每段补 So What 链（数据→分析→判断→建议）"),
         ("explicit_conclusion", "开头给出明确评级+目标价+核心观点"),
         ("data_traceability", "每个数值标注具体来源（机构+报告+日期）"),
+        # P3-audit 2026-08-24：E2E 实测高频失败项 → 修订靶向
+        (
+            "source_entity",
+            "来源标注实体化：把『公司公告/公司年报/券商研究报告』改写为"
+            "【公司名+文档名+日期】（如 宁德时代2025年三季报、高盛2026-08研报）",
+        ),
+        (
+            "annotation_types",
+            "补齐四类证据标注：历史业绩(A)、一致预期(E)、本报告预测(F)、"
+            "行业基准/可比(B)，全文至少各出现一次且必须含(A)",
+        ),
         ("evidence_layer", "提升数据来源覆盖率"),
         ("persuasion_architecture", "补市场共识表述与反方观点论证"),
         ("chart_analysis_quality", "每个图表附近加至少50字数据分析"),
