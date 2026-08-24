@@ -208,3 +208,29 @@ instruction hierarchy + spotlighting（已做第一层）。
 **用确定性验证栈守住"不出错"，用预测问责账本积累"谁更准"，用自进化环路让系统
 每跑一份报告就变得更准一点——这三件事叠加，就是任何通用深研智能体都复制不了
 的护城河。**
+
+---
+
+## 附录：Phase A 执行纪要（2026-08-24）
+
+**已落地**：
+- Gate 收敛率专项：R97/R98/R99 双路径注入、dcf_sensitivity 对 earnings_notes
+  转 advisory、修订靶向映射 +2 → 三轮 E2E 后 annotation_types / so_what_chain /
+  source_entity / dcf 全部退出失败清单（score 0.85→0.88 稳定）
+- 预测账本激活：prediction_extract + e2e 出口挂钩（实测提取 增持/318.5）
+- 来源分层：source_tier 四层打分 + 池统计 + 高置信占比
+- 红队：7 用例确定性回放全 PASS + promptfoo 脚手架（node v24 就绪，npm 源待配）
+- SDD 闭环：PIPELINE_FACTS.md 实时生成 + sdd-facts-sync 钩子
+
+**顺手挖出的真 bug（本轮 +4）**：
+1. editor_merge 输出 token 上限静默丢尾部维度（SAC 覆盖 3/5 根因）→ 小总量
+   确定性拼接 + 超阈分桶两段合并
+2. StyleCompiler 注入泛化来源 与 source_entity 检查自相矛盾 → 改为不伪造来源
+3. checkpoint attempt≥上限导致重跑砖化 → 上限保护
+4. _normalize_indicator 裸子串把 revision_slope 归入 PE 簇 → 词边界匹配
+
+**已知边界**：
+- eval_gate 相对基线未按报告类型分层（earnings_notes 会被深度报告基线拒之
+  flywheel 外）→ Phase B 待办：阈值分型
+- Gate 收敛最后一公里：SAC 维度覆盖（segment_analysis/outlook_implication）
+  属修订循环工艺，基础设施已就位

@@ -642,6 +642,10 @@ def _inj_tm_str(ctx):
 
 # ── 注册表 ──────────────────────────────────────────────────
 # (变量名, 注入器)。section_writer 侧按变量名取回，下游 prompt 组装零改动。
+
+# P3-B：追加注入器（方法论置信度 / [E#] 证据清单）从子模块挂载
+from pipeline.prompt_injectors_p3b import _inj_ev_str, _inj_mc_str  # noqa: E402
+
 INJECTORS = [
     ("fc_str", _inj_fc_str),
     ("ac_str", _inj_ac_str),
@@ -673,14 +677,37 @@ INJECTORS = [
     ("tt_str", _inj_tt_str),
     ("bm_str", _inj_bm_str),
     ("_tm_str", _inj_tm_str),
+    ("mc_str", _inj_mc_str),
+    ("ev_str", _inj_ev_str),
 ]
 
 
+# P3-B：骨架模式跳过集（重计算/长文本注入器）
+SKELETON_SKIP = {
+    "geo_str",
+    "tri_str",
+    "di_str",
+    "mc_str",
+    "ev_str",
+    "bn_str",
+    "ma_str",
+    "pm_str",
+    "tt_str",
+    "bm_str",
+}
+
+
 def build_injections(
-    asset: str, report_type: str, data_context: dict, asset_code: str = "", data_dict: dict = None
+    asset: str,
+    report_type: str,
+    data_context: dict,
+    asset_code: str = "",
+    data_dict: dict = None,
+    skeleton: bool = False,
 ) -> dict:
     """运行全部注入器，返回 {变量名: 内容}。
 
+    skeleton=True 时跳过重注入（对应 settings.skeleton_mode 冒烟档）。
     单个注入器异常已在内部降级为空串；本层再兜一层保证永不中断写作。
     """
     ctx = {
@@ -692,6 +719,9 @@ def build_injections(
     }
     out = {}
     for name, fn in INJECTORS:
+        if skeleton and name in SKELETON_SKIP:
+            out[name] = ""
+            continue
         try:
             out[name] = fn(ctx) or ""
         except Exception as e:  # 注入器自身漏接的最后防线

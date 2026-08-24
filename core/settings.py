@@ -131,3 +131,17 @@ def enrich_anchor_file() -> str:
 def min_data_density() -> float:
     """数据充足度下限。消费方: preflight/data_collector"""
     return _float("MIN_DATA_DENSITY", 0.30)
+
+
+# ── 编辑合并 ──────────────────────────────────────────────────
+
+
+def editor_llm_merge_max_chars() -> int:
+    """低于该总字数走确定性拼接（LLM 输出 token 上限会静默丢尾部维度）。
+    消费方: section_writer._editor_merge"""
+    return _int("EDITOR_LLM_MERGE_MAX_CHARS", 12_000)
+
+
+def editor_bucket_chars() -> int:
+    """超过上阈时分桶两段合并的单桶字数。section_writer._editor_merge"""
+    return _int("EDITOR_BUCKET_CHARS", 11_000)

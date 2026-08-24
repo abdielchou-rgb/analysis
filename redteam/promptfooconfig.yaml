@@ -8,7 +8,7 @@
 # FastAPI 包装 /v1/chat 后改用 http provider。
 providers:
   - id: exec
-    transform: file://transform_spotlight.js
+    transform: "input => input"
     config:
       command:
         - ..\\.venv\\Scripts\\python.exe

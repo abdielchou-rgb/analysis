@@ -120,6 +120,10 @@ class SectionWriter:
         self.chart_config = self.sac.get_chart_config()
         self.segments = self._build_segments()
         self._chart_paths = {}
+        # P3-B：骨架档 → 注入器走 SKELETON_SKIP 精简集
+        from core import settings as _settings
+
+        self._skeleton_mode = _settings.skeleton_mode()
 
     def _build_segments(self):
         chain = self.logic_chain
@@ -1909,6 +1913,7 @@ class SectionWriter:
             data_context=getattr(self, "_last_data_context", None) or {},
             asset_code=getattr(self, "_asset_code", ""),
             data_dict=getattr(self, "_data_dict", None) or {},
+            skeleton=bool(getattr(self, "_skeleton_mode", False)),
         )
         fc_str = _inj["fc_str"]
         ac_str = _inj["ac_str"]
@@ -1940,6 +1945,9 @@ class SectionWriter:
         tt_str = _inj["tt_str"]
         bm_str = _inj["bm_str"]
         _tm_str = _inj["_tm_str"]
+        # P3-B：方法论置信度先验 + [E#] 证据清单
+        mc_str = _inj["mc_str"]
+        ev_str = _inj["ev_str"]
 
         # 2. 各组并行写
         def _write_group(g):
@@ -2130,6 +2138,8 @@ class SectionWriter:
                 + (f"## 基准对标（引用到竞争/判断章节，个股 vs 指数/行业基准）\n{bm_str[:900]}\n\n" if bm_str else "")
                 + (
                     f"## 工具模块数据（弹性/信号链/护城河/生命周期/多模型，引用到对应分析章节）\n{_tm_str[:1200]}\n\n"
+                    + (f"{ev_str[:1600]}\n\n" if ev_str else "")
+                    + (f"{mc_str[:600]}\n\n" if mc_str else "")
                     if _tm_str
                     else ""
                 )
@@ -2314,10 +2324,53 @@ class SectionWriter:
         支撑国际投行级字数（1.2-1.5万字深度报告）。
         """
         # 控制输入长度（组数×3000 字上限，R53 提额）
-        sections = []
-        for i, t in enumerate(group_texts):
-            sections.append(f"### 组{i + 1}输出\n{t[:4500]}")
-        joined = "\n\n".join(sections)
+        # P3-audit 2026-08-24 丢维根因修复：
+        #   LLM 合并的输出 max_tokens(~8K) 无法复现 2 万字输入 → 尾部组
+        #   （如 segment_analysis/outlook_implication）被静默丢弃，
+        #   Gate SAC 覆盖 3/5 的直接原因。
+        # 策略：a) 小总量确定性拼接（零丢失）；b) 超阈分桶两段合并；
+        #       c) 单组 4500 截断改在标题边界并留标记。
+
+        def _cap(t: str, cap: int = 4500) -> str:
+            if len(t) <= cap:
+                return t
+            cut = t.rfind("\n#", 0, cap)  # 截在最近标题边界
+            if cut > 800:
+                return t[:cut] + "\n\n[注：本组超长，尾部细节见数据字典与图表]"
+            return t[:cap]
+
+        total = sum(len(t) for t in group_texts)
+        from core import settings as _settings
+
+        if total <= _settings.editor_llm_merge_max_chars():
+            logger.info("[EDITOR] 总量 %d 字 ≤ 阈值 → 确定性拼接（防 LLM 输出上限丢节）", total)
+            sections = [f"### 组{i + 1}输出\n{t}" for i, t in enumerate(group_texts)]
+            return "\n\n".join(sections)
+
+        buckets: list[list[str]] = []
+        cur: list[str] = []
+        cur_len = 0
+        for t in group_texts:
+            if cur and cur_len + len(t) > _settings.editor_bucket_chars():
+                buckets.append(cur)
+                cur, cur_len = [], 0
+            cur.append(t)
+            cur_len += len(t)
+        if cur:
+            buckets.append(cur)
+
+        if len(buckets) == 1:
+            sections = [f"### 组{i + 1}输出\n{_cap(t)}" for i, t in enumerate(group_texts)]
+            joined = "\n\n".join(sections)
+        else:
+            merged_parts = []
+            base = 0
+            for bucket in buckets:
+                sections_b = [f"### 组{base + j + 1}输出\n{_cap(t)}" for j, t in enumerate(bucket)]
+                sub = self._llm_merge_once(asset, "\n\n".join(sections_b), provider)
+                merged_parts.append(sub or "\n\n".join(sections_b))
+                base += len(bucket)
+            return "\n\n".join(merged_parts)
         # R83（2026-08-07）：按报告类型构造合并提示
         _title = "决策备忘录" if self.report_type == "decision_memo" else "深度研究报告"
         _rating_req = (
@@ -2355,6 +2408,10 @@ class SectionWriter:
             "等AI免责痕迹——报告必须像人类专业分析师撰写。\n"
             "直接输出完整合并后的报告正文。"
         )
+        return self._llm_merge_once(asset, prompt, provider, fallback="\n\n".join(group_texts))
+
+    def _llm_merge_once(self, asset, user_content: str, provider, fallback: str):
+        """单次 LLM 合并（user_content=完整合并指令）。失败回退 fallback 文本。"""
         try:
             _sys_role = (
                 "你是资深战略顾问，擅长为委托方撰写决策备忘录，只输出决策建议、投入产出和风险边界，不输出投资评级和目标价。"
@@ -2364,7 +2421,7 @@ class SectionWriter:
             r = call_deepseek(
                 [
                     {"role": "system", "content": _sys_role},
-                    {"role": "user", "content": prompt},
+                    {"role": "user", "content": user_content},
                 ],
                 temperature=0.3,
                 max_tokens=settings.seg_max_tokens(),
@@ -2373,7 +2430,7 @@ class SectionWriter:
             return r["choices"][0]["message"]["content"]
         except Exception as e:
             logger.warning("[EDITOR] 编辑合并失败，直接拼接: %s", str(e)[:80])
-            return "\n\n".join(group_texts)
+            return fallback
 
     @staticmethod
     def _inject_report_header(text: str) -> str:

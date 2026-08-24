@@ -6,6 +6,7 @@ P3-audit 2026-08-24 Strangler-Fig 重构的守护测试：
 3. 条件注入器按 report_type 正确门控
 4. 单个注入器抛异常不拖垮整体（返回空串）
 """
+
 import sys
 from pathlib import Path
 
@@ -19,8 +20,7 @@ from pipeline.prompt_injectors import INJECTORS, build_injections
 
 
 def _ctx(**over):
-    base = {"asset": "测试标的", "report_type": "listed_company",
-            "data_context": {}, "asset_code": "", "data_dict": {}}
+    base = {"asset": "测试标的", "report_type": "listed_company", "data_context": {}, "asset_code": "", "data_dict": {}}
     base.update(over)
     return base
 
@@ -31,7 +31,7 @@ def test_registry_returns_all_contract_keys():
     expected = {name for name, _ in INJECTORS}
     assert set(out.keys()) == expected, f"注册表与返回键不一致: {expected ^ set(out.keys())}"
     # 与 section_writer 消费端约定的 30 个变量名
-    assert len(expected) == 30
+    assert len(expected) == 32  # P3-B: +mc_str/ev_str
 
 
 @pytest.mark.unit
@@ -59,18 +59,20 @@ def test_conditional_injectors_gated_by_report_type():
 @pytest.mark.unit
 def test_broken_data_does_not_crash():
     """畸形 data_context 不应抛异常——全部降级为空串或正常值。"""
-    out = build_injections(**_ctx(data_context={"chart_data": None,
-                                                "compute_results": "not-a-dict",
-                                                "universe_summary": 12345}))
-    assert isinstance(out, dict) and len(out) == 30
+    out = build_injections(
+        **_ctx(data_context={"chart_data": None, "compute_results": "not-a-dict", "universe_summary": 12345})
+    )
+    assert isinstance(out, dict) and len(out) == 32
 
 
 @pytest.mark.unit
 def test_single_injector_failure_isolated(monkeypatch):
     """某个注入器炸了 → 该键空串，其余照常。"""
     import pipeline.prompt_injectors as pi
+
     def _boom(ctx):
         raise RuntimeError("boom")
+
     monkeypatch.setitem(pi.__dict__, "_inj_esg_str", _boom)
     # 直接操作注册表内引用（INJECTORS 持函数对象）
     saved = dict(pi.INJECTORS)

@@ -141,12 +141,16 @@ def test_group_char_requirement_800():
 
 
 def test_editor_merge_no_hard_truncation():
-    """编辑合并不应再 2500字/段 硬截断。"""
+    """编辑合并不应有硬截断；小总量确定性拼接防丢维。
+
+    P3-audit 2026-08-24：截断升级为标题边界感知 _cap(4500)，
+    超阈走分桶两段合并——断言随之迁移。
+    """
     src = (Path(__file__).parent.parent / "pipeline" / "section_writer.py").read_text(encoding="utf-8")
-    assert "[:4500]" in src, "编辑合并截断应提升到 4500 字/段"
+    assert "_cap(t" in src and "4500" in src, "应保留 4500 上限（边界感知截断）"
+    assert "editor_llm_merge_max_chars" in src, "小总量应确定性拼接防丢维"
 
 
-# ── 4. P1-4：LLM provider 健康预检 ───────────────────────────
 def test_llm_probe_fast_fail():
     """provider 不可用时应快速失败（probe 短超时），不空耗 300s。
 

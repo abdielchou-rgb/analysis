@@ -1797,3 +1797,30 @@ class AnalysisChecksMixin:
         r = check_methodology_compliance(self.report_text or "", self.report_type or "")
         det = "; ".join(r["issues"][:3]) if r["issues"] else "无"
         return GateCheckResult("methodology_compliance", r["passed"], r["score"], det, severity="warning")
+
+    def _check_inline_citations(self) -> GateCheckResult:
+        """P3-B：[E#] 写作期证据标注密度（warning 级引导）。
+
+        配合注入器 ev_str 的《证据编号清单》：数字密集报告应出现
+        至少 2 处 [En] 引用。无清单/低密度仅降分告警，不阻断。
+        """
+        import re
+
+        text = self.report_text or ""
+        if len(text) < 1500:
+            return GateCheckResult("inline_citations", True, 1.0, "短文跳过", severity="warning")
+        tags = len(re.findall(r"\[E\d+\]", text))
+        nums = len(re.findall(r"\d+\.?\d*\s*(?:亿|万|%|倍|元)", text))
+        need = max(2, nums // 60)
+        if tags >= need:
+            return GateCheckResult(
+                "inline_citations", True, 1.0, f"E标注 {tags} 处 / 数字点 {nums}", severity="warning"
+            )
+            # unreachable
+        return GateCheckResult(
+            "inline_citations",
+            False,
+            max(0.3, 0.6 - (need - tags) * 0.1),
+            f"E标注不足: {tags}/{need}（数字点 {nums}）——关键数字请标 [En]",
+            severity="warning",
+        )
