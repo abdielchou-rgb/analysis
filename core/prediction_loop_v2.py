@@ -1,8 +1,7 @@
-"""预测闭环激活 — 把 prediction_loop 从骨架变成工作循环
+"""预测闭环激活器 — 让 prediction_loop 从骨架变成工作循环。
 
-接入流程：
-  预测(写报告时) → 存入 predictions.json → 到期自动验证
-  → 回测偏差 → 更新置信度 → 反馈到下一份报告
+接入流程：预测(写报告时) → 存入 predictions.json → 到期自动验证
+  → 回测偏差 → 更新置信度 → 反馈到下一份报告。
 """
 from __future__ import annotations
 import json
@@ -31,7 +30,7 @@ def _save(data: dict):
 
 
 class PredictionLoop:
-    """Record → verify → confidence update cycle."""
+    """Record -> verify -> confidence update cycle."""
 
     def __init__(self):
         self.data = _load()
@@ -78,20 +77,19 @@ class PredictionLoop:
             return f"预测记录: {total}条, 已验证: 0条（尚无到期验证）"
         deviations = [p["deviation_pct"] for p in self.data["predictions"]
                       if p.get("deviation_pct") is not None]
-        avg_dev = sum(abs(d) for d in deviations) / len(deviations) if deviations else 0
-        return (f"预测记录: {total}条, 已验证: {verified}条, "
-                f"平均偏差: {avg_dev:.1f}%, 待验证: {total-verified}条")
-
-    def due_soon(self, days: int = 30) -> list:
-        """即将到期的预测。"""
-        now = datetime.now()
-        cutoff = now + timedelta(days=days)
-        return [p for p in self.data["predictions"]
-                if not p["verified"] and
-                datetime.fromisoformat(p["due_date"]) <= cutoff]
+        if not deviations:
+            return f"预测记录: {total}条, 已验证: {verified}条（无量化偏差数据）"
+        avg_dev = sum(abs(d) for d in deviations) / len(deviations)
+        within_10 = sum(1 for d in deviations if abs(d) <= 10)
+        hit_rate = within_10 / len(deviations) * 100
+        lines = [
+            f"=== 预测回测总结 ===",
+            f"总预测: {total}条 | 已验证: {verified}条",
+            f"平均绝对偏差: {avg_dev:.2f}% | ±10%命中率: {hit_rate:.0f}%",
+        ]
+        return "\n".join(lines)
 
 
 if __name__ == "__main__":
     pl = PredictionLoop()
     print(pl.backtest_summary())
-}", "file_path": "D:/2hao-analyst/core/prediction_loop_v2.py"}

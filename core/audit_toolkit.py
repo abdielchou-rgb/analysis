@@ -1,4 +1,4 @@
-"审计辅助工具包 — 收入确认规则(IFRS15/ASC606) + 异常检测 + 底稿骨架
+"""审计辅助工具包 — 收入确认规则(IFRS15/ASC606) + 异常检测 + 底稿骨架
 
 用法：
   from core.audit_toolkit import RevenueRecognition, AnomalyDetector, AuditWorkpaper
@@ -34,7 +34,7 @@ class RevenueRiskFlag:
 
 
 class RevenueRecognition:
-    \"\"\"IFRS15 / ASC606 收入确认五步法检查。\"\"\"
+    """IFRS15 / ASC606 收入确认五步法检查。"""
 
     RED_FLAGS = [
         ("收入增速 > 应收增速 2倍", "high", "收入可能被提前确认", "IFRS15.9"),
@@ -65,11 +65,11 @@ class RevenueRecognition:
             for f in flags:
                 lines.append(f"  [{f.severity.upper()}] {f.flag}")
                 lines.append(f"    {f.detail}（{f.ifrs_standard}）")
-        return "\\n".join(lines)
+        return "\n".join(lines)
 
 
 class AuditWorkpaper:
-    \"\"\"审计底稿骨架模板。\"\"\"
+    """审计底稿骨架模板。"""
 
     SECTIONS = [
         "一、审计概况",
@@ -89,15 +89,15 @@ class AuditWorkpaper:
     def generate(self, company: str, year: str) -> str:
         lines = [f"审计底稿 - {company} - {year}会计年度", "=" * 40]
         for s in self.SECTIONS:
-            lines.append(f"\\n{s}")
+            lines.append(f"\n{s}")
             lines.append("  [待填写]")
-        lines.append("\\n---")
+        lines.append("\n---")
         lines.append("编制人: [姓名]  复核人: [姓名]  日期: [日期]")
-        return "\\n".join(lines)
+        return "\n".join(lines)
 
 
 class AnomalyDetector:
-    \"\"\"财务异常检测。\"\"\"
+    """财务异常检测。"""
     def check_ratio_consistency(self, ratios: dict) -> list[str]:
         issues = []
         # 毛利率波动检查
@@ -111,4 +111,3 @@ class AnomalyDetector:
         if ar_ratio and ar_ratio > 0.5:
             issues.append(f"应收/收入比 {ar_ratio:.0%} > 50%（回款风险）")
         return issues
-]"}
