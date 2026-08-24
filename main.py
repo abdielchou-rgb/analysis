@@ -12,12 +12,12 @@
     4. Report Gate（导出 + 可视化门禁）
 """
 
-import sys
-import os
 import json
 import logging
-from pathlib import Path
+import os
+import sys
 from datetime import datetime
+from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent
 if str(_ROOT) not in sys.path:
@@ -44,8 +44,9 @@ try:
             _v = _v.strip().strip('"').strip("'")
             if _k and _k not in os.environ:
                 os.environ[_k] = _v
-        logger.info("[ENV-R69] 已从 .env 加载环境变量（deepseek=%s）",
-                    "OK" if os.environ.get("DEEPSEEK_API_KEY") else "MISSING")
+        logger.info(
+            "[ENV-R69] 已从 .env 加载环境变量（deepseek=%s）", "OK" if os.environ.get("DEEPSEEK_API_KEY") else "MISSING"
+        )
 except Exception as _e:
     logger.warning("[ENV-R69] .env 加载失败: %s", _e)
 
@@ -53,7 +54,9 @@ except Exception as _e:
 try:
     from export.report_gate import GateBlockedError
 except ImportError:
-    class GateBlockedError(Exception): pass
+
+    class GateBlockedError(Exception):
+        pass
 
 
 def run_pipeline(
@@ -77,14 +80,14 @@ def run_pipeline(
     Returns:
         dict: 包含 status / md / docx / gate_passed / gate_score
     """
-    print(f"\n{'='*60}")
-    print(f"  2hao-analyst Pipeline")
-    print(f"{'='*60}")
+    print(f"\n{'=' * 60}")
+    print("  2hao-analyst Pipeline")
+    print(f"{'=' * 60}")
     print(f"  标的: {asset}")
     print(f"  类型: {report_type}")
     print(f"  风格: {style}")
     print(f"  输出: {output_dir}")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     result = {
         "status": "ok",
@@ -98,6 +101,7 @@ def run_pipeline(
     print("[0/5] Harness 环境验证...")
     try:
         from harness.validator import run_all as harness_check
+
         h = harness_check()
         if not h.passed:
             h.print_report()
@@ -147,6 +151,7 @@ def run_pipeline(
     # Step 2: Iron Gate
     print("[2/5] Iron Gate 质量检查...")
     from pipeline.iron_gate import IronGate
+
     gate = IronGate.from_text(report_text, report_type, style, asset=asset)
     gate_result = gate.run_all()
     # P1-2 (audit 2026-08-01): 将 gate_result 存入 pipe_result，供 export 层复用
@@ -155,9 +160,11 @@ def run_pipeline(
     result["gate_passed"] = gate_result.passed
     result["gate_score"] = round(gate_result.overall_score, 3)
     result["gate_checks"] = gate_result.to_dict()
-    print(f"  IronGate: {'✓ 通过' if gate_result.passed else '✗ 阻断'} "
-          f"(score={result['gate_score']:.2f}, "
-          f"{len(gate_result.failures)} issues)")
+    print(
+        f"  IronGate: {'✓ 通过' if gate_result.passed else '✗ 阻断'} "
+        f"(score={result['gate_score']:.2f}, "
+        f"{len(gate_result.failures)} issues)"
+    )
 
     # Step 3: 导出
     print("[3/5] 导出报告...")
@@ -171,13 +178,24 @@ def run_pipeline(
     # 写盘前强制 strip AIGC 元数据，否则人工审计首要阅读的 MD 裸露 AIGC 块。
     try:
         from core.style import strip_aigc_metadata
+
         cleaned_md, _was_mod = strip_aigc_metadata(report_text)
     except ImportError:
         cleaned_md = report_text
     # 额外的排版整理：去除裸露的 HTML 注释块
     import re as _re
-    cleaned_md = _re.sub(r'<!--.*?-->', '', cleaned_md, flags=_re.DOTALL)
-    cleaned_md = _re.sub(r'\n{3,}', '\n\n', cleaned_md).strip()
+
+    cleaned_md = _re.sub(r"<!--.*?-->", "", cleaned_md, flags=_re.DOTALL)
+    cleaned_md = _re.sub(r"\n{3,}", "\n\n", cleaned_md).strip()
+    # P3-audit 2026-08-24：claim 级溯源附录（STORM 式数字→数据键→来源）。
+    # 纯确定性匹配，env REPORT_CITATION_APPENDIX=0 可关。
+    if os.environ.get("REPORT_CITATION_APPENDIX", "1") != "0":
+        try:
+            from core.claim_citation import append_citation_appendix
+
+            cleaned_md = append_citation_appendix(cleaned_md, pipe_result.get("collected_data", {}) or {})
+        except Exception as _cc_err:
+            logger.warning("[CITATION] 溯源附录生成失败: %s", str(_cc_err)[:80])
     md_path.write_text(cleaned_md, encoding="utf-8")
     result["md"] = str(md_path)
     print(f"  MD: {md_path}")
@@ -185,10 +203,14 @@ def run_pipeline(
     if gate_result.passed:
         try:
             from export.report_gate import export_report as gate_export
+
             exported = gate_export(
-                report_text, str(docx_path),
-                report_type=report_type, style=style,
-                company_name=asset, title=asset,
+                report_text,
+                str(docx_path),
+                report_type=report_type,
+                style=style,
+                company_name=asset,
+                title=asset,
             )
             result["docx"] = exported
             print(f"  DOCX: {exported}")
@@ -206,32 +228,34 @@ def run_pipeline(
     result["status"] = "ok" if result.get("gate_passed", False) else "error"
     if result["status"] != "ok":
         result["error"] = result.get("gate_error", "Iron Gate 未通过，报告未交付")
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"  完成: {result['status']}")
-    print(f"  Gate: {'✓' if result.get('gate_passed') else '✗'} "
-          f"score={result.get('gate_score', 'N/A')}")
+    print(f"  Gate: {'✓' if result.get('gate_passed') else '✗'} score={result.get('gate_score', 'N/A')}")
     for k in ["md", "docx"]:
         if result.get(k):
             print(f"  {k.upper()}: {result[k]}")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     return result
 
 
 def main():
     import argparse
+
     p = argparse.ArgumentParser(description="2hao-analyst — 深度研究报告生成")
     p.add_argument("asset", nargs="?", default="", help="分析标的")
-    p.add_argument("--type", "-t", default="industry_deep",
-                   choices=["industry_deep", "listed_company",
-                            "unlisted_company", "earnings_notes"])
-    p.add_argument("--style", "-s", default="cicc",
-                   help="机构风格（cicc/gs/ms/mck/bcg/jpm）")
+    p.add_argument(
+        "--type",
+        "-t",
+        default="industry_deep",
+        choices=["industry_deep", "listed_company", "unlisted_company", "earnings_notes"],
+    )
+    p.add_argument("--style", "-s", default="cicc", help="机构风格（cicc/gs/ms/mck/bcg/jpm）")
     p.add_argument("--output", "-o", default="output")
-    p.add_argument("--time-anchor", "-ta", default=None,
-                   help="时间锚点 JSON")
-    p.add_argument("--enrich-file", "-e", default=None,
-                   help="agent 补充数据 JSON 路径（见 pipeline/data_enrichment.py schema）")
+    p.add_argument("--time-anchor", "-ta", default=None, help="时间锚点 JSON")
+    p.add_argument(
+        "--enrich-file", "-e", default=None, help="agent 补充数据 JSON 路径（见 pipeline/data_enrichment.py schema）"
+    )
 
     args = p.parse_args()
     if not args.asset:
@@ -239,8 +263,7 @@ def main():
         return 1
 
     ta = json.loads(args.time_anchor) if args.time_anchor else None
-    result = run_pipeline(args.asset, args.type, args.style, args.output,
-                          ta, enrich_file=args.enrich_file)
+    result = run_pipeline(args.asset, args.type, args.style, args.output, ta, enrich_file=args.enrich_file)
     return 0 if result.get("status") == "ok" else 1
 
 
