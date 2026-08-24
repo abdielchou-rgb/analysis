@@ -10,6 +10,9 @@ from __future__ import annotations
 def serialize_chart_data(data):
     if not isinstance(data, dict):
         return ""
+    # P2-audit 2026-08-24：外部网页/新闻内容经 spotlighting 包装后进 prompt，
+    # 阻断间接 prompt injection（详见 core/untrusted_wrapper.py 模块注释）。
+    from core.untrusted_wrapper import spotlight_untrusted, is_external_source
     lines = []
     # ═══ 实时数据层(LIVE) — 报告中的"当前数据" ═══
     live = data.get("live", {}) if isinstance(data, dict) else {}
@@ -22,7 +25,7 @@ def serialize_chart_data(data):
         news = live.get("news")
         if news:
             lines.append("=== 实时新闻/动态 ===")
-            lines.append(f"  {str(news)[:300]}")
+            lines.append(f"  {spotlight_untrusted(news, source_label='news_feed', max_chars=300)}")
             lines.append("")
     
     # ═══ 参考知识层(REFERENCE) — 标注非实时 ═══
@@ -179,7 +182,16 @@ def serialize_chart_data(data):
                         lines.append("  .{}: {}".format(fk, fv[:900] + ("  [unit=" + _unit + "]" if _unit else "")))
             continue
         try:
-            lines.append("- {}: {}".format(k, str(v)[:300]))
+            # P2-audit 2026-08-24：兜底 dump 不得绕过 spotlighting——
+            # live/news 等外部渠道键若在此处整体 str() 会把未消毒内容再打一遍。
+            # 仅当键本身是外部来源、或其值实际携带外部素材（如 live.news）时包装；
+            # 纯确定性数据（live.financials 等）保持原样，不污染 prompt 可读性。
+            _has_news = isinstance(v, dict) and bool(v.get("news"))
+            if is_external_source(k) or _has_news:
+                lines.append("- {}: {}".format(
+                    k, spotlight_untrusted(str(v), source_label=str(k), max_chars=300)))
+            else:
+                lines.append("- {}: {}".format(k, str(v)[:300]))
         except Exception:
             pass
     return "\n".join(lines)
