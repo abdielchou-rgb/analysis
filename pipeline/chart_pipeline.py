@@ -108,6 +108,19 @@ DATA_PIPELINE_CHART_MAP = {
     "market_opportunity": {"chart_id": "market_opportunity",    "type": "pie"},
 }
 
+
+def _render_chart_task(payload):
+    """P3-audit 2026-08-24：进程池 worker（模块级函数，Windows spawn 可 pickle）。
+
+    pyplot 全局态非线程安全 → 用进程并行；子进程内重建轻量 ChartPipeline
+    （构造器仅 report_type/style/output_dir，避免 pickle 父实例）。
+    """
+    tmpl, chart_data, has_real_data, report_type, style, output_dir = payload
+    from pipeline.chart_pipeline import ChartPipeline
+    cp = ChartPipeline(report_type=report_type, style=style, output_dir=output_dir)
+    return cp._generate_chart(tmpl, data=chart_data, has_real_data=has_real_data)
+
+
 class ChartPipeline:
     def __init__(self, report_type="listed_company", style="cicc", output_dir="output/charts"):
         self.report_type = report_type
@@ -178,22 +191,64 @@ class ChartPipeline:
 
         # 从 data_pipeline 的 chart_data 提取已格式化的数据
         pipeline_chart_data = data.get("chart_data", {})
-        
-        for tmpl in templates:
-            # 尝试从 data_pipeline chart_data 映射实时数据
-            chart_data = self._extract_real_data(tmpl["id"], pipeline_chart_data, data)
-            # 如果映射失败，直接从 chart_data 中按 chart_id 查找
-            if chart_data is None and tmpl["id"] in pipeline_chart_data:
-                chart_data = pipeline_chart_data[tmpl["id"]]
-            # R51：判断该图是否用了真实数据（chart_data 非空且来自 pipeline）
-            is_template = chart_data is None
-            path = self._generate_chart(tmpl, data=chart_data, has_real_data=has_real_data)
+
+        def _classify(tmpl, path):
             if path:
                 chart_paths[tmpl["id"]] = path
-                template_flags[tmpl["id"]] = is_template
-            else:
-                logger.info("Chart %s skipped: insufficient real data", tmpl["id"])
-                chart_failures[tmpl["id"]] = "insufficient_data"
+                return True
+            logger.info("Chart %s skipped: insufficient real data", tmpl["id"])
+            chart_failures[tmpl["id"]] = "insufficient_data"
+            return False
+
+        def _prep_payload(tmpl):
+            chart_data = self._extract_real_data(tmpl["id"], pipeline_chart_data, data)
+            if chart_data is None and tmpl["id"] in pipeline_chart_data:
+                chart_data = pipeline_chart_data[tmpl["id"]]
+            return tmpl, chart_data, bool(chart_data is None)
+
+        _use_pool = (os.environ.get("CHART_PARALLEL", "1").lower() in ("1", "true", "yes")
+                     and len(templates) >= 4)
+        if _use_pool:
+            # P3-audit 2026-08-24：12 张串行 matplotlib → 进程池并行（渲染 CPU 密集）。
+            # 任何池化异常自动回退串行，保证功能等价。
+            try:
+                from concurrent.futures import ProcessPoolExecutor, as_completed
+                payloads = []
+                for tmpl in templates:
+                    _t, _cd, _is_tmpl = _prep_payload(tmpl)
+                    payloads.append((_t, _cd, has_real_data, self.report_type,
+                                     self.style, str(self.output_dir)))
+                maxw = int(os.environ.get("CHART_PARALLEL_WORKERS", "4"))
+                with ProcessPoolExecutor(max_workers=max(1, min(maxw, len(payloads)))) as ex:
+                    fut_map = {ex.submit(_render_chart_task, pl): pl[0]["id"] for pl in payloads}
+                    id2tmpl = {t["id"]: t for t in templates}
+                    id2tmpl_flag = {pl[0]["id"]: pl[1] is None for pl in payloads}
+                    for fut in as_completed(fut_map):
+                        cid = fut_map[fut]
+                        try:
+                            path = fut.result(timeout=240)
+                        except Exception as e:
+                            logger.warning("Chart %s pool render failed: %s", cid, str(e)[:80])
+                            path = None
+                        _classify(id2tmpl[cid], path)
+                        if path:
+                            template_flags[cid] = id2tmpl_flag[cid]
+            except Exception as pool_err:
+                logger.warning("chart process pool unavailable (%s), fallback serial",
+                               str(pool_err)[:80])
+                _use_pool = False
+        if not _use_pool:
+            for tmpl in templates:
+                # 尝试从 data_pipeline chart_data 映射实时数据
+                chart_data = self._extract_real_data(tmpl["id"], pipeline_chart_data, data)
+                # 如果映射失败，直接从 chart_data 中按 chart_id 查找
+                if chart_data is None and tmpl["id"] in pipeline_chart_data:
+                    chart_data = pipeline_chart_data[tmpl["id"]]
+                # R51：判断该图是否用了真实数据（chart_data 非空且来自 pipeline）
+                is_template = chart_data is None
+                path = self._generate_chart(tmpl, data=chart_data, has_real_data=has_real_data)
+                if _classify(tmpl, path):
+                    template_flags[tmpl["id"]] = is_template
 
         # P1: 将失败标记写入 data context，供 gate 区分"静默缺失"和"声明缺失"
         data["chart_failures"] = chart_failures
