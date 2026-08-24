@@ -33,7 +33,7 @@ from core.models import DataPoint
 
 # Consensus & data source manager
 from data.consensus_connector import fetch_consensus
-from data.datasource_manager import data_manager, _init_builtin_engines
+from data.datasource_manager import _init_builtin_engines, data_manager
 
 # Lazy-initialize built-in engines (avoids circular import at module level)
 _init_builtin_engines()
@@ -42,10 +42,17 @@ logger = logging.getLogger("v56.data")
 
 # Re-export the pipeline singleton from engine
 from data.engine import (
-    DataPipeline, DataQuery, DataResponse,
-    EastMoneyEngine, KLineEngine, CacheEngine,
+    CacheEngine,
+    DataPipeline,
+    DataQuery,
+    DataResponse,
+    EastMoneyEngine,
+    KLineEngine,
+)
+from data.engine import (
     pipeline as _pipeline,
 )
+
 pipeline = _pipeline
 
 # ═══════════════════════════════════════
@@ -56,30 +63,35 @@ from data.yfinance_engine import YFinanceEngine
 
 try:
     from data.macro_engine import ChinaMacroEngine
+
     _HAS_MACRO = True
 except ImportError:
     _HAS_MACRO = False
 
 try:
     from data.policy_crawler import PolicyCrawlerEngine
+
     _HAS_POLICY = True
 except ImportError:
     _HAS_POLICY = False
 
 try:
     from data.cvc_engine import CVCEngine
+
     _HAS_CVC = True
 except ImportError:
     _HAS_CVC = False
 
 try:
     from data.news_engine import NewsEngine
+
     _HAS_NEWS = True
 except ImportError:
     _HAS_NEWS = False
 
 try:
     from data.satellite_engine import SatelliteEngine
+
     _HAS_SATELLITE = True
 except ImportError:
     _HAS_SATELLITE = False
@@ -152,6 +164,7 @@ def build_data_cache(assets: list[str]) -> dict:
 # New V56 convenience wrappers
 # ═══════════════════════════════════════
 
+
 def fetch_macro(indicator: str = "all") -> list[DataPoint]:
     """Fetch China macro-economic data.
 
@@ -183,9 +196,13 @@ def fetch_policy(industry: str, days: int = 90) -> list[DataPoint]:
         logger.warning("policy_crawler not available")
         return []
     engine = PolicyCrawlerEngine()
-    resp = engine.fetch(DataQuery(
-        type="policy", assets=[industry], days=days,
-    ))
+    resp = engine.fetch(
+        DataQuery(
+            type="policy",
+            assets=[industry],
+            days=days,
+        )
+    )
     return resp.points
 
 
@@ -250,8 +267,7 @@ class DataOrchestrator:
         # data contains: market_data, macro, policy, cvc, news, global
     """
 
-    def collect(self, asset_code: str = "", asset_name: str = "",
-                industry: str = "") -> dict:
+    def collect(self, asset_code: str = "", asset_name: str = "", industry: str = "") -> dict:
         """Collect all relevant data for a report."""
         result = {}
 
@@ -289,13 +305,34 @@ data_orchestrator = DataOrchestrator()
 
 
 __all__ = [
-    "DataPipeline", "DataQuery", "DataResponse",
-    "EastMoneyEngine", "KLineEngine", "CacheEngine",
+    "DataPipeline",
+    "DataQuery",
+    "DataResponse",
+    "EastMoneyEngine",
+    "KLineEngine",
+    "CacheEngine",
     "YFinanceEngine",
-    "pipeline", "fetch_realtime", "fetch_kline",
-    "fetch_details", "build_data_cache",
-    "fetch_consensus", "data_manager",
-    "fetch_macro", "fetch_policy", "fetch_cvc",
-    "fetch_news", "fetch_global_market",
-    "DataOrchestrator", "data_orchestrator",
+    "pipeline",
+    "fetch_realtime",
+    "fetch_kline",
+    "fetch_details",
+    "build_data_cache",
+    "fetch_consensus",
+    "data_manager",
+    "fetch_macro",
+    "fetch_policy",
+    "fetch_cvc",
+    "fetch_news",
+    "fetch_global_market",
+    "DataOrchestrator",
+    "data_orchestrator",
 ]
+
+
+# ═══════════════════════════════════════════════════════════════
+# ⚠️ DEPRECATED（P3-audit 2026-08-24）：本包为 V50~V56 时代遗留的平行数据平台。
+# 主管线（pipeline/data_collector.py + core/data_backends.py）零引用本包；
+# 唯一消费者是 utils/scan_reports_layer2.py 与 tests/test_e2e.py 的历史用例。
+# 新数据接入一律走 DataCollectorV5 阶段包装（缓存+熔断），禁止再往本包添加模块。
+# 迁移计划：整体移入 legacy/data_platform/（保留 test_e2e 兼容 shim）。
+# ═══════════════════════════════════════════════════════════════
