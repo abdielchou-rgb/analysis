@@ -273,8 +273,17 @@ def _normalize_indicator(key: str) -> str:
             return "两融_融券"
         return "两融"
     # 识别核心指标
+    # P3-audit 2026-08-24 真 bug 修复：原 `if ind in k` 裸子串匹配把任何
+    # 尾部含 "pe" 的键（如 revision_slope→'pe'）聚进 PE 冲突簇，
+    # 产出 "值相差375040%" 式荒谬误报（宁德时代 earnings_notes 实测触发）。
+    # 边界规则：仅禁止紧邻字母/数字（下划线视作分词符，允许 gross_margin、
+    # pe_forward 这类惯例形态）；中文指标保持子串。
     for ind in INDICATOR_CALIBER:
-        if ind in k:
+        if not ind.isascii():
+            if ind in k:
+                return ind
+            continue
+        if re.search(rf"(?<![A-Za-z0-9]){re.escape(ind)}(?![A-Za-z0-9])", k):
             return ind
     return ""
 

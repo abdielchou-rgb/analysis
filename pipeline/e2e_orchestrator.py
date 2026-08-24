@@ -1335,6 +1335,23 @@ class E2EOrchestratorV2:
             logger.warning("[CHECKPOINT] 恢复失败（从头开始）: %s", str(_cke)[:80])
             _ck = {}
         _attempt_start = _ck.get("attempt", 0)
+        # P3-audit 2026-08-24 真 bug 修复：残留 checkpoint 的 attempt 可能
+        # ≥ 本次 MAX_ATTEMPTS（如上次以 MAX_ATTEMPTS=1 跑到 attempt 4），
+        # range(4, 3) 为空 → 三轮"零执行"直接判死且 score=[]。
+        # 上限保护：达到上限即清 checkpoint 从头收敛（TTL 内重跑不再砖化）。
+        if _attempt_start >= self.MAX_ATTEMPTS:
+            logger.warning(
+                "[CHECKPOINT] 残留 attempt=%d 已达本次上限 %d → 清 checkpoint 重置计数",
+                _attempt_start,
+                self.MAX_ATTEMPTS,
+            )
+            try:
+                from pipeline.write_checkpoint import clear_checkpoint
+
+                clear_checkpoint(self.asset)
+            except Exception:
+                pass
+            _attempt_start = 0
         ctx = {}  # R79-fix
 
         for attempt in range(_attempt_start, self.MAX_ATTEMPTS):
