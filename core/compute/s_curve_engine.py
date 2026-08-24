@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """s_curve_engine.py — 渗透率 S 曲线 + 实物期权（2026-08-08 框架优化 P1）
 
 顶级打法：
@@ -9,14 +8,17 @@
   from core.compute.s_curve_engine import s_curve_stage, build_s_curve_prompt
   from core.compute.s_curve_engine import real_option_value, RealOption
 """
+
 from __future__ import annotations
-import math
+
 import logging
+import math
 
 logger = logging.getLogger("2hao.s_curve")
 
 
 # ── S 曲线阶段定位 ─────────────────────────────────────
+
 
 def s_curve_stage(penetration: float, growth: float) -> dict:
     """按渗透率 + 增速定位 S 曲线阶段。
@@ -52,14 +54,16 @@ def s_curve_stage(penetration: float, growth: float) -> dict:
 def build_s_curve_prompt(data: dict) -> str:
     """生成注入行业分析的 S 曲线说明。"""
     stage = s_curve_stage(data.get("penetration", 0), data.get("growth", 0))
-    return (f"渗透率 S 曲线定位：渗透率 {stage['penetration']:.0%}，增速 {stage['growth']:.0%}"
-            f" → {stage['stage']}（策略：{stage['strategy']}）")
+    return (
+        f"渗透率 S 曲线定位：渗透率 {stage['penetration']:.0%}，增速 {stage['growth']:.0%}"
+        f" → {stage['stage']}（策略：{stage['strategy']}）"
+    )
 
 
 # ── 实物期权 ───────────────────────────────────────────
 
-def real_option_value(option_type: str, s: float, x: float, t: float,
-                      sigma: float, r: float = 0.05) -> dict:
+
+def real_option_value(option_type: str, s: float, x: float, t: float, sigma: float, r: float = 0.05) -> dict:
     """实物期权价值（Black-Scholes 近似）。
 
     Args:
@@ -76,14 +80,14 @@ def real_option_value(option_type: str, s: float, x: float, t: float,
         return {"option_type": option_type, "value": 0.0, "note": "参数不足"}
 
     def _bs_call():
-        d1 = (math.log(s / x) + (r + 0.5 * sigma ** 2) * t) / (sigma * math.sqrt(t))
+        d1 = (math.log(s / x) + (r + 0.5 * sigma**2) * t) / (sigma * math.sqrt(t))
         d2 = d1 - sigma * math.sqrt(t)
         nd1 = 0.5 * (1 + math.erf(d1 / math.sqrt(2)))
         nd2 = 0.5 * (1 + math.erf(d2 / math.sqrt(2)))
         return s * nd1 - x * math.exp(-r * t) * nd2
 
     def _bs_put():
-        d1 = (math.log(s / x) + (r + 0.5 * sigma ** 2) * t) / (sigma * math.sqrt(t))
+        d1 = (math.log(s / x) + (r + 0.5 * sigma**2) * t) / (sigma * math.sqrt(t))
         d2 = d1 - sigma * math.sqrt(t)
         nd1 = 0.5 * (1 + math.erf(d1 / math.sqrt(2)))
         nd2 = 0.5 * (1 + math.erf(d2 / math.sqrt(2)))
@@ -111,7 +115,10 @@ def real_option_value(option_type: str, s: float, x: float, t: float,
     return {
         "option_type": option_type,
         "value": round(value, 2),
-        "s": s, "x": x, "t": t, "sigma": sigma,
+        "s": s,
+        "x": x,
+        "t": t,
+        "sigma": sigma,
         "note": note,
     }
 
@@ -120,7 +127,8 @@ def build_real_options_prompt(options: list) -> str:
     """生成注入估值的实物期权说明。"""
     lines = ["=== 实物期权评估 ==="]
     for o in options:
-        lines.append(f"- {o['note']}: 价值 {o['value']:,.0f}（S={o['s']:,.0f}, X={o['x']:,.0f}, "
-                     f"t={o['t']}y, σ={o['sigma']}）")
+        lines.append(
+            f"- {o['note']}: 价值 {o['value']:,.0f}（S={o['s']:,.0f}, X={o['x']:,.0f}, t={o['t']}y, σ={o['sigma']}）"
+        )
     lines.append("=== 期权结束 ===")
     return "\n".join(lines)

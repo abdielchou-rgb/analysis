@@ -19,7 +19,6 @@ import logging
 import os
 import re
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +27,8 @@ try:
     from utils.ocr_engine_config import (
         HAS_CUDA_TORCH,
         UNLIMITED_OCR_API_URL,
-        UNLIMITED_OCR_MODEL_NAME,
         UNLIMITED_OCR_DEVICE,
+        UNLIMITED_OCR_MODEL_NAME,
     )
 except ImportError:
     HAS_CUDA_TORCH = False
@@ -102,7 +101,7 @@ class OCREngine:
 
     # ── 后端 1: UnlimitedOCR ─────────────────────────────────
 
-    def _try_unlimited_ocr(self, pdf_path: str) -> Optional[str]:
+    def _try_unlimited_ocr(self, pdf_path: str) -> str | None:
         """尝试使用 baidu/Unlimited-OCR via transformers。
 
         需要 CUDA torch。如果环境不满足，返回 None。
@@ -118,14 +117,13 @@ class OCREngine:
         # 本地模式：需要 CUDA torch
         if not HAS_CUDA_TORCH:
             logger.info(
-                "UnlimitedOCR 本地模式需要 CUDA torch，当前环境不可用。"
-                "可设置 UNLIMITED_OCR_API_URL 指向远程服务。"
+                "UnlimitedOCR 本地模式需要 CUDA torch，当前环境不可用。可设置 UNLIMITED_OCR_API_URL 指向远程服务。"
             )
             return None
 
         try:
             import torch
-            from PIL import Image
+            from PIL import Image  # noqa: F401  (dead-import debt)
             from transformers import pipeline
 
             if self._pipeline is None:
@@ -158,7 +156,7 @@ class OCREngine:
             logger.error(f"UnlimitedOCR 执行失败: {e}")
             return None
 
-    def _unlimited_ocr_api(self, file_path: str) -> Optional[str]:
+    def _unlimited_ocr_api(self, file_path: str) -> str | None:
         """通过 HTTP API 调用远程 UnlimitedOCR 服务（OpenAI Vision API 兼容格式）。
 
         自动识别文件类型：
@@ -197,9 +195,7 @@ class OCREngine:
                         "content": [
                             {
                                 "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:{mime_type};base64,{b64_string}"
-                                },
+                                "image_url": {"url": f"data:{mime_type};base64,{b64_string}"},
                             },
                             {
                                 "type": "text",
@@ -230,7 +226,7 @@ class OCREngine:
 
     # ── 后端 2: WebFallback ──────────────────────────────────
 
-    def _try_web_fallback(self, pdf_path: str) -> Optional[str]:
+    def _try_web_fallback(self, pdf_path: str) -> str | None:
         """通过 Web 搜索东方财富网获取研报文字版。
 
         基于 PDF 文件名（去掉后缀）构造搜索标题，
@@ -253,13 +249,12 @@ class OCREngine:
         logger.info(f"WebFallback 未找到: {filename}")
         return None
 
-    def _check_local_cache(self, filename: str) -> Optional[str]:
+    def _check_local_cache(self, filename: str) -> str | None:
         """检查 text 目录下是否已有同名 txt 缓存。"""
         # 从 pdf_path 推断 text 目录
         # 约定：PDF 在 eastmoney/ 下，txt 在 text/ 下
         candidate_paths = [
-            Path.cwd() / "data" / "cache"
-            / f"{filename}.txt",
+            Path.cwd() / "data" / "cache" / f"{filename}.txt",
         ]
 
         for p in candidate_paths:
@@ -268,7 +263,7 @@ class OCREngine:
                 return p.read_text(encoding="utf-8")
         return None
 
-    def _search_eastmoney(self, title: str) -> Optional[str]:
+    def _search_eastmoney(self, title: str) -> str | None:
         """搜索东方财富网研报页面并提取文字。
 
         返回提取的文字内容，失败返回 None。
@@ -316,7 +311,7 @@ class OCREngine:
             logger.warning(f"东方财富搜索失败: {e}")
             return None
 
-    def _extract_report_url(self, html: str, title: str) -> Optional[str]:
+    def _extract_report_url(self, html: str, title: str) -> str | None:
         """从东方财富搜索结果 HTML 中提取研报详情页 URL。"""
         # 匹配 data-link 或 href 中的研报链接
         patterns = [
@@ -333,15 +328,13 @@ class OCREngine:
                 return m
 
         # 回退：匹配 data.eastmoney.com 域名的任意研报链接
-        fallback = re.findall(
-            r'https?://data\.eastmoney\.com/report/[^"\s]+', html
-        )
+        fallback = re.findall(r'https?://data\.eastmoney\.com/report/[^"\s]+', html)
         if fallback:
             return fallback[0]
 
         return None
 
-    def _fetch_report_page(self, url: str) -> Optional[str]:
+    def _fetch_report_page(self, url: str) -> str | None:
         """抓取研报详情页并提取文字内容。"""
         try:
             import urllib.request
@@ -375,11 +368,7 @@ class OCREngine:
 
             # 只保留有意义的中文段落（至少含 20 个中文字符）
             lines = text.split("\n")
-            meaningful = [
-                line.strip()
-                for line in lines
-                if len(re.findall(r"[\u4e00-\u9fff]", line)) >= 20
-            ]
+            meaningful = [line.strip() for line in lines if len(re.findall(r"[\u4e00-\u9fff]", line)) >= 20]
 
             if meaningful:
                 return "\n\n".join(meaningful)
@@ -411,9 +400,10 @@ class OCREngine:
     def _pdf_to_images_pymupdf(self, pdf_path: str) -> list:
         """使用 PyMuPDF 将 PDF 转图片（兜底方案）。"""
         try:
+            import io
+
             import fitz  # PyMuPDF
             from PIL import Image
-            import io
 
             doc = fitz.open(pdf_path)
             images = []
@@ -430,7 +420,7 @@ class OCREngine:
             logger.error(f"PyMuPDF 转图片失败: {e}")
             return []
 
-    def _load_local_cache(self, txt_path: str) -> Optional[str]:
+    def _load_local_cache(self, txt_path: str) -> str | None:
         """显式从本地 txt 文件加载缓存（供外部调用）。"""
         p = Path(txt_path)
         if p.exists():

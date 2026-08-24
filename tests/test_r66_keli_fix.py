@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """R66 (2026-08-04) 回归测试 — 柯力传感写作失败四重根因修复
 
 覆盖：
@@ -7,6 +6,7 @@
 3. best-so-far 稿保留（失败时用最高分稿）
 4. _serialize_data 注入 fig_* 数值（enrich 数据进正文）
 """
+
 import ast
 import sys
 from pathlib import Path
@@ -38,7 +38,7 @@ def test_charts_failure_no_full_rewrite():
     src = _src("pipeline/fail_segment_locator.py")
     assert "全段局部重写补图引用" in src, "charts 失败应改为局部重写"
     # 旧逻辑"return None 全量重写"不应再是 charts 分支默认
-    old_branch = '图表类失败 → 全量重写（嵌入是全局的）'
+    old_branch = "图表类失败 → 全量重写（嵌入是全局的）"
     assert old_branch not in src, "charts 不应再触发全量重写"
     # 主文件应转发
     e2e_src = _src("pipeline/e2e_orchestrator.py")
@@ -76,6 +76,7 @@ def test_e2e_syntax_valid():
 
 if __name__ == "__main__":
     import traceback
+
     passed = failed = 0
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

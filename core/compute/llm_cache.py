@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """llm_cache.py — LLM 响应缓存 + 容错（2026-08-08 Python 库接入）
 
 用 diskcache 缓存 LLM 响应（同 prompt 命中免重调，省 token）
@@ -9,9 +8,10 @@
   content = cached_llm(prompt, key="segment3")  # 缓存命中免调
   content = retry_llm(prompt)  # 重试3次
 """
+
 from __future__ import annotations
+
 import logging
-from functools import wraps
 
 logger = logging.getLogger("2hao.llm_cache")
 
@@ -19,8 +19,10 @@ logger = logging.getLogger("2hao.llm_cache")
 def get_cache():
     """diskcache 实例（磁盘持久化，跨进程）。优先项目 data 目录，回退 /tmp。"""
     try:
-        import diskcache
         from pathlib import Path
+
+        import diskcache
+
         cache_dir = Path(__file__).resolve().parent.parent.parent / "data" / "llm_cache"
         try:
             cache_dir.mkdir(parents=True, exist_ok=True)
@@ -47,6 +49,7 @@ def cached_llm(prompt: str, cache_key: str = "", ttl: int = 86400) -> str:
             return hit
     # 实际调用
     from core.deepseek_client import call_llm
+
     r = call_llm([{"role": "user", "content": prompt}], temperature=0.1)
     content = r["choices"][0]["message"]["content"]
     if cache is not None:
@@ -57,25 +60,31 @@ def cached_llm(prompt: str, cache_key: str = "", ttl: int = 86400) -> str:
 def retry_llm(prompt: str, max_retries: int = 3, delay: float = 1.0) -> str:
     """带重试的 LLM 调用（tenacity）。"""
     try:
-        from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_type
         import requests
+        from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_fixed
 
-        @retry(stop=stop_after_attempt(max_retries),
-               wait=wait_fixed(delay),
-               retry=retry_if_exception_type((requests.exceptions.RequestException, RuntimeError)))
+        @retry(
+            stop=stop_after_attempt(max_retries),
+            wait=wait_fixed(delay),
+            retry=retry_if_exception_type((requests.exceptions.RequestException, RuntimeError)),
+        )
         def _call():
             from core.deepseek_client import call_llm
+
             r = call_llm([{"role": "user", "content": prompt}], temperature=0.1)
             return r["choices"][0]["message"]["content"]
+
         return _call()
     except ImportError:
         # 无 tenacity 回退简单重试
         from core.deepseek_client import call_llm
+
         for _ in range(max_retries):
             try:
                 r = call_llm([{"role": "user", "content": prompt}], temperature=0.1)
                 return r["choices"][0]["message"]["content"]
             except Exception:
                 import time
+
                 time.sleep(delay)
         raise

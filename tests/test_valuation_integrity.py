@@ -5,9 +5,9 @@
 修复：新增 valuation_integrity 检查——净利=EPS×股本 / 市值=股价×股本 /
       目标价/PE=EPS 三环勾稽，偏差>5% 即 FAIL。
 """
-import os
-import sys
+
 import json
+import sys
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
@@ -17,6 +17,7 @@ if str(_ROOT) not in sys.path:
 
 def _run_gate(text, asset=""):
     from pipeline.iron_gate import IronGate
+
     gate = IronGate.from_text(text, report_type="listed_company", style="cicc")
     if asset:
         gate.asset = asset
@@ -91,6 +92,7 @@ def test_target_price_pe_eps_integrity():
 def test_data_dict_external_anchor(tmp_path=None):
     """data_dict 提供真实股本/股价/净利时，作为外部锚校验。"""
     from pipeline.iron_gate import IronGate
+
     text = _BASE + (
         "公司总股本4.2亿股，总市值约196亿元，当前价46.7元。"
         "2027E EPS 1.50元，2027年净利润约5.2亿元。"
@@ -120,6 +122,7 @@ def test_data_dict_external_anchor(tmp_path=None):
 
 if __name__ == "__main__":
     import traceback
+
     passed = failed = 0
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """R85：叙事一致性 + 数据点引用 + self_audit 升级 回归测试
 
 油位 v0.90 事故（2026-08-07）：委托方必答问题覆盖 PASS（四个问题都回答了），
@@ -14,7 +13,10 @@
 """
 
 from __future__ import annotations
-import sys, os, tempfile
+
+import os
+import sys
+import tempfile
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
@@ -62,8 +64,7 @@ Q1立项，Q2产品开发，Q3客户验证，Q4定点。工程机械挖掘机是
     tmp.close()
     ig = IronGate(tmp.name, report_type="decision_memo")
     r = ig._check_narrative_consistency()
-    t("narrative FAILs wrong business", not r.passed,
-      f"passed={r.passed} det={r.details[:100]}")
+    t("narrative FAILs wrong business", not r.passed, f"passed={r.passed} det={r.details[:100]}")
     os.unlink(tmp.name)
 
     # ── 2. 叙事一致性：正确生意文本 → PASS ─────────────────
@@ -109,8 +110,7 @@ Q1立项，Q2产品开发，Q3客户验证，Q4定点。工程机械挖掘机是
     tmp3.close()
     ig3 = IronGate(tmp3.name, report_type="decision_memo")
     r3 = ig3._check_data_point_citation()
-    t("data_point FAILs missing enrich data", not r3.passed,
-      f"passed={r3.passed} det={r3.details[:100]}")
+    t("data_point FAILs missing enrich data", not r3.passed, f"passed={r3.passed} det={r3.details[:100]}")
     os.unlink(tmp3.name)
 
     # ── 4. 数据点引用：正确生意 → PASS ─────────────────────
@@ -147,6 +147,7 @@ Q1立项，Q2产品开发，Q3客户验证，Q4定点。工程机械挖掘机是
     # ── 6. iron_gate.run_all 注册了新检查 ───────────────────
     try:
         import inspect
+
         src = inspect.getsource(IronGate.run_all)
         t("run_all registers narrative_consistency", "_check_narrative_consistency" in src)
         t("run_all registers data_point_citation", "_check_data_point_citation" in src)
@@ -159,9 +160,10 @@ Q1立项，Q2产品开发，Q3客户验证，Q4定点。工程机械挖掘机是
     _self_audit = _ROOT / "_self_audit.py"
     if _self_audit.exists():
         try:
-            import subprocess, sys as _sys
-            r = subprocess.run([_sys.executable, str(_self_audit)],
-                               capture_output=True, text=True, timeout=60)
+            import subprocess
+            import sys as _sys
+
+            r = subprocess.run([_sys.executable, str(_self_audit)], capture_output=True, text=True, timeout=60)
             has_p104 = "P1-04" in r.stdout
             # 当前 v0.90 存在 → 内容一致性应 FAIL（Fail>=1）
             t("self_audit has P1-04 check", has_p104, r.stdout[:200])
@@ -178,6 +180,7 @@ if __name__ == "__main__":
     p, f = run()
     print(f"\nR85 叙事一致性+数据点引用回归测试: {p} passed, {f} failed")
     sys.exit(1 if f else 0)
+
 
 # ── P1-audit 2026-08-24 收编：原 run() 只 print 不 raise，pytest 看不见 ──
 def test_orphan_suite():

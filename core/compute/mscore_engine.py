@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """mscore_engine.py — Beneish M-Score 盈余操纵检测（2026-08-08 框架优化 P0）
 
 顶级打法：四大会所用 Beneish M-Score（8 变量）量化盈余操纵风险。
@@ -21,7 +20,9 @@ M = -4.84 + 0.92*DSRI + 0.528*GMI + 0.404*AQI + 0.892*SGI
   from core.compute.mscore_engine import calculate_mscore
   result = calculate_mscore({...})  # 输入各变量或原始财务数据
 """
+
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 
@@ -31,8 +32,8 @@ logger = logging.getLogger("2hao.mscore")
 @dataclass
 class MScoreResult:
     mscore: float = 0.0
-    flagged: bool = False        # M > -1.78 疑似操纵
-    risk_level: str = "正常"     # 正常/关注/高风险
+    flagged: bool = False  # M > -1.78 疑似操纵
+    risk_level: str = "正常"  # 正常/关注/高风险
     variables: dict = field(default_factory=dict)  # 各指数
     reasons: list = field(default_factory=list)
 
@@ -56,14 +57,28 @@ def calculate_mscore(vars: dict) -> MScoreResult:
     tata = float(vars.get("TATA", 0.0))
 
     r.variables = {
-        "DSRI": round(dsri, 3), "GMI": round(gmi, 3), "AQI": round(aqi, 3),
-        "SGI": round(sgi, 3), "DEPI": round(depi, 3), "SGAI": round(sgai, 3),
-        "LVGI": round(lvgi, 3), "TATA": round(tata, 3),
+        "DSRI": round(dsri, 3),
+        "GMI": round(gmi, 3),
+        "AQI": round(aqi, 3),
+        "SGI": round(sgi, 3),
+        "DEPI": round(depi, 3),
+        "SGAI": round(sgai, 3),
+        "LVGI": round(lvgi, 3),
+        "TATA": round(tata, 3),
     }
 
     # M-Score 公式
-    m = (-4.84 + 0.92 * dsri + 0.528 * gmi + 0.404 * aqi + 0.892 * sgi
-         + 0.115 * depi - 0.172 * sgai + 4.679 * tata - 0.327 * lvgi)
+    m = (
+        -4.84
+        + 0.92 * dsri
+        + 0.528 * gmi
+        + 0.404 * aqi
+        + 0.892 * sgi
+        + 0.115 * depi
+        - 0.172 * sgai
+        + 4.679 * tata
+        - 0.327 * lvgi
+    )
     r.mscore = round(m, 3)
 
     # 判定

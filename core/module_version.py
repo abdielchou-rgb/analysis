@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """module_version.py — 模块版本管理（P0-2 地基，2026-08-07）
 
 目标：把"整篇迭代"降为"单模块迭代"（R79-R87 八轮全量重写不收敛的根治方向）。
@@ -16,10 +15,14 @@
   mv.dependents("founder_ri")             # 依赖该模块的模块列表（影响传播）
   mv.mark_dirty("biz_model")              # 标记下游待重校验
 """
+
 from __future__ import annotations
-import os, json, time, hashlib, logging
+
+import hashlib
+import json
+import logging
+import time
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger("2hao.module_version")
 
@@ -31,7 +34,7 @@ MAX_VERSIONS = 10  # 每模块最多保留版本数，防磁盘膨胀
 class ModuleVersion:
     """模块版本管理器（每报告独立命名空间，工作区隔离）"""
 
-    def __init__(self, asset: str, version_dir: Optional[Path] = None):
+    def __init__(self, asset: str, version_dir: Path | None = None):
         self.asset = asset
         self.version_dir = Path(version_dir or DEFAULT_VERSION_DIR)
         # 工作区隔离：每报告独立目录，防跨任务污染
@@ -40,8 +43,7 @@ class ModuleVersion:
 
     # ── 版本生命周期 ─────────────────────────────────────
 
-    def commit(self, module_id: str, content: str,
-               metadata: Optional[dict] = None) -> dict:
+    def commit(self, module_id: str, content: str, metadata: dict | None = None) -> dict:
         """提交一个新版本（自动递增版本号）。metadata 可带 frozen_facts/source 等。"""
         module_id = _safe(module_id)
         meta = dict(metadata or {})
@@ -65,18 +67,17 @@ class ModuleVersion:
         path = self._ver_path(module_id, ver)
         path.write_text(json.dumps(entry, ensure_ascii=False, indent=2), encoding="utf-8")
         self._prune(module_id)
-        logger.info("[MODVER] %s/%s v%d committed (%d chars)",
-                    self.asset, module_id, ver, len(content or ""))
+        logger.info("[MODVER] %s/%s v%d committed (%d chars)", self.asset, module_id, ver, len(content or ""))
         return entry
 
-    def latest(self, module_id: str) -> Optional[dict]:
+    def latest(self, module_id: str) -> dict | None:
         """取最新版本（无则 None）。"""
         versions = self._versions(module_id)
         if not versions:
             return None
         return versions[-1]
 
-    def get(self, module_id: str, version: int) -> Optional[dict]:
+    def get(self, module_id: str, version: int) -> dict | None:
         """取指定版本。"""
         p = self._ver_path(module_id, version)
         if not p.exists():
@@ -86,7 +87,7 @@ class ModuleVersion:
         except (json.JSONDecodeError, OSError):
             return None
 
-    def rollback(self, module_id: str) -> Optional[dict]:
+    def rollback(self, module_id: str) -> dict | None:
         """回滚到上一版：删除最新版，返回上一版。无历史则返回 None。"""
         module_id = _safe(module_id)
         versions = self._versions(module_id)
@@ -109,7 +110,8 @@ class ModuleVersion:
         if not latest:
             return
         self.commit(
-            module_id, latest["content"],
+            module_id,
+            latest["content"],
             metadata={
                 "frozen_facts": latest.get("frozen_facts", {}),
                 "status": "dirty",
@@ -163,6 +165,7 @@ class ModuleVersion:
 def _safe(name: str) -> str:
     """文件名安全化：去路径/空格/中文转拼音风险→用 hash 兜底。"""
     import re as _re
+
     cleaned = _re.sub(r"[^\w\-.]+", "_", str(name).strip())
     if not cleaned or len(cleaned) > 80:
         cleaned = cleaned[:40] + "_" + hashlib.md5(name.encode("utf-8")).hexdigest()[:8]

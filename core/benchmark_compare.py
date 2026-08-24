@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 预测 vs 基准检验（Benchmark Compare）— R30 模块9a：对标学术研究
 
@@ -10,7 +9,9 @@
   - 若 2hao 预测方向正确且误差 < 基准误差 → 有超额价值
   - 否则 → 预测无增量信息，需校准
 """
+
 from __future__ import annotations
+
 import csv
 import logging
 from pathlib import Path
@@ -43,8 +44,7 @@ def compare_vs_benchmark() -> dict:
     """
     picks = _load_verified_picks()
     if not picks:
-        return {"total": 0, "hit_rate": 0, "benchmark_hit_rate": 0.5,
-                "excess": 0, "note": "暂无已验证预测"}
+        return {"total": 0, "hit_rate": 0, "benchmark_hit_rate": 0.5, "excess": 0, "note": "暂无已验证预测"}
 
     total = len(picks)
     hit = sum(1 for p in picks if p.get("verification_status") == "hit")
@@ -80,10 +80,12 @@ def serialize_benchmark(b: dict) -> str:
     """序列化注入。"""
     if not b:
         return ""
-    lines = ["=== 预测 vs 基准检验（对标学术研究） ===",
-             f"已验证预测: {b.get('total', 0)} | 命中率: {b.get('hit_rate', 0):.0%}",
-             f"基准命中率: {b.get('benchmark_hit_rate', 0):.0%} | 超额: {b.get('excess', 0):+.0%}",
-             f"结论: {b.get('conclusion', '')}"]
+    lines = [
+        "=== 预测 vs 基准检验（对标学术研究） ===",
+        f"已验证预测: {b.get('total', 0)} | 命中率: {b.get('hit_rate', 0):.0%}",
+        f"基准命中率: {b.get('benchmark_hit_rate', 0):.0%} | 超额: {b.get('excess', 0):+.0%}",
+        f"结论: {b.get('conclusion', '')}",
+    ]
     return "\n".join(lines)
 
 

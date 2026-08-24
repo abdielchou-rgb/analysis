@@ -18,11 +18,11 @@ Usage in workflow:
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from core.models import (
-    ArgumentScaffold, ArgumentSection, KnowledgePackage,
-    DataPoint, EvidenceLevel,
+    ArgumentScaffold,
+    DataPoint,
+    KnowledgePackage,
 )
 
 logger = logging.getLogger("v51.evidence_chain")
@@ -57,8 +57,8 @@ def _format_evidence_line(dp: DataPoint, source_level: str) -> str:
 
 # ── Build evidence chain appendix ─────────────────────────────
 
-def build_evidence_appendix(scaffold: ArgumentScaffold,
-                            kp: KnowledgePackage) -> str:
+
+def build_evidence_appendix(scaffold: ArgumentScaffold, kp: KnowledgePackage) -> str:
     """Generate a structured evidence chain appendix from scaffold + KP.
 
     Returns markdown string to append to report.
@@ -100,7 +100,7 @@ def build_evidence_appendix(scaffold: ArgumentScaffold,
         for cid in sec.counter_evidence_ids[:3]:
             dp = pool.get(cid)
             if dp:
-                lines.append(f"  🔶 [反方] " + _format_evidence_line(dp, dp.source_level or dp.confidence).lstrip("  "))
+                lines.append("  🔶 [反方] " + _format_evidence_line(dp, dp.source_level or dp.confidence).lstrip("  "))
 
         # Data gaps
         for gap in sec.data_gaps[:3]:
@@ -119,8 +119,7 @@ def build_evidence_appendix(scaffold: ArgumentScaffold,
     return appendix
 
 
-def build_evidence_table(scaffold: ArgumentScaffold,
-                         kp: KnowledgePackage) -> list[dict]:
+def build_evidence_table(scaffold: ArgumentScaffold, kp: KnowledgePackage) -> list[dict]:
     """Build structured evidence data for DOCX/HTML export.
 
     Returns list of dicts per section:
@@ -145,28 +144,32 @@ def build_evidence_table(scaffold: ArgumentScaffold,
             dp = pool.get(eid)
             if dp:
                 _, source_type, confidence = _get_level_info(dp.source_level or dp.confidence)
-                evidence_list.append({
-                    "name": dp.name,
-                    "value": dp.value,
-                    "unit": dp.unit,
-                    "source": dp.source or "",
-                    "source_type": source_type,
-                    "confidence": confidence,
-                })
-        table.append({
-            "section_title": sec.title,
-            "thesis": sec.thesis or "",
-            "evidence": evidence_list,
-            "gaps": sec.data_gaps[:5],
-            "counter_evidence_ids": sec.counter_evidence_ids[:3],
-        })
+                evidence_list.append(
+                    {
+                        "name": dp.name,
+                        "value": dp.value,
+                        "unit": dp.unit,
+                        "source": dp.source or "",
+                        "source_type": source_type,
+                        "confidence": confidence,
+                    }
+                )
+        table.append(
+            {
+                "section_title": sec.title,
+                "thesis": sec.thesis or "",
+                "evidence": evidence_list,
+                "gaps": sec.data_gaps[:5],
+                "counter_evidence_ids": sec.counter_evidence_ids[:3],
+            }
+        )
     return table
 
 
 # ── Summary statistics ────────────────────────────────────────
 
-def evidence_stats(scaffold: ArgumentScaffold,
-                   kp: KnowledgePackage) -> dict:
+
+def evidence_stats(scaffold: ArgumentScaffold, kp: KnowledgePackage) -> dict:
     """Compute aggregate evidence statistics for observability."""
     total_evidence = sum(len(s.evidence_ids) for s in scaffold.sections)
     total_gaps = sum(len(s.data_gaps) for s in scaffold.sections)
@@ -192,7 +195,7 @@ def evidence_stats(scaffold: ArgumentScaffold,
         "high_confidence": high_conf,
         "medium_confidence": med_conf,
         "low_confidence": low_conf,
-        "coverage_pct": round(
-            (total_evidence / (total_evidence + total_gaps)) * 100, 1
-        ) if (total_evidence + total_gaps) > 0 else 0,
+        "coverage_pct": round((total_evidence / (total_evidence + total_gaps)) * 100, 1)
+        if (total_evidence + total_gaps) > 0
+        else 0,
     }

@@ -14,14 +14,13 @@ from __future__ import annotations
 
 import dataclasses
 import logging
-from typing import Optional
 
-from core.models import ComputedResults, StructuredData
-from core.compute.financial.revenue_bridge import compute_revenue_bridge
-from core.compute.financial.margin_bridge import compute_margin_bridge
 from core.compute.financial.expense_bridge import compute_expense_bridge
+from core.compute.financial.margin_bridge import compute_margin_bridge
+from core.compute.financial.revenue_bridge import compute_revenue_bridge
 from core.compute.financial.summary import build_financial_summary
 from core.compute.quality_gate.numeric_gate import run_numeric_gate
+from core.models import ComputedResults, StructuredData
 
 logger = logging.getLogger("v30.layer2")
 
@@ -31,26 +30,55 @@ logger = logging.getLogger("v30.layer2")
 
 # 金融类：不跑标准三桥，跑偿付能力/NBV/利差
 FINANCIAL_INDUSTRIES = {
-    "保险", "银行", "券商", "证券", "多元金融",
-    "保险Ⅱ", "银行Ⅱ", "证券Ⅱ", "多元金融Ⅱ",
+    "保险",
+    "银行",
+    "券商",
+    "证券",
+    "多元金融",
+    "保险Ⅱ",
+    "银行Ⅱ",
+    "证券Ⅱ",
+    "多元金融Ⅱ",
 }
 
 # 消费类：渠道拆分+量价分析替代标准收入桥
 CONSUMER_INDUSTRIES = {
-    "白酒", "食品饮料", "啤酒", "饮料制造", "调味品",
-    "白酒Ⅱ", "食品加工", "食品饮料Ⅱ", "休闲食品", "乳品",
+    "白酒",
+    "食品饮料",
+    "啤酒",
+    "饮料制造",
+    "调味品",
+    "白酒Ⅱ",
+    "食品加工",
+    "食品饮料Ⅱ",
+    "休闲食品",
+    "乳品",
 }
 
 # 科技类：研发费用率+折旧周期替代标准费用桥
 TECH_INDUSTRIES = {
-    "半导体", "软件", "自动驾驶", "芯片", "计算机",
-    "半导体Ⅱ", "软件开发", "IT服务Ⅱ", "电子化学品Ⅱ",
+    "半导体",
+    "软件",
+    "自动驾驶",
+    "芯片",
+    "计算机",
+    "半导体Ⅱ",
+    "软件开发",
+    "IT服务Ⅱ",
+    "电子化学品Ⅱ",
 }
 
 # 制造业（默认管线）
 MANUFACTURING_INDUSTRIES = {
-    "光伏", "新能源", "电池", "新能源汽车", "电气设备",
-    "光伏设备", "电池Ⅱ", "能源金属", "风电设备",
+    "光伏",
+    "新能源",
+    "电池",
+    "新能源汽车",
+    "电气设备",
+    "光伏设备",
+    "电池Ⅱ",
+    "能源金属",
+    "风电设备",
 }
 
 
@@ -79,7 +107,7 @@ def run_compute_pipeline(
     enable_gate: bool = True,
     # 估值模型开关
     enable_valuation: bool = False,
-    valuation_params: Optional[dict] = None,
+    valuation_params: dict | None = None,
 ) -> ComputedResults:
     """
     L2 计算层完整管线：构建摘要 → 收入桥 → 毛利桥 → 费用桥 → (可选估值) → 数值门禁。
@@ -125,7 +153,6 @@ def run_compute_pipeline(
         pipeline_notes.append("科技管线: 建议关注研发费用率+折旧周期")
         logger.info("[L2] 科技管线已激活")
 
-
     logger.info(f"[L2] 开始计算: {company} ({stock_code})")
 
     # 1. 财务摘要
@@ -161,17 +188,19 @@ def run_compute_pipeline(
         expense_bridge=expense_bridge,
     )
     # warnings 和 data_freshness 在 ComputedResults 中不存在，需单独处理
-    results.warnings = l1_data.warnings.copy() if hasattr(results, 'warnings') else []
+    results.warnings = l1_data.warnings.copy() if hasattr(results, "warnings") else []
     # P1: 管线路由备注
     if pipeline_notes:
-        if hasattr(results, 'warnings') and results.warnings:
+        if hasattr(results, "warnings") and results.warnings:
             results.warnings.extend(pipeline_notes)
         else:
             results.warnings = pipeline_notes.copy()
     # 数据时效性信息通过 logger 记录
-    logger.info("[L2] 数据时效: years=%s, latest=%s", 
-                l1_data.years_covered, 
-                l1_data.years_covered[-1] if l1_data.years_covered else "N/A")
+    logger.info(
+        "[L2] 数据时效: years=%s, latest=%s",
+        l1_data.years_covered,
+        l1_data.years_covered[-1] if l1_data.years_covered else "N/A",
+    )
 
     # 6. 可选: 估值模型 (包括全球对标)
     if enable_valuation:
@@ -185,6 +214,7 @@ def run_compute_pipeline(
         try:
             from core.compute.valuation.global_benchmark import compute_global_benchmark
             from core.compute.valuation.global_peers_db import get_global_peers
+
             industry = l1_data.profile.industry or ""
             global_peers = get_global_peers(industry)
             if global_peers:
@@ -203,8 +233,7 @@ def run_compute_pipeline(
         logger.info("[L2] 运行数值门禁...")
         results = run_numeric_gate(results, l1_data)
         ng = results.numeric_gate_report
-        logger.info(f"[L2] 数值门禁: passed={ng.get('passed')}, "
-                     f"score={ng.get('score')}")
+        logger.info(f"[L2] 数值门禁: passed={ng.get('passed')}, score={ng.get('score')}")
     else:
         results.numeric_gate_report = {"passed": True, "score": 100, "checks": {}}
 
@@ -228,11 +257,13 @@ def _run_valuation_models(
     dcf_params = vp.get("dcf_params", {})
     try:
         from core.compute.valuation.dcf import compute_dcf
+
         dcf_result = compute_dcf(l1_data=l1_data, results=results, **dcf_params)
         if dcf_result is not None:
             results.dcf_result = dataclasses.asdict(dcf_result)
-            logger.info(f"[L2] DCF估值完成: EV={dcf_result.enterprise_value:.2f}亿, "
-                         f"目标价={dcf_result.target_price:.2f}元")
+            logger.info(
+                f"[L2] DCF估值完成: EV={dcf_result.enterprise_value:.2f}亿, 目标价={dcf_result.target_price:.2f}元"
+            )
     except Exception as e:
         logger.error(f"[L2] DCF估值失败: {e}")
         results.warnings.append(f"DCF估值计算失败: {e}")
@@ -244,6 +275,7 @@ def _run_valuation_models(
     if peer_codes:
         try:
             from core.compute.valuation.comparable import compute_comparable
+
             comp_result = compute_comparable(
                 l1_data,
                 peer_codes=peer_codes,
@@ -280,8 +312,7 @@ def _run_valuation_models(
                     target_region=target_region,
                 )
                 results.global_benchmark = dataclasses.asdict(gb_result)
-                logger.info("[L2] 全球竞争对标完成: %d家, 行业=%s",
-                            gb_result.peer_count, industry)
+                logger.info("[L2] 全球竞争对标完成: %d家, 行业=%s", gb_result.peer_count, industry)
             else:
                 logger.info("[L2] 全球竞争对标跳过: 无匹配行业(%s)", industry)
         except Exception as e:
@@ -292,7 +323,8 @@ def _run_valuation_models(
     sotp_params = vp.get("sotp_params", None)
     if sotp_params:
         try:
-            from core.compute.valuation.sotp import compute_sotp, SOTPSegmentInput
+            from core.compute.valuation.sotp import SOTPSegmentInput, compute_sotp
+
             segments = []
             for s in sotp_params.get("segments", []):
                 segments.append(
@@ -335,9 +367,10 @@ def _run_valuation_models(
             from core.compute.valuation.scenario import (
                 compute_scenario,
                 make_base_scenario,
-                make_bull_scenario,
                 make_bear_scenario,
+                make_bull_scenario,
             )
+
             # 构建情景对象
             base = make_base_scenario(**scenario_params.get("base", {}))
             bull = make_bull_scenario(**scenario_params.get("bull", {}))
@@ -388,6 +421,7 @@ def format_computed_results_for_report(results: ComputedResults) -> str:
         from core.compute.financial.revenue_bridge import (
             format_revenue_bridge_for_report,
         )
+
         lines.append("## 收入桥分析")
         lines.append("")
         lines.append(format_revenue_bridge_for_report(results.revenue_bridge))
@@ -398,6 +432,7 @@ def format_computed_results_for_report(results: ComputedResults) -> str:
         from core.compute.financial.margin_bridge import (
             format_margin_bridge_for_report,
         )
+
         lines.append("## 毛利桥分析")
         lines.append("")
         lines.append(format_margin_bridge_for_report(results.margin_bridge))
@@ -408,6 +443,7 @@ def format_computed_results_for_report(results: ComputedResults) -> str:
         from core.compute.financial.expense_bridge import (
             format_expense_bridge_for_report,
         )
+
         lines.append("## 费用桥分析")
         lines.append("")
         lines.append(format_expense_bridge_for_report(results.expense_bridge))

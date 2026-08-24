@@ -12,7 +12,8 @@ Path 3: compute_from_kp 统一入口 (最简路径，只需几个关键参数)
 - Global Benchmark 集成 → 全球同业对标
 """
 
-import sys, json, logging
+import logging
+import sys
 from pathlib import Path
 
 _ANALYST_ROOT = Path(__file__).resolve().parent.parent
@@ -29,38 +30,46 @@ _THINKING_MODELS_LOADED = False
 _KELLY_LOADED = False
 
 try:
-    from core.knowledge.xiao_jing_framework import analyze as xiao_jing_analyze
+    from core.knowledge.greenwald_strategy import analyze as greenwald_analyze
+    from core.knowledge.liu_run_logic import analyze_logic as liu_run_analyze
+    from core.knowledge.logic_models import audit_logic
     from core.knowledge.page_24_models import run_page_models
     from core.knowledge.serenity_chain import run_serenity
-    from core.knowledge.logic_models import audit_logic
-    from core.knowledge.greenwald_strategy import analyze as greenwald_analyze
     from core.knowledge.wang_siyu_analysis import analyze as wang_siyu_analyze
-    from core.knowledge.liu_run_logic import analyze_logic as liu_run_analyze
+    from core.knowledge.xiao_jing_framework import analyze as xiao_jing_analyze
+
     _KNOWLEDGE_MODULES_LOADED = True
 except ImportError as e:
     import logging as _lg2
+
     _lg2.getLogger("2hao.compute_engine.v3").warning(f"Knowledge modules not loaded: {e}")
 
 try:
-    from core.thinking_models import run_multi_model, MultiModelResult
+    from core.thinking_models import MultiModelResult, run_multi_model  # noqa: F401  (availability probe)
+
     _THINKING_MODELS_LOADED = True
 except ImportError as e:
     import logging as _lg3
+
     _lg3.getLogger("2hao.compute_engine.v3").warning(f"Thinking models not loaded: {e}")
 
 try:
-    from core.compute.kelly_formula import kelly_bet, KellyResult
+    from core.compute.kelly_formula import KellyResult, kelly_bet  # noqa: F401  (availability probe)
+
     _KELLY_LOADED = True
 except ImportError as e:
     import logging as _lg4
+
     _lg4.getLogger("2hao.compute_engine.v3").warning(f"Kelly not loaded: {e}")
 
 _SYNTHESIS_LOADED = False
 try:
     from core.synthesis.synthesis_engine import run_synthesis, synthesis_to_dict
+
     _SYNTHESIS_LOADED = True
 except ImportError as e:
     import logging as _lg5
+
     _lg5.getLogger("2hao.compute_engine.v3").warning(f"Synthesis not loaded: {e}")
 
 
@@ -102,8 +111,16 @@ def _clean_num(v) -> float:
     if not s or s in ("--", "-", "nan", "None", ""):
         return 0.0
     mult = 1.0
-    for unit, m in [("万亿", 1e12), ("千亿", 1e11), ("百亿", 1e10), ("十亿", 1e9),
-                    ("亿", 1e8), ("千万", 1e7), ("百万", 1e6), ("万", 1e4)]:
+    for unit, m in [
+        ("万亿", 1e12),
+        ("千亿", 1e11),
+        ("百亿", 1e10),
+        ("十亿", 1e9),
+        ("亿", 1e8),
+        ("千万", 1e7),
+        ("百万", 1e6),
+        ("万", 1e4),
+    ]:
         if unit in s:
             mult = m
             s = s.replace(unit, "")
@@ -202,7 +219,7 @@ class ComputeEngine:
 
     def _build_v30_structured(self, data: dict):
         try:
-            from core.models import StructuredData, CompanyProfile, AnnualFinancials
+            from core.models import AnnualFinancials, CompanyProfile, StructuredData
         except ImportError:
             return None
 
@@ -243,19 +260,35 @@ class ComputeEngine:
 
         all_years = sorted(set(list(revenue_data.keys()) + list(profit_data.keys())))
         for year in all_years:
-            financials.append(AnnualFinancials(stock_code="", stock_name=data.get("asset", ""),
-                fiscal_year=year, revenue=revenue_data.get(year, 0), net_profit=profit_data.get(year, 0),
-                source="tavily+akshare", data_quality="estimated"))
+            financials.append(
+                AnnualFinancials(
+                    stock_code="",
+                    stock_name=data.get("asset", ""),
+                    fiscal_year=year,
+                    revenue=revenue_data.get(year, 0),
+                    net_profit=profit_data.get(year, 0),
+                    source="tavily+akshare",
+                    data_quality="estimated",
+                )
+            )
 
         return StructuredData(profile=profile, financials=financials) if financials else None
 
     def _run_v30_pipeline(self, structured) -> dict:
         try:
             from core.compute.pipeline import run_compute_pipeline
+
             pr = run_compute_pipeline(structured, enable_gate=True, enable_valuation=True)
             if pr:
-                return {"_v30_pipeline": {"status": "ok", "revenue_bridge": pr.revenue_bridge,
-                    "margin_bridge": pr.margin_bridge, "expense_bridge": pr.expense_bridge, "numeric_gate": pr.numeric_gate_report}}
+                return {
+                    "_v30_pipeline": {
+                        "status": "ok",
+                        "revenue_bridge": pr.revenue_bridge,
+                        "margin_bridge": pr.margin_bridge,
+                        "expense_bridge": pr.expense_bridge,
+                        "numeric_gate": pr.numeric_gate_report,
+                    }
+                }
         except Exception as e:
             logger.debug("V30 pipeline: %s", e)
         return {}
@@ -269,7 +302,8 @@ class ComputeEngine:
         fcf = float(val.get("free_cash_flow", val.get("fcf", 0))) if val.get("free_cash_flow", val.get("fcf")) else 0
         eps = float(val.get("eps", 0)) if val.get("eps") else 0
         bvps = float(val.get("bvps", 0)) if val.get("bvps") else 0
-        if not any([price, shares, fcf, eps]): return {}
+        if not any([price, shares, fcf, eps]):
+            return {}
         return {"price": price, "shares": shares, "net_debt": net_debt, "fcf": fcf, "eps": eps, "bvps": bvps}
 
     def _extract_comparable_params(self, data: dict) -> dict:
@@ -278,12 +312,14 @@ class ComputeEngine:
         eps = float(val.get("eps", 0)) if val.get("eps") else 0
         bvps = float(val.get("bvps", 0)) if val.get("bvps") else 0
         price = float(val.get("price", 0)) if val.get("price") else 0
-        if not eps and not bvps: return {}
+        if not eps and not bvps:
+            return {}
         return {"eps": eps, "bvps": bvps, "price": price}
 
     def _compute_wacc_with_erp(self) -> float:
         try:
             from core.compute.financial.damodaran_erp import DamodaranERP
+
             china = DamodaranERP().for_country("中国")
             total_erp = china.get("total_erp", 0.0729)
             rf, beta, cd_rate, dr, tr = 0.025, 1.0, 0.04, 0.20, 0.25
@@ -295,15 +331,21 @@ class ComputeEngine:
     def _run_v51_dcf(self, params: dict, data: dict) -> dict:
         try:
             from core.compute.compute import DCFInput, run_dcf
+
             wacc = self._compute_wacc_with_erp()
-            inp = DCFInput(free_cash_flow=params["fcf"], shares_outstanding=params["shares"] or 1,
-                          net_debt=params["net_debt"], wacc=wacc)
+            inp = DCFInput(
+                free_cash_flow=params["fcf"],
+                shares_outstanding=params["shares"] or 1,
+                net_debt=params["net_debt"],
+                wacc=wacc,
+            )
             result = run_dcf(inp, current_price=params["price"], current_eps=params.get("eps", 0))
             if result and result.fair_value_per_share > 0:
                 # R56（2026-08-03）：估值规则护栏——知识库规则校验 DCF 结果
                 _guards = []
                 try:
                     from core.compute.valuation_guardrails import validate_dcf_guards
+
                     _sensitivity = getattr(result, "sensitivity_table", None)
                     _tv_pct = 0.0
                     if isinstance(_sensitivity, dict) and _sensitivity.get("enterprise_value"):
@@ -321,30 +363,39 @@ class ComputeEngine:
                 except Exception as _ge:
                     logger.debug("[DCF-GUARD] %s", _ge)
                 _result = {
-                    "fair_value": round(result.fair_value_per_share, 2), "upside_pct": result.upside_pct,
-                    "implied_pe": result.implied_pe, "enterprise_value": result.enterprise_value,
-                    "equity_value": result.equity_value, "assumptions": result.assumptions,
-                    "sensitivity_table": result.sensitivity_table, "wacc": f"{wacc*100:.1f}%",
+                    "fair_value": round(result.fair_value_per_share, 2),
+                    "upside_pct": result.upside_pct,
+                    "implied_pe": result.implied_pe,
+                    "enterprise_value": result.enterprise_value,
+                    "equity_value": result.equity_value,
+                    "assumptions": result.assumptions,
+                    "sensitivity_table": result.sensitivity_table,
+                    "wacc": f"{wacc * 100:.1f}%",
                 }
                 if _guards:
                     _result["guardrail_issues"] = _guards
                     logger.warning("[DCF-GUARD] %d 项估值护栏触发: %s", len(_guards), _guards[0])
                 return {"status": "ok", "method": "V51_direct", "result": _result}
-            return {"status": "skip", "reason": f"DCF zero fair_value"}
+            return {"status": "skip", "reason": "DCF zero fair_value"}
         except Exception as e:
             return {"status": "error", "error": str(e)}
 
     def _run_v51_comparable(self, params: dict) -> dict:
         try:
             from core.compute.compute import run_comparable
+
             result = run_comparable(company_eps=params.get("eps", 0), company_bvps=params.get("bvps", 0))
             if result and result.summary:
                 _result = {
-                    "target_pe": result.target_pe, "implied_pe_price": result.implied_pe_price,
-                    "peers": result.peers, "summary": result.summary}
+                    "target_pe": result.target_pe,
+                    "implied_pe_price": result.implied_pe_price,
+                    "peers": result.peers,
+                    "summary": result.summary,
+                }
                 # R56/FP4：可比估值护栏
                 try:
                     from core.compute.valuation_guardrails import validate_comparable_guards
+
                     _guards = validate_comparable_guards(
                         target_pe=getattr(result, "target_pe", 0) or 0,
                         implied_price=getattr(result, "implied_pe_price", 0) or 0,
@@ -364,24 +415,38 @@ class ComputeEngine:
     def _run_v51_scenario(self, dcf_params: dict, comp_params: dict, data: dict) -> dict:
         try:
             from core.compute.compute import DCFInput, run_dcf, run_scenario
+
             wacc = self._compute_wacc_with_erp()
-            inp = DCFInput(free_cash_flow=dcf_params["fcf"], shares_outstanding=dcf_params["shares"] or 1,
-                          net_debt=dcf_params["net_debt"], wacc=wacc)
+            inp = DCFInput(
+                free_cash_flow=dcf_params["fcf"],
+                shares_outstanding=dcf_params["shares"] or 1,
+                net_debt=dcf_params["net_debt"],
+                wacc=wacc,
+            )
             dcf_val = run_dcf(inp, dcf_params.get("price", 0), dcf_params.get("eps", 0)).fair_value_per_share
             current_price = dcf_params.get("price", 0) or comp_params.get("price", 0)
-            if current_price <= 0: return {"status": "skip", "reason": "no price"}
+            if current_price <= 0:
+                return {"status": "skip", "reason": "no price"}
             scenario = run_scenario(current_price, dcf_val, dcf_val * 0.85)
             _result = {
-                "bull_price": round(scenario.bull_price, 2), "base_price": round(scenario.base_price, 2),
-                "bear_price": round(scenario.bear_price, 2), "weighted_target": round(scenario.weighted_target, 2),
-                "upside_pct": scenario.upside, "downside_pct": scenario.downside,
-                "risk_reward_ratio": scenario.risk_reward}
+                "bull_price": round(scenario.bull_price, 2),
+                "base_price": round(scenario.base_price, 2),
+                "bear_price": round(scenario.bear_price, 2),
+                "weighted_target": round(scenario.weighted_target, 2),
+                "upside_pct": scenario.upside,
+                "downside_pct": scenario.downside,
+                "risk_reward_ratio": scenario.risk_reward,
+            }
             # R56/FP4：情景分析护栏（单调性/风险收益比/极差）
             try:
                 from core.compute.valuation_guardrails import validate_scenario_guards
+
                 _guards = validate_scenario_guards(
-                    bull=scenario.bull_price, base=scenario.base_price,
-                    bear=scenario.bear_price, risk_reward=scenario.risk_reward)
+                    bull=scenario.bull_price,
+                    base=scenario.base_price,
+                    bear=scenario.bear_price,
+                    risk_reward=scenario.risk_reward,
+                )
                 if _guards:
                     _result["guardrail_issues"] = _guards
                     logger.warning("[SCEN-GUARD] %d 项情景护栏触发: %s", len(_guards), _guards[0])
@@ -409,24 +474,37 @@ class ComputeEngine:
             yrs.sort(key=lambda t: t[0])
             if len(yrs) >= 2:
                 g = round((yrs[-1][1] - yrs[0][1]) / yrs[0][1] * 100, 2) if yrs[0][1] > 0 else 0
-                result["revenue_bridge"] = {"status": "ok", "method": "direct_extract",
-                    "result": {"period": f"{yrs[0][0]}->{yrs[-1][0]}", "total_revenue_growth_pct": g,
-                        "base_revenue": yrs[0][1], "current_revenue": yrs[-1][1], "years": dict(yrs)}}
+                result["revenue_bridge"] = {
+                    "status": "ok",
+                    "method": "direct_extract",
+                    "result": {
+                        "period": f"{yrs[0][0]}->{yrs[-1][0]}",
+                        "total_revenue_growth_pct": g,
+                        "base_revenue": yrs[0][1],
+                        "current_revenue": yrs[-1][1],
+                        "years": dict(yrs),
+                    },
+                }
         return result
 
     def _try_compute_from_kp(self, data: dict) -> dict:
         try:
             from core.compute.compute import compute_from_kp
+
             cd = data.get("chart_data", {})
             val = cd.get("fig_valuation", {})
             price = float(val.get("price", 0)) if val.get("price") else 0
             eps = float(val.get("eps", 0)) if val.get("eps") else 0
             bvps = float(val.get("bvps", 0)) if val.get("bvps") else 0
-            fcf = float(val.get("free_cash_flow", val.get("fcf", 0))) if val.get("free_cash_flow", val.get("fcf")) else 0
+            fcf = (
+                float(val.get("free_cash_flow", val.get("fcf", 0))) if val.get("free_cash_flow", val.get("fcf")) else 0
+            )
             shares = float(val.get("shares", 0)) if val.get("shares") else 0
-            if not any([price, eps, fcf, shares]): return {"status": "skip", "reason": "insufficient KP data"}
+            if not any([price, eps, fcf, shares]):
+                return {"status": "skip", "reason": "insufficient KP data"}
             result = compute_from_kp(price=price, eps=eps, bvps=bvps, fcf=fcf, shares=shares, current_price=price)
-            if result: return {"status": "ok", "method": "compute_from_kp", "result": result}
+            if result:
+                return {"status": "ok", "method": "compute_from_kp", "result": result}
             return {"status": "skip", "reason": "kp empty"}
         except Exception as e:
             return {"status": "error", "error": str(e)}
@@ -434,19 +512,27 @@ class ComputeEngine:
     def _compute_damodaran_erp(self) -> dict:
         try:
             from core.compute.financial.damodaran_erp import DamodaranERP
+
             china = DamodaranERP().for_country("中国")
-            return {"status": "ok", "method": "DamodaranERP", "result": {
-                "country": "中国", "rating": china.get("rating", "A1"),
-                "default_spread": china.get("default_spread", 0),
-                "country_risk_premium": china.get("country_risk_premium", 0),
-                "mature_market_erp": china.get("mature_market_erp", 0.0596),
-                "total_erp": china.get("total_erp", 0.0729)}}
+            return {
+                "status": "ok",
+                "method": "DamodaranERP",
+                "result": {
+                    "country": "中国",
+                    "rating": china.get("rating", "A1"),
+                    "default_spread": china.get("default_spread", 0),
+                    "country_risk_premium": china.get("country_risk_premium", 0),
+                    "mature_market_erp": china.get("mature_market_erp", 0.0596),
+                    "total_erp": china.get("total_erp", 0.0729),
+                },
+            }
         except Exception as e:
             return {"status": "skip", "reason": f"DamodaranERP: {e}"}
 
     def _run_pattern_detection(self, data: dict) -> dict:
         try:
             from core.compute.patterns import detect_all
+
             cd = data.get("chart_data", {})
             fd = {}
             rev = cd.get("fig_revenue_trend", {})
@@ -457,19 +543,31 @@ class ComputeEngine:
                         if y is None:
                             continue
                         if isinstance(val, dict):
-                            fd[y] = {"revenue": val.get("revenue", val.get("营业收入", 0)),
-                                     "net_profit": val.get("net_profit", val.get("净利润", 0)),
-                                     "gross_margin": val.get("gross_margin", val.get("毛利率", 0))}
+                            fd[y] = {
+                                "revenue": val.get("revenue", val.get("营业收入", 0)),
+                                "net_profit": val.get("net_profit", val.get("净利润", 0)),
+                                "gross_margin": val.get("gross_margin", val.get("毛利率", 0)),
+                            }
                         else:
                             fd[y] = {"revenue": float(val)} if val else {"revenue": 0}
                     except Exception:
                         pass  # Layer 5: bare except replaced with Exception
-            if not fd: return {"status": "skip", "reason": "no financial time series"}
+            if not fd:
+                return {"status": "skip", "reason": "no financial time series"}
             results = detect_all(fd)
-            return {"status": "ok", "method": "PatternLibrary", "result": {
-                pid: {"pattern_name": pr.pattern_name, "signal": pr.signal,
-                      "confidence": pr.confidence, "reasoning": pr.reasoning}
-                for pid, pr in results.items()}}
+            return {
+                "status": "ok",
+                "method": "PatternLibrary",
+                "result": {
+                    pid: {
+                        "pattern_name": pr.pattern_name,
+                        "signal": pr.signal,
+                        "confidence": pr.confidence,
+                        "reasoning": pr.reasoning,
+                    }
+                    for pid, pr in results.items()
+                },
+            }
         except Exception as e:
             return {"status": "skip", "reason": str(e)}
 
@@ -478,13 +576,23 @@ class ComputeEngine:
             return {"status": "skip", "reason": "no pattern results"}
         try:
             from core.compute.decision_hub import DecisionHub, from_pattern_results
+
             signals = from_pattern_results(pattern_results.get("result", {}))
-            if not signals: return {"status": "skip", "reason": "no non-neutral signals"}
+            if not signals:
+                return {"status": "skip", "reason": "no non-neutral signals"}
             d = DecisionHub.fuse(signals)
-            return {"status": "ok", "method": "DecisionHub", "result": {
-                "bull_prob": round(d.bull_prob, 4), "bear_prob": round(d.bear_prob, 4),
-                "neutral_prob": round(d.neutral_prob, 4), "conviction": round(d.conviction, 4),
-                "n_signals": d.n_signals, "dominant_signal": d.dominant_signal}}
+            return {
+                "status": "ok",
+                "method": "DecisionHub",
+                "result": {
+                    "bull_prob": round(d.bull_prob, 4),
+                    "bear_prob": round(d.bear_prob, 4),
+                    "neutral_prob": round(d.neutral_prob, 4),
+                    "conviction": round(d.conviction, 4),
+                    "n_signals": d.n_signals,
+                    "dominant_signal": d.dominant_signal,
+                },
+            }
         except Exception as e:
             return {"status": "skip", "reason": str(e)}
 
@@ -495,53 +603,97 @@ class ComputeEngine:
     def _run_xiao_jing(self, data: dict) -> dict:
         try:
             result = xiao_jing_analyze(data)
-            return {"status": "ok", "method": "xiao_jing", "life_cycle": result.life_cycle, "composite_score": result.composite_score, "recommendation": result.recommendation}
+            return {
+                "status": "ok",
+                "method": "xiao_jing",
+                "life_cycle": result.life_cycle,
+                "composite_score": result.composite_score,
+                "recommendation": result.recommendation,
+            }
         except Exception as e:
             return {"status": "skip", "reason": str(e)}
 
     def _run_page_models(self, data: dict) -> dict:
         try:
             result = run_page_models(data)
-            return {"status": "ok", "method": "page_models", "diversity_score": result.diversity_score, "consensus": result.consensus, "recommendation": result.recommendation}
+            return {
+                "status": "ok",
+                "method": "page_models",
+                "diversity_score": result.diversity_score,
+                "consensus": result.consensus,
+                "recommendation": result.recommendation,
+            }
         except Exception as e:
             return {"status": "skip", "reason": str(e)}
 
     def _run_serenity_chain(self, data: dict) -> dict:
         try:
             import json as _j
+
             text = data.get("text", "") or data.get("report_text", "") or _j.dumps(data, ensure_ascii=False)
             result = run_serenity(text)
-            return {"status": "ok", "method": "serenity", "all_passed": result.all_passed, "failed_steps": result.failed_steps}
+            return {
+                "status": "ok",
+                "method": "serenity",
+                "all_passed": result.all_passed,
+                "failed_steps": result.failed_steps,
+            }
         except Exception as e:
             return {"status": "skip", "reason": str(e)}
 
     def _run_logic_audit(self, data: dict) -> dict:
         try:
             import json as _j
+
             text = data.get("text", "") or data.get("report_text", "") or _j.dumps(data, ensure_ascii=False)
             result = audit_logic(text)
-            return {"status": "ok", "method": "logic_audit", "mece_score": result.mece_score, "pyramid_score": result.pyramid_principle, "recommendations": result.recommendations}
+            return {
+                "status": "ok",
+                "method": "logic_audit",
+                "mece_score": result.mece_score,
+                "pyramid_score": result.pyramid_principle,
+                "recommendations": result.recommendations,
+            }
         except Exception as e:
             return {"status": "skip", "reason": str(e)}
 
     def _run_greenwald(self, data: dict) -> dict:
         try:
             result = greenwald_analyze(data)
-            return {"status": "ok", "method": "greenwald", "barrier_level": result.barriers.barrier_level, "barrier_score": result.barriers.overall_barrier, "game_type": result.game_type, "recommendation": result.recommendation}
+            return {
+                "status": "ok",
+                "method": "greenwald",
+                "barrier_level": result.barriers.barrier_level,
+                "barrier_score": result.barriers.overall_barrier,
+                "game_type": result.game_type,
+                "recommendation": result.recommendation,
+            }
         except Exception as e:
             return {"status": "skip", "reason": str(e)}
 
     def _run_wang_siyu(self, data: dict) -> dict:
         try:
             result = wang_siyu_analyze(data)
-            return {"status": "ok", "method": "wang_siyu", "market_score": result.market_score, "competition_type": result.competition_type, "composite_score": result.composite_score, "recommendation": result.recommendation}
+            return {
+                "status": "ok",
+                "method": "wang_siyu",
+                "market_score": result.market_score,
+                "competition_type": result.competition_type,
+                "composite_score": result.composite_score,
+                "recommendation": result.recommendation,
+            }
         except Exception as e:
             return {"status": "skip", "reason": str(e)}
 
     def _run_liu_run(self, data: dict) -> dict:
         try:
             result = liu_run_analyze(data)
-            return {"status": "ok", "method": "liu_run", "composite_score": result.composite_score, "recommendation": result.recommendation}
+            return {
+                "status": "ok",
+                "method": "liu_run",
+                "composite_score": result.composite_score,
+                "recommendation": result.recommendation,
+            }
         except Exception as e:
             return {"status": "skip", "reason": str(e)}
 
@@ -553,14 +705,30 @@ class ComputeEngine:
             if upside <= 0:
                 return {"status": "skip", "reason": "no_upside_data"}
             r = kelly_bet(upside, max(downside, 1), wp)
-            return {"status": "ok", "method": "kelly", "optimal_fraction": r.optimal_fraction, "half_kelly": r.half_kelly, "odds_ratio": r.odds_ratio, "edge": r.edge, "interpretation": r.interpretation}
+            return {
+                "status": "ok",
+                "method": "kelly",
+                "optimal_fraction": r.optimal_fraction,
+                "half_kelly": r.half_kelly,
+                "odds_ratio": r.odds_ratio,
+                "edge": r.edge,
+                "interpretation": r.interpretation,
+            }
         except Exception as e:
             return {"status": "skip", "reason": str(e)}
 
     def _run_thinking_models(self, data: dict) -> dict:
         try:
             result = run_multi_model(data)
-            return {"status": "ok", "method": "thinking_models", "consensus": result.consensus, "bullish_count": result.bullish_count, "bearish_count": result.bearish_count, "avg_confidence": result.avg_confidence, "recommendation": result.recommendation}
+            return {
+                "status": "ok",
+                "method": "thinking_models",
+                "consensus": result.consensus,
+                "bullish_count": result.bullish_count,
+                "bearish_count": result.bearish_count,
+                "avg_confidence": result.avg_confidence,
+                "recommendation": result.recommendation,
+            }
         except Exception as e:
             return {"status": "skip", "reason": str(e)}
 
@@ -591,11 +759,16 @@ class ComputeEngine:
         # 1. 弹性分析（elasticity_analysis 维度）
         try:
             from core.tools.elasticity_analyzer import ElasticityAnalyzer
+
             ea = ElasticityAnalyzer()
             demand = ea.classify_demand_type(industry) if industry else None
             # DemandType 是枚举，is_cyclical 是 ElasticityProfile 的方法
             _is_cyc = None
-            _profile = ea.estimate_income_elasticity(industry) if industry and hasattr(ea, "estimate_income_elasticity") else None
+            _profile = (
+                ea.estimate_income_elasticity(industry)
+                if industry and hasattr(ea, "estimate_income_elasticity")
+                else None
+            )
             if _profile and hasattr(_profile, "is_cyclical"):
                 _is_cyc = _profile.is_cyclical()
             modules["elasticity"] = {
@@ -608,6 +781,7 @@ class ComputeEngine:
         # 2. 信号链（signal_chain 维度）——triggered_count/total_count 是属性
         try:
             from core.tools.signal_chain import SignalChainBuilder
+
             scb = SignalChainBuilder()
             chain = scb.build_chain(industry) if industry else None
             if chain:
@@ -627,20 +801,38 @@ class ComputeEngine:
         # 3. 护城河（competitive 维度补充）——需要 moat_data 结构化输入
         try:
             from core.tools.moat_analyzer import MoatAnalyzer, MoatType
+
             ma = MoatAnalyzer()
             # 从 chart_data 提取护城河特征（若无则用空 dict，工具会返回窄护城河）
-            _moat_data = {
-                MoatType.TECHNOLOGY: {"strength": "中", "durability": "可维持",
-                                      "source": "data_dict", "evidence": ["研发投入"], "risks": ["技术迭代"]},
-                MoatType.BRAND: {"strength": "中", "durability": "可维持",
-                                 "source": "data_dict", "evidence": ["品牌认知"], "risks": ["竞争"]},
-            } if company else {}
+            _moat_data = (
+                {
+                    MoatType.TECHNOLOGY: {
+                        "strength": "中",
+                        "durability": "可维持",
+                        "source": "data_dict",
+                        "evidence": ["研发投入"],
+                        "risks": ["技术迭代"],
+                    },
+                    MoatType.BRAND: {
+                        "strength": "中",
+                        "durability": "可维持",
+                        "source": "data_dict",
+                        "evidence": ["品牌认知"],
+                        "risks": ["竞争"],
+                    },
+                }
+                if company
+                else {}
+            )
             moat = ma.assess(company, _moat_data) if company else None
             if moat:
                 modules["moat"] = {
                     "overall": moat.overall_moat if hasattr(moat, "overall_moat") else "unknown",
-                    "strong": [m.type.value if hasattr(m.type, "value") else str(m.type)
-                               for m in moat.assessments if m.strength == "强"][:3],
+                    "strong": [
+                        m.type.value if hasattr(m.type, "value") else str(m.type)
+                        for m in moat.assessments
+                        if m.strength == "强"
+                    ][:3],
                     "summary": moat.summary() if hasattr(moat, "summary") else "",
                 }
             else:
@@ -651,6 +843,7 @@ class ComputeEngine:
         # 4. 生命周期（life_cycle 维度）——需要 stage 参数
         try:
             from core.tools.life_cycle_mapper import LifeCycleMapper
+
             lcm = LifeCycleMapper()
             # 从 data 判断阶段（渗透率/增速），默认成长期
             _pen = val.get("penetration_pct")
@@ -660,11 +853,21 @@ class ComputeEngine:
                 _stage = "introduction"
             elif _pen is not None and float(_pen) > 0.5:
                 _stage = "maturity"
-            lc = lcm.analyze(industry, _stage, penetration_rate=float(_pen) if _pen else None,
-                             growth_rate=float(_growth) if _growth else None) if industry else None
+            lc = (
+                lcm.analyze(
+                    industry,
+                    _stage,
+                    penetration_rate=float(_pen) if _pen else None,
+                    growth_rate=float(_growth) if _growth else None,
+                )
+                if industry
+                else None
+            )
             if lc:
                 modules["life_cycle"] = {
-                    "stage": lc.stage.value if hasattr(lc, "stage") and hasattr(lc.stage, "value") else str(getattr(lc, "stage", "")),
+                    "stage": lc.stage.value
+                    if hasattr(lc, "stage") and hasattr(lc.stage, "value")
+                    else str(getattr(lc, "stage", "")),
                     "next_stage": str(getattr(lc, "next_stage", "")),
                     "time_to_next": str(getattr(lc, "time_to_next", "")),
                     "summary": lc.summary() if hasattr(lc, "summary") else "",
@@ -677,6 +880,7 @@ class ComputeEngine:
         # 5. 多模型校验（FP3 协作维度）
         try:
             from core.tools.multi_model_validator import MultiModelValidator
+
             mmv = MultiModelValidator()
             models = mmv.get_relevant_models("industry_deep") if hasattr(mmv, "get_relevant_models") else []
             modules["multi_model"] = {
@@ -691,6 +895,7 @@ class ComputeEngine:
         # 注入写作 prompt 供 decision_memo 引用——根治"报告无推理"问题。
         try:
             from core.decision_engine import DecisionEngine
+
             de = DecisionEngine().analyze(data)
             _verdict = de.get("decision", {}).get("verdict", "")
             if _verdict and "待评估" not in str(_verdict):
@@ -704,15 +909,15 @@ class ComputeEngine:
         ok = {k: v for k, v in modules.items() if v.get("status") != "skip"}
         return {"status": "ok" if ok else "skip", "modules": modules, "ok_count": len(ok)}
 
-# ============================================================
-# APPENDIX: 遗漏模块补丁 — 追加到 compute_engine.py 末尾
-# 包含: SOTP, NumericGate, IndustryRouter, GlobalBenchmark, MarginBridge, ExpenseBridge
-# ============================================================
+    # ============================================================
+    # APPENDIX: 遗漏模块补丁 — 追加到 compute_engine.py 末尾
+    # 包含: SOTP, NumericGate, IndustryRouter, GlobalBenchmark, MarginBridge, ExpenseBridge
+    # ============================================================
 
     # ════════════════════════════════════════════
     # Heritage 方法论
     # ════════════════════════════════════════════
-    
+
     def _extract_sotp_segments(self, data: dict) -> list:
         """从 data dict 提取业务分部数据"""
         cd = data.get("chart_data", {})
@@ -723,23 +928,26 @@ class ComputeEngine:
         segments = []
         for name, info in segments_raw.items():
             if isinstance(info, dict):
-                segments.append({
-                    "name": name,
-                    "revenue": float(info.get("revenue", info.get("营收", 0)) or 0),
-                    "profit": float(info.get("profit", info.get("净利润", info.get("net_profit", 0))) or 0),
-                    "method": info.get("method", "PE"),
-                    "pe": float(info.get("pe", 0)) if info.get("pe") else None,
-                    "ps": float(info.get("ps", 0)) if info.get("ps") else None,
-                })
+                segments.append(
+                    {
+                        "name": name,
+                        "revenue": float(info.get("revenue", info.get("营收", 0)) or 0),
+                        "profit": float(info.get("profit", info.get("净利润", info.get("net_profit", 0))) or 0),
+                        "method": info.get("method", "PE"),
+                        "pe": float(info.get("pe", 0)) if info.get("pe") else None,
+                        "ps": float(info.get("ps", 0)) if info.get("ps") else None,
+                    }
+                )
             elif isinstance(info, (int, float)):
-                segments.append({"name": name, "revenue": float(info), "profit": 0,
-                                 "method": "PS", "pe": None, "ps": 15.0})
+                segments.append(
+                    {"name": name, "revenue": float(info), "profit": 0, "method": "PS", "pe": None, "ps": 15.0}
+                )
         return segments
 
     def _compute_sotp(self, data: dict) -> dict:
         """SOTP 分部加总估值"""
         try:
-            from core.compute.valuation.sotp import compute_sotp, SOTPSegmentInput
+            from core.compute.valuation.sotp import SOTPSegmentInput, compute_sotp
 
             cd = data.get("chart_data", {})
             val = cd.get("fig_valuation", {})
@@ -749,30 +957,43 @@ class ComputeEngine:
 
             seg_inputs = []
             for s in segments_raw:
-                seg_inputs.append(SOTPSegmentInput(
-                    name=s["name"], revenue_bn=s["revenue"], profit_bn=s["profit"],
-                    valuation_method=s["method"], peer_pe=s["pe"], peer_ps=s["ps"],
-                    description=s.get("description", ""),
-                ))
+                seg_inputs.append(
+                    SOTPSegmentInput(
+                        name=s["name"],
+                        revenue_bn=s["revenue"],
+                        profit_bn=s["profit"],
+                        valuation_method=s["method"],
+                        peer_pe=s["pe"],
+                        peer_ps=s["ps"],
+                        description=s.get("description", ""),
+                    )
+                )
 
             cash = float(val.get("cash_equivalents", 0)) if val.get("cash_equivalents") else 0
             net_debt = float(val.get("net_debt", 0)) if val.get("net_debt") else 0
             shares = int(float(val.get("shares", 0))) if val.get("shares") else 0
 
             result = compute_sotp(
-                company=data.get("asset", ""), stock_code="",
-                segments=seg_inputs, cash_and_equivalents=cash,
-                net_debt=net_debt, total_shares=shares,
+                company=data.get("asset", ""),
+                stock_code="",
+                segments=seg_inputs,
+                cash_and_equivalents=cash,
+                net_debt=net_debt,
+                total_shares=shares,
             )
             if result and result.total_segments_value > 0:
-                return {"status": "ok", "method": "SOTP", "result": {
-                    "total_segments_value": result.total_segments_value,
-                    "equity_value": result.equity_value,
-                    "target_price": result.target_price,
-                    "segments": result.segments,
-                    "warnings": result.warnings,
-                    "formatted": "",  # from format_sotp_for_report
-                }}
+                return {
+                    "status": "ok",
+                    "method": "SOTP",
+                    "result": {
+                        "total_segments_value": result.total_segments_value,
+                        "equity_value": result.equity_value,
+                        "target_price": result.target_price,
+                        "segments": result.segments,
+                        "warnings": result.warnings,
+                        "formatted": "",  # from format_sotp_for_report
+                    },
+                }
             return {"status": "skip", "reason": "SOTP produced zero value"}
         except Exception as e:
             return {"status": "error", "error": str(e)}
@@ -801,36 +1022,46 @@ class ComputeEngine:
             if abs(g) > 500:
                 checks.append({"module": "revenue", "issue": f"growth={g}%异常", "severity": "warn"})
 
-        return {"status": "ok" if not any(c["severity"]=="error" for c in checks) else "error",
-                "checks": checks, "n_checks": len(checks),
-                "n_errors": sum(1 for c in checks if c["severity"]=="error")}
+        return {
+            "status": "ok" if not any(c["severity"] == "error" for c in checks) else "error",
+            "checks": checks,
+            "n_checks": len(checks),
+            "n_errors": sum(1 for c in checks if c["severity"] == "error"),
+        }
 
     # ════════════════════════════════════════════
     # Industry Router 行业路由
     # ════════════════════════════════════════════
-    FINANCIAL_INDUSTRIES = {"保险","银行","券商","证券","多元金融"}
-    CONSUMER_INDUSTRIES = {"白酒","食品饮料","啤酒","饮料制造","调味品","乳品"}
-    TECH_INDUSTRIES = {"半导体","软件","自动驾驶","芯片","计算机","人工智能","AI","SaaS"}
-    MANUFACTURING_INDUSTRIES = {"光伏","新能源","电池","新能源汽车","电气设备","新材料"}
+    FINANCIAL_INDUSTRIES = {"保险", "银行", "券商", "证券", "多元金融"}
+    CONSUMER_INDUSTRIES = {"白酒", "食品饮料", "啤酒", "饮料制造", "调味品", "乳品"}
+    TECH_INDUSTRIES = {"半导体", "软件", "自动驾驶", "芯片", "计算机", "人工智能", "AI", "SaaS"}
+    MANUFACTURING_INDUSTRIES = {"光伏", "新能源", "电池", "新能源汽车", "电气设备", "新材料"}
 
     def _classify_industry(self, industry_label: str) -> str:
         """行业分类路由"""
-        if not industry_label: return "manufacturing"
-        for kw_set, pipe in [(self.FINANCIAL_INDUSTRIES, "financial"),
-                             (self.CONSUMER_INDUSTRIES, "consumer"),
-                             (self.TECH_INDUSTRIES, "tech")]:
+        if not industry_label:
+            return "manufacturing"
+        for kw_set, pipe in [
+            (self.FINANCIAL_INDUSTRIES, "financial"),
+            (self.CONSUMER_INDUSTRIES, "consumer"),
+            (self.TECH_INDUSTRIES, "tech"),
+        ]:
             for kw in kw_set:
-                if kw in industry_label: return pipe
+                if kw in industry_label:
+                    return pipe
         return "manufacturing"
 
     def _get_industry_pipeline(self, industry: str) -> dict:
         """获取行业特定管线配置"""
         pipe = self._classify_industry(industry)
         configs = {
-            "financial": {"valuation_prefer": "PB", "key_metrics": ["roe","pb","nbv","net_interest_margin"]},
-            "consumer": {"valuation_prefer": "PE", "key_metrics": ["revenue_growth","gross_margin","channel_count"]},
-            "tech": {"valuation_prefer": "PS", "key_metrics": ["r_and_d_pct","revenue_growth","gross_margin"]},
-            "manufacturing": {"valuation_prefer": "PE", "key_metrics": ["revenue_growth","gross_margin","capacity_utilization"]},
+            "financial": {"valuation_prefer": "PB", "key_metrics": ["roe", "pb", "nbv", "net_interest_margin"]},
+            "consumer": {"valuation_prefer": "PE", "key_metrics": ["revenue_growth", "gross_margin", "channel_count"]},
+            "tech": {"valuation_prefer": "PS", "key_metrics": ["r_and_d_pct", "revenue_growth", "gross_margin"]},
+            "manufacturing": {
+                "valuation_prefer": "PE",
+                "key_metrics": ["revenue_growth", "gross_margin", "capacity_utilization"],
+            },
         }
         return configs.get(pipe, configs["manufacturing"])
 
@@ -856,27 +1087,34 @@ class ComputeEngine:
             if isinstance(peers_data, list):
                 for p in peers_data:
                     if isinstance(p, dict):
-                        if p.get("pe"): peer_metrics["pe"].append(float(p["pe"]))
-                        if p.get("ps"): peer_metrics["ps"].append(float(p["ps"]))
-                        if p.get("roe"): peer_metrics["roe"].append(float(p["roe"]))
+                        if p.get("pe"):
+                            peer_metrics["pe"].append(float(p["pe"]))
+                        if p.get("ps"):
+                            peer_metrics["ps"].append(float(p["ps"]))
+                        if p.get("roe"):
+                            peer_metrics["roe"].append(float(p["roe"]))
 
             def safe_avg(vals):
-                return round(sum(vals)/len(vals), 2) if vals else None
+                return round(sum(vals) / len(vals), 2) if vals else None
 
             industry = data.get("report_type", "")
             pipe = self._classify_industry(industry)
 
-            return {"status": "ok", "method": "GlobalBenchmark_simple", "result": {
-                "industry_pipeline": pipe,
-                "preferred_metric": "PS" if pipe=="tech" else "PB" if pipe=="financial" else "PE",
-                "target_pe": target_pe,
-                "industry_avg_pe": safe_avg(peer_metrics.get("pe",[])),
-                "target_roe": target_roe,
-                "industry_avg_roe": safe_avg(peer_metrics.get("roe",[])),
-                "n_peers": len(peer_metrics.get("pe",[])),
-                "peer_count": len(peers_data) if isinstance(peers_data, list) else 0,
-                "industry": industry,
-            }}
+            return {
+                "status": "ok",
+                "method": "GlobalBenchmark_simple",
+                "result": {
+                    "industry_pipeline": pipe,
+                    "preferred_metric": "PS" if pipe == "tech" else "PB" if pipe == "financial" else "PE",
+                    "target_pe": target_pe,
+                    "industry_avg_pe": safe_avg(peer_metrics.get("pe", [])),
+                    "target_roe": target_roe,
+                    "industry_avg_roe": safe_avg(peer_metrics.get("roe", [])),
+                    "n_peers": len(peer_metrics.get("pe", [])),
+                    "peer_count": len(peers_data) if isinstance(peers_data, list) else 0,
+                    "industry": industry,
+                },
+            }
         except Exception as e:
             return {"status": "error", "error": str(e)}
 
@@ -892,6 +1130,7 @@ class ComputeEngine:
         """
         try:
             from core.compute.consolidation import consolidation_assessment, consolidator_profile
+
             cd = data.get("chart_data", {})
             val = cd.get("fig_valuation", {})
             industry = str(val.get("industry", data.get("industry", "")) or "")
@@ -942,18 +1181,26 @@ class ComputeEngine:
                     y = _parse_year_key(yr)
                     if y is None:
                         continue
-                    v = float(val.get("gross_margin", val.get("毛利率", val)) if isinstance(val, dict) else val) if val else 0
+                    v = (
+                        float(val.get("gross_margin", val.get("毛利率", val)) if isinstance(val, dict) else val)
+                        if val
+                        else 0
+                    )
                     yrs.append((y, v))
                 except Exception:
                     pass  # Layer 5: bare except replaced with Exception
             yrs.sort(key=lambda t: t[0])
             if len(yrs) >= 2:
-                result["margin_bridge"] = {"status": "ok", "method": "direct_extract", "result": {
-                    "current_gross_margin": yrs[-1][1],
-                    "trend": dict(yrs),
-                    "change": round(yrs[-1][1] - yrs[0][1], 2),
-                    "direction": "improving" if yrs[-1][1] > yrs[0][1] else "declining",
-                }}
+                result["margin_bridge"] = {
+                    "status": "ok",
+                    "method": "direct_extract",
+                    "result": {
+                        "current_gross_margin": yrs[-1][1],
+                        "trend": dict(yrs),
+                        "change": round(yrs[-1][1] - yrs[0][1], 2),
+                        "direction": "improving" if yrs[-1][1] > yrs[0][1] else "declining",
+                    },
+                }
 
         # Expense bridge
         expense_raw = cd.get("fig_expenses", cd.get("expense_history", {}))
@@ -970,14 +1217,15 @@ class ComputeEngine:
                     pass  # Layer 5: bare except replaced with Exception
             yrs_e.sort(key=lambda t: t[0])
             if len(yrs_e) >= 2:
-                result["expense_bridge"] = {"status": "ok", "method": "direct_extract", "result": {
-                    "current_expense_ratio": yrs_e[-1][1],
-                    "trend": dict(yrs_e),
-                    "change": round(yrs_e[-1][1] - yrs_e[0][1], 2),
-                    "direction": "improving" if yrs_e[-1][1] < yrs_e[0][1] else "deteriorating",
-                }}
+                result["expense_bridge"] = {
+                    "status": "ok",
+                    "method": "direct_extract",
+                    "result": {
+                        "current_expense_ratio": yrs_e[-1][1],
+                        "trend": dict(yrs_e),
+                        "change": round(yrs_e[-1][1] - yrs_e[0][1], 2),
+                        "direction": "improving" if yrs_e[-1][1] < yrs_e[0][1] else "deteriorating",
+                    },
+                }
 
         return result
-
-
-

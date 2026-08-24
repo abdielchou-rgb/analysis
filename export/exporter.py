@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 2号分析师 — 报告导出器
 
@@ -28,20 +27,17 @@ import os
 import re
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger("v30.exporter")
 
 # python-docx
 from docx import Document
-from docx.shared import Pt, Cm, Inches, RGBColor
-from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_TABLE_ALIGNMENT
-from docx.enum.section import WD_ORIENT
-from docx.oxml.ns import qn, nsdecls
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import parse_xml
+from docx.oxml.ns import nsdecls, qn
+from docx.shared import Cm, Inches, Pt, RGBColor
 
 
 class ReportExporter:
@@ -53,7 +49,7 @@ class ReportExporter:
         self.company_name = company_name
         self.style_id = style_id
         self.title = title
-        self._doc: Optional[Document] = None
+        self._doc: Document | None = None
 
     # ═══════════════════════════════════════════════
     # Word 导出
@@ -63,7 +59,7 @@ class ReportExporter:
         self,
         markdown_text: str,
         output_path: str,
-        chart_paths: Optional[dict[str, str]] = None,
+        chart_paths: dict[str, str] | None = None,
     ) -> str:
         """
         将 Markdown 文本转换为 Word (.docx) 文档。
@@ -88,15 +84,18 @@ class ReportExporter:
                 _p.clear()
             # 删除模板自带空表格
             for _t in list(self._doc.tables):
-                _all_empty = all(c.text.strip() == '' for row in _t.rows for c in row.cells)
-                if _all_empty or (_t.rows and _t.rows[0].cells[0].text.strip() in ('指标','项目','指标/项目')):
+                _all_empty = all(c.text.strip() == "" for row in _t.rows for c in row.cells)
+                if _all_empty or (_t.rows and _t.rows[0].cells[0].text.strip() in ("指标", "项目", "指标/项目")):
                     _t._element.getparent().remove(_t._element)
             logger.info("Loaded template: %s (placeholder cleared)", template_path)
         else:
             self._doc = Document()
         self._setup_styles()
         # Always add cover page and TOC
-        self._add_cover_page(title_text=self.title if self.title else self.company_name, style_name=self.style_id.upper() if self.style_id else "CICC")
+        self._add_cover_page(
+            title_text=self.title if self.title else self.company_name,
+            style_name=self.style_id.upper() if self.style_id else "CICC",
+        )
         self._add_toc()
         self._setup_headers_footers()
 
@@ -137,7 +136,7 @@ class ReportExporter:
 
             # ── 图表占位符 ──
             # 支持[CHART:fig_id]占位符(转换为![](chart:fig_id))
-            stripped = re.sub(r'\{?CHART:(\w+)\\}?', r'![](chart:\1)', stripped)
+            stripped = re.sub(r"\{?CHART:(\w+)\\}?", r"![](chart:\1)", stripped)
             chart_match = re.match(r"!\[\]\(chart:(\w+)\)", stripped)
             if chart_match:
                 chart_key = chart_match.group(1)
@@ -270,18 +269,18 @@ class ReportExporter:
 
         # 清理连续空段落（保留封面所需的最少留白，表格后间隔压缩为1行）
         body = self._doc.element.body
-        paras = body.findall(qn('w:p'))
+        paras = body.findall(qn("w:p"))
         prev_empty = False
         cover_zone = True  # 封面区域（第一个分页符前）保留原样
         for p_el in paras:
             # 检测分页符，越过封面区域
-            if cover_zone and p_el.findall(qn('w:r') + '/' + qn('w:br')):
+            if cover_zone and p_el.findall(qn("w:r") + "/" + qn("w:br")):
                 cover_zone = False
             if cover_zone:
                 continue
-            text = ''.join(node.text or '' for node in p_el.iter() if node.tag == qn('w:t'))
+            text = "".join(node.text or "" for node in p_el.iter() if node.tag == qn("w:t"))
             # 图片段落（含 drawing）不视为空段，避免连续图片中第二张被误删
-            has_drawing = p_el.findall('.//' + qn('w:drawing')) or p_el.findall('.//' + qn('w:pict'))
+            has_drawing = p_el.findall(".//" + qn("w:drawing")) or p_el.findall(".//" + qn("w:pict"))
             is_empty = (not text.strip()) and not has_drawing
             if is_empty and prev_empty:
                 p_el.getparent().remove(p_el)
@@ -292,19 +291,20 @@ class ReportExporter:
         logger.info(f"Word 文档已保存: {output_path}")
         return output_path
 
-    def _apply_run_font(self, run, style='cicc'):
-        from docx.shared import Pt, RGBColor
+    def _apply_run_font(self, run, style="cicc"):
         from docx.oxml import OxmlElement
         from docx.oxml.ns import qn
-        run.font.name = 'SimHei'
+        from docx.shared import Pt, RGBColor
+
+        run.font.name = "SimHei"
         run.font.size = Pt(10.5)
         run.font.color.rgb = RGBColor(0x33, 0x33, 0x33)
         rpr = run._element.get_or_add_rPr()
-        rFonts = rpr.find(qn('w:rFonts'))
+        rFonts = rpr.find(qn("w:rFonts"))
         if rFonts is None:
-            rFonts = OxmlElement('w:rFonts')
+            rFonts = OxmlElement("w:rFonts")
             rpr.insert(0, rFonts)
-        rFonts.set(qn('w:eastAsia'), 'SimHei')
+        rFonts.set(qn("w:eastAsia"), "SimHei")
 
     def _add_formatted_text(self, paragraph, text: str):
         """解析行内格式（粗体、斜体）。"""
@@ -387,6 +387,7 @@ class ReportExporter:
             display_w = 5.5
             try:
                 from PIL import Image
+
                 img = Image.open(chart_path)
                 img_w = img.size[0]
                 page_w = 6.3  # A4 usable width (inches)
@@ -394,7 +395,7 @@ class ReportExporter:
                 display_w = min(img_w * scale / 96.0, page_w)
             except ImportError:
                 pass
-            
+
             p = self._doc.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             run = p.add_run()
@@ -514,6 +515,7 @@ class ReportExporter:
         """尝试用 LibreOffice 转换。"""
         try:
             import shutil
+
             soffice = shutil.which("libreoffice") or shutil.which("soffice")
             # P1-4（2026-08-07）：LibreOffice 安装时可能不在 PATH。
             # 追加常见安装路径的逐级探测，优先级从高到低。
@@ -539,8 +541,7 @@ class ReportExporter:
 
             out_dir = str(Path(pdf_path).parent)
             result = subprocess.run(
-                [soffice, "--headless", "--convert-to", "pdf",
-                 "--outdir", out_dir, docx_path],
+                [soffice, "--headless", "--convert-to", "pdf", "--outdir", out_dir, docx_path],
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -557,17 +558,17 @@ class ReportExporter:
 
     def _reportlab_pdf(self, markdown_text: str, pdf_path: str) -> str:
         """用 reportlab 从 Markdown 生成 PDF（基础版本）。"""
-        from reportlab.lib.pagesizes import A4
-        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-        from reportlab.lib.units import cm, mm
         from reportlab.lib.colors import HexColor
-        from reportlab.platypus import (
-            SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
-            PageBreak, Image, KeepTogether,
-        )
-        from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+        from reportlab.lib.units import cm
         from reportlab.pdfbase import pdfmetrics
         from reportlab.pdfbase.ttfonts import TTFont
+        from reportlab.platypus import (
+            Paragraph,
+            SimpleDocTemplate,
+            Spacer,
+        )
 
         # 注册中文字体
         font_registered = False
@@ -587,6 +588,7 @@ class ReportExporter:
         if not font_registered:
             # Check for any available CJK font
             import glob
+
             for fp in glob.glob("/usr/share/fonts/**/*.ttf", recursive=True):
                 if "droid" in fp.lower() or "noto" in fp.lower() or "cjk" in fp.lower():
                     try:
@@ -609,37 +611,58 @@ class ReportExporter:
 
         styles = getSampleStyleSheet()
         title_style = ParagraphStyle(
-            "CJKTitle", parent=styles["Title"],
-            fontName=font_name, fontSize=18, leading=24,
+            "CJKTitle",
+            parent=styles["Title"],
+            fontName=font_name,
+            fontSize=18,
+            leading=24,
             textColor=HexColor("#003366"),
             spaceAfter=12,
         )
         h1_style = ParagraphStyle(
-            "CJKH1", parent=styles["Heading1"],
-            fontName=font_name, fontSize=16, leading=20,
+            "CJKH1",
+            parent=styles["Heading1"],
+            fontName=font_name,
+            fontSize=16,
+            leading=20,
             textColor=HexColor("#003366"),
-            spaceBefore=18, spaceAfter=8,
+            spaceBefore=18,
+            spaceAfter=8,
         )
         h2_style = ParagraphStyle(
-            "CJKH2", parent=styles["Heading2"],
-            fontName=font_name, fontSize=14, leading=18,
+            "CJKH2",
+            parent=styles["Heading2"],
+            fontName=font_name,
+            fontSize=14,
+            leading=18,
             textColor=HexColor("#003366"),
-            spaceBefore=14, spaceAfter=6,
+            spaceBefore=14,
+            spaceAfter=6,
         )
         h3_style = ParagraphStyle(
-            "CJKH3", parent=styles["Heading3"],
-            fontName=font_name, fontSize=12, leading=16,
+            "CJKH3",
+            parent=styles["Heading3"],
+            fontName=font_name,
+            fontSize=12,
+            leading=16,
             textColor=HexColor("#003366"),
-            spaceBefore=10, spaceAfter=5,
+            spaceBefore=10,
+            spaceAfter=5,
         )
         body_style = ParagraphStyle(
-            "CJKBody", parent=styles["Normal"],
-            fontName=font_name, fontSize=10, leading=16,
+            "CJKBody",
+            parent=styles["Normal"],
+            fontName=font_name,
+            fontSize=10,
+            leading=16,
             spaceAfter=6,
         )
         code_style = ParagraphStyle(
-            "Code", parent=styles["Code"],
-            fontName="Courier", fontSize=8, leading=10,
+            "Code",
+            parent=styles["Code"],
+            fontName="Courier",
+            fontSize=8,
+            leading=10,
             leftIndent=10,
         )
 
@@ -700,9 +723,9 @@ class ReportExporter:
         self,
         markdown_text: str,
         base_name: str,
-        chart_paths: Optional[dict[str, str]] = None,
+        chart_paths: dict[str, str] | None = None,
         output_dir: str = "outputs",
-        formats: Optional[list[str]] = None,
+        formats: list[str] | None = None,
     ) -> dict[str, str]:
         """
         一键导出所有格式。
@@ -739,20 +762,20 @@ class ReportExporter:
 
         return results
 
-
-# ═══════════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════
     def _add_cover_page(self, title_text="", date_str="", style_name=None):
         if style_name is None:
             style_name = self.style_id.upper() if self.style_id else "CICC"
         """添加专业封面页"""
-        from docx.shared import Pt, RGBColor
         from docx.enum.text import WD_ALIGN_PARAGRAPH
+        from docx.shared import Pt, RGBColor
+
         body = self._doc.element.body
         existing = list(body)
         # 仅保留节属性元素（sectPr），丢弃模板残留段落（避免封面后出现大量空段/空 Heading）
         kept = []
         for child in existing:
-            if child.tag.endswith('}sectPr'):
+            if child.tag.endswith("}sectPr"):
                 kept.append(child)
             else:
                 body.remove(child)
@@ -763,50 +786,63 @@ class ReportExporter:
         p = self._doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         r = p.add_run(style_name)
-        r.font.size = Pt(14); r.font.color.rgb = RGBColor(0x00, 0x33, 0x66)
-        r.font.name = "SimHei"; r.bold = True
+        r.font.size = Pt(14)
+        r.font.color.rgb = RGBColor(0x00, 0x33, 0x66)
+        r.font.name = "SimHei"
+        r.bold = True
         p = self._doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         r = p.add_run("\u6df1\u5ea6\u7814\u7a76\u62a5\u544a")
-        r.font.size = Pt(22); r.font.color.rgb = RGBColor(0x00, 0x00, 0x00)
-        r.font.name = "SimHei"; r.bold = True
+        r.font.size = Pt(22)
+        r.font.color.rgb = RGBColor(0x00, 0x00, 0x00)
+        r.font.name = "SimHei"
+        r.bold = True
         for _ in range(1):
             self._doc.add_paragraph()
         p = self._doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         r = p.add_run("\u5206\u6790\u5e08\uff1a\u5468\u529b")
-        r.font.size = Pt(11); r.font.color.rgb = RGBColor(0x66, 0x66, 0x66)
+        r.font.size = Pt(11)
+        r.font.color.rgb = RGBColor(0x66, 0x66, 0x66)
         from datetime import datetime
+
         ds = date_str or datetime.now().strftime("%Y\u5e74%m\u6708%d\u65e5")
         p = self._doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         r = p.add_run(ds)
-        r.font.size = Pt(11); r.font.color.rgb = RGBColor(0x66, 0x66, 0x66)
+        r.font.size = Pt(11)
+        r.font.color.rgb = RGBColor(0x66, 0x66, 0x66)
         for _ in range(3):
             self._doc.add_paragraph()
         p = self._doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        r = p.add_run("\u672c\u62a5\u544a\u57fa\u4e8e\u516c\u5f00\u4fe1\u606f\uff0c\u4e0d\u6784\u6210\u6295\u8d44\u5efa\u8bae")
-        r.font.size = Pt(8); r.font.color.rgb = RGBColor(0x99, 0x99, 0x99)
+        r = p.add_run(
+            "\u672c\u62a5\u544a\u57fa\u4e8e\u516c\u5f00\u4fe1\u606f\uff0c\u4e0d\u6784\u6210\u6295\u8d44\u5efa\u8bae"
+        )
+        r.font.size = Pt(8)
+        r.font.color.rgb = RGBColor(0x99, 0x99, 0x99)
         self._doc.add_page_break()
         for child in existing:
             body.append(child)
 
     def _add_toc(self):
         """添加目录页"""
-        from docx.shared import Pt, RGBColor
         from docx.enum.text import WD_ALIGN_PARAGRAPH
+        from docx.shared import Pt, RGBColor
+
         p = self._doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         r = p.add_run("\u76ee  \u5f55")
-        r.font.size = Pt(16); r.font.bold = True
+        r.font.size = Pt(16)
+        r.font.bold = True
         r.font.color.rgb = RGBColor(0x00, 0x33, 0x66)
         r.font.name = "SimHei"
         self._doc.add_paragraph()
         toc_entries = []
         for para in self._doc.paragraphs:
             text = para.text.strip()
-            if not text: continue
+            if not text:
+                continue
             if para.style.name.startswith("Heading 1"):
                 toc_entries.append(("", text))
             elif para.style.name.startswith("Heading 2"):
@@ -820,22 +856,20 @@ class ReportExporter:
             p.paragraph_format.space_after = Pt(2)
         self._doc.add_page_break()
 
+
 # CLI 入口
 # ═══════════════════════════════════════════════════════
 
+
 def main():
     import argparse
+
     parser = argparse.ArgumentParser(description="2号分析师 — 报告导出器")
-    parser.add_argument("--input", "-i", default="test_report.md",
-                        help="输入 Markdown 文件")
-    parser.add_argument("--output", "-o", default="outputs/test_report",
-                        help="输出文件名（不含扩展名）")
-    parser.add_argument("--company", "-c", default="测试公司",
-                        help="公司名称（用于页眉）")
-    parser.add_argument("--pdf", action="store_true",
-                        help="同时导出 PDF")
-    parser.add_argument("--charts", "-g", default=None,
-                        help="图表目录（自动查找 PNG）")
+    parser.add_argument("--input", "-i", default="test_report.md", help="输入 Markdown 文件")
+    parser.add_argument("--output", "-o", default="outputs/test_report", help="输出文件名（不含扩展名）")
+    parser.add_argument("--company", "-c", default="测试公司", help="公司名称（用于页眉）")
+    parser.add_argument("--pdf", action="store_true", help="同时导出 PDF")
+    parser.add_argument("--charts", "-g", default=None, help="图表目录（自动查找 PNG）")
 
     args = parser.parse_args()
 
@@ -869,9 +903,9 @@ def main():
         formats=formats,
     )
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("导出完成!")
     for fmt, path in result.items():
         size = Path(path).stat().st_size
-        print(f"  {fmt}: {path} ({size/1024:.1f} KB)")
-    print(f"{'='*60}")
+        print(f"  {fmt}: {path} ({size / 1024:.1f} KB)")
+    print(f"{'=' * 60}")

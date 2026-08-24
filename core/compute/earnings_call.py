@@ -25,21 +25,23 @@ import logging
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional
+from typing import Optional  # noqa: F401  (dead-import debt)
 
 logger = logging.getLogger("v51.earnings_call")
 
 # Parsing dependencies — all optional
 HAS_REQUESTS = False
 try:
-    import requests
+    import requests  # noqa: F401  (availability probe)
+
     HAS_REQUESTS = True
 except ImportError:
     pass
 
 HAS_PARSE = False
 try:
-    from bs4 import BeautifulSoup
+    from bs4 import BeautifulSoup  # noqa: F401  (availability probe)
+
     HAS_PARSE = True
 except ImportError:
     pass
@@ -48,11 +50,12 @@ except ImportError:
 @dataclass
 class EarningsCallResult:
     """业绩会分析结果。"""
+
     code: str = ""
     company: str = ""
     date: str = ""
-    tone_score: float = 0.0          # -1.0 to 1.0
-    tone_label: str = "中性"         # 积极/偏积极/中性/偏消极/消极
+    tone_score: float = 0.0  # -1.0 to 1.0
+    tone_label: str = "中性"  # 积极/偏积极/中性/偏消极/消极
     forward_looking_statements: list = field(default_factory=list)
     evasion_signals: list = field(default_factory=list)
     key_metrics_extracted: list = field(default_factory=list)
@@ -68,47 +71,47 @@ class EarningsCallResult:
 # ── Tone analysis ────────────────────────────────────────────
 
 POSITIVE_PATTERNS = [
-    r'增长|增长显著|高速增长|超预期|好于预期',
-    r'有信心|乐观|看好|积极|向好',
-    r'改善|提升|增强|扩大|加速',
-    r'创新高|历史最好|突破|里程碑',
-    r'市场地位|领先优势|护城河|壁垒',
-    r'分红|回购|股东回报|价值提升',
+    r"增长|增长显著|高速增长|超预期|好于预期",
+    r"有信心|乐观|看好|积极|向好",
+    r"改善|提升|增强|扩大|加速",
+    r"创新高|历史最好|突破|里程碑",
+    r"市场地位|领先优势|护城河|壁垒",
+    r"分红|回购|股东回报|价值提升",
 ]
 
 NEGATIVE_PATTERNS = [
-    r'下降|下滑|放缓|收缩|萎缩',
-    r'低于预期|不及预期|承压|挑战',
-    r'亏损|赤字|负增长|恶化',
-    r'风险|不确定|压力|困难|严峻',
-    r'竞争加剧|价格战|毛利率下降',
-    r'裁员|关停|减值|亏损|坏账',
+    r"下降|下滑|放缓|收缩|萎缩",
+    r"低于预期|不及预期|承压|挑战",
+    r"亏损|赤字|负增长|恶化",
+    r"风险|不确定|压力|困难|严峻",
+    r"竞争加剧|价格战|毛利率下降",
+    r"裁员|关停|减值|亏损|坏账",
 ]
 
 EVASION_PATTERNS = [
-    r'不便透露|暂不方便|不能披露',
-    r'以公告为准|请关注后续公告',
-    r'目前无法判断|不确定|不好说',
-    r'这个问题比较复杂|需要综合评估',
-    r'我们正在研究|还在讨论中|待定',
-    r'跳过这个问题|下一个问题',
+    r"不便透露|暂不方便|不能披露",
+    r"以公告为准|请关注后续公告",
+    r"目前无法判断|不确定|不好说",
+    r"这个问题比较复杂|需要综合评估",
+    r"我们正在研究|还在讨论中|待定",
+    r"跳过这个问题|下一个问题",
 ]
 
 FORWARD_LOOKING_PATTERNS = [
-    r'预计\d{4}年|我们预计|我们预期',
-    r'指引|目标|计划|规划',
-    r'未来\d{1,2}年|中长期|展望',
-    r'产能释放|新产品上市|新业务',
-    r'资本开支|capex|投资计划',
+    r"预计\d{4}年|我们预计|我们预期",
+    r"指引|目标|计划|规划",
+    r"未来\d{1,2}年|中长期|展望",
+    r"产能释放|新产品上市|新业务",
+    r"资本开支|capex|投资计划",
 ]
 
 KEY_METRIC_PATTERNS = [
-    (r'营收(\d+\.?\d*)', 'revenue'),
-    (r'净利润(\d+\.?\d*)', 'net_profit'),
-    (r'毛利率(\d+\.?\d*)%', 'gross_margin'),
-    (r'净利率(\d+\.?\d*)%', 'net_margin'),
-    (r'ROE(\d+\.?\d*)%?', 'roe'),
-    (r'分红(\d+\.?\d*)元', 'dividend'),
+    (r"营收(\d+\.?\d*)", "revenue"),
+    (r"净利润(\d+\.?\d*)", "net_profit"),
+    (r"毛利率(\d+\.?\d*)%", "gross_margin"),
+    (r"净利率(\d+\.?\d*)%", "net_margin"),
+    (r"ROE(\d+\.?\d*)%?", "roe"),
+    (r"分红(\d+\.?\d*)元", "dividend"),
 ]
 
 
@@ -116,8 +119,7 @@ class EarningsCallAnalyzer:
     """Earnings call text analyzer for A-share market."""
 
     @staticmethod
-    def analyze(text: str, code: str = "",
-                company: str = "", date: str = "") -> EarningsCallResult:
+    def analyze(text: str, code: str = "", company: str = "", date: str = "") -> EarningsCallResult:
         """Analyze earnings call transcript text.
 
         Args:
@@ -142,7 +144,7 @@ class EarningsCallAnalyzer:
             return result
 
         # Split into sentences
-        sentences = [s.strip() for s in re.split(r'[。！？\n]', text) if len(s.strip()) > 5]
+        sentences = [s.strip() for s in re.split(r"[。！？\n]", text) if len(s.strip()) > 5]
         result.n_sentences = len(sentences)
 
         if not sentences:
@@ -198,11 +200,13 @@ class EarningsCallAnalyzer:
             for pattern, metric_name in KEY_METRIC_PATTERNS:
                 match = re.search(pattern, sent)
                 if match:
-                    result.key_metrics_extracted.append({
-                        "metric": metric_name,
-                        "value": float(match.group(1)),
-                        "context": sent[:80],
-                    })
+                    result.key_metrics_extracted.append(
+                        {
+                            "metric": metric_name,
+                            "value": float(match.group(1)),
+                            "context": sent[:80],
+                        }
+                    )
 
         # Deduplicate metrics
         seen = set()
@@ -215,12 +219,10 @@ class EarningsCallAnalyzer:
         result.key_metrics_extracted = unique_metrics[:10]
 
         # 5. Management certainty (proxy: ratio of confident terms)
-        high_certainty = len(re.findall(r'确定|肯定|一定|明确|承诺|保证', text))
-        low_certainty = len(re.findall(r'可能|大概|或许|估计|希望|争取', text))
+        high_certainty = len(re.findall(r"确定|肯定|一定|明确|承诺|保证", text))
+        low_certainty = len(re.findall(r"可能|大概|或许|估计|希望|争取", text))
         total_certainty = high_certainty + low_certainty
-        result.management_certainty = round(
-            high_certainty / total_certainty, 2
-        ) if total_certainty > 0 else 0.5
+        result.management_certainty = round(high_certainty / total_certainty, 2) if total_certainty > 0 else 0.5
 
         # 6. Summary
         n_fl = len(result.forward_looking_statements)
@@ -233,9 +235,7 @@ class EarningsCallAnalyzer:
         )
 
         logger.info(
-            f"Earnings call analyzed: {result.company} | "
-            f"tone={result.tone_label} | "
-            f"forward={n_fl} | evasions={n_ev}"
+            f"Earnings call analyzed: {result.company} | tone={result.tone_label} | forward={n_fl} | evasions={n_ev}"
         )
         return result
 
@@ -253,8 +253,8 @@ class EarningsCallAnalyzer:
 
 # ── AlphaAnalyst-style sentiment aggregator ──────────────────
 
-def aggregate_earnings_signal(text: str, code: str = "",
-                               previous_text: str = "") -> dict:
+
+def aggregate_earnings_signal(text: str, code: str = "", previous_text: str = "") -> dict:
     """Full pipeline: analyze + compare with previous + produce signal.
 
     Args:
@@ -288,9 +288,7 @@ def aggregate_earnings_signal(text: str, code: str = "",
         prev_result = EarningsCallAnalyzer.analyze(previous_text)
         tone_change = result.tone_score - prev_result.tone_score
         signal["details"]["tone_change_vs_previous"] = round(tone_change, 3)
-        signal["details"]["consistency"] = round(
-            1.0 - min(abs(tone_change), 1.0), 2
-        )
+        signal["details"]["consistency"] = round(1.0 - min(abs(tone_change), 1.0), 2)
         if abs(tone_change) > 0.3:
             signal["direction"] = "bull" if tone_change > 0 else "bear"
             signal["strength"] = min(1.0, abs(tone_change) * 1.5)

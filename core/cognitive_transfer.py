@@ -24,7 +24,7 @@ import datetime
 import json
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import Optional  # noqa: F401  (dead-import debt)
 
 logger = logging.getLogger("v51.cognitive_transfer")
 
@@ -35,14 +35,17 @@ _has_baseline = False
 _CognitiveBaseline = None
 try:
     from core.cognitive_baseline import CognitiveBaseline as _CognitiveBaseline  # type: ignore
+
     _has_baseline = True
 except ImportError:
     logger.warning("core.cognitive_baseline not available — CognitiveTransfer is WIP, all methods return empty lists")
+
 
 def _require_baseline():
     """Raise if CognitiveBaseline is not available."""
     if not _has_baseline:
         raise ImportError("core.cognitive_baseline is required but not available — CognitiveTransfer is WIP")
+
 
 # ── Industry similarity (pre-coded, can be extended) ─────────
 
@@ -59,8 +62,8 @@ INDUSTRY_CLUSTERS = {
 
 # ── Similarity scoring ───────────────────────────────────────
 
-def compute_similarity(code_a: str, code_b: str,
-                       baseline_a: dict, baseline_b: dict) -> float:
+
+def compute_similarity(code_a: str, code_b: str, baseline_a: dict, baseline_b: dict) -> float:
     """Compute similarity score (0.0-1.0) between two assets.
 
     Factors:
@@ -103,6 +106,7 @@ def compute_similarity(code_a: str, code_b: str,
 
 # ── Transfer DB ──────────────────────────────────────────────
 
+
 def _load_transfers() -> dict:
     if TRANSFER_DB.exists():
         try:
@@ -121,6 +125,7 @@ def _save_transfers(data: dict):
 
 
 # ── Core API ─────────────────────────────────────────────────
+
 
 class CognitiveTransfer:
     """Cross-asset cognitive pattern transfer. (WIP — requires CognitiveBaseline)"""
@@ -155,11 +160,13 @@ class CognitiveTransfer:
                 continue
             sim = compute_similarity(code, other_code, source, other)
             if sim > 0.1:  # Minimum threshold
-                candidates.append({
-                    "code": other_code,
-                    "name": other.get("name", other_code),
-                    "similarity": sim,
-                })
+                candidates.append(
+                    {
+                        "code": other_code,
+                        "name": other.get("name", other_code),
+                        "similarity": sim,
+                    }
+                )
 
         # Sort and cache
         candidates.sort(key=lambda x: -x["similarity"])
@@ -167,19 +174,20 @@ class CognitiveTransfer:
 
         # Cache in transfer DB
         db = _load_transfers()
-        db["similarity_scores"].append({
-            "source": code,
-            "timestamp": datetime.datetime.now().isoformat(),
-            "results": top,
-        })
+        db["similarity_scores"].append(
+            {
+                "source": code,
+                "timestamp": datetime.datetime.now().isoformat(),
+                "results": top,
+            }
+        )
         db["similarity_scores"] = db["similarity_scores"][-100:]  # keep last 100
         _save_transfers(db)
 
         return top
 
     @staticmethod
-    def transfer_pattern(pattern_id: str, source_code: str,
-                          target_code: str, pattern_data: dict) -> dict:
+    def transfer_pattern(pattern_id: str, source_code: str, target_code: str, pattern_data: dict) -> dict:
         """Transfer a verified pattern from source to target asset.
 
         Args:
@@ -233,12 +241,14 @@ class CognitiveTransfer:
             for pattern in patterns:
                 if pattern_type and pattern.get("type") != pattern_type:
                     continue
-                relevant.append({
-                    "source_code": sim["code"],
-                    "source_name": sim.get("name", sim["code"]),
-                    "similarity": sim["similarity"],
-                    "pattern": pattern,
-                })
+                relevant.append(
+                    {
+                        "source_code": sim["code"],
+                        "source_name": sim.get("name", sim["code"]),
+                        "similarity": sim["similarity"],
+                        "pattern": pattern,
+                    }
+                )
 
         return relevant
 
@@ -261,14 +271,16 @@ class CognitiveTransfer:
             other_baseline = _CognitiveBaseline.load(sim["code"])
             for hyp in other_baseline.get("active_hypotheses", []):
                 if hyp.get("verified"):
-                    recommendations.append({
-                        "hypothesis": hyp.get("statement", ""),
-                        "source_code": sim["code"],
-                        "source_name": sim.get("name", sim["code"]),
-                        "similarity": sim["similarity"],
-                        "confidence_transfer": sim["similarity"] * 0.5,
-                        "note": f"已在{sim.get('name', sim['code'])}上验证，可考虑在本标的上检验",
-                    })
+                    recommendations.append(
+                        {
+                            "hypothesis": hyp.get("statement", ""),
+                            "source_code": sim["code"],
+                            "source_name": sim.get("name", sim["code"]),
+                            "similarity": sim["similarity"],
+                            "confidence_transfer": sim["similarity"] * 0.5,
+                            "note": f"已在{sim.get('name', sim['code'])}上验证，可考虑在本标的上检验",
+                        }
+                    )
 
         return recommendations
 
@@ -281,7 +293,5 @@ class CognitiveTransfer:
         return {
             "total_transfers": len(transfers),
             "total_similarity_runs": len(scores),
-            "unique_patterns": len(set(
-                t.get("pattern_id", "") for t in transfers.values()
-            )),
+            "unique_patterns": len(set(t.get("pattern_id", "") for t in transfers.values())),
         }

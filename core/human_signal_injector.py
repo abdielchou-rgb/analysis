@@ -10,9 +10,8 @@ F2 原则：不是"写了再查"，而是"在写的时候就注入"。
 """
 
 from __future__ import annotations
+
 import logging
-import re
-from typing import Optional
 
 logger = logging.getLogger("v56.core.human_signal")
 
@@ -35,9 +34,7 @@ HUMAN_SIGNAL_TEMPLATES = {
     "precise_uncertainty": {
         "description": "不确定性精确定位：明确标注判断的不确定性边界",
         "prompt": (
-            "请明确标注不确定性："
-            "'风险集中在{X和Y}两个变量' / '核心要看{Z}能否突破{阈值}' "
-            "而不是模糊地说'存在一定风险'"
+            "请明确标注不确定性：'风险集中在{X和Y}两个变量' / '核心要看{Z}能否突破{阈值}' 而不是模糊地说'存在一定风险'"
         ),
         "examples": [
             "我们判断的核心不确定性集中在两个变量：一是WACC是否随美联储降息下修至8%以下，二是公司能否在2026年实现20%以上的净利率",
@@ -71,8 +68,7 @@ class HumanSignalInjector:
     def __init__(self):
         self.signal_names = ["experience_ref", "precise_uncertainty", "data_quality_judgment"]
 
-    def analyze(self, text: str, human_sense_score: float = 0.0,
-                detail: Optional[dict] = None) -> dict:
+    def analyze(self, text: str, human_sense_score: float = 0.0, detail: dict | None = None) -> dict:
         """分析人感评分，生成注入指令"""
         injections = []
 
@@ -81,23 +77,26 @@ class HumanSignalInjector:
                 name = signal.get("signal", "")
                 score = signal.get("score", 0.0)
                 if score < 0.5 and name in self.signal_names:
-                    injections.append({
-                        "target_signal": name,
-                        "current_score": score,
-                        "prompt": HUMAN_SIGNAL_TEMPLATES[name]["prompt"],
-                        "examples": HUMAN_SIGNAL_TEMPLATES[name]["examples"],
-                    })
+                    injections.append(
+                        {
+                            "target_signal": name,
+                            "current_score": score,
+                            "prompt": HUMAN_SIGNAL_TEMPLATES[name]["prompt"],
+                            "examples": HUMAN_SIGNAL_TEMPLATES[name]["examples"],
+                        }
+                    )
         else:
             for name in self.signal_names:
-                injections.append({
-                    "target_signal": name,
-                    "current_score": 0.0,
-                    "prompt": HUMAN_SIGNAL_TEMPLATES[name]["prompt"],
-                    "examples": HUMAN_SIGNAL_TEMPLATES[name]["examples"],
-                })
+                injections.append(
+                    {
+                        "target_signal": name,
+                        "current_score": 0.0,
+                        "prompt": HUMAN_SIGNAL_TEMPLATES[name]["prompt"],
+                        "examples": HUMAN_SIGNAL_TEMPLATES[name]["examples"],
+                    }
+                )
 
-        priority = "high" if human_sense_score < 0.3 else (
-            "medium" if human_sense_score < 0.5 else "low")
+        priority = "high" if human_sense_score < 0.3 else ("medium" if human_sense_score < 0.5 else "low")
 
         return {
             "injections": injections,
@@ -123,15 +122,15 @@ class HumanSignalInjector:
         for inj in analysis["injections"]:
             lines.append(f"\n【缺失信号: {inj['target_signal']}】")
             lines.append(f"  提示: {inj['prompt']}")
-            lines.append(f"  参考示例: ")
+            lines.append("  参考示例: ")
             for ex in inj["examples"][:2]:
                 lines.append(f"    - 「{ex}」")
 
-        lines.append(f"\n注入原则：")
-        lines.append(f"  1. 每个信号至少注入1-2处，自然融入论证，不要生硬插入")
-        lines.append(f"  2. 经验引用要具体（公司名/年份/数据），不要泛泛而谈")
-        lines.append(f"  3. 不确定性要精确定位到具体变量，不要模糊说'存在风险'")
-        lines.append(f"  4. 数据判断要说明来源和可信度，不要机械列出数字")
+        lines.append("\n注入原则：")
+        lines.append("  1. 每个信号至少注入1-2处，自然融入论证，不要生硬插入")
+        lines.append("  2. 经验引用要具体（公司名/年份/数据），不要泛泛而谈")
+        lines.append("  3. 不确定性要精确定位到具体变量，不要模糊说'存在风险'")
+        lines.append("  4. 数据判断要说明来源和可信度，不要机械列出数字")
 
         return "\n".join(lines)
 
@@ -146,8 +145,7 @@ class HumanSignalInjector:
         return "无需注入"
 
 
-def inject_human_signals(text: str, human_sense_score: float = 0.0,
-                          detail: Optional[dict] = None) -> str:
+def inject_human_signals(text: str, human_sense_score: float = 0.0, detail: dict | None = None) -> str:
     """生成人感注入指令文本的快捷函数"""
     injector = HumanSignalInjector()
     analysis = injector.analyze(text, human_sense_score, detail)

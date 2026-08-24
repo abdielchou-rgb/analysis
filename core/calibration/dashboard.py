@@ -1,17 +1,18 @@
 """Prediction backtest dashboard. Wraps existing ForwardPicksDB + TemporalVerifier."""
 
 from __future__ import annotations
+
+import json
 import logging
 from dataclasses import dataclass, field
-from typing import Optional
-from datetime import datetime, timedelta
-import json
+from datetime import datetime
 from pathlib import Path
 
 logger = logging.getLogger("v52.calibration")
 
 try:
-    from core.forward_picks import ForwardPicksDB, ForwardPick
+    from core.forward_picks import ForwardPick, ForwardPicksDB  # noqa: F401  (availability probe)
+
     _HAS_FP = True
 except ImportError:
     _HAS_FP = False
@@ -19,6 +20,7 @@ except ImportError:
 
 try:
     from core.temporal_verifier import TemporalVerifier
+
     _HAS_TV = True
 except ImportError:
     _HAS_TV = False
@@ -92,12 +94,14 @@ class CalibrationDashboard:
 
         results = []
         for sector, data in sorted(sectors.items()):
-            results.append(SectorAccuracy(
-                sector=sector,
-                correct=data["correct"],
-                total=data["total"],
-                accuracy=round(data["correct"] / max(data["total"], 1), 3),
-            ))
+            results.append(
+                SectorAccuracy(
+                    sector=sector,
+                    correct=data["correct"],
+                    total=data["total"],
+                    accuracy=round(data["correct"] / max(data["total"], 1), 3),
+                )
+            )
         return results
 
     def accuracy_by_timeframe(self) -> list[TimeframeAccuracy]:
@@ -106,10 +110,12 @@ class CalibrationDashboard:
             return [TimeframeAccuracy("N/A", 0, 0, 0.0)]
 
         picks = self._get_matured_picks()
-        tfs: dict[str, dict] = {"3m": {"correct": 0, "total": 0},
-                                 "6m": {"correct": 0, "total": 0},
-                                 "12m": {"correct": 0, "total": 0},
-                                 "other": {"correct": 0, "total": 0}}
+        tfs: dict[str, dict] = {
+            "3m": {"correct": 0, "total": 0},
+            "6m": {"correct": 0, "total": 0},
+            "12m": {"correct": 0, "total": 0},
+            "other": {"correct": 0, "total": 0},
+        }
 
         for p in picks:
             tw = getattr(p, "time_window", "") or ""
@@ -127,9 +133,10 @@ class CalibrationDashboard:
             if correct:
                 tfs[key]["correct"] += 1
 
-        return [TimeframeAccuracy(k, v["correct"], v["total"],
-                                   round(v["correct"] / max(v["total"], 1), 3))
-                for k, v in tfs.items()]
+        return [
+            TimeframeAccuracy(k, v["correct"], v["total"], round(v["correct"] / max(v["total"], 1), 3))
+            for k, v in tfs.items()
+        ]
 
     def systematic_bias(self) -> BiasReport:
         """Detect systematic bullish/bearish bias."""
@@ -194,8 +201,7 @@ class CalibrationDashboard:
         result.sample_size = len(deviations)
         result.avg_deviation_pct = round(sum(deviations) / len(deviations) * 100, 1)
         sorted_d = sorted(deviations)
-        result.median_deviation_pct = round(
-            sorted_d[len(sorted_d) // 2] * 100, 1) if sorted_d else 0.0
+        result.median_deviation_pct = round(sorted_d[len(sorted_d) // 2] * 100, 1) if sorted_d else 0.0
 
         # Suggested calibration: if avg_deviation is -8.7% (overestimate),
         # multiply future DCF by 1/(1-0.087) ≈ 1.095 to correct
@@ -219,31 +225,40 @@ class CalibrationDashboard:
         if all_picks > 0:
             overall = all_correct / all_picks
             if overall < 0.5:
-                suggestions.append(CalibrationSuggestion(
-                    area="整体", priority="high",
-                    finding=f"总体准确率 {overall:.0%} 低于 50%",  # intentional: < 0.5
-                    suggestion="检查方法论执行质量，重点排查 hypothesis 是否正确"
-                ))
+                suggestions.append(
+                    CalibrationSuggestion(
+                        area="整体",
+                        priority="high",
+                        finding=f"总体准确率 {overall:.0%} 低于 50%",  # intentional: < 0.5
+                        suggestion="检查方法论执行质量，重点排查 hypothesis 是否正确",
+                    )
+                )
 
         # 2. Sector bias
         bias = self.systematic_bias()
         for sector in bias.warning_sectors:
             b = bias.sector_biases.get(sector, 0)
             direction = "bullish" if b > 0 else "bearish"
-            suggestions.append(CalibrationSuggestion(
-                area=sector, priority="medium",
-                finding=f"对 {sector} 的 {direction} 倾向 {abs(b):.1%}",
-                suggestion=f"复盘 {sector} 的假设链条，看是否忽略了某个持续性变量"
-            ))
+            suggestions.append(
+                CalibrationSuggestion(
+                    area=sector,
+                    priority="medium",
+                    finding=f"对 {sector} 的 {direction} 倾向 {abs(b):.1%}",
+                    suggestion=f"复盘 {sector} 的假设链条，看是否忽略了某个持续性变量",
+                )
+            )
 
         # 3. Valuation bias
         val_bias = self.valuation_bias()
         if val_bias.sample_size >= 5 and abs(val_bias.avg_deviation_pct) > 5:
-            suggestions.append(CalibrationSuggestion(
-                area="估值", priority="high" if abs(val_bias.avg_deviation_pct) > 10 else "medium",
-                finding=f"DCF 目标价 vs 实现价偏差 {val_bias.avg_deviation_pct:+.1f}% (样本 {val_bias.sample_size})",
-                suggestion=f"在 ComputeEngine DCF 输入层应用校准系数 {val_bias.suggested_calibration}x"
-            ))
+            suggestions.append(
+                CalibrationSuggestion(
+                    area="估值",
+                    priority="high" if abs(val_bias.avg_deviation_pct) > 10 else "medium",
+                    finding=f"DCF 目标价 vs 实现价偏差 {val_bias.avg_deviation_pct:+.1f}% (样本 {val_bias.sample_size})",
+                    suggestion=f"在 ComputeEngine DCF 输入层应用校准系数 {val_bias.suggested_calibration}x",
+                )
+            )
 
         return suggestions
 
@@ -285,7 +300,7 @@ class CalibrationDashboard:
         # Valuation
         val = self.valuation_bias()
         if val.sample_size > 0:
-            lines.append(f"  估值校准:")
+            lines.append("  估值校准:")
             lines.append(f"    DCF 目标价 vs 实现价平均偏差 {val.avg_deviation_pct:+.1f}%")
             if val.suggested_calibration != 1.0:
                 lines.append(f"    建议校准系数: {val.suggested_calibration}x")
@@ -304,12 +319,12 @@ class CalibrationDashboard:
         return "\n".join(lines)
 
     # << IronGate Calibration >>
-    
+
     def _get_calib_dir(self):
         p = Path("output/calibration")
         p.mkdir(parents=True, exist_ok=True)
         return p
-    
+
     def _load_runs(self, report_type):
         p = self._get_calib_dir() / (report_type + "_runs.json")
         if p.exists():
@@ -318,15 +333,16 @@ class CalibrationDashboard:
             except (json.JSONDecodeError, OSError):
                 return []
         return []
-    
+
     def _save_runs(self, report_type, runs):
         p = self._get_calib_dir() / (report_type + "_runs.json")
         p.write_text(json.dumps(runs, ensure_ascii=False, indent=2), encoding="utf-8")
-    
+
     def log_run(self, report_type, asset, gate_score, failures, suggestions):
         """Record one IronGate evaluation run."""
         runs = self._load_runs(report_type)
         from datetime import datetime
+
         record = {
             "timestamp": datetime.now().isoformat(),
             "report_type": report_type,
@@ -334,46 +350,45 @@ class CalibrationDashboard:
             "gate_score": round(gate_score, 4),
             "failures": [
                 {"name": f.name, "score": f.score, "details": f.details}
-                if hasattr(f, "name") else {"name": str(f), "score": 0.0, "details": ""}
+                if hasattr(f, "name")
+                else {"name": str(f), "score": 0.0, "details": ""}
                 for f in (failures or [])
             ],
             "suggestions": suggestions or [],
         }
         runs.append(record)
         self._save_runs(report_type, runs)
-    
+
     def get_trend(self, report_type, last_n=10):
         """Get gate score trend for last N runs."""
         runs = self._load_runs(report_type)
-        return [
-            {"timestamp": r["timestamp"], "gate_score": r["gate_score"]}
-            for r in runs[-last_n:]
-        ]
-    
+        return [{"timestamp": r["timestamp"], "gate_score": r["gate_score"]} for r in runs[-last_n:]]
+
     def get_frequent_failures(self, report_type, top_k=5):
         """Get most common failure check names."""
         runs = self._load_runs(report_type)
         from collections import Counter
+
         counter = Counter()
         for r in runs:
             for f in r.get("failures", []):
                 counter[f.get("name", "unknown")] += 1
-        return [{"name": name, "count": count}
-                for name, count in counter.most_common(top_k)]
-    
+        return [{"name": name, "count": count} for name, count in counter.most_common(top_k)]
+
     def get_improvement_suggestions(self, report_type):
         """Get recurring suggestions from history."""
         runs = self._load_runs(report_type)
         if not runs:
             return []
         from collections import Counter
+
         counter = Counter()
         for r in runs:
             for s in r.get("suggestions", []):
                 counter[s] += 1
         top = counter.most_common(3)
         return [s + " (appeared " + str(count) + "x)" for s, count in top]
-    
+
     # ─── helpers ───
 
     def _get_matured_picks(self) -> list:

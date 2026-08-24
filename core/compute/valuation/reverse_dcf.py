@@ -23,9 +23,6 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Optional
-
-import numpy as np
 
 logger = logging.getLogger("2hao.valuation.reverse_dcf")
 
@@ -33,11 +30,12 @@ logger = logging.getLogger("2hao.valuation.reverse_dcf")
 @dataclass
 class ReverseDCFResult:
     """反向 DCF 计算结果。"""
-    implied_growth_pct: float          # 隐含永续增长率 (%)
-    our_growth_pct: Optional[float]    # 分析师假设的增长率 (%)——如有输入
-    expectation_gap_pct: float         # 隐含 vs 假设的差距 (百分点)
-    implied_fcf_margin_pct: float      # 隐含 FCF margin (%)——若有营收数据
-    implied_roic_pct: Optional[float]  # 隐含 ROIC (%)——若有投入资本数据
+
+    implied_growth_pct: float  # 隐含永续增长率 (%)
+    our_growth_pct: float | None  # 分析师假设的增长率 (%)——如有输入
+    expectation_gap_pct: float  # 隐含 vs 假设的差距 (百分点)
+    implied_fcf_margin_pct: float  # 隐含 FCF margin (%)——若有营收数据
+    implied_roic_pct: float | None  # 隐含 ROIC (%)——若有投入资本数据
     sensitivity: dict = field(default_factory=dict)  # WACC/增长率的双变量敏感性
     warnings: list = field(default_factory=list)
 
@@ -50,15 +48,15 @@ class ReverseDCF:
 
     def __init__(
         self,
-        market_cap: float,          # 总市值（元）
-        net_debt: float = 0,        # 净债务 = 总负债 - 现金（元）
-        fcf_ttm: Optional[float] = None,   # TTM 自由现金流（元）
-        revenue_ttm: Optional[float] = None,  # TTM 营收（元）
-        invested_capital: Optional[float] = None,  # 投入资本（元）
-        wacc: float = 0.10,         # 加权平均资本成本
-        tax_rate: float = 0.25,     # 有效税率
-        growth_assumption: Optional[float] = None,  # 分析师假设的增长率 (%)
-        shares_outstanding: Optional[float] = None,  # 总股本
+        market_cap: float,  # 总市值（元）
+        net_debt: float = 0,  # 净债务 = 总负债 - 现金（元）
+        fcf_ttm: float | None = None,  # TTM 自由现金流（元）
+        revenue_ttm: float | None = None,  # TTM 营收（元）
+        invested_capital: float | None = None,  # 投入资本（元）
+        wacc: float = 0.10,  # 加权平均资本成本
+        tax_rate: float = 0.25,  # 有效税率
+        growth_assumption: float | None = None,  # 分析师假设的增长率 (%)
+        shares_outstanding: float | None = None,  # 总股本
     ):
         self.market_cap = market_cap
         self.net_debt = net_debt
@@ -80,9 +78,10 @@ class ReverseDCF:
         """
         if not self.fcf_ttm or self.fcf_ttm <= 0:
             return ReverseDCFResult(
-                implied_growth_pct=0, expectation_gap_pct=0,
+                implied_growth_pct=0,
+                expectation_gap_pct=0,
                 implied_fcf_margin_pct=0,
-                warnings=["FCF <= 0，无法做反向 DCF"]
+                warnings=["FCF <= 0，无法做反向 DCF"],
             )
 
         ev = self.ev
@@ -116,10 +115,10 @@ class ReverseDCF:
                 g_test = implied_g + g_delta
                 if w > g_test:
                     implied_ev = fcf * (1 + g_test) / (w - g_test)
-                    row[f"g={g_test*100:.1f}%"] = implied_ev
+                    row[f"g={g_test * 100:.1f}%"] = implied_ev
                 else:
-                    row[f"g={g_test*100:.1f}%"] = float("inf")
-            sensitivity[f"WACC={w*100:.1f}%"] = row
+                    row[f"g={g_test * 100:.1f}%"] = float("inf")
+            sensitivity[f"WACC={w * 100:.1f}%"] = row
 
         return ReverseDCFResult(
             implied_growth_pct=round(implied_g_pct, 2),
@@ -149,7 +148,7 @@ class ReverseDCF:
         result = self.solve_implied_growth()
         d = {
             "enterprise_value": round(self.ev, 0),
-            "wacc": f"{self.wacc*100:.1f}%",
+            "wacc": f"{self.wacc * 100:.1f}%",
             "implied_growth_pct": result.implied_growth_pct,
             "expectation_gap_pct": result.expectation_gap_pct,
             "implied_fcf_margin_pct": result.implied_fcf_margin_pct,

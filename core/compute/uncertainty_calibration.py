@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """uncertainty_calibration.py — 预测不确定性校准（2026-08-08 框架 P2）
 
 顶级打法：预测加置信区间 + 校准（预测区间 vs 实际命中率）。
@@ -10,15 +9,15 @@
   interval = forecast_interval(base, uncertainty_pct)
   cal = calibrate(predictions)  # 历史校准
 """
+
 from __future__ import annotations
-import math
+
 import logging
 
 logger = logging.getLogger("2hao.uncertainty")
 
 
-def forecast_interval(base: float, uncertainty_pct: float = 0.2,
-                      confidence: float = 0.9) -> dict:
+def forecast_interval(base: float, uncertainty_pct: float = 0.2, confidence: float = 0.9) -> dict:
     """给预测加置信区间。
 
     Args:
@@ -63,18 +62,24 @@ def calibrate(predictions: list) -> dict:
         "hit_rate": round(hit_rate, 3),
         "declared_conf": declared,
         "calibration": round(calibration, 3),
-        "note": ("校准良好" if 0.9 <= calibration <= 1.1
-                 else ("区间过窄，需加宽" if calibration < 0.9
-                       else "区间过宽，可收窄")),
+        "note": (
+            "校准良好"
+            if 0.9 <= calibration <= 1.1
+            else ("区间过窄，需加宽" if calibration < 0.9 else "区间过宽，可收窄")
+        ),
     }
 
 
 def build_prompt(interval: dict, cal: dict) -> str:
-    lines = ["=== 预测不确定性校准 ===",
-             f"预测区间: {interval['lower']:,.0f} ~ {interval['upper']:,.0f}"
-             f"（基准 {interval['base']:,.0f}，{interval['confidence']:.0%} 置信）"]
+    lines = [
+        "=== 预测不确定性校准 ===",
+        f"预测区间: {interval['lower']:,.0f} ~ {interval['upper']:,.0f}"
+        f"（基准 {interval['base']:,.0f}，{interval['confidence']:.0%} 置信）",
+    ]
     if cal.get("status") == "ok":
-        lines.append(f"校准: 历史{cal['n']}次预测命中 {cal['hit_rate']:.0%}"
-                     f"（声明 {cal['declared_conf']:.0%}）→ 校准系数 {cal['calibration']}（{cal['note']}）")
+        lines.append(
+            f"校准: 历史{cal['n']}次预测命中 {cal['hit_rate']:.0%}"
+            f"（声明 {cal['declared_conf']:.0%}）→ 校准系数 {cal['calibration']}（{cal['note']}）"
+        )
     lines.append("=== 校准结束 ===")
     return "\n".join(lines)

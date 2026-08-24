@@ -7,23 +7,33 @@ Rules now include advanced financial charts (candlestick, dotplot, multi-panel).
 """
 
 from __future__ import annotations
+
 import logging
 from pathlib import Path
-from typing import Optional
 
 from core.chart_engine import ChartEngine
 
 try:
-    from core.chart_extensions import tornado_chart, box_chart, stacked_bar_chart, radar_chart
+    from core.chart_extensions import (  # noqa: F401  (availability probe)
+        box_chart,
+        radar_chart,
+        stacked_bar_chart,
+        tornado_chart,
+    )
+
     _HAS_EXT = True
 except ImportError:
     _HAS_EXT = False
 
 try:
     from core.advanced_charts import (
-        candlestick_chart, dotplot_chart, multi_panel_chart,
-        sensitivity_table_heatmap, bridge_chart
+        bridge_chart,
+        candlestick_chart,  # noqa: F401  (dead-import debt)
+        dotplot_chart,  # noqa: F401  (dead-import debt)
+        multi_panel_chart,
+        sensitivity_table_heatmap,  # noqa: F401  (dead-import debt)
     )
+
     _HAS_ADV = True
 except ImportError:
     _HAS_ADV = False
@@ -34,10 +44,17 @@ logger = logging.getLogger("v53.chart_planner")
 class ChartSpec:
     """Specification for a single chart to be generated."""
 
-    def __init__(self, chart_id: str, chart_type: str, title: str,
-                 data_sources: list[str] = None, file_name: str = "",
-                 section_hint: str = "", priority: int = 1,
-                 figure_num: int = None):
+    def __init__(
+        self,
+        chart_id: str,
+        chart_type: str,
+        title: str,
+        data_sources: list[str] = None,
+        file_name: str = "",
+        section_hint: str = "",
+        priority: int = 1,
+        figure_num: int = None,
+    ):
         self.chart_id = chart_id
         self.chart_type = chart_type
         self.title = title
@@ -87,21 +104,20 @@ class ChartInventory:
     def to_prompt_block(self) -> str:
         if not self.charts:
             return ""
-        lines = [
-            "\n## Chart Inventory (MUST reference all mandatory charts)\n",
-            f"**{self.summary_text}**\n"
-        ]
+        lines = ["\n## Chart Inventory (MUST reference all mandatory charts)\n", f"**{self.summary_text}**\n"]
         for c in self.charts:
             tag = "MANDATORY" if c.priority == 1 else ("recommended" if c.priority == 2 else "optional")
             fn = f" (Fig {c.figure_num})" if c.figure_num else ""
             lines.append(f"- **{c.chart_id}** ({c.chart_type}){fn}: {c.title} [{tag}]")
-        lines.extend([
-            "\n### Rules",
-            "- Each MANDATORY chart must be referenced at least once in the report body",
-            "- Reference format: ![{id}: {title}]({file_name})",
-            "- The surrounding text MUST analyze the chart, not just reference it",
-            "- Include figure number when referencing: (Figure {num}) or (\u56fe{num})",
-        ])
+        lines.extend(
+            [
+                "\n### Rules",
+                "- Each MANDATORY chart must be referenced at least once in the report body",
+                "- Reference format: ![{id}: {title}]({file_name})",
+                "- The surrounding text MUST analyze the chart, not just reference it",
+                "- Include figure number when referencing: (Figure {num}) or (\u56fe{num})",
+            ]
+        )
         return "\n".join(lines)
 
 
@@ -154,12 +170,21 @@ class ChartPlanner:
                 cid = self._next_id()
                 data_dict = {str(y): v for y, v in values}
                 path = self.engine.line_chart(
-                    data_dict, title=f"{item_key} Trend",
-                    save_path=str(self.engine.output_dir / f"{cid}_{item_key}_{self.style_id}.png"))
+                    data_dict,
+                    title=f"{item_key} Trend",
+                    save_path=str(self.engine.output_dir / f"{cid}_{item_key}_{self.style_id}.png"),
+                )
                 if path:
-                    specs.append(ChartSpec(cid, "line", f"{item_key} Trend",
-                                           file_name=Path(path).name,
-                                           section_hint="financial_analysis", priority=1))
+                    specs.append(
+                        ChartSpec(
+                            cid,
+                            "line",
+                            f"{item_key} Trend",
+                            file_name=Path(path).name,
+                            section_hint="financial_analysis",
+                            priority=1,
+                        )
+                    )
         return specs
 
     def _rule_peer_comparison(self, kp) -> list[ChartSpec]:
@@ -172,12 +197,19 @@ class ChartPlanner:
             return []
         cid = self._next_id()
         path = self.engine.bar_chart(
-            peers, title="Peer Comparison",
-            save_path=str(self.engine.output_dir / f"{cid}_peer_{self.style_id}.png"))
+            peers, title="Peer Comparison", save_path=str(self.engine.output_dir / f"{cid}_peer_{self.style_id}.png")
+        )
         if path:
-            return [ChartSpec(cid, "bar", "Peer Comparison",
-                              file_name=Path(path).name,
-                              section_hint="financial_analysis", priority=1)]
+            return [
+                ChartSpec(
+                    cid,
+                    "bar",
+                    "Peer Comparison",
+                    file_name=Path(path).name,
+                    section_hint="financial_analysis",
+                    priority=1,
+                )
+            ]
         return []
 
     def _rule_tornado_sensitivity(self, kp) -> list[ChartSpec]:
@@ -197,13 +229,26 @@ class ChartPlanner:
                 {"name": "Gross Margin", "high": base * 1.08, "low": base * 0.95},
             ]
             cid = self._next_id()
-            path = tornado_chart(self.engine, base, base*1.3, base*0.7, drivers,
-                                 title="Valuation Sensitivity",
-                                 save_path=str(self.engine.output_dir / f"{cid}_tornado_{self.style_id}.png"))
+            path = tornado_chart(
+                self.engine,
+                base,
+                base * 1.3,
+                base * 0.7,
+                drivers,
+                title="Valuation Sensitivity",
+                save_path=str(self.engine.output_dir / f"{cid}_tornado_{self.style_id}.png"),
+            )
             if path:
-                return [ChartSpec(cid, "tornado", "Valuation Sensitivity",
-                                  file_name=Path(path).name,
-                                  section_hint="valuation", priority=1)]
+                return [
+                    ChartSpec(
+                        cid,
+                        "tornado",
+                        "Valuation Sensitivity",
+                        file_name=Path(path).name,
+                        section_hint="valuation",
+                        priority=1,
+                    )
+                ]
         return []
 
     def _rule_composition(self, kp) -> list[ChartSpec]:
@@ -211,8 +256,10 @@ class ChartPlanner:
         composition = {}
         data_points = getattr(kp, "data_points", []) or []
         for dp in data_points:
-            if any(kw in dp.name.lower() for kw in ["share", "composition", "mix", "segment",
-                                                      "\u5360\u6bd4", "\u7ec4\u6210"]):
+            if any(
+                kw in dp.name.lower()
+                for kw in ["share", "composition", "mix", "segment", "\u5360\u6bd4", "\u7ec4\u6210"]
+            ):
                 try:
                     composition[dp.name] = float(dp.value)
                 except Exception:
@@ -222,12 +269,21 @@ class ChartPlanner:
         if len(composition) >= 2:
             cid = self._next_id()
             path = self.engine.pie_chart(
-                composition, title="Business Composition",
-                save_path=str(self.engine.output_dir / f"{cid}_pie_{self.style_id}.png"))
+                composition,
+                title="Business Composition",
+                save_path=str(self.engine.output_dir / f"{cid}_pie_{self.style_id}.png"),
+            )
             if path:
-                specs.append(ChartSpec(cid, "pie", "Business Composition",
-                                       file_name=Path(path).name,
-                                       section_hint="overview", priority=2))
+                specs.append(
+                    ChartSpec(
+                        cid,
+                        "pie",
+                        "Business Composition",
+                        file_name=Path(path).name,
+                        section_hint="overview",
+                        priority=2,
+                    )
+                )
         return specs
 
     def _rule_radar_scoring(self, kp) -> list[ChartSpec]:
@@ -246,12 +302,24 @@ class ChartPlanner:
         if len(categories) < 3:
             return []
         cid = self._next_id()
-        path = radar_chart(self.engine, categories, scores, title="Composite Score",
-                           save_path=str(self.engine.output_dir / f"{cid}_radar_{self.style_id}.png"))
+        path = radar_chart(
+            self.engine,
+            categories,
+            scores,
+            title="Composite Score",
+            save_path=str(self.engine.output_dir / f"{cid}_radar_{self.style_id}.png"),
+        )
         if path:
-            return [ChartSpec(cid, "radar", "Composite Score",
-                              file_name=Path(path).name,
-                              section_hint="executive_summary", priority=2)]
+            return [
+                ChartSpec(
+                    cid,
+                    "radar",
+                    "Composite Score",
+                    file_name=Path(path).name,
+                    section_hint="executive_summary",
+                    priority=2,
+                )
+            ]
         return []
 
     def _rule_valuation_comparison(self, kp) -> list[ChartSpec]:
@@ -263,12 +331,21 @@ class ChartPlanner:
         if isinstance(peers, dict) and len(peers) >= 3:
             cid = self._next_id()
             path = self.engine.bar_chart(
-                peers, title="Valuation Comparison",
-                save_path=str(self.engine.output_dir / f"{cid}_val_comp_{self.style_id}.png"))
+                peers,
+                title="Valuation Comparison",
+                save_path=str(self.engine.output_dir / f"{cid}_val_comp_{self.style_id}.png"),
+            )
             if path:
-                return [ChartSpec(cid, "bar", "Valuation Comparison",
-                                  file_name=Path(path).name,
-                                  section_hint="valuation", priority=1)]
+                return [
+                    ChartSpec(
+                        cid,
+                        "bar",
+                        "Valuation Comparison",
+                        file_name=Path(path).name,
+                        section_hint="valuation",
+                        priority=1,
+                    )
+                ]
         return []
 
     def _rule_bridge_analysis(self, kp) -> list[ChartSpec]:
@@ -288,12 +365,23 @@ class ChartPlanner:
                     {"label": "Net Profit", "value": float(items["net_profit"]), "type": "total"},
                 ]
                 cid = self._next_id()
-                path = bridge_chart(self.engine, bridge_items, title="Profit Bridge",
-                                    save_path=str(self.engine.output_dir / f"{cid}_bridge_{self.style_id}.png"))
+                path = bridge_chart(
+                    self.engine,
+                    bridge_items,
+                    title="Profit Bridge",
+                    save_path=str(self.engine.output_dir / f"{cid}_bridge_{self.style_id}.png"),
+                )
                 if path:
-                    return [ChartSpec(cid, "bridge", "Profit Bridge Analysis",
-                                      file_name=Path(path).name,
-                                      section_hint="financial_analysis", priority=2)]
+                    return [
+                        ChartSpec(
+                            cid,
+                            "bridge",
+                            "Profit Bridge Analysis",
+                            file_name=Path(path).name,
+                            section_hint="financial_analysis",
+                            priority=2,
+                        )
+                    ]
             except Exception:
                 pass
         return []
@@ -312,20 +400,33 @@ class ChartPlanner:
         for key in list(items.keys())[:6]:  # Max 6 panels
             val = items[key]
             try:
-                panels.append({
-                    "type": "bar" if isinstance(val, (int, float)) else "pie",
-                    "data": {key: float(val)} if isinstance(val, (int, float)) else {},
-                    "title": key
-                })
+                panels.append(
+                    {
+                        "type": "bar" if isinstance(val, (int, float)) else "pie",
+                        "data": {key: float(val)} if isinstance(val, (int, float)) else {},
+                        "title": key,
+                    }
+                )
             except Exception:
                 pass
         if len(panels) >= 3:
             cid = self._next_id()
-            path = multi_panel_chart(self.engine, panels, title="Financial Overview",
-                                     layout=(2, 3),
-                                     save_path=str(self.engine.output_dir / f"{cid}_overview_{self.style_id}.png"))
+            path = multi_panel_chart(
+                self.engine,
+                panels,
+                title="Financial Overview",
+                layout=(2, 3),
+                save_path=str(self.engine.output_dir / f"{cid}_overview_{self.style_id}.png"),
+            )
             if path:
-                return [ChartSpec(cid, "multi_panel", "Financial Overview",
-                                  file_name=Path(path).name,
-                                  section_hint="executive_summary", priority=2)]
+                return [
+                    ChartSpec(
+                        cid,
+                        "multi_panel",
+                        "Financial Overview",
+                        file_name=Path(path).name,
+                        section_hint="executive_summary",
+                        priority=2,
+                    )
+                ]
         return []

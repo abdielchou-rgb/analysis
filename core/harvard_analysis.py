@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 哈佛分析框架（Harvard Framework / Palepu-Healy）— R19 财务分析总纲
 
@@ -11,9 +10,10 @@ Palepu, Healy & Peek 四步分析框架，是投行/学术公认的财务分析�
 **本模块**：把四步框架固化为可执行判断规则 + 从 data_dict 提取数据支撑，
 注入报告 prompt，让分析按哈佛框架展开而非碎片化罗列。
 """
+
 from __future__ import annotations
+
 import logging
-from typing import Optional
 
 logger = logging.getLogger("2hao.harvard_analysis")
 
@@ -29,7 +29,9 @@ def build_harvard_analysis(data: dict) -> dict:
     pe = _sf(val.get("pe", val.get("pe_ttm", 0)))
     roe = _sf(cd.get("fig_roe_trend", {}).get("latest", 0)) if isinstance(cd.get("fig_roe_trend"), dict) else 0
     margin = _sf(cd.get("fig_margin", {}).get("latest", 0)) if isinstance(cd.get("fig_margin"), dict) else 0
-    growth = _sf(cd.get("fig_revenue_trend", {}).get("growth", 0)) if isinstance(cd.get("fig_revenue_trend"), dict) else 0
+    growth = (
+        _sf(cd.get("fig_revenue_trend", {}).get("growth", 0)) if isinstance(cd.get("fig_revenue_trend"), dict) else 0
+    )
 
     steps = {
         "1_战略分析": {
@@ -101,6 +103,7 @@ def _sf(v, default=0.0):
 
 if __name__ == "__main__":
     import sys
+
     sys.path.insert(0, ".")
     hf = build_harvard_analysis({})
     print(serialize_harvard_for_prompt(hf))

@@ -10,8 +10,12 @@
               Markdown 语法符号剥离后喂给现有正则，输出 schema 不变。
 """
 
-import pdfplumber, json, re, argparse
+import argparse
+import json
+import re
 from pathlib import Path
+
+import pdfplumber
 
 _ROOT = Path(__file__).resolve().parent.parent
 BASELINE_DIR = _ROOT / "data" / "基线" / "回测基线库"
@@ -38,23 +42,70 @@ _DIR_INSTITUTIONS = {
 
 # 文件名关键词 → 机构ID（2阶段散装研报，文件名形如 "20240117-联储证券-14页.pdf"）
 _FILE_INSTITUTIONS = [
-    ("中金", "cicc"), ("中信", "citic"), ("华泰", "huatai"), ("国泰君安", "gtja"),
-    ("申万宏源", "swhy"), ("海通", "haitong"), ("招商", "cms"), ("广发", "gf"),
-    ("兴业", "xy"), ("东方", "orient"), ("长江", "cj"), ("天风", "tf"),
-    ("浙商", "zs"), ("华西", "hx"), ("华鑫", "hx2"), ("联储", "ls"),
-    ("国信", "gx"), ("民生", "ms2"), ("光大", "ebscn"), ("平安", "pa"),
-    ("国盛", "gs2"), ("德邦", "db"), ("东吴", "dw"), ("东北", "db2"),
-    ("东莞", "dg"), ("信达", "xd"), ("开源", "ky"), ("中泰", "zt"),
-    ("中银", "boc"), ("银河", "yh"), ("国海", "gh"), ("中邮", "zy"),
-    ("华创", "hc"), ("国投", "gt"), ("国联", "gl"), ("华福", "hf"),
-    ("万联", "wl"), ("西部", "xb"), ("长城", "cc"), ("财通", "ct"),
-    ("西南", "xn"), ("方正", "fz"), ("太平洋", "tpy"), ("首创", "sc"),
-    ("中原", "zy2"), ("红塔", "ht"), ("山西", "sx"), ("东莞", "dg2"),
-    ("第一创业", "dyc"), ("东亚前海", "dyqh"), ("上海证券", "shzq"),
-    ("联储", "ls"), ("国新", "gxzq"), ("大和", "dwzq"), ("高盛", "goldman_sachs"),
-    ("摩根", "morgan_stanley"), ("美林", "ml"), ("沙利文", "f&s"),
-    ("鸟语花香", "pawpaw"), ("野村", "nomura"), ("瑞银", "ubs"),
-    ("伯恩斯坦", "bernstein"), ("杰富瑞", "jefferies"), ("巴克莱", "barclays"),
+    ("中金", "cicc"),
+    ("中信", "citic"),
+    ("华泰", "huatai"),
+    ("国泰君安", "gtja"),
+    ("申万宏源", "swhy"),
+    ("海通", "haitong"),
+    ("招商", "cms"),
+    ("广发", "gf"),
+    ("兴业", "xy"),
+    ("东方", "orient"),
+    ("长江", "cj"),
+    ("天风", "tf"),
+    ("浙商", "zs"),
+    ("华西", "hx"),
+    ("华鑫", "hx2"),
+    ("联储", "ls"),
+    ("国信", "gx"),
+    ("民生", "ms2"),
+    ("光大", "ebscn"),
+    ("平安", "pa"),
+    ("国盛", "gs2"),
+    ("德邦", "db"),
+    ("东吴", "dw"),
+    ("东北", "db2"),
+    ("东莞", "dg"),
+    ("信达", "xd"),
+    ("开源", "ky"),
+    ("中泰", "zt"),
+    ("中银", "boc"),
+    ("银河", "yh"),
+    ("国海", "gh"),
+    ("中邮", "zy"),
+    ("华创", "hc"),
+    ("国投", "gt"),
+    ("国联", "gl"),
+    ("华福", "hf"),
+    ("万联", "wl"),
+    ("西部", "xb"),
+    ("长城", "cc"),
+    ("财通", "ct"),
+    ("西南", "xn"),
+    ("方正", "fz"),
+    ("太平洋", "tpy"),
+    ("首创", "sc"),
+    ("中原", "zy2"),
+    ("红塔", "ht"),
+    ("山西", "sx"),
+    ("东莞", "dg2"),
+    ("第一创业", "dyc"),
+    ("东亚前海", "dyqh"),
+    ("上海证券", "shzq"),
+    ("联储", "ls"),
+    ("国新", "gxzq"),
+    ("大和", "dwzq"),
+    ("高盛", "goldman_sachs"),
+    ("摩根", "morgan_stanley"),
+    ("美林", "ml"),
+    ("沙利文", "f&s"),
+    ("鸟语花香", "pawpaw"),
+    ("野村", "nomura"),
+    ("瑞银", "ubs"),
+    ("伯恩斯坦", "bernstein"),
+    ("杰富瑞", "jefferies"),
+    ("巴克莱", "barclays"),
 ]
 
 
@@ -76,6 +127,7 @@ def extract_text(pdf_path: str, max_pages: int = 5, use_mineru: bool = True) -> 
     if use_mineru:
         try:
             from core.mineru_parser import extract_markdown
+
             # 云 flash 限 20 页；max_pages<=20 直接传，否则截前 20 页
             page_range = f"1-{min(max_pages, 20)}"
             md = extract_markdown(str(pdf_path), mode="auto", page_range=page_range)
@@ -185,8 +237,14 @@ def process_all(search_dir: str = None, use_mineru: bool = False) -> dict:
             return {"error": f"{BASELINE_DIR} 与 {DEFAULT_FALLBACK_DIR} 均不存在"}
     pdfs = sorted(base.rglob("*.pdf"))
     findings = {}
-    stats = {"total": len(pdfs), "parsed": 0, "skipped_error": 0, "skipped_empty": 0,
-             "mineru_fallback": 0, "search_dir": str(base)}
+    stats = {
+        "total": len(pdfs),
+        "parsed": 0,
+        "skipped_error": 0,
+        "skipped_empty": 0,
+        "mineru_fallback": 0,
+        "search_dir": str(base),
+    }
     for pdf in pdfs:
         inst = detect_institution(str(pdf))
         text = extract_text(str(pdf), use_mineru=use_mineru)
@@ -208,8 +266,10 @@ def process_all(search_dir: str = None, use_mineru: bool = False) -> dict:
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     # 附加统计信息
-    out = {"_meta": {"stats": stats, "generated": __import__("datetime").datetime.now().isoformat()},
-           "findings": findings}
+    out = {
+        "_meta": {"stats": stats, "generated": __import__("datetime").datetime.now().isoformat()},
+        "findings": findings,
+    }
     OUTPUT.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"[DONE] parsed {stats['parsed']}/{stats['total']} PDFs -> {len(findings)} institutions")
     return out
@@ -218,7 +278,11 @@ def process_all(search_dir: str = None, use_mineru: bool = False) -> dict:
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="回测基线PDF提取器（MinerU 增强）")
     ap.add_argument("--dir", default=None, help="扫描目录（默认回测基线库，缺失则回退 ifind研报）")
-    ap.add_argument("--mineru", action="store_true", help="启用 MinerU 提取（默认 pdfplumber；MinerU 云单份~70s，仅少量高价值文档用）")
+    ap.add_argument(
+        "--mineru",
+        action="store_true",
+        help="启用 MinerU 提取（默认 pdfplumber；MinerU 云单份~70s，仅少量高价值文档用）",
+    )
     args = ap.parse_args()
     result = process_all(search_dir=args.dir, use_mineru=args.mineru)
     stats = result.get("_meta", {}).get("stats", {})

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """关键指标单一事实源 — R82 P1 数字一致性架构。
 
 v9 事故：渗透率 40%vs50%、份额 50%-73%、替换需求 1.2vs2.1-3.2 万套，
@@ -11,19 +10,21 @@ v9 事故：渗透率 40%vs50%、份额 50%-73%、替换需求 1.2vs2.1-3.2 万�
     from core.data_single_source import validate_indicators
     issues = validate_indicators(text)  # 返回跨章节冲突
 """
+
 from __future__ import annotations
-import re
+
 import logging
+import re
 
 logger = logging.getLogger("2hao.single_source")
 
 # 关键指标检测模式：指标名 + 数值
 _INDICATOR_PATTERNS = {
-    "渗透率": r'(渗透率|覆盖率)[^。]{0,10}?(\d{1,3}(?:\.\d+)?)\s*%',
-    "市场份额": r'(份额|市场占有率)[^。]{0,10}?(\d{1,3}(?:\.\d+)?)\s*%',
-    "增速": r'(增速|增长率|CAGR)[^。]{0,10}?(\d{1,3}(?:\.\d+)?)\s*%',
-    "替换需求": r'(替换需求|年替换|每年约)[^。]{0,10}?(\d+(?:\.\d+)?)\s*(万套|万只)',
-    "市场空间": r'(市场规模|市场空间|TAM)[^。]{0,10}?(\d+(?:\.\d+)?)\s*(亿元|亿美元)',
+    "渗透率": r"(渗透率|覆盖率)[^。]{0,10}?(\d{1,3}(?:\.\d+)?)\s*%",
+    "市场份额": r"(份额|市场占有率)[^。]{0,10}?(\d{1,3}(?:\.\d+)?)\s*%",
+    "增速": r"(增速|增长率|CAGR)[^。]{0,10}?(\d{1,3}(?:\.\d+)?)\s*%",
+    "替换需求": r"(替换需求|年替换|每年约)[^。]{0,10}?(\d+(?:\.\d+)?)\s*(万套|万只)",
+    "市场空间": r"(市场规模|市场空间|TAM)[^。]{0,10}?(\d+(?:\.\d+)?)\s*(亿元|亿美元)",
 }
 
 
@@ -53,11 +54,11 @@ def validate_indicators(text: str, tolerance: float = 0.20) -> list[str]:
             except (ValueError, TypeError):
                 continue
             unit = m.group(3) if m.lastindex and m.lastindex >= 3 else ""
-            before30 = text[max(0, m.start() - 30):m.start()]
-            yms = re.findall(r'(20\d{2})', before30)
+            before30 = text[max(0, m.start() - 30) : m.start()]
+            yms = re.findall(r"(20\d{2})", before30)
             year = yms[-1] if yms else ""
-            raw_ctx = text[max(0, m.start() - 4):m.start()]
-            ctx_clean = re.sub(r'[\d.。，、\s%()（）]+', '', raw_ctx)
+            raw_ctx = text[max(0, m.start() - 4) : m.start()]
+            ctx_clean = re.sub(r"[\d.。，、\s%()（）]+", "", raw_ctx)
             ctx = ctx_clean if len(ctx_clean) >= 2 else ""
             # CAGR 为多年复合口径，与单年增速/增长率不同，单独成簇
             mname = m.group(1) if m.lastindex and m.lastindex >= 1 else ""
@@ -84,7 +85,7 @@ def single_source_prompt() -> str:
 
 
 if __name__ == "__main__":
-    test = ("渗透率为40%，渗透率50%，份额65%，份额50%，增速8.7%，增速3.6%")
+    test = "渗透率为40%，渗透率50%，份额65%，份额50%，增速8.7%，增速3.6%"
     issues = validate_indicators(test)
     for i in issues:
         print("冲突:", i)

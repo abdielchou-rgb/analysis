@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 盈利预测模型（Earnings Forecast Model）— R16 深度补强
 
@@ -12,9 +11,10 @@
 **不编造数据**：历史值必须来自数据层，预测值是模型推导（标注 E/F）。
 基准情景 = 历史增速的中位/均值外推；乐观/悲观 = ±敏感性区间。
 """
+
 from __future__ import annotations
+
 import logging
-from typing import Optional
 
 logger = logging.getLogger("2hao.predict_model")
 
@@ -26,7 +26,7 @@ def _safe_float(v, default=0.0) -> float:
         return default
 
 
-def build_forecast(data: dict, report_type: str = "listed_company") -> Optional[dict]:
+def build_forecast(data: dict, report_type: str = "listed_company") -> dict | None:
     """构建盈利预测表。
 
     Args:
@@ -51,6 +51,7 @@ def build_forecast(data: dict, report_type: str = "listed_company") -> Optional[
     # 消除"fig_margin 读空 → 毛利率兜底 5%"的字段错位根因。
     try:
         from core.financial_extract import extract_financial_history, extract_shares
+
         historical_raw = extract_financial_history(data)
     except Exception as _e:
         logger.debug("[PREDICT] extract layer failed: %s", _e)
@@ -135,6 +136,7 @@ def build_forecast(data: dict, report_type: str = "listed_company") -> Optional[
     # 股本提取（R39）：统一走 financial_extract（兼容 fig_valuation/扁平键/市值反推）
     try:
         from core.financial_extract import extract_shares
+
         shares = extract_shares(cd)
     except Exception as _e:
         logger.debug("[PREDICT] shares extract failed: %s", _e)
@@ -170,7 +172,7 @@ def build_forecast(data: dict, report_type: str = "listed_company") -> Optional[
         for i in range(1, 4):
             s_rev = s_rev * (1 + s_g_rev / 100)
             s_prof = s_prof * (1 + s_g_prof / 100)
-        last_f = forecast.get(f"{base_year+3}E", {})
+        last_f = forecast.get(f"{base_year + 3}E", {})
         scenarios[sname] = {
             "revenue_3y": round(s_rev, 2),
             "net_profit_3y": round(s_prof, 2),
@@ -203,11 +205,13 @@ def build_forecast_summary(fc: dict) -> str:
     fc_ = fc.get("forecast", {})
     lines.append("未来3年预测:")
     for yr, v in fc_.items():
-        lines.append(f"  {yr}: 营收{v.get('revenue',0):.1f}亿(+{v.get('growth',0):.1f}%) "
-                     f"净利{v.get('net_profit',0):.1f}亿 EPS={v.get('eps',0):.2f} 毛利率{v.get('gross_margin',0):.1f}%")
+        lines.append(
+            f"  {yr}: 营收{v.get('revenue', 0):.1f}亿(+{v.get('growth', 0):.1f}%) "
+            f"净利{v.get('net_profit', 0):.1f}亿 EPS={v.get('eps', 0):.2f} 毛利率{v.get('gross_margin', 0):.1f}%"
+        )
     sc = fc.get("scenarios", {})
     if sc:
         lines.append("情景分析:")
         for sname, v in sc.items():
-            lines.append(f"  {sname}: 3年后净利{v.get('net_profit_3y',0):.1f}亿 EPS={v.get('eps_3y',0):.2f}")
+            lines.append(f"  {sname}: 3年后净利{v.get('net_profit_3y', 0):.1f}亿 EPS={v.get('eps_3y', 0):.2f}")
     return "\n".join(lines)

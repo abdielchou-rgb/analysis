@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """consistency_engine 测试 — 跨段数值一致性检查
 
 覆盖：正常报告无冲突 / 矛盾报告阻断 / 币种归一化 / 跨年合理差异 /
@@ -9,6 +8,7 @@
 """
 
 from __future__ import annotations
+
 import sys
 from pathlib import Path
 
@@ -131,6 +131,7 @@ def run(report=None) -> tuple:
 if __name__ == "__main__":
     np_, nf_ = run()
     sys.exit(1 if nf_ > 0 else 0)
+
 
 # ── P1-audit 2026-08-24 收编：原 run() 只 print 不 raise，pytest 看不见 ──
 def test_orphan_suite():

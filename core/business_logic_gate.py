@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """business_logic_gate.py — 业务逻辑检测（2026-08-08 圆桌 Codex 建议）
 
 检测报告中的"业务逻辑断点"——非数字一致性，而是语义级逻辑：
@@ -11,9 +10,11 @@
   from core.business_logic_gate import check_business_logic
   result = check_business_logic(report_text)
 """
+
 from __future__ import annotations
-import re
+
 import logging
+import re
 
 logger = logging.getLogger("2hao.business_logic")
 
@@ -38,17 +39,22 @@ def check_business_logic(report_text: str) -> dict:
         low = min(p[0] for p in prices)
         high = max(p[0] for p in prices)
         if high > low * 3:
-            has_explanation = any(k in text for k in
-                                  ("双轨", "两条业务线", "入场券", "主战场", "业务定位", "代工线", "中高端线"))
-            issues.append({
-                "type": "dual_price_band",
-                "severity": "warning" if has_explanation else "error",
-                "low_price": low,
-                "high_price": high,
-                "ratio": round(high / low, 1),
-                "issue": f"报告出现价格带 {low:.0f} 与 {high:.0f}（差{high/low:.1f}倍）"
-                         + ("，已说明双轨业务关系" if has_explanation else "，但未说明两条业务线关系——需明确是入场券+主战场"),
-            })
+            has_explanation = any(
+                k in text for k in ("双轨", "两条业务线", "入场券", "主战场", "业务定位", "代工线", "中高端线")
+            )
+            issues.append(
+                {
+                    "type": "dual_price_band",
+                    "severity": "warning" if has_explanation else "error",
+                    "low_price": low,
+                    "high_price": high,
+                    "ratio": round(high / low, 1),
+                    "issue": f"报告出现价格带 {low:.0f} 与 {high:.0f}（差{high / low:.1f}倍）"
+                    + (
+                        "，已说明双轨业务关系" if has_explanation else "，但未说明两条业务线关系——需明确是入场券+主战场"
+                    ),
+                }
+            )
 
     # 2. 跨章节口径冲突（毛利率等）
     margin_vals = []
@@ -61,28 +67,32 @@ def check_business_logic(report_text: str) -> dict:
         lo, hi = min(margin_vals), max(margin_vals)
         if hi - lo > 15:
             has_explanation = any(k in text for k in ("口径", "盈亏平衡", "中高端", "场景不同"))
-            issues.append({
-                "type": "cross_section_margin_conflict",
-                "severity": "warning" if has_explanation else "error",
-                "values": sorted(set(margin_vals)),
-                "issue": f"毛利率口径不一致（{sorted(set(margin_vals))}），差异{hi-lo}pct——"
-                         + ("已说明场景不同" if has_explanation else "需统一口径（盈亏平衡 vs 中高端）"),
-            })
+            issues.append(
+                {
+                    "type": "cross_section_margin_conflict",
+                    "severity": "warning" if has_explanation else "error",
+                    "values": sorted(set(margin_vals)),
+                    "issue": f"毛利率口径不一致（{sorted(set(margin_vals))}），差异{hi - lo}pct——"
+                    + ("已说明场景不同" if has_explanation else "需统一口径（盈亏平衡 vs 中高端）"),
+                }
+            )
 
     # 3. 声称无量化的价值检测
     for kw in ["协同", "期权", "战略价值", "衍生价值", "护城河"]:
         if kw in text:
             # 检查该词附近是否有数字
             for m in re.finditer(kw, text):
-                window = text[max(0, m.start()-30):m.end()+80]
+                window = text[max(0, m.start() - 30) : m.end() + 80]
                 has_num = bool(re.search(r"[0-9]{2,}", window))
                 if not has_num:
-                    issues.append({
-                        "type": "claimed_value_no_quant",
-                        "severity": "warning",
-                        "claim": kw,
-                        "issue": f"声称「{kw}」但附近无量化数值——顶级报告会对战略价值做粗略量化",
-                    })
+                    issues.append(
+                        {
+                            "type": "claimed_value_no_quant",
+                            "severity": "warning",
+                            "claim": kw,
+                            "issue": f"声称「{kw}」但附近无量化数值——顶级报告会对战略价值做粗略量化",
+                        }
+                    )
                     break
 
     passed = not any(i["severity"] == "error" for i in issues)
@@ -102,8 +112,12 @@ def business_logic_gate_node(node_id: str, context: dict) -> dict:
     try:
         result = check_business_logic(text)
         context["business_logic_result"] = result
-        logger.info("[BUSINESS-LOGIC] passed=%s errors=%d warnings=%d",
-                    result["passed"], result["error_count"], result["warning_count"])
+        logger.info(
+            "[BUSINESS-LOGIC] passed=%s errors=%d warnings=%d",
+            result["passed"],
+            result["error_count"],
+            result["warning_count"],
+        )
         return {
             "business_logic_passed": result["passed"],
             "business_logic_errors": result["error_count"],

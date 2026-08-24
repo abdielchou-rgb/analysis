@@ -10,16 +10,12 @@ V50+ T2x — 修改引擎与修改学习回路（第一性原理新增）
 
 from __future__ import annotations
 
-import json
-import re
 import sqlite3
-from dataclasses import dataclass, field
-from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from core.models import (
-    EditingType, EditCase, ArgumentSection, ArgumentScaffold,
+    EditCase,
+    EditingType,
 )
 
 
@@ -34,8 +30,7 @@ class EditClassifier:
     """
 
     @staticmethod
-    def classify(instruction: str,
-                 correction_type: Optional[str] = None) -> tuple[EditingType, str]:
+    def classify(instruction: str, correction_type: str | None = None) -> tuple[EditingType, str]:
         """
         分类一条修改指令。
 
@@ -56,23 +51,19 @@ class EditClassifier:
             return EditingType.WEAK_EVIDENCE, "检测到'证据不够'相关关键词"
 
         # 判断偏
-        if any(w in text for w in ["太激进", "太保守", "太确定", "太模糊",
-                                     "语气不对", "判断过强", "判断过弱"]):
+        if any(w in text for w in ["太激进", "太保守", "太确定", "太模糊", "语气不对", "判断过强", "判断过弱"]):
             return EditingType.BIASED_JUDGMENT, "检测到'判断偏'相关关键词"
 
         # 逻辑跳
-        if any(w in text for w in ["逻辑跳", "缺少一步", "说不通", "看不懂",
-                                     "这里不对", "因果关系不清"]):
+        if any(w in text for w in ["逻辑跳", "缺少一步", "说不通", "看不懂", "这里不对", "因果关系不清"]):
             return EditingType.LOGIC_GAP, "检测到'逻辑跳跃'相关关键词"
 
         # 风格不对
-        if any(w in text for w in ["风格不对", "太口语化", "太正式", "不像我们",
-                                     "语气不对", "措辞不当"]):
+        if any(w in text for w in ["风格不对", "太口语化", "太正式", "不像我们", "语气不对", "措辞不当"]):
             return EditingType.STYLE_MISMATCH, "检测到'风格不对'相关关键词"
 
         # 结构乱
-        if any(w in text for w in ["放错地方", "位置不对", "章节不对", "应该放到",
-                                     "顺序不对"]):
+        if any(w in text for w in ["放错地方", "位置不对", "章节不对", "应该放到", "顺序不对"]):
             return EditingType.STRUCTURE, "检测到'结构乱'相关关键词"
 
         # 冗余
@@ -100,9 +91,9 @@ class EditEngine:
         self.style_compiler = style_compiler
         self.classifier = EditClassifier()
 
-    def apply(self, report_text: str, instruction: str,
-              edit_type: Optional[str] = None,
-              location: Optional[str] = None) -> EditCase:
+    def apply(
+        self, report_text: str, instruction: str, edit_type: str | None = None, location: str | None = None
+    ) -> EditCase:
         """执行分类修改"""
         # 1. 分类
         etype, classifier_note = self.classifier.classify(instruction, edit_type)
@@ -131,15 +122,13 @@ class EditEngine:
 
         return case
 
-    def _fix_weak_evidence(self, text: str, instruction: str,
-                           location: Optional[str] = None) -> tuple[str, str]:
+    def _fix_weak_evidence(self, text: str, instruction: str, location: str | None = None) -> tuple[str, str]:
         """证据弱：回查 T1 找更强证据 → 替换证据句"""
         # 在实际系统中：查询 T1 数据引擎获取更强证据
         # 当前原型：标记需要替换
         return text, f"需要回查 T1 数据引擎获取更强证据: {instruction[:50]}"
 
-    def _fix_biased_judgment(self, text: str, instruction: str,
-                             location: Optional[str] = None) -> tuple[str, str]:
+    def _fix_biased_judgment(self, text: str, instruction: str, location: str | None = None) -> tuple[str, str]:
         """判断偏：调整判断措辞强度"""
         # 判断强度映射表
         intensity_map = {
@@ -165,26 +154,22 @@ class EditEngine:
 
         return text, f"判断措辞强度调整: {replacements} 处替换"
 
-    def _fix_logic_gap(self, text: str, instruction: str,
-                       location: Optional[str] = None) -> tuple[str, str]:
+    def _fix_logic_gap(self, text: str, instruction: str, location: str | None = None) -> tuple[str, str]:
         """逻辑跳跃：定位断裂点 → 需要 LLM 补全中间推理"""
         return text, f"逻辑断裂标记: {instruction[:50]}（需要 LLM 补全中间推理）"
 
-    def _fix_style_mismatch(self, text: str, instruction: str,
-                            location: Optional[str] = None) -> tuple[str, str]:
+    def _fix_style_mismatch(self, text: str, instruction: str, location: str | None = None) -> tuple[str, str]:
         """风格不对：调用 Style Compiler 改写"""
         if self.style_compiler:
             result = self.style_compiler.compile(text)
             return result.compiled, f"Style Compiler 改写: {len(result.rules_applied)} 条规则应用"
         return text, "Style Compiler 未配置，检查点已标记"
 
-    def _fix_structure(self, text: str, instruction: str,
-                       location: Optional[str] = None) -> tuple[str, str]:
+    def _fix_structure(self, text: str, instruction: str, location: str | None = None) -> tuple[str, str]:
         """结构乱：移动段落（规则驱动，不需要 LLM）"""
         return text, f"段落移动标记: {instruction[:50]}（规则驱动）"
 
-    def _fix_verbose(self, text: str, instruction: str,
-                     location: Optional[str] = None) -> tuple[str, str]:
+    def _fix_verbose(self, text: str, instruction: str, location: str | None = None) -> tuple[str, str]:
         """冗余：段落压缩"""
         # 基本压缩：提取前 3 句话作为段落
         paragraphs = text.split("\n\n")
@@ -196,8 +181,7 @@ class EditEngine:
             compressed.append(para)
         return "\n\n".join(compressed), "段落压缩: 保留前3句"
 
-    def _fallback_rewrite(self, text: str, instruction: str,
-                          location: Optional[str] = None) -> tuple[str, str]:
+    def _fallback_rewrite(self, text: str, instruction: str, location: str | None = None) -> tuple[str, str]:
         """默认：整段重写"""
         return text, "整段重写（fallback）"
 
@@ -245,26 +229,36 @@ class EditLearningDB:
     def save(self, case: EditCase):
         """保存一条修改案例"""
         conn = sqlite3.connect(self.db_path)
-        conn.execute("""
+        conn.execute(
+            """
             INSERT OR REPLACE INTO edit_cases
             (case_id, report_id, analyst_id, original_text,
              correction_type, correction_action, corrected_text,
              report_type, section_type, style_profile,
              persisted, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            case.case_id, case.report_id, case.analyst_id,
-            case.original_text, case.correction_type.value, case.correction_action,
-            case.corrected_text, case.report_type, case.section_type,
-            case.style_profile, int(case.persisted), case.created_at,
-        ))
+        """,
+            (
+                case.case_id,
+                case.report_id,
+                case.analyst_id,
+                case.original_text,
+                case.correction_type.value,
+                case.correction_action,
+                case.corrected_text,
+                case.report_type,
+                case.section_type,
+                case.style_profile,
+                int(case.persisted),
+                case.created_at,
+            ),
+        )
         conn.commit()
         conn.close()
 
-    def get_similar_cases(self, report_type: str = "",
-                          correction_type: str = "",
-                          style_profile: str = "",
-                          limit: int = 5) -> list[EditCase]:
+    def get_similar_cases(
+        self, report_type: str = "", correction_type: str = "", style_profile: str = "", limit: int = 5
+    ) -> list[EditCase]:
         """检索相似修改案例——broad matching, any non-empty field filters."""
         conn = sqlite3.connect(self.db_path)
         conditions = []
@@ -279,12 +273,15 @@ class EditLearningDB:
             conditions.append("(style_profile = ? OR style_profile LIKE ?)")
             params.extend([style_profile, f"%{style_profile}%"])
         where_clause = " AND ".join(conditions) if conditions else "1=1"
-        rows = conn.execute(f"""
+        rows = conn.execute(
+            f"""
             SELECT * FROM edit_cases
             WHERE {where_clause}
             ORDER BY created_at DESC
             LIMIT ?
-        """, (*params, limit)).fetchall()
+        """,
+            (*params, limit),
+        ).fetchall()
         conn.close()
         return [self._row_to_case(r) for r in rows]
 
@@ -309,11 +306,17 @@ class EditLearningDB:
     @staticmethod
     def _row_to_case(row: tuple) -> EditCase:
         return EditCase(
-            case_id=row[0], report_id=row[1], analyst_id=row[2],
-            original_text=row[3], correction_type=EditingType(row[4]),
-            correction_action=row[5], corrected_text=row[6],
-            report_type=row[7] or "", section_type=row[8] or "",
-            style_profile=row[9] or "", persisted=bool(row[10]),
+            case_id=row[0],
+            report_id=row[1],
+            analyst_id=row[2],
+            original_text=row[3],
+            correction_type=EditingType(row[4]),
+            correction_action=row[5],
+            corrected_text=row[6],
+            report_type=row[7] or "",
+            section_type=row[8] or "",
+            style_profile=row[9] or "",
+            persisted=bool(row[10]),
             created_at=row[11] or "",
         )
 
@@ -331,8 +334,7 @@ class ModificationSuggester:
     def __init__(self, db: EditLearningDB):
         self.db = db
 
-    def suggest(self, report_type: str, style_profile: str,
-                analyst_id: str = "") -> list[dict]:
+    def suggest(self, report_type: str, style_profile: str, analyst_id: str = "") -> list[dict]:
         """给出修改建议"""
         suggestions = []
 
@@ -341,18 +343,16 @@ class ModificationSuggester:
 
         if stats:
             total = sum(stats.values())
-            suggestions.append({
-                "type": "distribution",
-                "data": stats,
-                "note": f"基于 {total} 条历史修改记录"
-            })
+            suggestions.append({"type": "distribution", "data": stats, "note": f"基于 {total} 条历史修改记录"})
 
             # 最常见的修改类型
             most_common = max(stats, key=stats.get)
-            suggestions.append({
-                "type": "attention",
-                "correction_type": most_common,
-                "frequency": f"{stats[most_common] / total * 100:.0f}%",
-            })
+            suggestions.append(
+                {
+                    "type": "attention",
+                    "correction_type": most_common,
+                    "frequency": f"{stats[most_common] / total * 100:.0f}%",
+                }
+            )
 
         return suggestions

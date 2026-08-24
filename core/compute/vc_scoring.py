@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """vc_scoring.py — PE/VC 十大维度打分引擎（2026-08-08 非上市）
 
 对齐红杉/高瓴/IDG 等顶级 VC 十大评估维度权重：
@@ -9,7 +8,9 @@
   from core.compute.vc_scoring import vc_score, build_prompt
   r = vc_score({...})  # 每维 0-10
 """
+
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 

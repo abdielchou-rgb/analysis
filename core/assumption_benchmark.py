@@ -6,11 +6,11 @@ Conviction Matrix 设定 base/bull/bear 概率时，对照行业假设分布定�
 """
 
 from __future__ import annotations
+
 import json
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger("v51.benchmark.assumptions")
 
@@ -66,6 +66,7 @@ INDUSTRY_ASSUMPTIONS: dict[str, dict] = {
 @dataclass
 class BenchmarkResult:
     """对标查询结果。"""
+
     industry: str = ""
     metric: str = ""
     our_value: float = 0.0
@@ -107,14 +108,14 @@ class AssumptionBenchmark:
                     logger.info(f"Dynamic DB added industries: {added}")
 
     @staticmethod
-    def _load_dynamic_db(db_path: str = None) -> Optional[dict]:
+    def _load_dynamic_db(db_path: str = None) -> dict | None:
         """从 JSON 文件动态加载行业分布。"""
         path = Path(db_path) if db_path else _DEFAULT_DB_PATH
         if not path.exists():
             logger.warning(f"Dynamic DB not found: {path}, fallback to hardcoded")
             return None
         try:
-            with open(str(path), "r", encoding="utf-8") as f:
+            with open(str(path), encoding="utf-8") as f:
                 raw = json.load(f)
             # V53 格式: {industry: {metric: {mean, p25, p50, p75, ...}}}
             # 转换为兼容格式: {industry: {metric: {mean, p10, p25, p50, p75, p90, count}}}
@@ -149,7 +150,7 @@ class AssumptionBenchmark:
         """别名：重载数据。"""
         return self.load_from_db(db_path)
 
-    def get_distribution(self, industry: str, metric: str) -> Optional[dict]:
+    def get_distribution(self, industry: str, metric: str) -> dict | None:
         """直接获取某行业某指标的分布数据。"""
         industry_key = self._match_industry(industry)
         if not industry_key:
@@ -159,9 +160,7 @@ class AssumptionBenchmark:
 
     def query(self, industry: str, metric: str, value: float) -> BenchmarkResult:
         """查询假设值在行业分布中的位置。"""
-        result = BenchmarkResult(
-            industry=industry, metric=metric, our_value=value
-        )
+        result = BenchmarkResult(industry=industry, metric=metric, our_value=value)
 
         industry_key = self._match_industry(industry)
         if not industry_key:
@@ -177,7 +176,7 @@ class AssumptionBenchmark:
 
         result.distribution = dist
         if "mean" not in dist:
-            result.note = f"分布数据不完整（缺mean）"
+            result.note = "分布数据不完整（缺mean）"
             result.judgment = "无法判断"
             return result
 
@@ -216,7 +215,7 @@ class AssumptionBenchmark:
 
         return result
 
-    def _match_industry(self, industry: str) -> Optional[str]:
+    def _match_industry(self, industry: str) -> str | None:
         """模糊匹配行业名到数据库中的行业键。"""
         if not industry:
             return None
@@ -263,6 +262,7 @@ class AssumptionBenchmark:
 # Conviction Matrix 概率校准
 # ═══════════════════════════════════════════════════════════════
 
+
 def calibrate_probabilities(
     industry: str,
     revenue_cagr: float = None,
@@ -291,15 +291,19 @@ def calibrate_probabilities(
             adjustments["bear"] += adj
             adjustments["base"] -= adj / 2
             adjustments["bull"] -= adj / 2
-            calibration_log.append(f"假设'{name}={value:.0%}'偏乐观（P{int(result.percentile*100)}），bear上调{adj:.1%}")
+            calibration_log.append(
+                f"假设'{name}={value:.0%}'偏乐观（P{int(result.percentile * 100)}），bear上调{adj:.1%}"
+            )
         elif result.judgment == "偏保守":
             adj = min(0.10, 0.50 - result.percentile)
             adjustments["bull"] += adj
             adjustments["base"] -= adj / 2
             adjustments["bear"] -= adj / 2
-            calibration_log.append(f"假设'{name}={value:.0%}'偏保守（P{int(result.percentile*100)}），bull上调{adj:.1%}")
+            calibration_log.append(
+                f"假设'{name}={value:.0%}'偏保守（P{int(result.percentile * 100)}），bull上调{adj:.1%}"
+            )
         else:
-            calibration_log.append(f"假设'{name}={value:.0%}'在行业正常范围（P{int(result.percentile*100)})")
+            calibration_log.append(f"假设'{name}={value:.0%}'在行业正常范围（P{int(result.percentile * 100)})")
 
     adj_base = base + adjustments["base"]
     adj_bull = bull + adjustments["bull"]
@@ -322,7 +326,7 @@ def calibrate_probabilities(
 def detect_growth_assumption_gap(
     industry: str,
     our_revenue_cagr: float,
-) -> Optional[str]:
+) -> str | None:
     """检测营收假设是否与行业对标数据存在显著偏差。"""
     bm = AssumptionBenchmark()
     dist = bm.get_distribution(industry, "revenue_cagr_3y")
@@ -336,9 +340,13 @@ def detect_growth_assumption_gap(
         return None
     deviation = (our_revenue_cagr - mean) / iqr
     if deviation > 1.5:
-        return (f"营收假设 {our_revenue_cagr:.1%} 显著高于行业均值{mean:.1%} "
-                f"（偏差{deviation:.1f}倍IQR），建议谨慎评估假设合理性")
+        return (
+            f"营收假设 {our_revenue_cagr:.1%} 显著高于行业均值{mean:.1%} "
+            f"（偏差{deviation:.1f}倍IQR），建议谨慎评估假设合理性"
+        )
     if deviation < -1.5:
-        return (f"营收假设 {our_revenue_cagr:.1%} 显著低于行业均值{mean:.1%} "
-                f"（偏差{abs(deviation):.1f}倍IQR），建议检查是否低估")
+        return (
+            f"营收假设 {our_revenue_cagr:.1%} 显著低于行业均值{mean:.1%} "
+            f"（偏差{abs(deviation):.1f}倍IQR），建议检查是否低估"
+        )
     return None

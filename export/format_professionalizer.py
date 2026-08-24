@@ -10,10 +10,8 @@
 6. 页眉页脚专业
 """
 
-import re
 import logging
-from pathlib import Path
-from typing import Optional, Union
+import re
 
 logger = logging.getLogger("2hao.format_pro")
 
@@ -27,12 +25,54 @@ class FormatProfessionalizer:
 
     # 标准字体配置
     FONTS = {
-        "cicc": {"chinese": "宋体", "english": "Times New Roman", "size_body": 10.5, "size_h1": 18, "size_h2": 14, "size_h3": 12},
-        "gs": {"chinese": "宋体", "english": "Times New Roman", "size_body": 10, "size_h1": 16, "size_h2": 13, "size_h3": 11},
-        "ms": {"chinese": "宋体", "english": "Times New Roman", "size_body": 10, "size_h1": 16, "size_h2": 13, "size_h3": 11},
-        "mck": {"chinese": "微软雅黑", "english": "Arial", "size_body": 10, "size_h1": 18, "size_h2": 14, "size_h3": 12},
-        "bcg": {"chinese": "微软雅黑", "english": "Arial", "size_body": 10, "size_h1": 16, "size_h2": 13, "size_h3": 11},
-        "bain": {"chinese": "微软雅黑", "english": "Arial", "size_body": 10.5, "size_h1": 17, "size_h2": 13, "size_h3": 11},
+        "cicc": {
+            "chinese": "宋体",
+            "english": "Times New Roman",
+            "size_body": 10.5,
+            "size_h1": 18,
+            "size_h2": 14,
+            "size_h3": 12,
+        },
+        "gs": {
+            "chinese": "宋体",
+            "english": "Times New Roman",
+            "size_body": 10,
+            "size_h1": 16,
+            "size_h2": 13,
+            "size_h3": 11,
+        },
+        "ms": {
+            "chinese": "宋体",
+            "english": "Times New Roman",
+            "size_body": 10,
+            "size_h1": 16,
+            "size_h2": 13,
+            "size_h3": 11,
+        },
+        "mck": {
+            "chinese": "微软雅黑",
+            "english": "Arial",
+            "size_body": 10,
+            "size_h1": 18,
+            "size_h2": 14,
+            "size_h3": 12,
+        },
+        "bcg": {
+            "chinese": "微软雅黑",
+            "english": "Arial",
+            "size_body": 10,
+            "size_h1": 16,
+            "size_h2": 13,
+            "size_h3": 11,
+        },
+        "bain": {
+            "chinese": "微软雅黑",
+            "english": "Arial",
+            "size_body": 10.5,
+            "size_h1": 17,
+            "size_h2": 13,
+            "size_h3": 11,
+        },
     }
 
     def __init__(self, style: str = "cicc"):
@@ -69,13 +109,13 @@ class FormatProfessionalizer:
         fixed = []
         for line in lines:
             # 如果一行中加粗字符占比超过40%，减少加粗
-            bold_parts = re.findall(r'\*\*(.*?)\*\*', line)
+            bold_parts = re.findall(r"\*\*(.*?)\*\*", line)
             if bold_parts:
                 bold_chars = sum(len(p) for p in bold_parts)
                 total_chars = len(line.replace("**", ""))
                 if total_chars > 0 and bold_chars / total_chars > 0.4:
                     # 只保留第一个加粗
-                    line = re.sub(r'\*\*(.*?)\*\*', r'\1', line, count=len(bold_parts) - 1)
+                    line = re.sub(r"\*\*(.*?)\*\*", r"\1", line, count=len(bold_parts) - 1)
             fixed.append(line)
         return "\n".join(fixed)
 
@@ -101,6 +141,7 @@ class FormatProfessionalizer:
 
     def _fix_image_refs(self, text: str) -> str:
         """修复图片引用"""
+
         def fix_img(match):
             alt = match.group(1)
             path = match.group(2)
@@ -109,8 +150,8 @@ class FormatProfessionalizer:
             if not path.startswith("output/") and not is_abs and "://" not in path:
                 path = f"output/charts/{path}"
             return f"![{alt}]({path})"
-        
-        return re.sub(r'!\[(.*?)\]\((.*?)\)', fix_img, text)
+
+        return re.sub(r"!\[(.*?)\]\((.*?)\)", fix_img, text)
 
     def _standardize_headings(self, text: str) -> str:
         """标准化标题格式"""
@@ -118,7 +159,7 @@ class FormatProfessionalizer:
         fixed = []
         for line in lines:
             # 确保标题前后有空行
-            if re.match(r'^#{1,4}\s', line):
+            if re.match(r"^#{1,4}\s", line):
                 if fixed and fixed[-1].strip() != "":
                     fixed.append("")
                 fixed.append(line)
@@ -151,9 +192,9 @@ class FormatProfessionalizer:
     def _ensure_data_sources(self, text: str) -> str:
         """确保数据来源标注"""
         source_patterns = [
-            r'数据来源[：:]\s*\S+',
-            r'来源[：:]\s*\S+',
-            r'数据源自\s*\S+',
+            r"数据来源[：:]\s*\S+",
+            r"来源[：:]\s*\S+",
+            r"数据源自\s*\S+",
         ]
         has_sources = any(re.search(p, text) for p in source_patterns)
         if not has_sources:
@@ -166,7 +207,7 @@ class FormatProfessionalizer:
         issues = []
 
         # 1. 检查加粗滥用
-        bold_count = len(re.findall(r'\*\*', text))
+        bold_count = len(re.findall(r"\*\*", text))
         para_count = max(len([p for p in text.split("\n\n") if p.strip()]), 1)
         if bold_count > para_count * 3:
             issues.append(f"加粗过多: {bold_count}处加粗，建议不超过段落数的3倍")
@@ -178,12 +219,12 @@ class FormatProfessionalizer:
                 issues.append(f"表格行过长: {len(tl)}字符，建议控制在200以内")
 
         # 3. 检查字体大小不一致
-        font_sizes = re.findall(r'font-size[=:]\s*(\d+)', text)
+        font_sizes = re.findall(r"font-size[=:]\s*(\d+)", text)
         if font_sizes and len(set(font_sizes)) > 4:
             issues.append(f"字体大小不一致: {len(set(font_sizes))}种不同字号")
 
         # 4. 检查图片路径
-        img_refs = re.findall(r'!\[.*?\]\((.*?)\)', text)
+        img_refs = re.findall(r"!\[.*?\]\((.*?)\)", text)
         for ref in img_refs:
             if not ref.startswith("output/") and "://" not in ref and not ref.startswith("/"):
                 issues.append(f"图片路径可能不正确: {ref}")
@@ -225,11 +266,11 @@ def main():
     print(result)
 
     validation = formatter.validate_format(result)
-    print(f"\n=== 排版验证 ===")
+    print("\n=== 排版验证 ===")
     print(f"  评分: {validation['score']}")
     print(f"  通过: {validation['passed']}")
-    if validation['issues']:
-        for i in validation['issues']:
+    if validation["issues"]:
+        for i in validation["issues"]:
             print(f"  ⚠️ {i}")
 
 

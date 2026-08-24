@@ -6,7 +6,8 @@
   - 预测导入脚本
   - LLM 泛写维度标注（check_wiring 三类支撑）
 """
-import os
+
+import os  # noqa: F401  (dead-import debt)
 import sys
 from pathlib import Path
 
@@ -19,8 +20,8 @@ if str(_ROOT) not in sys.path:
 def test_sensitive_files_flagged():
     """敏感文件 .env.bak 存在时应被 cleanup 脚本检测。"""
     import importlib.util
-    spec = importlib.util.spec_from_file_location(
-        "cleanup", _ROOT / "scripts" / "cleanup_workspace.py")
+
+    spec = importlib.util.spec_from_file_location("cleanup", _ROOT / "scripts" / "cleanup_workspace.py")
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     targets = mod.collect_targets()
@@ -32,8 +33,8 @@ def test_sensitive_files_flagged():
 def test_cleanup_dry_run_safe():
     """cleanup --dry-run 不应删除任何文件。"""
     import importlib.util
-    spec = importlib.util.spec_from_file_location(
-        "cleanup", _ROOT / "scripts" / "cleanup_workspace.py")
+
+    spec = importlib.util.spec_from_file_location("cleanup", _ROOT / "scripts" / "cleanup_workspace.py")
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     targets = mod.collect_targets()
@@ -45,12 +46,14 @@ def test_cleanup_dry_run_safe():
 def test_evidence_chain_registered():
     """IronGate 应注册 _check_evidence_chain。"""
     from pipeline.iron_gate import IronGate
+
     assert hasattr(IronGate, "_check_evidence_chain")
 
 
 def test_evidence_chain_detects_tool_data():
     """含工具关键词的报告应通过证据链检查。"""
     from pipeline.iron_gate import IronGate
+
     text = (
         "## 行业分析\n本报告分析气体传感器。行业处于成长期，生命周期阶段明确。"
         "龙头企业具备护城河，竞争壁垒显著。信号链显示先行指标转正，行业景气回升。"
@@ -65,6 +68,7 @@ def test_evidence_chain_detects_tool_data():
 def test_evidence_chain_warns_without_tool_data():
     """无工具关键词的报告应预警（证据链不足）。"""
     from pipeline.iron_gate import IronGate
+
     text = (
         "本报告分析某行业。行业规模较大，参与者众多。产业链覆盖上下游。"
         "综合来看行业保持增长。我们判断行业前景良好。我们预计稳步发展。"
@@ -85,8 +89,8 @@ def test_import_script_exists():
 def test_check_wiring_judgment_dimensions():
     """check_wiring 应把判断维度视为已接线。"""
     import importlib.util
-    spec = importlib.util.spec_from_file_location(
-        "check_wiring", _ROOT / "scripts" / "check_wiring.py")
+
+    spec = importlib.util.spec_from_file_location("check_wiring", _ROOT / "scripts" / "check_wiring.py")
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     assert "bold_call" in mod._DIM_JUDGMENT, "bold_call 应标判断维度"
@@ -97,8 +101,8 @@ def test_check_wiring_judgment_dimensions():
 def test_check_wiring_100_percent():
     """接线验收应 100%（判断+数据底座+工具三类支撑）。"""
     import importlib.util
-    spec = importlib.util.spec_from_file_location(
-        "check_wiring", _ROOT / "scripts" / "check_wiring.py")
+
+    spec = importlib.util.spec_from_file_location("check_wiring", _ROOT / "scripts" / "check_wiring.py")
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     report = mod.check()
@@ -109,6 +113,7 @@ def test_check_wiring_100_percent():
 
 if __name__ == "__main__":
     import traceback
+
     passed = failed = 0
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

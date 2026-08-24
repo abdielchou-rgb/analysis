@@ -5,7 +5,8 @@
   - cleanup_workspace.py 清理脚本存在
   - hard_fail_errors 改 @property
 """
-import os
+
+import os  # noqa: F401  (dead-import debt)
 import sys
 from pathlib import Path
 
@@ -18,20 +19,26 @@ if str(_ROOT) not in sys.path:
 def test_tool_modules_injection_exists():
     """section_writer 应有 _build_tool_modules_injection 方法。"""
     from pipeline.section_writer import SectionWriter
+
     assert hasattr(SectionWriter, "_build_tool_modules_injection")
 
 
 def test_tool_modules_injection_by_segment():
     """tool_modules 应按 segment 注入对应工具数据。"""
     from pipeline.section_writer import SectionWriter
+
     sw = SectionWriter("industry_deep", "cicc")
-    cr = {"tool_modules": {"modules": {
-        "elasticity": {"demand_type": "investment", "is_cyclical": True},
-        "signal_chain": {"triggered": 2, "total": 6, "confidence": "中"},
-        "moat": {"overall": "中等"},
-        "life_cycle": {"stage": "growth"},
-        "multi_model": {"models": ["周期"]},
-    }}}
+    cr = {
+        "tool_modules": {
+            "modules": {
+                "elasticity": {"demand_type": "investment", "is_cyclical": True},
+                "signal_chain": {"triggered": 2, "total": 6, "confidence": "中"},
+                "moat": {"overall": "中等"},
+                "life_cycle": {"stage": "growth"},
+                "multi_model": {"models": ["周期"]},
+            }
+        }
+    }
     sw._prompt_compute_results = cr
     # seg0 → 生命周期
     inj0 = sw._build_tool_modules_injection(0)
@@ -47,6 +54,7 @@ def test_tool_modules_injection_by_segment():
 def test_tool_modules_empty_returns_empty():
     """无 tool_modules 时应返回空串（不报错）。"""
     from pipeline.section_writer import SectionWriter
+
     sw = SectionWriter("industry_deep", "cicc")
     sw._prompt_compute_results = {}
     assert sw._build_tool_modules_injection(1) == ""
@@ -66,9 +74,9 @@ def test_cleanup_detects_sensitive():
     检测逻辑，测完清理——不再依赖仓库当前是否存在垃圾。
     """
     import importlib.util
-    from pathlib import Path as _P
-    spec = importlib.util.spec_from_file_location(
-        "cleanup", _ROOT / "scripts" / "cleanup_workspace.py")
+    from pathlib import Path as _P  # noqa: F401  (dead-import debt)
+
+    spec = importlib.util.spec_from_file_location("cleanup", _ROOT / "scripts" / "cleanup_workspace.py")
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     # 临时创建敏感文件验证检测能力
@@ -98,11 +106,13 @@ def test_cleanup_detects_sensitive():
 def test_hard_fail_errors_is_property():
     """hard_fail_errors 应为 @property。"""
     from pipeline.iron_gate import GateReport
+
     assert isinstance(GateReport.__dict__.get("hard_fail_errors"), property), "应为property"
 
 
 if __name__ == "__main__":
     import traceback
+
     passed = failed = 0
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

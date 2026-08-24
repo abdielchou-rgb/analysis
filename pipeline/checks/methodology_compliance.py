@@ -1,7 +1,10 @@
 """_check_methodology_compliance — 验证报告是否遵守注入的方法论规则"""
+
 from __future__ import annotations
+
 import re
 from pathlib import Path
+
 
 def check_methodology_compliance(report_text: str, report_type: str) -> dict:
     issues = []
@@ -11,6 +14,7 @@ def check_methodology_compliance(report_text: str, report_type: str) -> dict:
     if rules_path.exists():
         try:
             import json
+
             rules = json.loads(rules_path.read_text(encoding="utf-8"))
         except Exception:
             rules = {}
@@ -29,7 +33,7 @@ def check_methodology_compliance(report_text: str, report_type: str) -> dict:
                 issues.append(f"方法论覆盖缺失: {topic}")
     judgment_pat = r"我们判断[^。]*?(?:将|会|应)"
     for m in re.finditer(judgment_pat, report_text):
-        ctx = report_text[max(0, m.start()-50):m.end()+100]
+        ctx = report_text[max(0, m.start() - 50) : m.end() + 100]
         if not re.search(r"\d+\.?\d*\s*[%亿万千元]", ctx):
             issues.append(f"判断句缺数据支撑: {m.group(0)[:40]}")
             break

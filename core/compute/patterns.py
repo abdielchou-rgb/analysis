@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any, Optional  # noqa: F401  (dead-import debt)
 
 logger = logging.getLogger("v51.patterns")
 
@@ -30,6 +30,7 @@ logger = logging.getLogger("v51.patterns")
 @dataclass
 class PatternResult:
     """单个模式检测结果。"""
+
     pattern_id: str = ""
     pattern_name: str = ""
     signal: str = "neutral"  # "bull" | "bear" | "neutral" | "inflection"
@@ -42,8 +43,8 @@ class PatternResult:
 # 1. 增速拐点检测
 # ═══════════════════════════════════════
 
-def detect_growth_inflection(revenue_series: list[dict],
-                               years: Optional[list] = None) -> PatternResult:
+
+def detect_growth_inflection(revenue_series: list[dict], years: Optional[list] = None) -> PatternResult:
     """Detect inflection points in revenue growth.
 
     Args:
@@ -138,6 +139,7 @@ def detect_growth_inflection(revenue_series: list[dict],
 # 2. 利润率驱动力分解
 # ═══════════════════════════════════════
 
+
 def analyze_margin_structure(margin_series: list[dict]) -> PatternResult:
     """Decompose margin drivers: gross margin -> operating margin -> net margin.
 
@@ -160,13 +162,15 @@ def analyze_margin_structure(margin_series: list[dict]) -> PatternResult:
         gm = m.get("gross_margin", 0) or 0
         om = m.get("operating_margin", 0) or 0
         nm = m.get("net_margin", 0) or 0
-        gaps.append({
-            "year": m.get("year", 0),
-            "sga_gap": gm - om,        # SG&A as % of revenue
-            "tax_gap": om - nm,         # Tax + interest as % of revenue
-            "gm": gm,
-            "nm": nm,
-        })
+        gaps.append(
+            {
+                "year": m.get("year", 0),
+                "sga_gap": gm - om,  # SG&A as % of revenue
+                "tax_gap": om - nm,  # Tax + interest as % of revenue
+                "gm": gm,
+                "nm": nm,
+            }
+        )
 
     # Trend analysis
     first, last = gaps[0], gaps[-1]
@@ -178,10 +182,14 @@ def analyze_margin_structure(margin_series: list[dict]) -> PatternResult:
     drivers = []
     if abs(gm_change) >= abs(sga_change):
         if abs(gm_change) > 1.0:
-            drivers.append(("毛利率变化", gm_change, f"毛利{'改善' if gm_change > 0 else '承压'} {abs(gm_change):.1f}pct"))
+            drivers.append(
+                ("毛利率变化", gm_change, f"毛利{'改善' if gm_change > 0 else '承压'} {abs(gm_change):.1f}pct")
+            )
     else:
         if abs(sga_change) > 1.0:
-            drivers.append(("费用率变化", -sga_change, f"费用率{'下降' if sga_change < 0 else '上升'} {abs(sga_change):.1f}pct"))
+            drivers.append(
+                ("费用率变化", -sga_change, f"费用率{'下降' if sga_change < 0 else '上升'} {abs(sga_change):.1f}pct")
+            )
 
     if not drivers:
         result.signal = "neutral"
@@ -207,8 +215,8 @@ def analyze_margin_structure(margin_series: list[dict]) -> PatternResult:
 # 3. 同业偏离检测
 # ═══════════════════════════════════════
 
-def detect_peer_deviation(company_metrics: dict,
-                           peer_metrics: list[dict]) -> PatternResult:
+
+def detect_peer_deviation(company_metrics: dict, peer_metrics: list[dict]) -> PatternResult:
     """Detect where the company significantly deviates from peers.
 
     Args:
@@ -244,13 +252,15 @@ def detect_peer_deviation(company_metrics: dict,
 
         if abs(deviation_pct) > 30:  # >30% deviation threshold
             direction = "above" if deviation_pct > 0 else "below"
-            deviations.append({
-                "metric": metric,
-                "company_value": comp_val,
-                "peer_mean": round(avg, 2),
-                "deviation_pct": round(deviation_pct, 1),
-                "direction": direction,
-            })
+            deviations.append(
+                {
+                    "metric": metric,
+                    "company_value": comp_val,
+                    "peer_mean": round(avg, 2),
+                    "deviation_pct": round(deviation_pct, 1),
+                    "direction": direction,
+                }
+            )
 
     if not deviations:
         result.signal = "neutral"
@@ -272,6 +282,7 @@ def detect_peer_deviation(company_metrics: dict,
 # ═══════════════════════════════════════
 # 4. 多信号叠加
 # ═══════════════════════════════════════
+
 
 def stack_signals(signals: list[dict]) -> PatternResult:
     """Stack multiple signals and determine convergence/diversion.
@@ -308,7 +319,7 @@ def stack_signals(signals: list[dict]) -> PatternResult:
         n_bear = sum(1 for s in signals if s.get("signal") == "bear")
         result.reasoning = [
             f"多信号{'一致看多' if net > 0 else '一致看空'}（看多{n_bull}个/看空{n_bear}个）",
-            f"信号强度: {abs(net)*100:.0f}%",
+            f"信号强度: {abs(net) * 100:.0f}%",
         ]
     # Divergence: mixed
     else:
@@ -334,8 +345,10 @@ def stack_signals(signals: list[dict]) -> PatternResult:
 # 5. 隐含增长预期反推
 # ═══════════════════════════════════════
 
-def estimate_implied_growth(pe: float, pb: float, roe: float,
-                             wacc: float = 0.10, terminal_growth: float = 0.03) -> PatternResult:
+
+def estimate_implied_growth(
+    pe: float, pb: float, roe: float, wacc: float = 0.10, terminal_growth: float = 0.03
+) -> PatternResult:
     """Estimate what growth rate the market is pricing in.
 
     Uses simplified PEG-like logic and PB/ROE framework.
@@ -405,6 +418,7 @@ def estimate_implied_growth(pe: float, pb: float, roe: float,
 # Aggregator
 # ═══════════════════════════════════════
 
+
 def detect_all(financial_data: dict) -> dict[str, PatternResult]:
     """Run all pattern detectors on a financial data dict.
 
@@ -441,9 +455,7 @@ def detect_all(financial_data: dict) -> dict[str, PatternResult]:
     pb = comp.get("pb") if comp else None
     roe = comp.get("roe") if comp else None
     if pe:
-        results["valuation_sensitivity"] = estimate_implied_growth(
-            pe=pe, pb=pb or 0, roe=roe or 0
-        )
+        results["valuation_sensitivity"] = estimate_implied_growth(pe=pe, pb=pb or 0, roe=roe or 0)
 
     # 5. Signal stacking (from all above)
     signals = []
@@ -470,25 +482,35 @@ def format_pattern_brief(results: dict[str, PatternResult]) -> str:
             lines.append(f"  - {r}")
         lines.append("")
     return "\n".join(lines)
+
     def detect_mean_reversion(self, data):
         result = {}
-        pe_pct = data.get('pe_percentile')
+        pe_pct = data.get("pe_percentile")
         if pe_pct is not None:
             p = float(pe_pct)
             if p < 0.15:
-                result['pe_mean_reversion'] = {'signal':'bullish','confidence':min(1.0,(0.15-p)*5),
-                    'detail':'PE at {:.0%} percentile, below avg, mean reversion likely upward'.format(p)}
+                result["pe_mean_reversion"] = {
+                    "signal": "bullish",
+                    "confidence": min(1.0, (0.15 - p) * 5),
+                    "detail": "PE at {:.0%} percentile, below avg, mean reversion likely upward".format(p),
+                }
             elif p > 0.85:
-                result['pe_mean_reversion'] = {'signal':'bearish','confidence':min(1.0,(p-0.85)*5),
-                    'detail':'PE at {:.0%} percentile, above avg, mean reversion likely downward'.format(p)}
-        gm = data.get('gross_margin')
-        ga = data.get('gross_margin_5y_avg')
+                result["pe_mean_reversion"] = {
+                    "signal": "bearish",
+                    "confidence": min(1.0, (p - 0.85) * 5),
+                    "detail": "PE at {:.0%} percentile, above avg, mean reversion likely downward".format(p),
+                }
+        gm = data.get("gross_margin")
+        ga = data.get("gross_margin_5y_avg")
         if gm and ga:
             d = float(gm) - float(ga)
             if abs(d) > 10:
-                result['margin_mean_reversion'] = {'signal':'reversion_risk','confidence':min(1.0,abs(d)/20),
-                    'detail':'Gross margin {:.1f}% deviates {:+} from 5y avg'.format(gm,d)}
-        result['_status'] = 'ok' if result else 'no_data'
+                result["margin_mean_reversion"] = {
+                    "signal": "reversion_risk",
+                    "confidence": min(1.0, abs(d) / 20),
+                    "detail": "Gross margin {:.1f}% deviates {:+} from 5y avg".format(gm, d),
+                }
+        result["_status"] = "ok" if result else "no_data"
         return result
 
 
@@ -497,15 +519,16 @@ def format_pattern_brief(results: dict[str, PatternResult]) -> str:
 # R23（2026-08-02）王牌方法：从当前市值反推市场隐含假设，找预期差
 # ══════════════════════════════════════════════════════════════════
 
+
 def estimate_implied_growth_full(
-    market_cap: float = 0.0,          # 总市值（亿元）
-    current_fcf: float = 0.0,         # 当前自由现金流（亿元）
+    market_cap: float = 0.0,  # 总市值（亿元）
+    current_fcf: float = 0.0,  # 当前自由现金流（亿元）
     fcf_growth_rates: Optional[list] = None,  # 我方预测的逐年 FCF 增速（0-1）
-    wacc: float = 0.10,               # 折现率
-    terminal_growth: float = 0.03,    # 终值增长率
-    projection_years: int = 5,        # 预测期年数
-    shares: float = 1.0,              # 总股本（亿股），用于算每股
-    current_price: float = 0.0,       # 当前股价
+    wacc: float = 0.10,  # 折现率
+    terminal_growth: float = 0.03,  # 终值增长率
+    projection_years: int = 5,  # 预测期年数
+    shares: float = 1.0,  # 总股本（亿股），用于算每股
+    current_price: float = 0.0,  # 当前股价
 ) -> dict:
     """完整版反向 DCF：反推市场隐含的 FCF 增速，与我方预测对比找预期差。
 
@@ -519,8 +542,8 @@ def estimate_implied_growth_full(
 
     返回 dict，含 implied_g / expectation_gap / sensitivity / 判断。
     """
-    def _solve_implied_g(mcap: float, fcf0: float, w: float, g_term: float,
-                         years: int) -> float:
+
+    def _solve_implied_g(mcap: float, fcf0: float, w: float, g_term: float, years: int) -> float:
         """二分法解恒定增速 g，使得 DCF 值 = mcap。"""
         if mcap <= 0 or fcf0 <= 0:
             return 0.0
@@ -552,8 +575,7 @@ def estimate_implied_growth_full(
         return result
 
     # 1. 反推市场隐含增速
-    g_implied = _solve_implied_g(market_cap, current_fcf, wacc, terminal_growth,
-                                 projection_years)
+    g_implied = _solve_implied_g(market_cap, current_fcf, wacc, terminal_growth, projection_years)
 
     # 2. 我方预测的稳态增速（取预测期平均，或最后一年）
     if fcf_growth_rates and len(fcf_growth_rates) > 0:
@@ -568,40 +590,43 @@ def estimate_implied_growth_full(
     if gap > 0.05:
         signal = "bear"
         conf = min(0.9, 0.4 + abs(gap) * 2)
-        judgement = f"市场隐含 {g_implied*100:.1f}% 增速，高于我们预测的 {our_g*100:.1f}%"
+        judgement = f"市场隐含 {g_implied * 100:.1f}% 增速，高于我们预测的 {our_g * 100:.1f}%"
         action = "若我们判断正确，当前估值偏贵，等待回调或证伪"
     elif gap < -0.05:
         signal = "bull"
         conf = min(0.9, 0.4 + abs(gap) * 2)
-        judgement = f"市场隐含 {g_implied*100:.1f}% 增速，低于我们预测的 {our_g*100:.1f}%"
+        judgement = f"市场隐含 {g_implied * 100:.1f}% 增速，低于我们预测的 {our_g * 100:.1f}%"
         action = "若我们判断正确，当前估值便宜，存在预期差机会"
     else:
         signal = "neutral"
         conf = 0.4
-        judgement = f"市场隐含 {g_implied*100:.1f}% 增速，与我们预测的 {our_g*100:.1f}% 接近"
+        judgement = f"市场隐含 {g_implied * 100:.1f}% 增速，与我们预测的 {our_g * 100:.1f}% 接近"
         action = "估值合理，预期差不大，需其他维度支撑"
 
     result.signal = signal
     result.confidence = round(conf, 2)
-    result.reasoning = [judgement, action, f"(反向DCF: 市值{market_cap:.0f}亿 / 当前FCF{current_fcf:.1f}亿 / WACC{wacc:.0%})"]
+    result.reasoning = [
+        judgement,
+        action,
+        f"(反向DCF: 市值{market_cap:.0f}亿 / 当前FCF{current_fcf:.1f}亿 / WACC{wacc:.0%})",
+    ]
 
     # 4. 敏感性表：wacc × terminal_growth → 隐含 g
     sensitivity = {}
     for w in [round(wacc - 0.01, 3), wacc, round(wacc + 0.01, 3)]:
-        for gt in [round(terminal_growth - 0.005, 3),
-                   round(terminal_growth + 0.005, 3),
-                   round(terminal_growth, 3)]:
+        for gt in [round(terminal_growth - 0.005, 3), round(terminal_growth + 0.005, 3), round(terminal_growth, 3)]:
             key = f"wacc={w:.1%}|g={gt:.1%}"
-            sensitivity[key] = round(_solve_implied_g(market_cap, current_fcf, w, gt,
-                                                      projection_years) * 100, 1)
+            sensitivity[key] = round(_solve_implied_g(market_cap, current_fcf, w, gt, projection_years) * 100, 1)
     sensitivity = dict(sorted(sensitivity.items()))
 
     result.data = {
         "implied_growth_pct": round(g_implied * 100, 1),
         "our_growth_pct": round(our_g * 100, 1),
         "expectation_gap_pct": round(gap * 100, 1),
-        "market_cap": market_cap, "current_fcf": current_fcf,
-        "wacc": wacc, "terminal_growth": terminal_growth,
+        "market_cap": market_cap,
+        "current_fcf": current_fcf,
+        "wacc": wacc,
+        "terminal_growth": terminal_growth,
         "per_share_implied_price": round(current_fcf * (1 + g_implied) / max(shares, 1e-9) * 15, 1),
         "sensitivity": sensitivity,
     }
@@ -613,12 +638,12 @@ def estimate_implied_growth_full(
 # 给定市值 + 营收，反推需要多高的 FCF margin 才支撑当前估值
 # ══════════════════════════════════════════════════════════════════
 def estimate_implied_fcf_margin(
-    market_cap: float = 0.0,        # 总市值（亿元）
-    revenue: float = 0.0,           # 当前营收（亿元）
-    fcf_growth: float = 0.10,       # 假设的 FCF 增速
-    wacc: float = 0.10,             # 折现率
+    market_cap: float = 0.0,  # 总市值（亿元）
+    revenue: float = 0.0,  # 当前营收（亿元）
+    fcf_growth: float = 0.10,  # 假设的 FCF 增速
+    wacc: float = 0.10,  # 折现率
     terminal_growth: float = 0.03,  # 终值增速
-    projection_years: int = 5,      # 预测期
+    projection_years: int = 5,  # 预测期
 ) -> dict:
     """反推市场隐含的稳态 FCF margin。
 
@@ -628,6 +653,7 @@ def estimate_implied_fcf_margin(
 
     返回 {implied_fcf_margin, implied_fcf, revenue, signal}
     """
+
     def _solve_margin(mcap, rev, g, w, g_term, years):
         if mcap <= 0 or rev <= 0:
             return 0.0
@@ -651,14 +677,12 @@ def estimate_implied_fcf_margin(
                 hi = mid
         return (lo + hi) / 2
 
-    result = PatternResult(pattern_id="reverse_fcf_margin",
-                           pattern_name="隐含FCF利润率反推")
+    result = PatternResult(pattern_id="reverse_fcf_margin", pattern_name="隐含FCF利润率反推")
     if market_cap <= 0 or revenue <= 0:
         result.reasoning = ["缺少市值或营收数据"]
         return result
 
-    margin = _solve_margin(market_cap, revenue, fcf_growth, wacc,
-                           terminal_growth, projection_years)
+    margin = _solve_margin(market_cap, revenue, fcf_growth, wacc, terminal_growth, projection_years)
     implied_fcf = revenue * margin
 
     # 判断
@@ -705,10 +729,12 @@ def build_fcf_margin_prompt(rd) -> str:
         reasoning = rd.get("reasoning", []) or []
     if not data:
         return ""
-    lines = ["=== 隐含FCF利润率反推（New Constructs 法） ===",
-             f"市场隐含稳态FCF利润率: **{data.get('implied_fcf_margin', 0):.1%}**"
-             f"（营收{data.get('revenue', 0):.1f}亿→FCF{data.get('implied_fcf', 0):.1f}亿）",
-             f"信号: {signal}"]
+    lines = [
+        "=== 隐含FCF利润率反推（New Constructs 法） ===",
+        f"市场隐含稳态FCF利润率: **{data.get('implied_fcf_margin', 0):.1%}**"
+        f"（营收{data.get('revenue', 0):.1f}亿→FCF{data.get('implied_fcf', 0):.1f}亿）",
+        f"信号: {signal}",
+    ]
     for r in reasoning[:2]:
         lines.append(f"- {r}")
     return "\n".join(lines)
@@ -734,10 +760,12 @@ def build_reverse_dcf_prompt(rd) -> str:
     if not data:
         return ""
     sens = data.get("sensitivity", {})
-    lines = ["=== 反向DCF/市场隐含预期（预期差核心） ===",
-             f"市场隐含增速: **{data.get('implied_growth_pct')}%** vs 我方预测: {data.get('our_growth_pct')}%",
-             f"预期差: {data.get('expectation_gap_pct'):+}%（正=市场比我方乐观，负=市场比我方悲观）",
-             f"信号: {signal} / 置信度: {conf}"]
+    lines = [
+        "=== 反向DCF/市场隐含预期（预期差核心） ===",
+        f"市场隐含增速: **{data.get('implied_growth_pct')}%** vs 我方预测: {data.get('our_growth_pct')}%",
+        f"预期差: {data.get('expectation_gap_pct'):+}%（正=市场比我方乐观，负=市场比我方悲观）",
+        f"信号: {signal} / 置信度: {conf}",
+    ]
     for r in reasoning[:3]:
         lines.append(f"- {r}")
     if sens:
@@ -745,5 +773,3 @@ def build_reverse_dcf_prompt(rd) -> str:
         items = list(sens.items())[:6]
         lines.append("  " + "  ".join(f"{k}={v}%" for k, v in items))
     return "\n".join(lines)
-
-

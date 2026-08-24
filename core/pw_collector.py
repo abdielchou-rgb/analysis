@@ -2,15 +2,17 @@
 # 处理BS4无法处理的JS渲染页面 + 定时监控任务
 
 from __future__ import annotations
-import logging, time, json, re
+
+import logging
+import time
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
-from dataclasses import dataclass, field
 
 logger = logging.getLogger("2hao.playwright_collector")
 
 try:
     from playwright.sync_api import sync_playwright
+
     _HAS_PW = True
 except ImportError:
     _HAS_PW = False
@@ -150,16 +152,17 @@ def extract_xueqiu_sentiment(text: str) -> dict:
             sentiment["signals"].append(f"消极:{word}x{count}")
     total = sentiment["positive"] + sentiment["negative"]
     if total > 0:
-        sentiment["net_sentiment"] = round(
-            (sentiment["positive"] - sentiment["negative"]) / total, 2)
+        sentiment["net_sentiment"] = round((sentiment["positive"] - sentiment["negative"]) / total, 2)
     return sentiment
 
 
 # ── 批量报告解析 ──────────────────────────────────
 
+
 def batch_extract_reports(max_files: int = 30) -> list[dict]:
     """批量从assets/reports/提取报告元数据"""
     from core.data_feeds import extract_report_metadata
+
     results = []
     root = Path(__file__).resolve().parent.parent
     report_dir = root / "assets" / "reports"

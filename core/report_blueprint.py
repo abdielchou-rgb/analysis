@@ -4,7 +4,6 @@ Each blueprint specifies sections, chart requirements, and page budgets.
 """
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 @dataclass
@@ -28,17 +27,17 @@ class SectionBlueprint:
     depth: str = "standard"  # deep / standard / brief
 
 
-@dataclass  
+@dataclass
 class ReportBlueprint:
     report_type: str  # industry_deep / listed_company / unlisted_company
     style_profile: str = "cicc"
     total_pages: int = 25
     sections: list[SectionBlueprint] = field(default_factory=list)
     required_charts_total: int = 6
-    
+
     def get_deep_sections(self) -> list[SectionBlueprint]:
         return [s for s in self.sections if s.depth == "deep"]
-    
+
     def get_standard_sections(self) -> list[SectionBlueprint]:
         return [s for s in self.sections if s.depth == "standard"]
 
@@ -54,21 +53,24 @@ INDUSTRY_DEEP_BLUEPRINT = ReportBlueprint(
         SectionBlueprint(
             section_id="executive_summary",
             title="投资概要",
-            min_words=500, max_words=2000,
+            min_words=500,
+            max_words=2000,
             must_include=["investment_thesis", "core_disagreement", "key_metrics_table"],
             depth="deep",
         ),
         SectionBlueprint(
             section_id="industry_boundary",
             title="行业边界与定义",
-            min_words=300, max_words=800,
+            min_words=300,
+            max_words=800,
             must_include=["l1_l2_l3_classification", "industry_chain_position"],
             depth="standard",
         ),
         SectionBlueprint(
             section_id="value_chain",
             title="价值链分析",
-            min_words=600, max_words=1500,
+            min_words=600,
+            max_words=1500,
             required_charts=[
                 ChartRequirement("waterfall", "行业价值链分布"),
                 ChartRequirement("pie", "利润池分布"),
@@ -79,7 +81,8 @@ INDUSTRY_DEEP_BLUEPRINT = ReportBlueprint(
         SectionBlueprint(
             section_id="market_size",
             title="市场规模与增长驱动",
-            min_words=600, max_words=1500,
+            min_words=600,
+            max_words=1500,
             required_charts=[
                 ChartRequirement("line", "市场规模趋势"),
                 ChartRequirement("bar", "细分市场增长"),
@@ -90,7 +93,8 @@ INDUSTRY_DEEP_BLUEPRINT = ReportBlueprint(
         SectionBlueprint(
             section_id="supply_demand",
             title="供需分析",
-            min_words=400, max_words=1000,
+            min_words=400,
+            max_words=1000,
             required_charts=[
                 ChartRequirement("bar", "供需平衡表"),
             ],
@@ -100,7 +104,8 @@ INDUSTRY_DEEP_BLUEPRINT = ReportBlueprint(
         SectionBlueprint(
             section_id="competitive_landscape",
             title="竞争格局",
-            min_words=500, max_words=1500,
+            min_words=500,
+            max_words=1500,
             required_charts=[
                 ChartRequirement("bar", "竞争格局（CR3/CR5）"),
                 ChartRequirement("radar", "核心竞争要素对标"),
@@ -112,7 +117,8 @@ INDUSTRY_DEEP_BLUEPRINT = ReportBlueprint(
         SectionBlueprint(
             section_id="technology_roadmap",
             title="技术路线",
-            min_words=400, max_words=1000,
+            min_words=400,
+            max_words=1000,
             required_charts=[
                 ChartRequirement("line", "技术成熟度曲线"),
             ],
@@ -122,7 +128,8 @@ INDUSTRY_DEEP_BLUEPRINT = ReportBlueprint(
         SectionBlueprint(
             section_id="policy_regulation",
             title="政策传导分析",
-            min_words=400, max_words=1000,
+            min_words=400,
+            max_words=1000,
             must_include=["policy_industry_profit_stock_chain"],
             has_counter_argument=True,
             depth="standard",
@@ -130,7 +137,8 @@ INDUSTRY_DEEP_BLUEPRINT = ReportBlueprint(
         SectionBlueprint(
             section_id="financial_valuation",
             title="财务与估值分析",
-            min_words=500, max_words=1500,
+            min_words=500,
+            max_words=1500,
             required_charts=[
                 ChartRequirement("tornado", "估值敏感性分析"),
                 ChartRequirement("line", "PE Band"),
@@ -143,7 +151,8 @@ INDUSTRY_DEEP_BLUEPRINT = ReportBlueprint(
         SectionBlueprint(
             section_id="catalyst_risk",
             title="催化剂与风险",
-            min_words=400, max_words=1000,
+            min_words=400,
+            max_words=1000,
             must_include=["catalyst_calendar", "risk_matrix", "falsification_conditions"],
             has_counter_argument=True,
             depth="standard",
@@ -151,11 +160,12 @@ INDUSTRY_DEEP_BLUEPRINT = ReportBlueprint(
         SectionBlueprint(
             section_id="appendix",
             title="附录",
-            min_words=200, max_words=500,
+            min_words=200,
+            max_words=500,
             must_include=["methodology", "data_sources", "risk_factors", "disclaimer"],
             depth="brief",
         ),
-    ]
+    ],
 )
 
 
@@ -170,21 +180,24 @@ LISTED_COMPANY_BLUEPRINT = ReportBlueprint(
         SectionBlueprint(
             section_id="executive_summary",
             title="投资概要",
-            min_words=500, max_words=2000,
+            min_words=500,
+            max_words=2000,
             must_include=["rating", "target_price", "investment_thesis", "key_metrics"],
             depth="deep",
         ),
         SectionBlueprint(
             section_id="core_disagreement",
             title="核心分歧",
-            min_words=400, max_words=1200,
+            min_words=400,
+            max_words=1200,
             must_include=["market_consensus", "our_view", "key_variable", "consensus_gap_table"],
             depth="deep",
         ),
         SectionBlueprint(
             section_id="company_overview",
             title="公司概览",
-            min_words=300, max_words=800,
+            min_words=300,
+            max_words=800,
             required_charts=[
                 ChartRequirement("pie", "收入结构"),
             ],
@@ -194,7 +207,8 @@ LISTED_COMPANY_BLUEPRINT = ReportBlueprint(
         SectionBlueprint(
             section_id="industry_context",
             title="行业位置",
-            min_words=400, max_words=1000,
+            min_words=400,
+            max_words=1000,
             required_charts=[
                 ChartRequirement("bar", "市场份额"),
                 ChartRequirement("line", "行业增长趋势"),
@@ -204,7 +218,8 @@ LISTED_COMPANY_BLUEPRINT = ReportBlueprint(
         SectionBlueprint(
             section_id="financial_analysis",
             title="财务深度分析",
-            min_words=600, max_words=1500,
+            min_words=600,
+            max_words=1500,
             required_charts=[
                 ChartRequirement("line", "营收/利润趋势"),
                 ChartRequirement("waterfall", "收入桥"),
@@ -216,7 +231,8 @@ LISTED_COMPANY_BLUEPRINT = ReportBlueprint(
         SectionBlueprint(
             section_id="competitive_advantage",
             title="竞争优势",
-            min_words=400, max_words=1200,
+            min_words=400,
+            max_words=1200,
             must_include=["moat", "barriers_to_entry", "competitive_position"],
             has_counter_argument=True,
             depth="standard",
@@ -224,7 +240,8 @@ LISTED_COMPANY_BLUEPRINT = ReportBlueprint(
         SectionBlueprint(
             section_id="growth_drivers",
             title="增长驱动",
-            min_words=400, max_words=1200,
+            min_words=400,
+            max_words=1200,
             required_charts=[
                 ChartRequirement("bar", "增长驱动因素分解"),
             ],
@@ -235,7 +252,8 @@ LISTED_COMPANY_BLUEPRINT = ReportBlueprint(
         SectionBlueprint(
             section_id="valuation",
             title="估值分析",
-            min_words=500, max_words=1500,
+            min_words=500,
+            max_words=1500,
             required_charts=[
                 ChartRequirement("heatmap", "DCF敏感性分析"),
                 ChartRequirement("tornado", "估值敏感性"),
@@ -248,7 +266,8 @@ LISTED_COMPANY_BLUEPRINT = ReportBlueprint(
         SectionBlueprint(
             section_id="risk_factors",
             title="风险因素",
-            min_words=300, max_words=800,
+            min_words=300,
+            max_words=800,
             must_include=["downside_risks", "falsification_conditions", "catalyst_calendar"],
             has_counter_argument=True,
             depth="standard",
@@ -256,11 +275,12 @@ LISTED_COMPANY_BLUEPRINT = ReportBlueprint(
         SectionBlueprint(
             section_id="appendix",
             title="附录",
-            min_words=200, max_words=500,
+            min_words=200,
+            max_words=500,
             must_include=["methodology", "financial_summary", "risk_factors", "disclaimer"],
             depth="brief",
         ),
-    ]
+    ],
 )
 
 
@@ -274,14 +294,16 @@ UNLISTED_COMPANY_BLUEPRINT = ReportBlueprint(
         SectionBlueprint(
             section_id="executive_summary",
             title="执行摘要",
-            min_words=400, max_words=1500,
+            min_words=400,
+            max_words=1500,
             must_include=["company_thesis", "valuation_range", "key_strengths"],
             depth="deep",
         ),
         SectionBlueprint(
             section_id="company_overview",
             title="公司全貌",
-            min_words=300, max_words=800,
+            min_words=300,
+            max_words=800,
             required_charts=[
                 ChartRequirement("pie", "业务结构"),
             ],
@@ -291,7 +313,8 @@ UNLISTED_COMPANY_BLUEPRINT = ReportBlueprint(
         SectionBlueprint(
             section_id="market_position",
             title="市场定位",
-            min_words=400, max_words=1000,
+            min_words=400,
+            max_words=1000,
             required_charts=[
                 ChartRequirement("radar", "竞争要素雷达图"),
                 ChartRequirement("bar", "市场份额测算"),
@@ -303,7 +326,8 @@ UNLISTED_COMPANY_BLUEPRINT = ReportBlueprint(
         SectionBlueprint(
             section_id="financial_estimation",
             title="财务估算",
-            min_words=400, max_words=1200,
+            min_words=400,
+            max_words=1200,
             required_charts=[
                 ChartRequirement("line", "营收趋势估算"),
                 ChartRequirement("stacked_bar", "成本结构"),
@@ -314,7 +338,8 @@ UNLISTED_COMPANY_BLUEPRINT = ReportBlueprint(
         SectionBlueprint(
             section_id="growth_strategy",
             title="增长战略",
-            min_words=300, max_words=800,
+            min_words=300,
+            max_words=800,
             must_include=["expansion_plan", "competitive_response", "tam_sam_som"],
             has_counter_argument=True,
             depth="standard",
@@ -322,7 +347,8 @@ UNLISTED_COMPANY_BLUEPRINT = ReportBlueprint(
         SectionBlueprint(
             section_id="valuation_analysis",
             title="估值分析",
-            min_words=400, max_words=1000,
+            min_words=400,
+            max_words=1000,
             required_charts=[
                 ChartRequirement("heatmap", "估值区间敏感性"),
                 ChartRequirement("scatter", "可比公司估值"),
@@ -334,7 +360,8 @@ UNLISTED_COMPANY_BLUEPRINT = ReportBlueprint(
         SectionBlueprint(
             section_id="risk_assessment",
             title="风险评估",
-            min_words=300, max_words=800,
+            min_words=300,
+            max_words=800,
             must_include=["key_risks", "mitigation_factors", "scenario_analysis"],
             has_counter_argument=True,
             depth="standard",
@@ -342,11 +369,12 @@ UNLISTED_COMPANY_BLUEPRINT = ReportBlueprint(
         SectionBlueprint(
             section_id="appendix",
             title="附录",
-            min_words=200, max_words=500,
+            min_words=200,
+            max_words=500,
             must_include=["methodology", "data_source_declaration", "disclaimer"],
             depth="brief",
         ),
-    ]
+    ],
 )
 
 
@@ -358,16 +386,16 @@ BLUEPRINT_REGISTRY = {
     "unlisted_company": UNLISTED_COMPANY_BLUEPRINT,
 }
 
-def get_blueprint(report_type: str) -> Optional[ReportBlueprint]:
+
+def get_blueprint(report_type: str) -> ReportBlueprint | None:
     return BLUEPRINT_REGISTRY.get(report_type)
 
 
 if __name__ == "__main__":
-    import json
     for rtype, bp in BLUEPRINT_REGISTRY.items():
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"Blueprint: {rtype} ({bp.total_pages}p, {bp.required_charts_total} charts)")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         for s in bp.sections:
             charts = f" [{len(s.required_charts)} charts]" if s.required_charts else ""
             depth_mark = " ★" if s.depth == "deep" else ""

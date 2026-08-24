@@ -17,13 +17,14 @@ Integration point: workflow.py V51Orchestrator.run()
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
-from core.models import (
-    ArgumentScaffold, ArgumentSection, WritingBrief,
-    EditingType,
-)
 from core.edit_learn import EditDatabase
+from core.models import (
+    ArgumentScaffold,
+    ArgumentSection,
+    EditingType,
+    WritingBrief,
+)
 
 logger = logging.getLogger("v51.edit_history")
 
@@ -45,9 +46,10 @@ INTENSITY_MAP = {
 
 # ── Injector ─────────────────────────────────────────────────
 
-def inject_preferences(scaffold: ArgumentScaffold,
-                       brief: WritingBrief,
-                       db: Optional[EditDatabase] = None) -> ArgumentScaffold:
+
+def inject_preferences(
+    scaffold: ArgumentScaffold, brief: WritingBrief, db: EditDatabase | None = None
+) -> ArgumentScaffold:
     """Inject edit history preferences into scaffold design.
 
     1. Query DB for analyst's most common correction type
@@ -92,7 +94,7 @@ def inject_preferences(scaffold: ArgumentScaffold,
     return scaffold
 
 
-def _get_dominant_type(stats: dict, total: int) -> Optional[str]:
+def _get_dominant_type(stats: dict, total: int) -> str | None:
     """Find the most common correction type (if > 20% of total)."""
     for ctype, count in sorted(stats.items(), key=lambda x: -x[1]):
         pct = count / total * 100
@@ -101,10 +103,7 @@ def _get_dominant_type(stats: dict, total: int) -> Optional[str]:
     return None
 
 
-def _adjust_thesis(section: ArgumentSection,
-                   dominant_type: Optional[str],
-                   db: EditDatabase,
-                   brief: WritingBrief):
+def _adjust_thesis(section: ArgumentSection, dominant_type: str | None, db: EditDatabase, brief: WritingBrief):
     """Apply learned adjustments to a single section's thesis."""
     if not section.thesis:
         return
@@ -144,17 +143,19 @@ def summarize_learning(db: EditDatabase) -> dict:
     by_type = []
     total_cases = sum(stats.values()) or 1
     for ctype, count in sorted(stats.items(), key=lambda x: -x[1]):
-        by_type.append({
-            "type": ctype,
-            "count": count,
-            "pct": round(count / total_cases * 100, 1),
-        })
+        by_type.append(
+            {
+                "type": ctype,
+                "count": count,
+                "pct": round(count / total_cases * 100, 1),
+            }
+        )
 
     status = "learning" if total >= 10 else "initial"
     message = (
         f"已积累 {total} 条修改记录。系统在同类型报告生成时会自动参考历史偏好。"
-        if total >= 10 else
-        f"仅 {total} 条记录，继续积累至 10+ 条后生效。"
+        if total >= 10
+        else f"仅 {total} 条记录，继续积累至 10+ 条后生效。"
     )
 
     return {

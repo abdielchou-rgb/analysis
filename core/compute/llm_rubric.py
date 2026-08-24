@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """llm_rubric.py — LLM 维度评分（2026-08-08 系统级优化）
 
 顶级打法（G-Eval）：用 LLM 按 rubric 打分，结合自洽性。规则门禁抓硬伤，LLM 评分抓软质量。
@@ -10,7 +9,9 @@
   from core.compute.llm_rubric import llm_score_report
   result = llm_score_report(report_text)  # 返回各维度评分
 """
+
 from __future__ import annotations
+
 import json
 import logging
 
@@ -46,7 +47,7 @@ def _rubric_prompt(text: str) -> str:
         parts.append(f"  1分: {spec['anchor']['1']}")
     parts.append("\n报告文本（截断）:")
     parts.append(text[:4000])
-    parts.append("\n输出JSON: {\"data_density\": 4, \"argument_depth\": 3, ...}")
+    parts.append('\n输出JSON: {"data_density": 4, "argument_depth": 3, ...}')
     return "\n".join(parts)
 
 
@@ -64,15 +65,19 @@ def llm_score_report(report_text: str, use_llm: bool = True) -> dict:
 
     try:
         from core.deepseek_client import call_llm
-        r = call_llm([{"role": "user", "content": _rubric_prompt(report_text)}],
-                     temperature=0.1, max_tokens=500)
+
+        r = call_llm([{"role": "user", "content": _rubric_prompt(report_text)}], temperature=0.1, max_tokens=500)
         content = r["choices"][0]["message"]["content"]
         import re
+
         m = re.search(r"\{.*\}", content, re.DOTALL)
         if m:
             scores = json.loads(m.group())
-            return {"status": "ok", "scores": scores,
-                    "overall": round(sum(v for v in scores.values() if isinstance(v, (int, float))) / len(scores), 2)}
+            return {
+                "status": "ok",
+                "scores": scores,
+                "overall": round(sum(v for v in scores.values() if isinstance(v, (int, float))) / len(scores), 2),
+            }
     except Exception as e:
         logger.debug("[LLM-RUBRIC] %s", str(e)[:60])
     return _rule_based_score(report_text)
@@ -89,6 +94,7 @@ def _rule_based_score(report_text: str) -> dict:
     argument_depth = min(5, 1 + arg_cnt // 5)
     # 去AI化：AI痕迹词
     from core.template_blacklist import scan_metacomment, scan_work_process
+
     mc = scan_metacomment(text)
     wp = scan_work_process(text)
     ai_marks = mc["total"] + wp["total"]
@@ -102,8 +108,7 @@ def _rule_based_score(report_text: str) -> dict:
         "aigc_fingerprint": aigc_fingerprint,
         "decision_quality": decision_quality,
     }
-    return {"status": "rule_based", "scores": scores,
-            "overall": round(sum(scores.values()) / len(scores), 2)}
+    return {"status": "rule_based", "scores": scores, "overall": round(sum(scores.values()) / len(scores), 2)}
 
 
 def build_prompt(result: dict) -> str:
@@ -111,6 +116,8 @@ def build_prompt(result: dict) -> str:
     if result.get("status") not in ("ok", "rule_based"):
         return ""
     s = result["scores"]
-    return (f"LLM 维度评分（{result['status']}）：数据密度{s.get('data_density')}/5 "
-            f"论证深度{s.get('argument_depth')}/5 去AI化{s.get('aigc_fingerprint')}/5 "
-            f"决策质量{s.get('decision_quality')}/5 → 综合 {result['overall']}/5")
+    return (
+        f"LLM 维度评分（{result['status']}）：数据密度{s.get('data_density')}/5 "
+        f"论证深度{s.get('argument_depth')}/5 去AI化{s.get('aigc_fingerprint')}/5 "
+        f"决策质量{s.get('decision_quality')}/5 → 综合 {result['overall']}/5"
+    )

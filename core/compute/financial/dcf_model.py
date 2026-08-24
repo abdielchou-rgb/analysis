@@ -12,11 +12,11 @@
 """
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
-from typing import Optional
 
-from core.models import AssumptionTree, AssumptionNode
+from core.models import AssumptionNode, AssumptionTree
 
 logger = logging.getLogger("v51.valuation.dcf")
 
@@ -24,6 +24,7 @@ logger = logging.getLogger("v51.valuation.dcf")
 @dataclass
 class DCFResult:
     """DCF 估值结果（升级版）。"""
+
     company: str = ""
     stock_code: str = ""
     present_value_of_fcf: float = 0.0
@@ -35,19 +36,21 @@ class DCFResult:
     shares_outstanding: float = 0.0
 
     # WACC 逐项拆解（新增 — 对标美团模型）
-    wacc_breakdown: dict = field(default_factory=lambda: {
-        "risk_free_rate": 0.0,
-        "equity_risk_premium": 0.0,
-        "beta": 0.0,
-        "cost_of_equity": 0.0,
-        "cost_of_debt": 0.0,
-        "debt_ratio": 0.0,
-        "tax_rate": 0.0,
-        "wacc": 0.0,
-    })
+    wacc_breakdown: dict = field(
+        default_factory=lambda: {
+            "risk_free_rate": 0.0,
+            "equity_risk_premium": 0.0,
+            "beta": 0.0,
+            "cost_of_equity": 0.0,
+            "cost_of_debt": 0.0,
+            "debt_ratio": 0.0,
+            "tax_rate": 0.0,
+            "wacc": 0.0,
+        }
+    )
 
     # 假设树引用
-    assumptions: Optional[AssumptionTree] = None
+    assumptions: AssumptionTree | None = None
 
     # 敏感性矩阵（WACC × 永续增长率）
     sensitivity_wacc_range: list[float] = field(default_factory=list)
@@ -74,13 +77,17 @@ class DCFResult:
         if not self.sensitivity_matrix:
             return "（敏感性数据不足）"
         lines = []
-        header = ["WACC \\ g"] + [f"{g*100:.1f}%" for g in self.sensitivity_g_range]
+        header = ["WACC \\ g"] + [f"{g * 100:.1f}%" for g in self.sensitivity_g_range]
         lines.append("| " + " | ".join(f"{h:>8}" for h in header) + " |")
         lines.append("|" + "|".join([":------:"] * len(header)) + "|")
         for i, wacc in enumerate(self.sensitivity_wacc_range):
-            row = [f"{wacc*100:.0f}%"]
+            row = [f"{wacc * 100:.0f}%"]
             for j in range(len(self.sensitivity_g_range)):
-                val = self.sensitivity_matrix[i][j] if i < len(self.sensitivity_matrix) and j < len(self.sensitivity_matrix[i]) else 0
+                val = (
+                    self.sensitivity_matrix[i][j]
+                    if i < len(self.sensitivity_matrix) and j < len(self.sensitivity_matrix[i])
+                    else 0
+                )
                 if val > 0:
                     row.append(f"{val:.1f}")
                 else:
@@ -94,19 +101,20 @@ class DCFResult:
         lines = []
         lines.append("| 参数 | 值 | 说明 |")
         lines.append("|------|-----|------|")
-        lines.append(f"| 无风险利率 | {wb.get('risk_free_rate', 0)*100:.1f}% | 通常取10年期国债收益率 |")
-        lines.append(f"| 股权风险溢价 | {wb.get('equity_risk_premium', 0)*100:.1f}% | 市场风险溢价 |")
+        lines.append(f"| 无风险利率 | {wb.get('risk_free_rate', 0) * 100:.1f}% | 通常取10年期国债收益率 |")
+        lines.append(f"| 股权风险溢价 | {wb.get('equity_risk_premium', 0) * 100:.1f}% | 市场风险溢价 |")
         lines.append(f"| Beta | {wb.get('beta', 0):.2f}x | 与可比公司对标 |")
-        lines.append(f"| 股权成本 | {wb.get('cost_of_equity', 0)*100:.1f}% | = Rf + β × ERP |")
-        lines.append(f"| 债务成本 | {wb.get('cost_of_debt', 0)*100:.1f}% | 税后 |")
-        lines.append(f"| 目标资本结构 | {wb.get('debt_ratio', 0)*100:.0f}% | 负债/总资本 |")
-        lines.append(f"| WACC | {wb.get('wacc', 0)*100:.1f}% | 加权平均 |")
+        lines.append(f"| 股权成本 | {wb.get('cost_of_equity', 0) * 100:.1f}% | = Rf + β × ERP |")
+        lines.append(f"| 债务成本 | {wb.get('cost_of_debt', 0) * 100:.1f}% | 税后 |")
+        lines.append(f"| 目标资本结构 | {wb.get('debt_ratio', 0) * 100:.0f}% | 负债/总资本 |")
+        lines.append(f"| WACC | {wb.get('wacc', 0) * 100:.1f}% | 加权平均 |")
         return "\n".join(lines)
 
 
 # ═══════════════════════════════════════════════════════════════
 # 计算引擎
 # ═══════════════════════════════════════════════════════════════
+
 
 def compute_dcf(
     revenue_projections: list[float] = None,
@@ -168,7 +176,9 @@ def compute_dcf(
     fcf_list = []
     for i in range(n):
         rev = revenue_projections[i]
-        ebit = rev * (ebit_margin_projections[i] if ebit_margin_projections and i < len(ebit_margin_projections) else 0.15)
+        ebit = rev * (
+            ebit_margin_projections[i] if ebit_margin_projections and i < len(ebit_margin_projections) else 0.15
+        )
         nopat = ebit * (1 - tax_rate)
         da = rev * da_pct_of_revenue
         capex = rev * capex_pct_of_revenue
@@ -185,7 +195,9 @@ def compute_dcf(
         tv = last_fcf * (1 + terminal_growth) / (wacc - terminal_growth)
     else:
         tv = 0.0
-        result.warnings.append(f"永续增长率 {terminal_growth*100:.1f}% 大于 WACC {wacc*100:.1f}%，终值使用 Exit Multiple")
+        result.warnings.append(
+            f"永续增长率 {terminal_growth * 100:.1f}% 大于 WACC {wacc * 100:.1f}%，终值使用 Exit Multiple"
+        )
         if exit_multiple:
             last_ebitda = revenue_projections[-1] * 0.25  # 假设 EBITDA 利润率 25%
             tv = last_ebitda * exit_multiple
@@ -249,7 +261,8 @@ def build_assumption_tree(
         "risk_free_rate": wacc_assumptions.get("risk_free_rate", 0.03),
         "equity_risk_premium": wacc_assumptions.get("equity_risk_premium", 0.06),
         "beta": wacc_assumptions.get("beta", 1.0),
-        "cost_of_equity": wacc_assumptions.get("risk_free_rate", 0.03) + wacc_assumptions.get("beta", 1.0) * wacc_assumptions.get("equity_risk_premium", 0.06),
+        "cost_of_equity": wacc_assumptions.get("risk_free_rate", 0.03)
+        + wacc_assumptions.get("beta", 1.0) * wacc_assumptions.get("equity_risk_premium", 0.06),
         "cost_of_debt": wacc_assumptions.get("cost_of_debt", 0.03),
         "debt_ratio": wacc_assumptions.get("debt_ratio", 0.0),
         "wacc": 0.0,  # 由 compute_dcf 填充
@@ -267,7 +280,7 @@ def build_assumption_tree(
             is_historical=(i == 0),
         )
         if i > 0:
-            prev = revenue_projections[i-1]
+            prev = revenue_projections[i - 1]
             node.growth_rate = (rev / prev - 1) if prev > 0 else None
         tree.revenue_drivers.append(node)
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 反共识检测器（Anti-Consensus Detector）— R16 深度补强
 
@@ -9,7 +8,9 @@
 
 **不编造**：共识来自真实数据（一致预期/研报），偏差是数值计算，不是 LLM 臆测。
 """
+
 from __future__ import annotations
+
 import json
 import logging
 import sqlite3
@@ -39,6 +40,7 @@ def detect_anti_consensus(asset: str, collected_data: dict) -> dict:
     signals = []
     code = ""
     import re as _re
+
     m = _re.search(r"(\d{6})", asset)
     code = m.group(1) if m else ""
 
@@ -48,20 +50,22 @@ def detect_anti_consensus(asset: str, collected_data: dict) -> dict:
         if conn:
             try:
                 row = conn.execute(
-                    "SELECT * FROM consensus WHERE code=? ORDER BY as_of DESC LIMIT 1",
-                    (code,)).fetchone()
+                    "SELECT * FROM consensus WHERE code=? ORDER BY as_of DESC LIMIT 1", (code,)
+                ).fetchone()
                 if row:
                     eps_cur = row["eps_2026e"] if "eps_2026e" in row.keys() else None
                     n_analysts = row["n_analysts"] if "n_analysts" in row.keys() else 0
                     rating_buy = row["rating_buy"] if "rating_buy" in row.keys() else 0
                     if n_analysts and eps_cur:
                         # 一致预期 EPS 暗示的增长 vs 实际财务增速
-                        signals.append({
-                            "type": "consensus_vs_growth",
-                            "signal": f"{n_analysts}家分析师一致预期 EPS={eps_cur}",
-                            "bias": "consensus_positive" if rating_buy > n_analysts * 0.6 else "neutral",
-                            "confidence": 0.7,
-                        })
+                        signals.append(
+                            {
+                                "type": "consensus_vs_growth",
+                                "signal": f"{n_analysts}家分析师一致预期 EPS={eps_cur}",
+                                "bias": "consensus_positive" if rating_buy > n_analysts * 0.6 else "neutral",
+                                "confidence": 0.7,
+                            }
+                        )
             except Exception as e:
                 logger.debug("[ANTI-CONSENSUS] consensus: %s", e)
             finally:
@@ -75,19 +79,23 @@ def detect_anti_consensus(asset: str, collected_data: dict) -> dict:
     if pe > 0 and industry_pe > 0:
         ratio = pe / industry_pe
         if ratio > 1.5:
-            signals.append({
-                "type": "valuation_premium",
-                "signal": f"当前PE({pe:.1f})为行业均值({industry_pe:.1f})的{ratio:.1f}倍，市场给予显著溢价",
-                "bias": "consensus_expensive",
-                "confidence": 0.8,
-            })
+            signals.append(
+                {
+                    "type": "valuation_premium",
+                    "signal": f"当前PE({pe:.1f})为行业均值({industry_pe:.1f})的{ratio:.1f}倍，市场给予显著溢价",
+                    "bias": "consensus_expensive",
+                    "confidence": 0.8,
+                }
+            )
         elif ratio < 0.6:
-            signals.append({
-                "type": "valuation_discount",
-                "signal": f"当前PE({pe:.1f})仅为行业均值({industry_pe:.1f})的{ratio:.1f}倍，市场或低估",
-                "bias": "consensus_cheap",
-                "confidence": 0.8,
-            })
+            signals.append(
+                {
+                    "type": "valuation_discount",
+                    "signal": f"当前PE({pe:.1f})仅为行业均值({industry_pe:.1f})的{ratio:.1f}倍，市场或低估",
+                    "bias": "consensus_cheap",
+                    "confidence": 0.8,
+                }
+            )
 
     # ── 信号3：研报共识文本（从 baseline_findings 提取评级/观点）──
     try:
@@ -111,6 +119,7 @@ def detect_anti_consensus(asset: str, collected_data: dict) -> dict:
                         ratings.append(r)
             if ratings:
                 from collections import Counter
+
                 cnt = Counter()
                 for r in ratings:
                     for kw in ["买入", "增持", "持有", "中性", "减持", "卖出"]:
@@ -120,12 +129,14 @@ def detect_anti_consensus(asset: str, collected_data: dict) -> dict:
                 if cnt:
                     total = sum(cnt.values())
                     buy_ratio = (cnt.get("买入", 0) + cnt.get("增持", 0)) / max(total, 1)
-                    signals.append({
-                        "type": "research_consensus",
-                        "signal": f"研报评级分布: {dict(cnt)}，买入占比{buy_ratio:.0%}",
-                        "bias": "consensus_buy" if buy_ratio > 0.7 else "neutral",
-                        "confidence": 0.6,
-                    })
+                    signals.append(
+                        {
+                            "type": "research_consensus",
+                            "signal": f"研报评级分布: {dict(cnt)}，买入占比{buy_ratio:.0%}",
+                            "bias": "consensus_buy" if buy_ratio > 0.7 else "neutral",
+                            "confidence": 0.6,
+                        }
+                    )
     except Exception as e:
         logger.debug("[ANTI-CONSENSUS] research: %s", e)
 

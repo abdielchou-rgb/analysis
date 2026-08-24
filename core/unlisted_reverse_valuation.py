@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 非上市反向定价 + 里程碑时间轴（Unlisted Reverse Valuation & Milestone Timeline）— R23
 
@@ -17,7 +16,9 @@
 
 输出：隐含营收目标 / 隐含利润目标 / 里程碑时间轴 / 可行性判断。
 """
+
 from __future__ import annotations
+
 import json
 import logging
 from datetime import date
@@ -104,6 +105,7 @@ def build_unlisted_reverse_valuation(data: dict) -> dict:
     if not valuation:
         try:
             from core.reference_class_prediction import get_baserate
+
             br = get_baserate(stage="成长期", industry=asset_name)
             if br and getattr(br, "median_exit_value", 0):
                 valuation = _sf(br.median_exit_value)
@@ -122,7 +124,7 @@ def build_unlisted_reverse_valuation(data: dict) -> dict:
     # 常用非上市估值倍数：PS 5-10x（成长期）、PE 20-40x
     implied_rev_low = valuation / 10 if valuation else 0  # 高PS(10x) → 低营收目标
     implied_rev_high = valuation / 5 if valuation else 0  # 低PS(5x) → 高营收目标
-    implied_profit = valuation / 30 if valuation else 0   # 中性PE(30x)
+    implied_profit = valuation / 30 if valuation else 0  # 中性PE(30x)
 
     # 可行性：当前营收 vs 隐含营收目标
     rev_gap_ok = None
@@ -140,22 +142,24 @@ def build_unlisted_reverse_valuation(data: dict) -> dict:
     y = now.year
     milestones = []
     if ps.get("file"):
-        milestones.append({"time": f"{y+1}H1", "type": "退出",
-                           "desc": "IPO 申报/注册推进", "source": "A/招股书"})
-    milestones.append({"time": f"{y}H2", "type": "融资",
-                       "desc": "下一轮融资窗口（估值抬升验证）", "source": "E/假设"})
+        milestones.append({"time": f"{y + 1}H1", "type": "退出", "desc": "IPO 申报/注册推进", "source": "A/招股书"})
+    milestones.append({"time": f"{y}H2", "type": "融资", "desc": "下一轮融资窗口（估值抬升验证）", "source": "E/假设"})
     if rev > 0:
-        milestones.append({"time": f"{y+1}H1", "type": "业绩",
-                           "desc": f"营收目标 {implied_rev_high:.1f}亿（当前 {rev:.1f}亿）验证",
-                           "source": "E/反向定价"})
-    milestones.append({"time": f"{y+1}H2", "type": "里程碑",
-                       "desc": "关键客户/产品里程碑", "source": "E/假设"})
+        milestones.append(
+            {
+                "time": f"{y + 1}H1",
+                "type": "业绩",
+                "desc": f"营收目标 {implied_rev_high:.1f}亿（当前 {rev:.1f}亿）验证",
+                "source": "E/反向定价",
+            }
+        )
+    milestones.append({"time": f"{y + 1}H2", "type": "里程碑", "desc": "关键客户/产品里程碑", "source": "E/假设"})
 
     # 判断
     if rev_gap_ok is True:
         feasibility = "当前营收已接近隐含目标，估值有支撑"
     elif rev_gap_ok == "需高增长":
-        feasibility = f"需高增长（营收 {rev:.1f}亿 → {implied_rev_high:.1f}亿，{implied_rev_high/rev:.1f}x），依赖融资+里程碑兑现"
+        feasibility = f"需高增长（营收 {rev:.1f}亿 → {implied_rev_high:.1f}亿，{implied_rev_high / rev:.1f}x），依赖融资+里程碑兑现"
     elif rev_gap_ok is False:
         feasibility = f"营收差距过大（当前 {rev:.1f}亿 vs 隐含 {implied_rev_high:.1f}亿），估值偏高或营收高估"
     else:
@@ -167,8 +171,7 @@ def build_unlisted_reverse_valuation(data: dict) -> dict:
         "valuation_source": valuation_source,
         "current_revenue": round(rev, 2) if rev else 0,
         "current_profit": round(profit, 2) if profit else 0,
-        "implied_revenue_target": {"low_ps": round(implied_rev_low, 1),
-                                   "high_ps": round(implied_rev_high, 1)},
+        "implied_revenue_target": {"low_ps": round(implied_rev_low, 1), "high_ps": round(implied_rev_high, 1)},
         "implied_profit_target": round(implied_profit, 1) if implied_profit else 0,
         "revenue_gap_ratio": round(implied_rev_high / rev, 1) if rev and implied_rev_high else None,
         "feasibility": feasibility,
@@ -181,22 +184,25 @@ def serialize_unlisted_reverse(ur: dict, max_chars: int = 900) -> str:
     """序列化为 prompt 注入文本。"""
     if not ur or ur.get("status") != "ok":
         return ""
-    lines = ["=== 非上市反向定价 + 里程碑时间轴 ===",
-             f"估值: **{ur.get('valuation')}**（{ur.get('valuation_source')}）",
-             f"当前营收: {ur.get('current_revenue')}亿 / 利润: {ur.get('current_profit')}亿",
-             f"隐含营收目标(PS 5-10x): {ur.get('implied_revenue_target',{}).get('low_ps')} ~ {ur.get('implied_revenue_target',{}).get('high_ps')}亿",
-             f"隐含利润目标(PE 30x): {ur.get('implied_profit_target')}亿"]
+    lines = [
+        "=== 非上市反向定价 + 里程碑时间轴 ===",
+        f"估值: **{ur.get('valuation')}**（{ur.get('valuation_source')}）",
+        f"当前营收: {ur.get('current_revenue')}亿 / 利润: {ur.get('current_profit')}亿",
+        f"隐含营收目标(PS 5-10x): {ur.get('implied_revenue_target', {}).get('low_ps')} ~ {ur.get('implied_revenue_target', {}).get('high_ps')}亿",
+        f"隐含利润目标(PE 30x): {ur.get('implied_profit_target')}亿",
+    ]
     if ur.get("revenue_gap_ratio"):
         lines.append(f"营收差距: 需增长 {ur.get('revenue_gap_ratio')}x")
     lines.append(f"可行性: {ur.get('feasibility')}")
     lines.append("\n里程碑时间轴:")
     for m in ur.get("milestones", [])[:4]:
-        lines.append(f"- [{m.get('source')}] {m.get('time')} {m.get('desc','')[:40]}")
+        lines.append(f"- [{m.get('source')}] {m.get('time')} {m.get('desc', '')[:40]}")
     return "\n".join(lines)[:max_chars]
 
 
 if __name__ == "__main__":
     import sys
+
     sys.path.insert(0, ".")
     for asset in ["尚水智能", "思必驰", "未知标的"]:
         ur = build_unlisted_reverse_valuation({"asset": asset, "chart_data": {}})

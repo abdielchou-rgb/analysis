@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 瓶颈分析引擎（Bottleneck Engine）— R21 全量优化版：供应链卡点发现 + 卡位评级 + 利润池 + TOC + BOM
 
@@ -24,7 +23,9 @@
     penetration_life_cycle / industry_driver_count（产业链结构 + 生命周期）
   本版统一走 `_load_context()` 从多来源合并，杜绝空转。
 """
+
 from __future__ import annotations
+
 import json
 import logging
 from pathlib import Path
@@ -52,9 +53,16 @@ BOTTLENECK_QUESTIONS = [
 # 各环节典型毛利率（利润池估算默认值，标注为假设，非实测）
 # 仅当 chart_data 无各环节利润率数据时使用；有真实数据优先。
 _SEGMENT_GROSS_MARGIN_DEFAULT = {
-    "上游": 0.40, "中游": 0.22, "下游": 0.30,
-    "上游芯片设计": 0.45, "中游制造封装": 0.20, "下游应用": 0.32,
-    "芯片设计": 0.45, "制造": 0.25, "封装测试": 0.20, "应用": 0.32,
+    "上游": 0.40,
+    "中游": 0.22,
+    "下游": 0.30,
+    "上游芯片设计": 0.45,
+    "中游制造封装": 0.20,
+    "下游应用": 0.32,
+    "芯片设计": 0.45,
+    "制造": 0.25,
+    "封装测试": 0.20,
+    "应用": 0.32,
 }
 # 生命周期 → TOC 当前约束阶段映射
 _LIFECYCLE_TOC = {
@@ -83,9 +91,18 @@ def _load_context(data: dict) -> dict:
 
     兼容多来源，优先真实数据、缺省用默认。R21 修复空转的关键。
     """
-    ctx = {"supply_chain": {}, "penetration_pct": 0.0, "life_cycle": "",
-           "upstream": [], "midstream": [], "downstream": [], "players": [],
-           "driver_count": 0, "asset": "", "chain_found": False}
+    ctx = {
+        "supply_chain": {},
+        "penetration_pct": 0.0,
+        "life_cycle": "",
+        "upstream": [],
+        "midstream": [],
+        "downstream": [],
+        "players": [],
+        "driver_count": 0,
+        "asset": "",
+        "chain_found": False,
+    }
     if not isinstance(data, dict):
         return ctx
     cd = data.get("chart_data", {})
@@ -114,10 +131,10 @@ def _load_context(data: dict) -> dict:
     # 2) 产业链结构：从 basement 实时读（chain_upstream_count 等）或 chain 原文
     try:
         from core.data_basement import build_basement_data_dict, load_industry_chain
+
         asset_name = ctx["asset"].split()[0] if ctx["asset"] else ""
         bd = build_basement_data_dict(ctx["asset"]) or {}
-        if bd.get("chain_upstream_count") or bd.get("chain_midstream_count") \
-                or bd.get("chain_downstream_count"):
+        if bd.get("chain_upstream_count") or bd.get("chain_midstream_count") or bd.get("chain_downstream_count"):
             ctx["chain_found"] = True
         if _sf(bd.get("penetration_pct", 0)):
             ctx["penetration_pct"] = _sf(bd["penetration_pct"])
@@ -126,8 +143,7 @@ def _load_context(data: dict) -> dict:
         if bd.get("industry_driver_count"):
             ctx["driver_count"] = int(_sf(bd["industry_driver_count"]))
         chain = load_industry_chain(asset_name) or {}
-        if isinstance(chain, dict) and (chain.get("upstream") or chain.get("midstream")
-                                        or chain.get("downstream")):
+        if isinstance(chain, dict) and (chain.get("upstream") or chain.get("midstream") or chain.get("downstream")):
             ctx["upstream"] = chain.get("upstream", []) or []
             ctx["midstream"] = chain.get("midstream", []) or []
             ctx["downstream"] = chain.get("downstream", []) or []
@@ -216,9 +232,12 @@ def score_chokepoint(data: dict) -> dict:
         "action": action,
         "weakest": weakest_name,
         "evidence": {
-            "penetration": pen, "lifecycle": lc,
-            "upstream_count": n_up, "midstream_count": n_mid,
-            "downstream_count": n_down, "player_count": n_players,
+            "penetration": pen,
+            "lifecycle": lc,
+            "upstream_count": n_up,
+            "midstream_count": n_mid,
+            "downstream_count": n_down,
+            "player_count": n_players,
             "chain_found": ctx["chain_found"],
         },
     }
@@ -240,8 +259,13 @@ def score_alpha(data: dict) -> dict:
     elasticity = 4 if pen and pen < 30 else 2
     timeframe = 4 if pen and pen < 30 else 2
 
-    scores = {"certainty": certainty, "clarity": clarity, "purity": purity,
-              "elasticity": elasticity, "timeframe": timeframe}
+    scores = {
+        "certainty": certainty,
+        "clarity": clarity,
+        "purity": purity,
+        "elasticity": elasticity,
+        "timeframe": timeframe,
+    }
     total = sum(scores.values()) / len(scores) * 20
 
     if total >= 80:
@@ -294,7 +318,8 @@ def analyze_profit_pool(data: dict) -> dict:
         return {
             "status": "no_data",
             "segments": [],
-            "thickest": "", "thinnest": "",
+            "thickest": "",
+            "thinnest": "",
             "note": "无 fig_supply_chain 环节规模数据，利润池无法定量。",
         }
 
@@ -304,8 +329,7 @@ def analyze_profit_pool(data: dict) -> dict:
         gm = _SEGMENT_GROSS_MARGIN_DEFAULT.get(name, 0.30)
         # 若 supply_chain 的 value 已是"利润"（用户口径），margin=1
         profit = size * gm
-        segs.append({"segment": name, "size": round(size, 1),
-                     "margin": round(gm, 3), "profit": round(profit, 1)})
+        segs.append({"segment": name, "size": round(size, 1), "margin": round(gm, 3), "profit": round(profit, 1)})
         total_profit += profit
     for s in segs:
         s["share"] = round(s["profit"] / total_profit * 100, 1) if total_profit else 0.0
@@ -330,7 +354,8 @@ def analyze_profit_pool(data: dict) -> dict:
     return {
         "status": "ok",
         "segments": segs,
-        "thickest": thickest, "thinnest": thinnest,
+        "thickest": thickest,
+        "thinnest": thinnest,
         "migration": migration,
         "note": "规模取 fig_supply_chain；利润率用行业默认毛利率（假设，非实测）。",
     }
@@ -419,8 +444,7 @@ def bom_reverse(data: dict) -> dict:
     downstream = ctx["downstream"]
 
     if not (players or upstream or midstream or downstream):
-        return {"status": "no_data",
-                "note": "无产业链 key_players/环节数据，BOM 逆向无法执行。"}
+        return {"status": "no_data", "note": "无产业链 key_players/环节数据，BOM 逆向无法执行。"}
 
     # 瓶颈环节候选：中游制造 + 上游材料/设备（供给弹性低、壁垒高）
     candidate_links = []
@@ -432,10 +456,16 @@ def bom_reverse(data: dict) -> dict:
     # 候选标的（key_players 与环节的关键性）
     targets = []
     for p in players[:8]:
-        targets.append({"company": p, "matching_links": ", ".join(
-            l["link"] for l in candidate_links if any(
-                kw in str(p) or str(p) in kw for kw in []) or True)[:60] or "产业链核心",
-            "note": "产业链 key_players（BOM 关键件对应）"})
+        targets.append(
+            {
+                "company": p,
+                "matching_links": ", ".join(
+                    l["link"] for l in candidate_links if any(kw in str(p) or str(p) in kw for kw in []) or True
+                )[:60]
+                or "产业链核心",
+                "note": "产业链 key_players（BOM 关键件对应）",
+            }
+        )
 
     return {
         "status": "ok",
@@ -473,7 +503,9 @@ def serialize_bottleneck(bn: dict, max_chars: int = 2000) -> str:
     if pp and pp.get("status") == "ok":
         lines.append("\n利润池分布（McKinsey Profit Pool）:")
         for s in pp.get("segments", []):
-            lines.append(f"- {s['segment']}: 规模{s['size']} × 毛利率{s['margin']:.0%} = 利润{s['profit']}（占比{s['share']}%）")
+            lines.append(
+                f"- {s['segment']}: 规模{s['size']} × 毛利率{s['margin']:.0%} = 利润{s['profit']}（占比{s['share']}%）"
+            )
         lines.append(f"利润最厚: **{pp.get('thickest')}** / 最薄: {pp.get('thinnest')}")
         lines.append(f"流向: {pp.get('migration')}")
     elif pp:
@@ -501,8 +533,10 @@ def serialize_bottleneck(bn: dict, max_chars: int = 2000) -> str:
     if unlisted and unlisted.get("status") == "ok":
         lines.append("\n非上市稀缺性评估（专属）:")
         lines.append(f"  总评: **{unlisted.get('rating')}**（{unlisted.get('total')}/10）")
-        lines.append(f"  卡位稀缺{unlisted.get('scarcity')} / 商业化{unlisted.get('commercial_maturity')} / "
-                     f"退出清晰{unlisted.get('exit_clarity')} / 融资验证{unlisted.get('funding_validation')}")
+        lines.append(
+            f"  卡位稀缺{unlisted.get('scarcity')} / 商业化{unlisted.get('commercial_maturity')} / "
+            f"退出清晰{unlisted.get('exit_clarity')} / 融资验证{unlisted.get('funding_validation')}"
+        )
         if unlisted.get("evidence", {}).get("prospectus_file"):
             lines.append(f"  招股书: {unlisted['evidence']['prospectus_file']}")
     if vc:
@@ -539,8 +573,8 @@ def scan_segment_chokepoints(data: dict) -> dict:
     # 环节名 → 环节级输入。优先用 supply_chain（带规模），否则用结构 list
     segments = []
     for name, stage in (
-            [(u, "上游") for u in upstream] + [(m, "中游") for m in midstream]
-            + [(d, "下游") for d in downstream]):
+        [(u, "上游") for u in upstream] + [(m, "中游") for m in midstream] + [(d, "下游") for d in downstream]
+    ):
         if not name or any(name == s["segment"] for s in segments):
             continue
         # 该环节在 supply_chain 中的规模（若键名匹配）
@@ -549,19 +583,20 @@ def scan_segment_chokepoints(data: dict) -> dict:
         for k, v in sc.items():
             if name in str(k) or str(k) in name:
                 size = v if v else size
-        segments.append({"segment": name, "stage": stage, "size": size,
-                         "profit_share": profit_share})
+        segments.append({"segment": name, "stage": stage, "size": size, "profit_share": profit_share})
 
     # 补充 supply_chain 中未在结构里的环节
     for k, v in sc.items():
         if not any(k == s["segment"] for s in segments):
-            stage = "上游" if ("上游" in k or "芯片" in k or "材料" in k or "设备" in k) else \
-                    ("中游" if ("中游" in k or "制造" in k or "封装" in k) else "下游")
+            stage = (
+                "上游"
+                if ("上游" in k or "芯片" in k or "材料" in k or "设备" in k)
+                else ("中游" if ("中游" in k or "制造" in k or "封装" in k) else "下游")
+            )
             segments.append({"segment": k, "stage": stage, "size": v, "profit_share": 0.0})
 
     if not segments:
-        return {"status": "no_data",
-                "note": "无产业链环节/fig_supply_chain 数据，环节级扫描无法执行。"}
+        return {"status": "no_data", "note": "无产业链环节/fig_supply_chain 数据，环节级扫描无法执行。"}
 
     # 计算利润池份额
     total_size = sum(s["size"] for s in segments) or 1.0
@@ -577,13 +612,16 @@ def scan_segment_chokepoints(data: dict) -> dict:
         supply_score = base + size_bonus
         moat = 4 if s["stage"] == "上游" else (3 if s["stage"] == "中游" else 2)
         # 不可替代：环节名含关键特征加分
-        kw_bonus = 0.5 if any(k in s["segment"] for k in
-                              ["芯片", "材料", "设备", "封装", "设计", "核心", "关键"]) else 0
+        kw_bonus = (
+            0.5 if any(k in s["segment"] for k in ["芯片", "材料", "设备", "封装", "设计", "核心", "关键"]) else 0
+        )
         s["supply_score"] = round(min(5.0, supply_score), 1)
         s["moat_score"] = moat
         s["replacement_score"] = round(min(5.0, moat + kw_bonus), 1)
-        s["total_score"] = round((s["supply_score"] + s["moat_score"]
-                                  + s["replacement_score"] + min(2.0, s["profit_share"] / 25.0)) / 4 * 5, 1)
+        s["total_score"] = round(
+            (s["supply_score"] + s["moat_score"] + s["replacement_score"] + min(2.0, s["profit_share"] / 25.0)) / 4 * 5,
+            1,
+        )
 
     segments.sort(key=lambda s: s["total_score"], reverse=True)
     bottleneck = segments[0] if segments else None
@@ -765,6 +803,7 @@ def build_bottleneck_analysis(data: dict, report_type: str = "listed_company") -
 
 if __name__ == "__main__":
     import sys
+
     sys.path.insert(0, ".")
     # 用传感器行业真实数据验证
     try:

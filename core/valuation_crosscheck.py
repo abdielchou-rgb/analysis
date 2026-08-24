@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 估值锚交叉验证器（Valuation Crosscheck）— R30 模块8：对标投行三表→估值
 
@@ -7,7 +6,9 @@
 
 **方案**：给定多估值锚，检查差异 >20% 时强制声明取值逻辑；差异小取中值。
 """
+
 from __future__ import annotations
+
 import logging
 from pathlib import Path
 
@@ -29,8 +30,7 @@ def crosscheck(valuations: dict) -> dict:
         {methods, values, gap_pct, passed, final, note}
     """
     # 过滤有效值
-    valid = {k: float(v) for k, v in (valuations or {}).items()
-             if v is not None and float(v) > 0}
+    valid = {k: float(v) for k, v in (valuations or {}).items() if v is not None and float(v) > 0}
     if len(valid) < 2:
         return {
             "methods": list((valuations or {}).keys()),
@@ -53,9 +53,11 @@ def crosscheck(valuations: dict) -> dict:
         # 差异大：取中间值 + 声明
         sorted_v = sorted(valid.values())
         final = sorted_v[len(sorted_v) // 2]
-        note = (f"估值锚差异{gap:.0%} > {GAP_THRESHOLD:.0%}，"
-                f"正文必须声明取值逻辑。本验证取中值 {final:.1f}，"
-                f"建议报告明确'采用X法因...'")
+        note = (
+            f"估值锚差异{gap:.0%} > {GAP_THRESHOLD:.0%}，"
+            f"正文必须声明取值逻辑。本验证取中值 {final:.1f}，"
+            f"建议报告明确'采用X法因...'"
+        )
 
     return {
         "methods": list(valid.keys()),
@@ -74,8 +76,7 @@ def serialize_crosscheck(cc: dict) -> str:
     lines = ["=== 估值锚交叉验证（多方法一致性） ==="]
     for k, v in (cc.get("values") or {}).items():
         lines.append(f"  {k}: {v:.1f} 元")
-    lines.append(f"差异: {cc.get('gap_pct', 0):.0%} → "
-                 f"{'✅一致' if cc.get('passed') else '⚠️需声明取值逻辑'}")
+    lines.append(f"差异: {cc.get('gap_pct', 0):.0%} → {'✅一致' if cc.get('passed') else '⚠️需声明取值逻辑'}")
     if cc.get("final"):
         lines.append(f"综合取值: {cc['final']} 元")
     lines.append(f"说明: {cc.get('note', '')}")

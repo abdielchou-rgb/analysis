@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 估值模型 Excel 提取器（Valuation Model Extractor）— R18 估值深度补强
 
@@ -19,7 +18,9 @@
 
 **输出**：data/valuation_models_knowledge.json（按行业聚合）
 """
+
 from __future__ import annotations
+
 import json
 import logging
 import re
@@ -37,9 +38,11 @@ def _open_workbook(path: Path):
     try:
         if path.suffix.lower() == ".xlsx":
             import openpyxl
+
             return openpyxl.load_workbook(str(path), data_only=True, read_only=True)
         elif path.suffix.lower() in (".xls", ".xlsm"):
             import xlrd
+
             return xlrd.open_workbook(str(path))
     except Exception as e:
         logger.debug("[VAL] 打开失败 %s: %s", path.name, e)
@@ -54,8 +57,7 @@ def _iter_sheets(wb):
                 yield sn, wb[sn].iter_rows(values_only=True)
         elif hasattr(wb, "sheets"):  # xlrd
             for sh in wb.sheets():
-                yield sh.name, ([sh.cell_value(r, c) for c in range(sh.ncols)]
-                                for r in range(sh.nrows))
+                yield sh.name, ([sh.cell_value(r, c) for c in range(sh.ncols)] for r in range(sh.nrows))
     except Exception as e:
         logger.debug("[VAL] sheet 遍历失败: %s", e)
 
@@ -78,7 +80,7 @@ def _find_param(rows, keys: list) -> str | None:
                     if v is None:
                         continue
                     vs = str(v).strip()
-                    if vs and vs != "0" and re.match(r'^-?\d+\.?\d*$', vs):
+                    if vs and vs != "0" and re.match(r"^-?\d+\.?\d*$", vs):
                         try:
                             fv = float(vs)
                             # WACC/g 应在合理范围
@@ -93,13 +95,13 @@ def _find_param(rows, keys: list) -> str | None:
 def _find_company(path: Path) -> str:
     """从文件名提取公司名。"""
     name = path.stem
-    name = re.sub(r'^\d+[\+\-]?\d*', '', name)  # 去前缀代码
-    name = re.sub(r'^\d{6}\.[A-Z]{2}\.?|^\d{6}\.?', '', name)
-    name = re.sub(r'[（(].*?[)）]', '', name)  # 去括号
-    name = re.sub(r'(财务估值模型|财务预测估值模型|估值模型|财务模型|估值建模|财务预测估值建模)$', '', name)
-    name = name.strip(' +-_、')
+    name = re.sub(r"^\d+[\+\-]?\d*", "", name)  # 去前缀代码
+    name = re.sub(r"^\d{6}\.[A-Z]{2}\.?|^\d{6}\.?", "", name)
+    name = re.sub(r"[（(].*?[)）]", "", name)  # 去括号
+    name = re.sub(r"(财务估值模型|财务预测估值模型|估值模型|财务模型|估值建模|财务预测估值建模)$", "", name)
+    name = name.strip(" +-_、")
     # 去掉尾部残留的 +/-
-    name = re.sub(r'[\+\-]+$', '', name)
+    name = re.sub(r"[\+\-]+$", "", name)
     return name.strip() or path.stem
 
 
@@ -128,14 +130,16 @@ def extract_model(path: Path) -> dict | None:
             rows_iter = iter(rows)
             result["sheets"].append(sn)
             # DCF sheet：提取 WACC/g/退出倍数
-            if re.search(r'dcf|现金流', sn, re.I):
+            if re.search(r"dcf|现金流", sn, re.I):
                 result["wacc"] = _find_param(rows_iter, ["wacc", "加权平均资本成本"])
                 rows_iter = iter(rows)  # 重新迭代找 g
-                result["terminal_growth"] = _find_param(rows_iter, ["永续增长", "终端增长率", "长期增长率", "增长率为g"])
+                result["terminal_growth"] = _find_param(
+                    rows_iter, ["永续增长", "终端增长率", "长期增长率", "增长率为g"]
+                )
                 rows_iter = iter(rows)
                 result["ebitda_exit"] = _find_param(rows_iter, ["ebitda退出", "退出倍数"])
             # 风险清单
-            elif re.search(r'风险', sn):
+            elif re.search(r"风险", sn):
                 for row in rows_iter:
                     cells = list(row)
                     if cells and str(cells[0] or "").strip() and len(str(cells[0]).strip()) > 2:
@@ -163,9 +167,7 @@ def extract_models_batch(dir_path: Path = None, limit: int = 0) -> dict:
 
     excel_files = list(dir_path.rglob("*.xlsx")) + list(dir_path.rglob("*.xls"))
     # 过滤掉 .xls 但其实是模板/工具包
-    excel_files = [f for f in excel_files if not any(
-        k in f.name for k in ["使用帮助", "速算", "资源包", "工具包"])
-    ]
+    excel_files = [f for f in excel_files if not any(k in f.name for k in ["使用帮助", "速算", "资源包", "工具包"])]
     logger.info("[VAL] 发现 %d 个 Excel 估值模型", len(excel_files))
 
     if limit:
@@ -189,11 +191,21 @@ def extract_models_batch(dir_path: Path = None, limit: int = 0) -> dict:
 def save_knowledge(models: dict) -> str:
     """保存到 valuation_models_knowledge.json。"""
     # 按行业聚合（目前简单存全部，后续可加行业映射）
-    OUTPUT.write_text(json.dumps({"models": models, "_meta": {
-        "count": len(models),
-        "source": "data/基线/估值模型 (Excel投行估值模型)",
-        "generated": "2026-08-01",
-    }}, ensure_ascii=False, indent=1), encoding="utf-8")
+    OUTPUT.write_text(
+        json.dumps(
+            {
+                "models": models,
+                "_meta": {
+                    "count": len(models),
+                    "source": "data/基线/估值模型 (Excel投行估值模型)",
+                    "generated": "2026-08-01",
+                },
+            },
+            ensure_ascii=False,
+            indent=1,
+        ),
+        encoding="utf-8",
+    )
     return str(OUTPUT)
 
 
@@ -209,11 +221,12 @@ def load_knowledge() -> dict:
 
 if __name__ == "__main__":
     import sys
+
     sys.path.insert(0, ".")
     models = extract_models_batch(limit=5)
     print(f"提取 {len(models)} 个模型:")
     for comp, m in list(models.items())[:5]:
-        print(f"  {comp}: WACC={m.get('wacc')} g={m.get('terminal_growth')} sheets={len(m.get('sheets',[]))}")
+        print(f"  {comp}: WACC={m.get('wacc')} g={m.get('terminal_growth')} sheets={len(m.get('sheets', []))}")
     if models:
         save_knowledge(models)
         print("已保存")

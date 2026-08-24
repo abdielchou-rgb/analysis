@@ -1,8 +1,13 @@
 """
 chart_assembler.py - Code-Based Chart Assembly (FDV Pattern)
 """
+
 from __future__ import annotations
-import sys, os, re, json, logging
+
+import logging
+import os
+import re
+import sys
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
@@ -62,8 +67,8 @@ class ChartAssembler:
     def generate_chart(self, tmpl, data=None):
         try:
             from pipeline.chart_pipeline import ChartPipeline
-            cp = ChartPipeline(report_type=self.report_type, style=self.style,
-                              output_dir=str(self.output_dir))
+
+            cp = ChartPipeline(report_type=self.report_type, style=self.style, output_dir=str(self.output_dir))
             paths = cp.generate_all(data or {})
             # R51（2026-08-02）：generate_all 返回 (chart_paths, template_flags)
             if isinstance(paths, tuple):
@@ -89,6 +94,7 @@ class ChartAssembler:
         _fig_alias = {}
         try:
             import json as _json
+
             _schema_path = Path(__file__).resolve().parent / "chart_schema.json"
             if _schema_path.exists():
                 _fig_alias = _json.loads(_schema_path.read_text(encoding="utf-8")).get("aliases", {})
@@ -117,8 +123,13 @@ class ChartAssembler:
                     rel_path = os.path.relpath(path, Path(str(_ROOT)) / "output")
                     return "![" + real + "](" + rel_path + ")"
             return m.group(0)
+
         # 兼容三种格式: [CHART:id, title] / {[CHART:id, title]} / [CHART:id]（无标题）
-        report_text = re.sub(r"!\[\]\(chart:(\w+)\)", lambda m: _replace(re.match(r"\[CHART:%s\]" % m.group(1), m.group(0)) or m), report_text)
+        report_text = re.sub(
+            r"!\[\]\(chart:(\w+)\)",
+            lambda m: _replace(re.match(r"\[CHART:%s\]" % m.group(1), m.group(0)) or m),
+            report_text,
+        )
         report_text = re.sub(r"\{?\[CHART:\s*([A-Za-z0-9_\-]+)\s*(?:[,，].*?)?\]\}?", _replace, report_text)
         # 兜底：若正文图表引用不足（LLM 未按指令嵌入占位符），自动追加已生成但未引用的图表。
         # 修复（2026-08-01）：正文 0 图引用导致 template BLOCK「图表不足 0/5」→ Gate 被压至 0.40。
@@ -133,6 +144,7 @@ class ChartAssembler:
         min_charts = 999
         try:
             from core.sacs import SACLoader
+
             min_charts = int(SACLoader(self.report_type).get_chart_config().get("min_charts", 8))
         except Exception:
             pass
@@ -249,8 +261,10 @@ class VisualGate:
         score = min(1.0, coverage * 0.8 + (len(found_ids) / max(len(chart_paths), 1)) * 0.2)
         passed = score >= 0.5 and inline_charts >= 1
         return {
-            "passed": passed, "score": round(score, 2),
-            "total": len(chart_paths), "embedded": inline_charts,
+            "passed": passed,
+            "score": round(score, 2),
+            "total": len(chart_paths),
+            "embedded": inline_charts,
             "images": inline_charts,
             "tables": len(re.findall(r"\|.*\|.*\|", report_text)),
             "issues": issues,

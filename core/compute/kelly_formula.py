@@ -11,20 +11,20 @@ Kelly Formula Module — 赔率计算与仓位建议
 """
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional  # noqa: F401  (dead-import debt)
 
 
 @dataclass
 class KellyResult:
     optimal_fraction: float  # 凯利最优仓位比例
-    upside: float           # 潜在涨幅 (%)
-    downside: float         # 潜在跌幅 (%)
-    win_prob: float         # 胜率
-    odds_ratio: float       # 赔率
-    edge: float            # 期望收益
-    half_kelly: float      # 半凯利（保守）
-    quarter_kelly: float   # 四分之一凯利（极保守）
-    interpretation: str    # 中文解读
+    upside: float  # 潜在涨幅 (%)
+    downside: float  # 潜在跌幅 (%)
+    win_prob: float  # 胜率
+    odds_ratio: float  # 赔率
+    edge: float  # 期望收益
+    half_kelly: float  # 半凯利（保守）
+    quarter_kelly: float  # 四分之一凯利（极保守）
+    interpretation: str  # 中文解读
 
 
 def kelly_bet(
@@ -51,10 +51,15 @@ def kelly_bet(
 
     if b <= 0:
         return KellyResult(
-            optimal_fraction=0.0, upside=upside_pct, downside=downside_pct,
-            win_prob=win_prob, odds_ratio=0.0, edge=0.0,
-            half_kelly=0.0, quarter_kelly=0.0,
-            interpretation="赔率为零或负数，不建议下注"
+            optimal_fraction=0.0,
+            upside=upside_pct,
+            downside=downside_pct,
+            win_prob=win_prob,
+            odds_ratio=0.0,
+            edge=0.0,
+            half_kelly=0.0,
+            quarter_kelly=0.0,
+            interpretation="赔率为零或负数，不建议下注",
         )
 
     edge = b * p - q
@@ -84,7 +89,7 @@ def kelly_bet(
         edge=round(edge, 4),
         half_kelly=round(f_star * 0.5, 4),
         quarter_kelly=round(f_star * 0.25, 4),
-        interpretation=interp
+        interpretation=interp,
     )
 
 

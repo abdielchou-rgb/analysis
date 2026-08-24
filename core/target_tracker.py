@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 目标价追踪台账（Target Tracker）— R30 模块2：对标投行分析师考核
 
@@ -10,11 +9,12 @@
 达成率分级：误差<5%=命中 / <15%=接近 / >15%=miss
 聚合：按标的/行业/报告类型 → 分析师能力档案 → 回流 prompt（"我过去命中率X%"）
 """
+
 from __future__ import annotations
+
 import csv
-import json
 import logging
-from datetime import datetime, date, timedelta
+from datetime import date, datetime
 from pathlib import Path
 
 logger = logging.getLogger("2hao.target_tracker")
@@ -36,6 +36,7 @@ def _get_latest_price(code: str) -> float | None:
     """获取标的最近价格（本地 qlib，离线）。"""
     try:
         from core.data_backends import _query_local_qlib_price
+
         q = _query_local_qlib_price(code)
         if q and q.get("prices"):
             return float(q["prices"][-1])
@@ -64,8 +65,16 @@ def compute_tracker(horizon_days: int = 365) -> dict:
     """
     picks = _load_picks()
     if not picks:
-        return {"total": 0, "verified": 0, "hit": 0, "close": 0, "miss": 0,
-                "by_industry": {}, "by_report_type": {}, "accuracy": 0}
+        return {
+            "total": 0,
+            "verified": 0,
+            "hit": 0,
+            "close": 0,
+            "miss": 0,
+            "by_industry": {},
+            "by_report_type": {},
+            "accuracy": 0,
+        }
 
     today = date.today()
     results = []
@@ -87,16 +96,18 @@ def compute_tracker(horizon_days: int = 365) -> dict:
         if not actual_price:
             continue
         grade = grade_target_error(base_target, actual_price)
-        results.append({
-            "asset": p.get("asset_name", p.get("asset_code", "")),
-            "code": code,
-            "target": base_target,
-            "actual": actual_price,
-            "grade": grade,
-            "direction": p.get("direction", ""),
-            "industry": p.get("industry", p.get("report_type", "unknown")),
-            "report_type": p.get("report_type", "unknown"),
-        })
+        results.append(
+            {
+                "asset": p.get("asset_name", p.get("asset_code", "")),
+                "code": code,
+                "target": base_target,
+                "actual": actual_price,
+                "grade": grade,
+                "direction": p.get("direction", ""),
+                "industry": p.get("industry", p.get("report_type", "unknown")),
+                "report_type": p.get("report_type", "unknown"),
+            }
+        )
 
     verified = len(results)
     hit = sum(1 for r in results if r["grade"] == "hit")
@@ -134,10 +145,12 @@ def compute_tracker(horizon_days: int = 365) -> dict:
 
 def format_tracker(t: dict) -> str:
     """格式化为可读台账。"""
-    lines = ["=== 目标价追踪台账 ===",
-             f"总预测: {t['total']} | 已到期验证: {t['verified']}",
-             f"命中(误差<5%): {t['hit']} | 接近(<15%): {t['close']} | 未中(>15%): {t['miss']}",
-             f"目标价达成率: {t['accuracy']:.0%}" if t['verified'] else "达成率: N/A"]
+    lines = [
+        "=== 目标价追踪台账 ===",
+        f"总预测: {t['total']} | 已到期验证: {t['verified']}",
+        f"命中(误差<5%): {t['hit']} | 接近(<15%): {t['close']} | 未中(>15%): {t['miss']}",
+        f"目标价达成率: {t['accuracy']:.0%}" if t["verified"] else "达成率: N/A",
+    ]
     if t.get("by_report_type"):
         lines.append("\n按报告类型:")
         for rt, s in t["by_report_type"].items():

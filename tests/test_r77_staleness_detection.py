@@ -6,6 +6,7 @@
 3. _COVERAGE_ENRICH_THRESHOLD 从 framework_registry.json 读（FP5 校准口子）
 4. agent_provider 队列积压快速失败（防 IronGate 挂死）
 """
+
 import os
 import sys
 import time
@@ -27,6 +28,7 @@ for k in ("http_proxy", "https_proxy", "HTTP_PROXY", "HTTPS_PROXY"):
 def test_universe_build_has_data_freshness():
     """build() 输出应含 data_freshness。"""
     from pipeline.universe_build import UniverseBuilder
+
     b = UniverseBuilder()
     r = b.build("人形机器人", {"chart_data": {"company_intro": "机器人产业"}}, "industry_deep")
     s = r["universe_summary"]
@@ -40,6 +42,7 @@ def test_universe_build_has_data_freshness():
 def test_staleness_check_reports_stale():
     """超过 _STALE_DAYS 的底座应标记 stale_refresh。"""
     import pipeline.universe_build as ub
+
     b = ub.UniverseBuilder()
     b._data_mtime = {
         "unlisted_players": time.time() - 100 * 86400,
@@ -54,7 +57,8 @@ def test_staleness_check_reports_stale():
 def test_industry_baseline_gap_warning():
     """IronGate 行业底座缺口应为 warning 级、不阻断。"""
     from pipeline.iron_gate import IronGate
-    text = ("未知板块行业分析。\n公司2025年营收15.58亿元，毛利率44.8%。\n" * 3)
+
+    text = "未知板块行业分析。\n公司2025年营收15.58亿元，毛利率44.8%。\n" * 3
     ig = IronGate.__new__(IronGate)
     ig.report_text = text
     ig.asset = "未知标的"
@@ -66,7 +70,8 @@ def test_industry_baseline_gap_warning():
 def test_industry_baseline_ok_for_known_sector():
     """底座已覆盖的行业不应误报缺口。"""
     from pipeline.iron_gate import IronGate
-    text = ("传感器行业分析。\n公司2025年营收15.58亿元，毛利率44.8%。\n" * 3)
+
+    text = "传感器行业分析。\n公司2025年营收15.58亿元，毛利率44.8%。\n" * 3
     ig = IronGate.__new__(IronGate)
     ig.report_text = text
     ig.asset = "油位传感器"
@@ -77,18 +82,20 @@ def test_industry_baseline_ok_for_known_sector():
 def test_coverage_threshold_from_registry():
     """_COVERAGE_ENRICH_THRESHOLD 应从 registry 读。"""
     import json
+
     from pipeline.universe_build import _COVERAGE_ENRICH_THRESHOLD
+
     reg = json.loads((_ROOT / "data" / "framework_registry.json").read_text(encoding="utf-8"))
     calib = reg.get("_meta", {}).get("calibration", {})
     expected = float(calib.get("coverage_enrich_threshold", 0.7))
-    assert _COVERAGE_ENRICH_THRESHOLD == expected, (
-        f"阈值应从 registry 读: {_COVERAGE_ENRICH_THRESHOLD} != {expected}")
+    assert _COVERAGE_ENRICH_THRESHOLD == expected, f"阈值应从 registry 读: {_COVERAGE_ENRICH_THRESHOLD} != {expected}"
 
 
 def test_agent_provider_fast_fail_no_heartbeat():
     """agent_provider 无活跃 responder（无心跳）时应快速失败，不空等 300s。"""
-    from core.agent_provider import AgentProvider, QUEUE_DIR
-    import uuid, json
+
+    from core.agent_provider import QUEUE_DIR, AgentProvider
+
     # 确保无心跳文件
     hb = QUEUE_DIR / ".heartbeat"
     hb_was = hb.exists()
@@ -112,6 +119,7 @@ def test_agent_provider_fast_fail_no_heartbeat():
 
 if __name__ == "__main__":
     import traceback
+
     passed = failed = 0
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

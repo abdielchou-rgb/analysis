@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """intent_parser.py — 意图解析层（FP0 落地，2026-08-07）
 
 从"写满 SAC 模板"升级为"回答委托方必答问题"。
@@ -15,8 +14,11 @@
 
   ip.validate_report(plan, report_text)  # 意图符合性：必答问题是否被回答
 """
+
 from __future__ import annotations
-import os, re, json, logging
+
+import logging
+import re
 from pathlib import Path
 
 logger = logging.getLogger("2hao.intent_parser")
@@ -81,8 +83,7 @@ class IntentParser:
         "竞争": "竞争格局/壁垒/替代威胁？",
     }
 
-    def parse(self, asset: str, report_type: str = "decision_memo",
-              requirement: str = "", client: str = "") -> dict:
+    def parse(self, asset: str, report_type: str = "decision_memo", requirement: str = "", client: str = "") -> dict:
         """解析委托方意图 → 报告结构计划。
 
         requirement: 用户口述需求（自由文本），驱动必答问题定制。
@@ -133,11 +134,13 @@ class IntentParser:
         for q in plan.get("must_answer_questions", []):
             keywords = self._extract_keywords(q)
             hit = any(kw in report_text for kw in keywords if len(kw) >= 2)
-            results.append({
-                "question": q,
-                "keywords": keywords,
-                "answered": hit,
-            })
+            results.append(
+                {
+                    "question": q,
+                    "keywords": keywords,
+                    "answered": hit,
+                }
+            )
         answered = sum(1 for r in results if r["answered"])
         total = len(results)
         return {
@@ -150,10 +153,12 @@ class IntentParser:
 
     def build_prompt(self, plan: dict) -> str:
         """生成注入写作 prompt 的意图约束块（FP0 强制）。"""
-        lines = ["=== 委托方意图（FP0 最高优先级，必须回答）===",
-                 f"委托方: {plan['client']}",
-                 f"决策点: {plan['decision_point']}",
-                 "必答问题（必须全部在报告中回答）:"]
+        lines = [
+            "=== 委托方意图（FP0 最高优先级，必须回答）===",
+            f"委托方: {plan['client']}",
+            f"决策点: {plan['decision_point']}",
+            "必答问题（必须全部在报告中回答）:",
+        ]
         for i, q in enumerate(plan.get("must_answer_questions", []), 1):
             lines.append(f"  {i}. {q}")
         lines.append("报告结构必须围绕必答问题组织，禁止只填模板不回答问题。")
@@ -167,11 +172,24 @@ class IntentParser:
         sections = [{"title": "执行摘要", "answers": questions[:1]}]
         if report_type == "decision_memo":
             sections.append({"title": "决策建议与依据", "answers": questions})
-            sections.append({"title": "行业真相与市场空间", "answers": [q for q in questions if "规模" in q or "空间" in q]})
-            sections.append({"title": "投入产出与财务测算", "answers": [q for q in questions if "投入" in q or "产出" in q or "回本" in q]})
-            sections.append({"title": "战略卡位与替代路径", "answers": [q for q in questions if "卡位" in q or "战略" in q]})
-            sections.append({"title": "最坏损失与风险", "answers": [q for q in questions if "损失" in q or "风险" in q]})
-            sections.append({"title": "衍生价值与期权", "answers": [q for q in questions if "衍生" in q or "期权" in q]})
+            sections.append(
+                {"title": "行业真相与市场空间", "answers": [q for q in questions if "规模" in q or "空间" in q]}
+            )
+            sections.append(
+                {
+                    "title": "投入产出与财务测算",
+                    "answers": [q for q in questions if "投入" in q or "产出" in q or "回本" in q],
+                }
+            )
+            sections.append(
+                {"title": "战略卡位与替代路径", "answers": [q for q in questions if "卡位" in q or "战略" in q]}
+            )
+            sections.append(
+                {"title": "最坏损失与风险", "answers": [q for q in questions if "损失" in q or "风险" in q]}
+            )
+            sections.append(
+                {"title": "衍生价值与期权", "answers": [q for q in questions if "衍生" in q or "期权" in q]}
+            )
             sections.append({"title": "执行路线图", "answers": []})
         else:
             for q in questions:
@@ -180,31 +198,61 @@ class IntentParser:
 
     def _guardrails(self, report_type: str) -> list:
         if report_type == "decision_memo":
-            return ["禁止投资评级/目标价/EPS", "禁止二级市场用语",
-                    "禁止匿名化委托方", "禁止编造数据（须带来源）"]
+            return ["禁止投资评级/目标价/EPS", "禁止二级市场用语", "禁止匿名化委托方", "禁止编造数据（须带来源）"]
         return ["禁止编造数据", "禁止主观评分"]
 
     @staticmethod
     def _extract_keywords(question: str) -> list:
         """从必答问题提取关键词（用于意图符合性近似匹配）。"""
         # 去除疑问词/标点，取 2-4 字核心词
-        _stop = {"什么", "多少", "怎么", "为什么", "如何", "是否", "多大", "多久",
-                 "？", "?", "，", ",", "。", "、", "的", "了", "？"}
+        _stop = {
+            "什么",
+            "多少",
+            "怎么",
+            "为什么",
+            "如何",
+            "是否",
+            "多大",
+            "多久",
+            "？",
+            "?",
+            "，",
+            ",",
+            "。",
+            "、",
+            "的",
+            "了",
+            "？",
+        }
         words = []
         for ch in re.split(r"[，。？,?!?]", question):
             ch = ch.strip()
             if len(ch) >= 2 and ch not in _stop:
                 words.append(ch[:6])
         # 追加高频业务词（行业关键词）
-        for kw in ["市场", "规模", "投入", "产出", "卡位", "风险", "损失", "估值",
-                   "竞争", "渠道", "代工", "衍生", "期权", "技术", "政策"]:
+        for kw in [
+            "市场",
+            "规模",
+            "投入",
+            "产出",
+            "卡位",
+            "风险",
+            "损失",
+            "估值",
+            "竞争",
+            "渠道",
+            "代工",
+            "衍生",
+            "期权",
+            "技术",
+            "政策",
+        ]:
             if kw in question:
                 words.append(kw)
         return words
 
 
-def parse_requirement_cli(asset: str, requirement: str, report_type: str = "decision_memo",
-                          client: str = "") -> dict:
+def parse_requirement_cli(asset: str, requirement: str, report_type: str = "decision_memo", client: str = "") -> dict:
     """CLI 便捷入口。"""
     ip = IntentParser()
     return ip.parse(asset, report_type, requirement, client)

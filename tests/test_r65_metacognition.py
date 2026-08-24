@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """R65 (2026-08-04) 回归测试 — FP8 元认知选择层
 
 覆盖：
@@ -8,6 +7,7 @@
 4. method_reflection 回写 registry（FP5 演化）
 5. scheduler 接入方案规划（语法/import 兼容）
 """
+
 import json
 import sys
 from pathlib import Path
@@ -22,6 +22,7 @@ _REG = _ROOT / "data" / "framework_registry.json"
 def test_planner_selects_frameworks():
     """数据充足时应选多框架组合。"""
     from core.analyst_planner import AnalystPlanner
+
     p = AnalystPlanner()
     plan = p.plan("气体传感器", "industry_deep", {"sufficient": True}, "传感器")
     assert plan["frameworks"], "数据充足应选到框架"
@@ -32,19 +33,22 @@ def test_planner_selects_frameworks():
 def test_planner_poor_data_focuses_core():
     """数据不足时聚焦核心维度 + 声明降级。"""
     from core.analyst_planner import AnalystPlanner
+
     p = AnalystPlanner()
-    plan = p.plan("某标的", "listed_company",
-                  {"sufficient": False, "semantic_gap": ["渗透率"], "missing_partial": ["行情"]},
-                  "")
+    plan = p.plan(
+        "某标的", "listed_company", {"sufficient": False, "semantic_gap": ["渗透率"], "missing_partial": ["行情"]}, ""
+    )
     assert plan["degradation"], "数据不足应声明降级策略"
     # 降级策略应含诚实标注
-    assert any("confidence" in str(d) or "不可得" in str(d) or "不硬凑" in str(d)
-               for d in plan["degradation"]), "降级须诚实标注（FP2a）"
+    assert any("confidence" in str(d) or "不可得" in str(d) or "不硬凑" in str(d) for d in plan["degradation"]), (
+        "降级须诚实标注（FP2a）"
+    )
 
 
 def test_planner_focus_rationale():
     """维度裁剪须有理由（FP8-3 数据驱动）。"""
     from core.analyst_planner import AnalystPlanner
+
     p = AnalystPlanner()
     plan = p.plan("测试", "industry_deep", {"sufficient": False, "semantic_gap": ["x"]}, "")
     assert plan["sac_focus"]["rationale"], "维度裁剪须有理由"
@@ -65,8 +69,10 @@ def test_registry_schema():
 
 def test_method_reflection_updates_registry():
     """method_reflection 应回写 registry 效果字段（FP5 演化）。"""
-    from core.method_reflection import record_reflection
     import json as _json
+
+    from core.method_reflection import record_reflection
+
     # 备份原值
     reg = _json.loads(_REG.read_text(encoding="utf-8"))
     orig = {}
@@ -74,8 +80,9 @@ def test_method_reflection_updates_registry():
         if fw["id"] == "bottleneck_engine":
             orig = dict(fw["效果"])
     try:
-        ok = record_reflection("回归测试", "industry_deep", ["bottleneck_engine"],
-                               0.99, {"sufficient": True}, "r65 回归测试")
+        ok = record_reflection(
+            "回归测试", "industry_deep", ["bottleneck_engine"], 0.99, {"sufficient": True}, "r65 回归测试"
+        )
         assert ok, "反思记录应成功"
         reg2 = _json.loads(_REG.read_text(encoding="utf-8"))
         for fw in reg2["frameworks"]:
@@ -105,6 +112,7 @@ def test_method_reflection_updates_registry():
 def test_scheduler_imports_planner():
     """scheduler.py 应能 import（含 FP8 方案规划接入）。"""
     import ast
+
     src = (_ROOT / "pipeline" / "scheduler.py").read_text(encoding="utf-8")
     tree = ast.parse(src)
     assert "analyst_planner" in src, "scheduler 应引用 analyst_planner"
@@ -113,6 +121,7 @@ def test_scheduler_imports_planner():
 
 if __name__ == "__main__":
     import traceback
+
     passed = failed = 0
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

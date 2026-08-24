@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """intent_gate.py — 意图符合性门禁（FP0 落地，2026-08-07）
 
 Gate 层新增"意图符合性"检查：必答问题是否被报告回答。
@@ -13,8 +12,12 @@ Gate 层新增"意图符合性"检查：必答问题是否被报告回答。
 直接调用：
   python -m core.intent_gate --report output/x.md --requirement "评估市场规模"
 """
+
 from __future__ import annotations
-import os, sys, json, logging
+
+import json
+import logging
+import sys
 from pathlib import Path
 
 logger = logging.getLogger("2hao.intent_gate")
@@ -33,6 +36,7 @@ def check_intent_compliance(report_text: str, plan: dict) -> dict:
         {passed, coverage, answered, total, results, gaps}
     """
     from core.intent_parser import IntentParser
+
     ip = IntentParser()
     result = ip.validate_report(plan, report_text)
     gaps = [r["question"] for r in result["results"] if not r["answered"]]
@@ -59,8 +63,12 @@ def intent_gate_node(node_id: str, context: dict) -> dict:
     try:
         result = check_intent_compliance(text, plan)
         context["intent_gate_result"] = result
-        logger.info("[INTENT-GATE] coverage=%.2f passed=%s gaps=%d",
-                    result["coverage"], result["passed"], len(result.get("gaps", [])))
+        logger.info(
+            "[INTENT-GATE] coverage=%.2f passed=%s gaps=%d",
+            result["coverage"],
+            result["passed"],
+            len(result.get("gaps", [])),
+        )
         return {
             "intent_passed": result["passed"],
             "intent_coverage": result["coverage"],
@@ -73,12 +81,14 @@ def intent_gate_node(node_id: str, context: dict) -> dict:
 
 def main():
     import argparse
+
     ap = argparse.ArgumentParser(description="意图符合性检查")
     ap.add_argument("--report", required=True, help="报告文件路径")
     ap.add_argument("--requirement", default="", help="委托方需求")
     ap.add_argument("--type", default="decision_memo", help="报告类型")
     args = ap.parse_args()
     from core.intent_parser import IntentParser
+
     text = Path(args.report).read_text(encoding="utf-8")
     plan = IntentParser().parse("CLI", args.type, args.requirement)
     result = check_intent_compliance(text, plan)

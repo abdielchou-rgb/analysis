@@ -4,14 +4,15 @@
 从东方财富、新浪财经等公开API直接抓取。
 """
 
-import re, json, logging, time
-from pathlib import Path
-from typing import Optional
+import json
+import logging
+import re
 
 logger = logging.getLogger("2hao.universal")
 
 try:
     import requests
+
     HAS_REQUESTS = True
 except ImportError:
     HAS_REQUESTS = False
@@ -19,12 +20,14 @@ except ImportError:
 # 尝试导入akshare(如果可用)
 try:
     import akshare as _ak
+
     HAS_AKSHARE = True
 except ImportError:
     HAS_AKSHARE = False
 
 try:
     import yfinance as _yf
+
     HAS_YFINANCE = True
 except ImportError:
     HAS_YFINANCE = False
@@ -38,7 +41,7 @@ def fetch_stock_price(code: str) -> dict:
         return {"error": "requests not installed"}
     try:
         url = f"https://push2.eastmoney.com/api/qt/stock/get?secid=1.{code}&fields=f43,f44,f45,f46,f47,f48,f50,f57,f58,f115,f170"
-        r = requests.get(url, timeout=5, headers={"User-Agent":"Mozilla/5.0"})
+        r = requests.get(url, timeout=5, headers={"User-Agent": "Mozilla/5.0"})
         if r.status_code == 200:
             d = r.json().get("data", {})
             return {
@@ -55,8 +58,9 @@ def fetch_stock_price(code: str) -> dict:
         logger.debug("fetch_stock_price: %s", e)
     # Fallback: Sina finance
     try:
-        r2 = requests.get(f"https://hq.sinajs.cn/list=sh{code}", timeout=5,
-            headers={"Referer":"https://finance.sina.com.cn"})
+        r2 = requests.get(
+            f"https://hq.sinajs.cn/list=sh{code}", timeout=5, headers={"Referer": "https://finance.sina.com.cn"}
+        )
         if r2.status_code == 200:
             parts = r2.text.split(",")
             if len(parts) > 3:
@@ -79,8 +83,8 @@ def fetch_financial_summary(code: str) -> dict:
         return {"error": "requests not installed"}
     try:
         url = f"https://datacenter.eastmoney.com/securities/api/data/v1/get?reportName=RPT_LICO_FN_CPD&columns=REPORT_DATE,SECUCODE,SECURITY_NAME_ABBR,TOTAL_OPERATE_INCOME,PARENT_NETPROFIT&filter=(SECUCODE%3D%22{code}.SH%22)&pageNumber=1&pageSize=3&sortTypes=-1&sortColumns=REPORT_DATE&source=WEB"
-        r = requests.get(url, timeout=5, headers={"User-Agent":"Mozilla/5.0"})
-        if r.status_code == 200 and r.text.strip() and r.text.strip() != 'null':
+        r = requests.get(url, timeout=5, headers={"User-Agent": "Mozilla/5.0"})
+        if r.status_code == 200 and r.text.strip() and r.text.strip() != "null":
             data = json.loads(r.text)
             # 提取最近3年
             result = {"revenue": {}, "net_profit": {}}
@@ -95,8 +99,9 @@ def fetch_financial_summary(code: str) -> dict:
         logger.debug("fetch_financial_summary: %s", e)
     # Fallback: Sina finance
     try:
-        r2 = requests.get(f"https://hq.sinajs.cn/list=sh{code}", timeout=5,
-            headers={"Referer":"https://finance.sina.com.cn"})
+        r2 = requests.get(
+            f"https://hq.sinajs.cn/list=sh{code}", timeout=5, headers={"Referer": "https://finance.sina.com.cn"}
+        )
         if r2.status_code == 200:
             parts = r2.text.split(",")
             if len(parts) > 3:
@@ -122,7 +127,7 @@ def fetch_industry(code: str) -> str:
         r = requests.get(url, timeout=5)
         if r.status_code == 200:
             d = r.json().get("data", {})
-            return f"{d.get('f57','')} {d.get('f58','')}"
+            return f"{d.get('f57', '')} {d.get('f58', '')}"
     except Exception:
         pass
     return ""
@@ -133,25 +138,27 @@ def collect_akshare(code: str) -> dict:
     if not HAS_AKSHARE:
         return {}
     try:
-        fin = _ak.stock_financial_abstract_ths(symbol=code, indicator='按年度')
+        fin = _ak.stock_financial_abstract_ths(symbol=code, indicator="按年度")
         if fin is not None and len(fin) > 0:
-            data = fin.to_dict(orient='records') if hasattr(fin, 'to_dict') else str(fin)[:2000]
-            return {'akshare_financials': data[:2000]}
+            data = fin.to_dict(orient="records") if hasattr(fin, "to_dict") else str(fin)[:2000]
+            return {"akshare_financials": data[:2000]}
     except Exception:
         pass
     return {}
+
 
 def collect_yfinance(code: str) -> dict:
     """yfinance引擎(如果可用)"""
     if not HAS_YFINANCE:
         return {}
     try:
-        tk = f"{code}.SS" if code.startswith(('6','9')) else f"{code}.SZ"
+        tk = f"{code}.SS" if code.startswith(("6", "9")) else f"{code}.SZ"
         info = _yf.Ticker(tk).info or {}
-        return {k: info[k] for k in ['marketCap','trailingPE','returnOnEquity','sector','industry'] if k in info}
+        return {k: info[k] for k in ["marketCap", "trailingPE", "returnOnEquity", "sector", "industry"] if k in info}
     except Exception:
         pass
     return {}
+
 
 def collect_universal(asset: str) -> dict:
     """万能采集入口 — 识别股票代码并采集"""
@@ -160,30 +167,30 @@ def collect_universal(asset: str) -> dict:
     if not code_match:
         return {"source": "universal", "status": "no_code", "error": "no stock code found"}
     code = code_match.group(1)
-    
+
     # 引擎0: akshare(如果可用) — 最精确的结构化数据
     ak_data = collect_akshare(code)
     if ak_data:
         result.update(ak_data)
-    
+
     # 引擎0.5: yfinance(如果可用) — 国际数据覆盖
     yf_data = collect_yfinance(code)
     if yf_data:
-        result['yfinance'] = yf_data
-    
+        result["yfinance"] = yf_data
+
     # 实时行情
     price_data = fetch_stock_price(code)
     if "error" not in price_data:
         result["price"] = price_data
-    
+
     # 财务摘要
     fin_data = fetch_financial_summary(code)
     if "error" not in fin_data:
         result["financials"] = fin_data
-    
+
     # 行业
     industry = fetch_industry(code)
     if industry:
         result["industry"] = industry
-    
+
     return result

@@ -16,7 +16,7 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-import pandas as pd
+import pandas as pd  # noqa: F401  (dead-import debt)
 
 from core.models import RevenueBridge, StructuredData
 
@@ -77,19 +77,23 @@ def compute_revenue_bridge(
 
         # 驱动2: 如果有 YoY 同比数据，用官方数据
         if curr.yoy_revenue is not None:
-            drivers.append({
-                "period": f"{prev.fiscal_year}→{curr.fiscal_year}",
-                "yoy_pct": round(curr.yoy_revenue, 2),
-                "yoy_source": "baostock",
-                "revenue_level": curr.revenue,
-            })
+            drivers.append(
+                {
+                    "period": f"{prev.fiscal_year}→{curr.fiscal_year}",
+                    "yoy_pct": round(curr.yoy_revenue, 2),
+                    "yoy_source": "baostock",
+                    "revenue_level": curr.revenue,
+                }
+            )
         elif yoy is not None:
-            drivers.append({
-                "period": f"{prev.fiscal_year}→{curr.fiscal_year}",
-                "yoy_pct": yoy,
-                "yoy_source": "calculated",
-                "revenue_level": curr.revenue,
-            })
+            drivers.append(
+                {
+                    "period": f"{prev.fiscal_year}→{curr.fiscal_year}",
+                    "yoy_pct": yoy,
+                    "yoy_source": "calculated",
+                    "revenue_level": curr.revenue,
+                }
+            )
 
     # ── 质量判断 ──
     data_gaps = []
@@ -128,15 +132,13 @@ def format_revenue_bridge_for_report(bridge: RevenueBridge) -> str:
     lines = []
     lines.append(f"**收入桥: {bridge.period}**")
     lines.append("")
-    lines.append(f"总营收变化: {bridge.total_revenue_change_abs:+.2f} 亿元 "
-                 f"({bridge.total_revenue_growth_pct:+.2f}%)")
+    lines.append(f"总营收变化: {bridge.total_revenue_change_abs:+.2f} 亿元 ({bridge.total_revenue_growth_pct:+.2f}%)")
     lines.append("")
     lines.append("| 期间 | YoY增速 | 营收水平(亿) | 来源 |")
     lines.append("|------|---------|-------------|------|")
     for d in bridge.drivers:
         src = "baostock" if d.get("yoy_source") == "baostock" else "计算值"
-        lines.append(f"| {d['period']} | {d['yoy_pct']:+.2f}% | "
-                     f"{d['revenue_level']:.2f} | {src} |")
+        lines.append(f"| {d['period']} | {d['yoy_pct']:+.2f}% | {d['revenue_level']:.2f} | {src} |")
 
     if bridge.data_gaps:
         lines.append("")

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """runway.py — Runway 资金链（2026-08-08 非上市 PE/VC）
 
 顶级 VC 风控：公司账上现金能撑多久？到里程碑要烧多少？何时融资？
@@ -10,7 +9,9 @@
   from core.compute.runway import Runway, build_prompt
   r = Runway(cash=500, burn=50, milestone_cost=300, milestone_months=6)
 """
+
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 
@@ -19,8 +20,8 @@ logger = logging.getLogger("2hao.runway")
 
 @dataclass
 class Runway:
-    cash: float = 0            # 账上现金（万）
-    burn: float = 0            # 月烧钱率（万）
+    cash: float = 0  # 账上现金（万）
+    burn: float = 0  # 月烧钱率（万）
     milestone_cost: float = 0  # 到里程碑总需求（万）
     milestone_months: float = 0  # 到里程碑月数
 
@@ -48,5 +49,7 @@ class Runway:
 
 
 def build_prompt(r: Runway) -> str:
-    return (f"Runway 资金链：账上现金{r.cash:,.0f}万 / 月烧钱{r.burn:,.0f}万 → 可撑 {r.months():.0f} 个月；"
-            f"到里程碑（{r.milestone_months:.0f}月）资金缺口 {r.funding_gap():,.0f}万（{r.verdict()}）")
+    return (
+        f"Runway 资金链：账上现金{r.cash:,.0f}万 / 月烧钱{r.burn:,.0f}万 → 可撑 {r.months():.0f} 个月；"
+        f"到里程碑（{r.milestone_months:.0f}月）资金缺口 {r.funding_gap():,.0f}万（{r.verdict()}）"
+    )

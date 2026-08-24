@@ -7,7 +7,7 @@
 修复：sac_dims + 全局失败并存时返回段索引（触发组级局部重写），
       纯全局失败才全量重写。组级 prompt 附加 gate_feedback。
 """
-import os
+
 import sys
 from pathlib import Path
 
@@ -18,6 +18,7 @@ if str(_ROOT) not in sys.path:
 
 def _make_sw(rt="industry_deep"):
     from pipeline.section_writer import SectionWriter
+
     return SectionWriter(rt, "cicc")
 
 
@@ -38,9 +39,9 @@ def test_global_fail_with_sac_dims_returns_segments():
     修复后：返回段索引 → 组级局部重写触发。
     """
     from pipeline.e2e_orchestrator import _locate_failed_segments
+
     sw = _make_sw("industry_deep")
-    fb = ("[必需维度缺失=decision_gate] "
-          "content_volume: 内容量不足，需扩充至 10000 字")
+    fb = "[必需维度缺失=decision_gate] content_volume: 内容量不足，需扩充至 10000 字"
     ctx = {"gate_feedback": fb}
     idx = _locate_failed_segments(ctx, sw)
     assert idx is not None, "sac_dims+全局失败不应短路为 None"
@@ -55,6 +56,7 @@ def test_global_fail_with_sac_dims_returns_segments():
 def test_pure_global_fail_still_full_rewrite():
     """纯全局失败（无 sac_dims）仍触发全量重写（return None）。"""
     from pipeline.e2e_orchestrator import _locate_failed_segments
+
     sw = _make_sw("industry_deep")
     fb = "content_volume: 字数不足，需扩充至 10000 字以上"
     ctx = {"gate_feedback": fb}
@@ -66,6 +68,7 @@ def test_pure_global_fail_still_full_rewrite():
 def test_global_fail_types_recorded():
     """_gate_fail_types 应记录全部失败类型（含全局）。"""
     from pipeline.e2e_orchestrator import _locate_failed_segments
+
     sw = _make_sw("industry_deep")
     fb = "[必需维度缺失=decision_gate] content_volume: 不足 data_conflicts: 冲突"
     ctx = {"gate_feedback": fb}
@@ -79,8 +82,9 @@ def test_global_fail_types_recorded():
 # ── 2. 组级重写：非目标组从上一轮复用（含全局失败时仍在）──
 def test_rewrite_group_names_when_mixed_failures():
     """组级局部重写目标组计算：只重写含失败段维度的组。"""
-    from pipeline.section_writer import SectionWriter
     from pipeline.dimension_grouper import group_dimensions
+    from pipeline.section_writer import SectionWriter
+
     sw = SectionWriter("industry_deep", "cicc")
     all_dims = sw.sac.get_dimension_ids()
     groups = group_dimensions("industry_deep", all_dims)
@@ -101,6 +105,7 @@ def test_group_prompt_includes_gate_feedback():
 
 if __name__ == "__main__":
     import traceback
+
     passed = failed = 0
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

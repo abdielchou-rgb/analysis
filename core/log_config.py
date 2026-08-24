@@ -5,44 +5,49 @@
 
 import logging
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 _LOG_CONFIGURED = False
+
 
 def configure_logging(level=logging.INFO, log_dir: str = "logs"):
     """全局配置日志（线程安全，只配置一次）"""
     global _LOG_CONFIGURED
     if _LOG_CONFIGURED:
         return
-    
+
     log_path = Path(log_dir)
     log_path.mkdir(parents=True, exist_ok=True)
-    
+
     # File handler — 所有级别
     file_handler = logging.FileHandler(
         log_path / f"pipeline_{datetime.now().strftime('%Y%m%d')}.log",
         encoding="utf-8",
     )
     file_handler.setLevel(logging.DEBUG)
-    file_handler.setFormatter(logging.Formatter(
-        "%(asctime)s [%(name)s] %(levelname)s: %(message)s",
-        datefmt="%H:%M:%S",
-    ))
-    
+    file_handler.setFormatter(
+        logging.Formatter(
+            "%(asctime)s [%(name)s] %(levelname)s: %(message)s",
+            datefmt="%H:%M:%S",
+        )
+    )
+
     # Console handler — INFO+
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(level)
-    console_handler.setFormatter(logging.Formatter(
-        "%(asctime)s [%(name)s] %(levelname)s: %(message)s",
-        datefmt="%H:%M:%S",
-    ))
-    
+    console_handler.setFormatter(
+        logging.Formatter(
+            "%(asctime)s [%(name)s] %(levelname)s: %(message)s",
+            datefmt="%H:%M:%S",
+        )
+    )
+
     root = logging.getLogger()
     root.setLevel(logging.DEBUG)
     root.addHandler(file_handler)
     root.addHandler(console_handler)
-    
+
     _LOG_CONFIGURED = True
 
 

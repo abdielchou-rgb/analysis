@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """agent_provider.py — Agent 作为 LLM 主执行 provider（2026-08-01 用户决策：强制 Marvis 主执行）
 
 原为 FP7d 兜底设计（DeepSeek 失败/熔断时 fallback），现按用户决策提升为
@@ -19,16 +18,20 @@ StyleCompiler → IronGate → export 完整管线。
 """
 
 from __future__ import annotations
-import os, re, json, time, logging, uuid
+
+import json
+import logging
+import time
+import uuid
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
 QUEUE_DIR = _ROOT / "data" / "agent_llm_queue"
 
 # 兜底轮询参数（2026-08-07 调优：对齐三通道超时设计，原 300s 空等→120s）
-POLL_INTERVAL = 2.0          # 轮询间隔（秒）
-MAX_WAIT_SEC = 120           # 最长等待 agent 回复（120s，原 300s）
-REQUEST_TTL = 300            # 请求文件过期时间（300s，原 600s）
+POLL_INTERVAL = 2.0  # 轮询间隔（秒）
+MAX_WAIT_SEC = 120  # 最长等待 agent 回复（120s，原 300s）
+REQUEST_TTL = 300  # 请求文件过期时间（300s，原 600s）
 
 logger = logging.getLogger("2hao.agent_provider")
 
@@ -47,9 +50,15 @@ class AgentProvider:
         QUEUE_DIR.mkdir(parents=True, exist_ok=True)
 
     # ── Provider 接口（被 call_llm 调用）────────────────────
-    def __call__(self, messages: list, model: str = "agent-writing",
-                 temperature: float = 0.35, max_tokens: int = 4096,
-                 stream: bool = False, timeout: int = None) -> dict:
+    def __call__(
+        self,
+        messages: list,
+        model: str = "agent-writing",
+        temperature: float = 0.35,
+        max_tokens: int = 4096,
+        stream: bool = False,
+        timeout: int = None,
+    ) -> dict:
         """处理一次 LLM 请求：落盘 → 等待 agent 响应 → 返回 OpenAI 格式"""
         # R77（2026-08-05）：心跳检测快速失败——沙箱/无 responder 环境会空等
         # MAX_WAIT_SEC=300s（test_audit_report / test_r61 触发 IronGate 挂死 5 分钟）。
@@ -72,8 +81,7 @@ class AgentProvider:
             # 无活跃 responder（无心跳/心跳过期）→ 快速失败，回退 DeepSeek。
             # 注意：不依赖"队列积压"判断——即使队列为空，无 responder 也是空等。
             if not _hb_alive:
-                raise RuntimeError(
-                    "Agent responder 不在线（无心跳/心跳过期 30s），回退其他 provider")
+                raise RuntimeError("Agent responder 不在线（无心跳/心跳过期 30s），回退其他 provider")
         except OSError:
             pass  # 队列目录不可读时继续（不阻塞主路径）
         req_id = uuid.uuid4().hex[:12]
@@ -101,14 +109,13 @@ class AgentProvider:
             # 缓解"agent 响应质量随机"（柯力事故：attempt3 兜底写泛化稿）。
             "quality_requirements": {
                 "min_chars": 150,
-                "no_placeholder": True,   # 禁止返回"请求超时/失败/稍后重试"占位
-                "no_refusal": True,       # 禁止拒绝生成（"我无法完成"类）
+                "no_placeholder": True,  # 禁止返回"请求超时/失败/稍后重试"占位
+                "no_refusal": True,  # 禁止拒绝生成（"我无法完成"类）
                 "must_match_request": True,
             },
         }
         req_path = QUEUE_DIR / f"{req_id}_request.json"
-        req_path.write_text(json.dumps(request, ensure_ascii=False, indent=2),
-                            encoding="utf-8")
+        req_path.write_text(json.dumps(request, ensure_ascii=False, indent=2), encoding="utf-8")
         logger.info("[AGENT-LLM] 请求 %s 已落盘，等待 agent 兜底回复...", req_id)
 
         # 轮询等待 agent 响应
@@ -125,8 +132,7 @@ class AgentProvider:
                             # （柯力事故根因：无质量校验，200字/4000字/占位符都接受）
                             _q_issue = _check_agent_response_quality(content)
                             if _q_issue:
-                                logger.warning("[AGENT-LLM] 请求 %s 响应质量不达标(%s)，忽略重等...",
-                                               req_id, _q_issue)
+                                logger.warning("[AGENT-LLM] 请求 %s 响应质量不达标(%s)，忽略重等...", req_id, _q_issue)
                                 # 删除坏响应，等待 agent 重写（重试窗口内）
                                 try:
                                     resp_path.unlink()
@@ -135,27 +141,24 @@ class AgentProvider:
                                 time.sleep(POLL_INTERVAL)
                                 continue
                             self._cleanup(req_id)
-                            logger.info("[AGENT-LLM] 请求 %s 收到 agent 回复 (%d chars)",
-                                        req_id, len(content))
+                            logger.info("[AGENT-LLM] 请求 %s 收到 agent 回复 (%d chars)", req_id, len(content))
                             return {
-                                "choices": [{"message": {"role": "assistant",
-                                                         "content": content}}],
+                                "choices": [{"message": {"role": "assistant", "content": content}}],
                                 "id": req_id,
                                 "object": "chat.completion",
                                 "model": model,
                             }
                         elif resp.get("status") == "failed":
                             self._cleanup(req_id)
-                            raise RuntimeError(
-                                f"Agent 兜底失败: {resp.get('error', 'unknown')}")
+                            raise RuntimeError(f"Agent 兜底失败: {resp.get('error', 'unknown')}")
                     except json.JSONDecodeError:
                         pass  # agent 还在写，重试
                 time.sleep(POLL_INTERVAL)
             # 超时：清理并抛出，触发 L3
             self._cleanup(req_id)
             raise RuntimeError(
-                f"Agent 兜底超时（{int(MAX_WAIT_SEC)}s 无响应）。"
-                f"请运行: python scripts/agent_llm_responder.py watch")
+                f"Agent 兜底超时（{int(MAX_WAIT_SEC)}s 无响应）。请运行: python scripts/agent_llm_responder.py watch"
+            )
         except KeyboardInterrupt:
             self._cleanup(req_id)
             raise
@@ -163,8 +166,7 @@ class AgentProvider:
     def _cleanup(self, req_id: str):
         """清理请求/响应文件"""
         try:
-            for f in [QUEUE_DIR / f"{req_id}_request.json",
-                      QUEUE_DIR / f"{req_id}_response.json"]:
+            for f in [QUEUE_DIR / f"{req_id}_request.json", QUEUE_DIR / f"{req_id}_response.json"]:
                 if f.exists():
                     f.unlink()
         except Exception:
@@ -187,13 +189,22 @@ def _check_agent_response_quality(content: str) -> str | None:
     if len(stripped) < 150:
         return f"过短({len(stripped)}字<150)"
     lower = stripped.lower()
-    placeholders = ["请求超时", "请求失败", "稍后重试", "请稍等", "timeout", "failed to",
-                    "重试失败", "服务暂不可用", "queue empty", "无待处理请求"]
+    placeholders = [
+        "请求超时",
+        "请求失败",
+        "稍后重试",
+        "请稍等",
+        "timeout",
+        "failed to",
+        "重试失败",
+        "服务暂不可用",
+        "queue empty",
+        "无待处理请求",
+    ]
     for ph in placeholders:
         if ph in lower:
             return f"占位/错误响应(含'{ph}')"
-    refusals = ["我无法完成", "无法生成", "不能提供", "抱歉，我", "对不起，我",
-                "i cannot", "i'm unable", "i am unable"]
+    refusals = ["我无法完成", "无法生成", "不能提供", "抱歉，我", "对不起，我", "i cannot", "i'm unable", "i am unable"]
     for rf in refusals:
         if rf in lower:
             return f"拒绝生成(含'{rf}')"
@@ -204,6 +215,7 @@ def _check_agent_response_quality(content: str) -> str | None:
 def register_agent_provider(registry=None) -> AgentProvider:
     """把 AgentProvider 注册进 ProviderRegistry（P2 兜底，非主路径）。"""
     from core.deepseek_client import _registry as default_registry
+
     reg = registry or default_registry
     provider = AgentProvider()
     # 若已注册则跳过

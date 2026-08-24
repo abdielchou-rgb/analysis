@@ -11,6 +11,7 @@ ROE = 净利率 × 资产周转率 × 权益乘数
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass
 
 
@@ -24,8 +25,7 @@ class DupontResult:
 
 
 class DupontAnalysis:
-    def __init__(self, net_profit: float, revenue: float,
-                 total_assets: float, equity: float):
+    def __init__(self, net_profit: float, revenue: float, total_assets: float, equity: float):
         self.net_profit = net_profit
         self.revenue = revenue
         self.total_assets = total_assets
@@ -42,7 +42,7 @@ class DupontAnalysis:
             equity_multiplier=round(multiplier, 4),
             roe_pct=round(roe * 100, 2),
             components={
-                "net_margin": f"{net_margin*100:.2f}%",
+                "net_margin": f"{net_margin * 100:.2f}%",
                 "asset_turnover": f"{turnover:.4f}",
                 "equity_multiplier": f"{multiplier:.4f}",
                 "formula": "净利率 × 周转率 × 杠杆 = ROE",

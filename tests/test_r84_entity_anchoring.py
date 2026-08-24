@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """R84：委托方实体锚定 + 决策引擎引用 Gate 回归测试
 
 油位 v0.90 事故根因（2026-08-07）：
@@ -16,7 +15,10 @@
 """
 
 from __future__ import annotations
-import sys, os, tempfile
+
+import os
+import sys
+import tempfile
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
@@ -40,8 +42,13 @@ def run(report=None) -> tuple:
 
     # ── 1. report_planner 支持 must_contain/forbidden_swap ─────
     from core.report_planner import build_report_plan, serialize_plan
+
     cq = [
-        {"q": "油位市场是否值得战略卡位？", "must_contain": ["华虹", "加油站", "危化品"], "forbidden_swap": ["商用车", "车规"]},
+        {
+            "q": "油位市场是否值得战略卡位？",
+            "must_contain": ["华虹", "加油站", "危化品"],
+            "forbidden_swap": ["商用车", "车规"],
+        },
         {"q": "久通整合可行性？", "must_contain": ["久通", "转移定价"], "forbidden_swap": ["汽车油箱"]},
     ]
     plan = build_report_plan("decision_memo", client_questions=cq)
@@ -55,6 +62,7 @@ def run(report=None) -> tuple:
 
     # ── 2. Gate _check_entity_anchoring：缺实体 → FAIL ────────
     from pipeline.iron_gate import IronGate
+
     # 2a. 缺关键实体（华虹/加油站/危化品），出现禁止场景（商用车）→ FAIL
     tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False, encoding="utf-8")
     tmp.write("""
@@ -69,8 +77,7 @@ IATF16949认证已建立，客户渠道与整车厂高度重叠。
     tmp.close()
     ig = IronGate(tmp.name, report_type="decision_memo", client_questions=cq)
     r = ig._check_entity_anchoring()
-    t("entity_anchoring FAILs missing entities", not r.passed,
-      f"passed={r.passed} det={r.details[:100]}")
+    t("entity_anchoring FAILs missing entities", not r.passed, f"passed={r.passed} det={r.details[:100]}")
     os.unlink(tmp.name)
 
     # 2b. 含关键实体、无禁止场景 → PASS
@@ -129,8 +136,7 @@ Q1立项，Q2产品开发，Q3客户验证，Q4定点。18个月内验证市场�
     tmp4.close()
     ig4 = IronGate(tmp4.name, report_type="decision_memo")
     r4 = ig4._check_decision_engine_citation()
-    t("decision_citation FAILs missing score/worst", not r4.passed,
-      f"passed={r4.passed} det={r4.details[:100]}")
+    t("decision_citation FAILs missing score/worst", not r4.passed, f"passed={r4.passed} det={r4.details[:100]}")
     os.unlink(tmp4.name)
 
     # 3b. 含卡位评分(X.X/5)+最坏损失金额+投入 → PASS
@@ -162,6 +168,7 @@ Q1立项，Q2产品开发，Q3客户验证，Q4定点。18个月内验证市场�
     # ── 4. iron_gate.run_all 注册了新检查 ────────────────────
     try:
         import inspect
+
         src = inspect.getsource(IronGate.run_all)
         t("run_all registers entity_anchoring", "_check_entity_anchoring" in src)
         t("run_all registers decision_engine_citation", "_check_decision_engine_citation" in src)
@@ -175,6 +182,7 @@ if __name__ == "__main__":
     p, f = run()
     print(f"\nR84 实体锚定+决策引擎引用回归测试: {p} passed, {f} failed")
     sys.exit(1 if f else 0)
+
 
 # ── P1-audit 2026-08-24 收编：原 run() 只 print 不 raise，pytest 看不见 ──
 def test_orphan_suite():

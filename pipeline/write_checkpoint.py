@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """写改循环 checkpoint — R78 Phase2.3 可恢复状态机。
 
 背景：E2EOrchestratorV2 的写改循环（最多 MAX_ATTEMPTS 轮）在中断
@@ -11,7 +10,9 @@ Gate 反馈全部丢失。这对长任务（单份报告 40+ 分钟）是致命�
 用法：
     from pipeline.write_checkpoint import save_checkpoint, load_checkpoint, clear_checkpoint
 """
+
 from __future__ import annotations
+
 import json
 import logging
 import sqlite3
@@ -44,10 +45,8 @@ def save_checkpoint(asset: str, report_type: str, state: dict) -> bool:
     try:
         conn = _connect()
         conn.execute(
-            "INSERT OR REPLACE INTO checkpoints (asset, report_type, data_json, updated_at) "
-            "VALUES (?, ?, ?, ?)",
-            (asset, report_type, json.dumps(state, ensure_ascii=False),
-             datetime.now().isoformat()),
+            "INSERT OR REPLACE INTO checkpoints (asset, report_type, data_json, updated_at) VALUES (?, ?, ?, ?)",
+            (asset, report_type, json.dumps(state, ensure_ascii=False), datetime.now().isoformat()),
         )
         conn.commit()
         conn.close()
@@ -61,15 +60,14 @@ def load_checkpoint(asset: str) -> dict | None:
     """读取 checkpoint。不存在/过期返回 None。"""
     try:
         conn = _connect()
-        row = conn.execute(
-            "SELECT data_json, updated_at FROM checkpoints WHERE asset=?",
-            (asset,)).fetchone()
+        row = conn.execute("SELECT data_json, updated_at FROM checkpoints WHERE asset=?", (asset,)).fetchone()
         conn.close()
         if row is None:
             return None
         # 过期检查
         try:
             from datetime import datetime as _dt
+
             updated = _dt.fromisoformat(row["updated_at"])
             if (datetime.now() - updated).days > _TTL_DAYS:
                 return None
@@ -106,6 +104,7 @@ def _maintenance() -> None:
 
 if __name__ == "__main__":
     import sys
+
     if len(sys.argv) > 1 and sys.argv[1] == "--maintenance":
         _maintenance()
         print("checkpoint 过期清理完成")

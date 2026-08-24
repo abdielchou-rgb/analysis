@@ -13,17 +13,16 @@ Composio Publisher — 报告分发模块
   - agent 也可以通过 Composio MCP 工具手动推送
 """
 
-import sys, json, logging
-from pathlib import Path
+import logging
 from datetime import datetime
 
 logger = logging.getLogger("2hao.composio")
 
 # ── 分发目标配置 ──
 # 通过环境变量控制是否启用各目标
-ENABLE_SLACK = False     # composio add slack + OAuth
-ENABLE_GITHUB = False    # composio add github + OAuth
-ENABLE_GMAIL = False     # composio add gmail + OAuth
+ENABLE_SLACK = False  # composio add slack + OAuth
+ENABLE_GITHUB = False  # composio add github + OAuth
+ENABLE_GMAIL = False  # composio add gmail + OAuth
 
 
 class ComposioPublisher:
@@ -39,9 +38,9 @@ class ComposioPublisher:
         self._github_enabled = ENABLE_GITHUB
         self._gmail_enabled = ENABLE_GMAIL
 
-    def publish(self, asset: str, report_type: str,
-                md_path: str = "", dx_path: str = "",
-                gate_score: float = 0.0) -> dict:
+    def publish(
+        self, asset: str, report_type: str, md_path: str = "", dx_path: str = "", gate_score: float = 0.0
+    ) -> dict:
         """主入口：按配置推送报告到各目标
 
         Args:

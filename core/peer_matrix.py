@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 可比公司对标矩阵（Peer Matrix）— R30 模块9b：对标麦肯锡/咨询
 
@@ -7,7 +6,9 @@
 
 **方案**：标的 vs 同行业可比公司（global_leaders + financials.db）→ 多指标矩阵。
 """
+
 from __future__ import annotations
+
 import json
 import logging
 import sqlite3
@@ -40,8 +41,8 @@ def _company_financials(code: str) -> dict:
     try:
         conn = sqlite3.connect(str(FIN_DB))
         row = conn.execute(
-            "SELECT quarter, field, value FROM financials WHERE code=? "
-            "ORDER BY quarter DESC LIMIT 200", (code,)).fetchall()
+            "SELECT quarter, field, value FROM financials WHERE code=? ORDER BY quarter DESC LIMIT 200", (code,)
+        ).fetchall()
         conn.close()
         # 取最新季度
         latest_q = None
@@ -90,15 +91,17 @@ def build_peer_matrix(code: str, asset_name: str = "", industry: str = "") -> di
 
     rows = []
     for p in peers[:8]:
-        rows.append({
-            "name": p.get("company", ""),
-            "ticker": p.get("ticker", ""),
-            "industry": p.get("industry", ""),
-            "pe": p.get("pe_ttm"),
-            "revenue_b": p.get("revenue_ttm_m", 0) / 1000 if p.get("revenue_ttm_m") else None,
-            "net_profit_b": p.get("net_income_ttm_m", 0) / 1000 if p.get("net_income_ttm_m") else None,
-            "market_cap_b": p.get("market_cap_b"),
-        })
+        rows.append(
+            {
+                "name": p.get("company", ""),
+                "ticker": p.get("ticker", ""),
+                "industry": p.get("industry", ""),
+                "pe": p.get("pe_ttm"),
+                "revenue_b": p.get("revenue_ttm_m", 0) / 1000 if p.get("revenue_ttm_m") else None,
+                "net_profit_b": p.get("net_income_ttm_m", 0) / 1000 if p.get("net_income_ttm_m") else None,
+                "market_cap_b": p.get("market_cap_b"),
+            }
+        )
 
     # 计算目标 vs 可比均值偏离
     pe_list = [r["pe"] for r in rows if r.get("pe")]
@@ -121,16 +124,18 @@ def serialize_matrix(m: dict) -> str:
     """序列化注入 prompt。"""
     if not m or m.get("status") != "ok":
         return ""
-    lines = ["=== 可比公司对标矩阵（对标咨询） ===",
-             f"标的: {m['target'].get('name')} | 行业: {m.get('industry') or '未指定'}"]
+    lines = [
+        "=== 可比公司对标矩阵（对标咨询） ===",
+        f"标的: {m['target'].get('name')} | 行业: {m.get('industry') or '未指定'}",
+    ]
     if m["target"].get("revenue"):
-        lines.append(f"  {m['target']['name']}: 营收{m['target']['revenue']:.1f}亿 "
-                     f"净利{m['target'].get('net_profit', 0):.1f}亿")
+        lines.append(
+            f"  {m['target']['name']}: 营收{m['target']['revenue']:.1f}亿 净利{m['target'].get('net_profit', 0):.1f}亿"
+        )
     lines.append("  可比公司:")
     for r in m["peers"]:
         pe = f"{r['pe']:.0f}x" if r.get("pe") else "N/A"
-        lines.append(f"    {r['name']}({r['ticker']}): PE {pe}, "
-                     f"市值{r.get('market_cap_b', 0):.0f}亿美元")
+        lines.append(f"    {r['name']}({r['ticker']}): PE {pe}, 市值{r.get('market_cap_b', 0):.0f}亿美元")
     if m.get("peer_avg_pe"):
         t_pe = "N/A"
         lines.append(f"  可比平均PE: {m['peer_avg_pe']}x")

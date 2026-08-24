@@ -2,10 +2,12 @@
 findings_db.py - Audit findings database with closed-loop lifecycle.
 Every finding: discovered -> registered -> triaged -> fixed -> verified -> closed.
 """
-import os, json, sqlite3, logging
+
+import json
+import logging
+import sqlite3
+from datetime import datetime
 from pathlib import Path
-from datetime import datetime, timedelta
-from typing import Optional, List, Dict
 
 logger = logging.getLogger("2hao.findings_db")
 
@@ -13,7 +15,7 @@ FINDINGS_DB_PATH = Path(__file__).resolve().parent.parent / "output" / "findings
 
 
 class FindingsDB:
-    def __init__(self, db_path: Optional[str] = None):
+    def __init__(self, db_path: str | None = None):
         self.db_path = db_path or str(FINDINGS_DB_PATH)
         self._conn = None
         self._init_db()
@@ -60,94 +62,115 @@ class FindingsDB:
         """)
         c.commit()
 
-    def register_finding(self, finding: Dict) -> str:
+    def register_finding(self, finding: dict) -> str:
         """Register a new finding or update existing one if same check+file+line"""
         c = self._get_conn()
         # Generate ID
         import hashlib
-        raw = f"{finding['check_name']}:{finding['file']}:{finding.get('line',0)}"
+
+        raw = f"{finding['check_name']}:{finding['file']}:{finding.get('line', 0)}"
         finding_id = "F-" + hashlib.md5(raw.encode()).hexdigest()[:8]
 
         now = datetime.now().isoformat()
 
-        existing = c.execute(
-            "SELECT id, status FROM audit_findings WHERE id=?", (finding_id,)
-        ).fetchone()
+        existing = c.execute("SELECT id, status FROM audit_findings WHERE id=?", (finding_id,)).fetchone()
 
         if existing:
             if existing["status"] == "closed" or existing["status"] == "wontfix":
                 return finding_id  # Don't reopen closed findings
             # Update existing open finding
-            c.execute("""
+            c.execute(
+                """
                 UPDATE audit_findings SET
                     source=?, severity=?, description=?, updated_at=?
                 WHERE id=?
-            """, (finding.get("source","auto"), finding.get("severity","P1"),
-                  finding["description"], now, finding_id))
+            """,
+                (finding.get("source", "auto"), finding.get("severity", "P1"), finding["description"], now, finding_id),
+            )
         else:
-            c.execute("""
+            c.execute(
+                """
                 INSERT INTO audit_findings
                     (id, source, severity, file, line, check_name,
                      description, status, created_at, updated_at)
                 VALUES (?,?,?,?,?,?,?, 'open', ?, ?)
-            """, (finding_id, finding.get("source","auto"),
-                  finding.get("severity","P1"),
-                  finding["file"], finding.get("line",0),
-                  finding["check_name"], finding["description"],
-                  now, now))
+            """,
+                (
+                    finding_id,
+                    finding.get("source", "auto"),
+                    finding.get("severity", "P1"),
+                    finding["file"],
+                    finding.get("line", 0),
+                    finding["check_name"],
+                    finding["description"],
+                    now,
+                    now,
+                ),
+            )
 
         c.commit()
         return finding_id
 
-    def register_audit_run(self, session_name: str, report: Dict):
+    def register_audit_run(self, session_name: str, report: dict):
         """Record an audit session"""
         c = self._get_conn()
-        c.execute("""
+        c.execute(
+            """
             INSERT INTO audit_sessions
                 (session_name, run_at, files_scanned, total_findings,
                  p0_count, p1_count, p2_count, summary)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            session_name, datetime.now().isoformat(),
-            report.get("files_scanned", 0),
-            report.get("total_findings", 0),
-            report["summary"].get("P0_count", 0),
-            report["summary"].get("P1_count", 0),
-            report["summary"].get("P2_count", 0),
-            json.dumps(report.get("by_severity", {}), ensure_ascii=False)
-        ))
+        """,
+            (
+                session_name,
+                datetime.now().isoformat(),
+                report.get("files_scanned", 0),
+                report.get("total_findings", 0),
+                report["summary"].get("P0_count", 0),
+                report["summary"].get("P1_count", 0),
+                report["summary"].get("P2_count", 0),
+                json.dumps(report.get("by_severity", {}), ensure_ascii=False),
+            ),
+        )
         c.commit()
 
     def mark_fixed(self, finding_id: str, notes: str = ""):
         c = self._get_conn()
-        c.execute("""
+        c.execute(
+            """
             UPDATE audit_findings SET
                 status='fixed', fixed_at=?, updated_at=?, fix_notes=?
             WHERE id=?
-        """, (datetime.now().isoformat(), datetime.now().isoformat(),
-              notes[:200], finding_id))
+        """,
+            (datetime.now().isoformat(), datetime.now().isoformat(), notes[:200], finding_id),
+        )
         c.commit()
 
     def mark_verified(self, finding_id: str):
         c = self._get_conn()
-        c.execute("""
+        c.execute(
+            """
             UPDATE audit_findings SET
                 status='verified', verified_at=?, updated_at=?
             WHERE id=?
-        """, (datetime.now().isoformat(), datetime.now().isoformat(),
-              finding_id))
+        """,
+            (datetime.now().isoformat(), datetime.now().isoformat(), finding_id),
+        )
         c.commit()
 
     def mark_wontfix(self, finding_id: str, reason: str = ""):
         c = self._get_conn()
-        c.execute("""
+        c.execute(
+            """
             UPDATE audit_findings SET
                 status='wontfix', updated_at=?, fix_notes=?
             WHERE id=?
-        """, (datetime.now().isoformat(), reason[:200], finding_id))
+        """,
+            (datetime.now().isoformat(), reason[:200], finding_id),
+        )
         c.commit()
 
-    def get_open_findings(self, severity: Optional[str] = None) -> List[Dict]:
+    def get_open_findings(self, severity: str | None = None) -> list[dict]:
         c = self._get_conn()
         query = "SELECT * FROM audit_findings WHERE status='open'"
         params = []
@@ -157,7 +180,7 @@ class FindingsDB:
         query += " ORDER BY CASE severity WHEN 'P0' THEN 0 WHEN 'P1' THEN 1 ELSE 2 END, created_at DESC"
         return [dict(r) for r in c.execute(query, params).fetchall()]
 
-    def get_all_findings(self, status: Optional[str] = None) -> List[Dict]:
+    def get_all_findings(self, status: str | None = None) -> list[dict]:
         c = self._get_conn()
         if status:
             rows = c.execute("SELECT * FROM audit_findings WHERE status=? ORDER BY created_at DESC", (status,))
@@ -165,18 +188,28 @@ class FindingsDB:
             rows = c.execute("SELECT * FROM audit_findings ORDER BY created_at DESC")
         return [dict(r) for r in rows.fetchall()]
 
-    def get_stats(self) -> Dict:
+    def get_stats(self) -> dict:
         c = self._get_conn()
-        result = {"total": 0, "open": 0, "fixed": 0, "verified": 0, "closed": 0,
-                  "p0_open": 0, "p1_open": 0, "p2_open": 0, "sessions": 0}
+        result = {
+            "total": 0,
+            "open": 0,
+            "fixed": 0,
+            "verified": 0,
+            "closed": 0,
+            "p0_open": 0,
+            "p1_open": 0,
+            "p2_open": 0,
+            "sessions": 0,
+        }
         total = c.execute("SELECT COUNT(*) as cnt FROM audit_findings").fetchone()
         result["total"] = total["cnt"] if total else 0
         for status in ["open", "fixed", "verified", "closed"]:
             row = c.execute("SELECT COUNT(*) as cnt FROM audit_findings WHERE status=?", (status,)).fetchone()
             result[status] = row["cnt"] if row else 0
         for sev in ["P0", "P1", "P2"]:
-            row = c.execute("SELECT COUNT(*) as cnt FROM audit_findings WHERE status='open' AND severity=?",
-                          (sev,)).fetchone()
+            row = c.execute(
+                "SELECT COUNT(*) as cnt FROM audit_findings WHERE status='open' AND severity=?", (sev,)
+            ).fetchone()
             result[f"{sev.lower()}_open"] = row["cnt"] if row else 0
         sess = c.execute("SELECT COUNT(*) as cnt FROM audit_sessions").fetchone()
         result["sessions"] = sess["cnt"] if sess else 0
@@ -201,19 +234,22 @@ class FindingsDB:
         return "\n".join(lines)
 
 
-def run_audit_and_register(db: FindingsDB, project_root: str, session_name: str) -> Dict:
+def run_audit_and_register(db: FindingsDB, project_root: str, session_name: str) -> dict:
     """Run audit engine scan and register all findings"""
     from core.audit_engine import scan_project
+
     report = scan_project(project_root)
     for f in report["findings"]:
-        db.register_finding({
-            "check_name": f["check"],
-            "file": f["file"],
-            "line": f["line"],
-            "severity": f["severity"],
-            "description": f"{f['description']}: {f['message']}",
-            "source": session_name,
-        })
+        db.register_finding(
+            {
+                "check_name": f["check"],
+                "file": f["file"],
+                "line": f["line"],
+                "severity": f["severity"],
+                "description": f"{f['description']}: {f['message']}",
+                "source": session_name,
+            }
+        )
     db.register_audit_run(session_name, report)
     return report
 

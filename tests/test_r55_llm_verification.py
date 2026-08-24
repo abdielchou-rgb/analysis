@@ -4,7 +4,7 @@ Phase E：IronGate 新增 _check_llm_data_verification——校验 provider 与�
 对侧，防止同源偏见（LLM 自采自校验）。训练模式生成=Marvis→校验=DeepSeek，
 性能模式生成=DeepSeek→校验=Marvis/本地。
 """
-import os
+
 import sys
 from pathlib import Path
 
@@ -16,6 +16,7 @@ if str(_ROOT) not in sys.path:
 def test_verification_registered():
     """_check_llm_data_verification 应注册为类方法。"""
     from pipeline.iron_gate import IronGate
+
     assert hasattr(IronGate, "_check_llm_data_verification")
     # 应在 LLM 并行检查名单中
     src = (Path(__file__).parent.parent / "pipeline" / "iron_gate.py").read_text(encoding="utf-8")
@@ -28,7 +29,7 @@ def test_opposite_provider_logic():
     # R61(2026-08-03) 迁移：LLM 校验逻辑从 iron_gate.py 拆到 pipeline/checks/llm_checks_mixin.py
     mixin = (Path(__file__).parent.parent / "pipeline" / "checks" / "llm_checks_mixin.py").read_text(encoding="utf-8")
     # 训练模式（agent_provider 生成）→ 校验 deepseek
-    assert 'agent_provider' in mixin and 'deepseek-reasoner' in mixin
+    assert "agent_provider" in mixin and "deepseek-reasoner" in mixin
     # 应读 LLM_PROVIDER 判断生成端
     assert "LLM_PROVIDER" in mixin
     # iron_gate.py 应通过 mixin 继承接入（接线检查）
@@ -39,6 +40,7 @@ def test_opposite_provider_logic():
 def test_verification_skips_short_text():
     """短文本应跳过。"""
     from pipeline.iron_gate import IronGate
+
     gate = IronGate.from_text("太短了", report_type="industry_deep", style="cicc")
     r = gate._check_llm_data_verification()
     assert r.passed, f"短文本应跳过: {r.details}"
@@ -47,6 +49,7 @@ def test_verification_skips_short_text():
 def test_verification_runs_in_sandbox():
     """沙箱环境下校验应运行（不抛异常），返回 GateCheckResult。"""
     from pipeline.iron_gate import IronGate
+
     text = (
         "本报告对某公司分析。2024年归母净利2.1亿元，2025年预计3.5亿元。"
         "毛利率维持40%以上，PE估值22倍。公司市占率约15%，位居行业前列。"
@@ -59,7 +62,7 @@ def test_verification_runs_in_sandbox():
         r = gate._check_llm_data_verification()
         # 不抛异常即可，passed 可能因沙箱 provider 而异
         assert r is not None
-        assert hasattr(r, 'name')
+        assert hasattr(r, "name")
     except Exception as e:
         # 若沙箱完全无 provider，应优雅降级不抛异常
         assert "降级" in str(e) or "不可用" in str(e), f"应优雅降级: {e}"
@@ -67,8 +70,7 @@ def test_verification_runs_in_sandbox():
 
 def test_three_tier_calibration():
     """三级判定：低分阻断、中分警告通过、高分通过。"""
-    import os
-    from pipeline.iron_gate import IronGate
+
     # R61 迁移后阈值常量在 pipeline/checks/llm_checks_mixin.py
     src = (Path(__file__).parent.parent / "pipeline" / "checks" / "llm_checks_mixin.py").read_text(encoding="utf-8")
     assert "LLM_VERIFY_MIN_PASS" in src, "应含通过阈值"
@@ -81,6 +83,7 @@ def test_three_tier_calibration():
 
 if __name__ == "__main__":
     import traceback
+
     passed = failed = 0
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

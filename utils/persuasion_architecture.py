@@ -10,7 +10,6 @@ Onion Architecture:
 """
 
 from core.models import KnowledgePackage
-from typing import Optional
 
 # ──────────────────────────────────────────────
 # 叙事弧模板
@@ -74,6 +73,6 @@ CALL_TO_ACTION_TEMPLATE = """
 def build_persuasion_prompt(kp: KnowledgePackage) -> str:
     """根据报告类型生成说服力约束"""
     report_type = kp.brief.report_type.value if kp.brief and kp.brief.report_type else "listed_company"
-    
+
     blocks = [NARRATIVE_ARC, COUNTER_ARGUMENT_TEMPLATE, CALL_TO_ACTION_TEMPLATE]
     return "\n\n".join(blocks)

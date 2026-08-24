@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """标准一致性回归测试 — 防止图表/表格标准系统性降级
 
 背景（2026-08-01 审计）：
@@ -42,10 +41,12 @@ def test_sac_chart_config_meets_standards():
         sac = SACLoader(rt)
         cc = sac.get_chart_config()
         assert cc.get("charts"), f"{rt} chart_config 缺 charts"
-        assert cc.get("min_charts", 0) >= STANDARDS_BASE[rt]["min_charts"], \
+        assert cc.get("min_charts", 0) >= STANDARDS_BASE[rt]["min_charts"], (
             f"{rt} min_charts={cc.get('min_charts')} < 基线 {STANDARDS_BASE[rt]['min_charts']}"
-        assert cc.get("min_tables", 0) >= STANDARDS_BASE[rt]["min_tables"], \
+        )
+        assert cc.get("min_tables", 0) >= STANDARDS_BASE[rt]["min_tables"], (
             f"{rt} min_tables={cc.get('min_tables')} < 基线 {STANDARDS_BASE[rt]['min_tables']}"
+        )
         # 模板 id 唯一
         ids = [c["id"] for c in cc["charts"]]
         assert len(ids) == len(set(ids)), f"{rt} 图表 id 重复: {ids}"
@@ -84,15 +85,14 @@ def test_irongate_min_charts_matches_sac():
             ig = IronGate(tmp.name, rt, "cicc")
         finally:
             os.unlink(tmp.name)
-        assert ig.min_charts == sac_mc, \
-            f"{rt} IronGate.min_charts={ig.min_charts} != SAC {sac_mc}"
-        assert ig.min_charts >= STANDARDS_BASE[rt]["min_charts"], \
-            f"{rt} IronGate.min_charts={ig.min_charts} < 基线"
+        assert ig.min_charts == sac_mc, f"{rt} IronGate.min_charts={ig.min_charts} != SAC {sac_mc}"
+        assert ig.min_charts >= STANDARDS_BASE[rt]["min_charts"], f"{rt} IronGate.min_charts={ig.min_charts} < 基线"
 
 
 # ── 4. chart_pipeline 模板 id 与 SAC chart_config id 对齐 ─────
 def test_chart_pipeline_ids_match_sac():
     import pipeline.chart_pipeline as cp_mod
+
     for rt in REPORT_TYPES:
         sac = SACLoader(rt)
         sac_ids = {c["id"] for c in sac.get_chart_config()["charts"]}
@@ -124,10 +124,8 @@ def test_irongate_baseline_fallback():
     tmp.close()
     try:
         # 模拟 SAC 加载失败 → get_chart_config 抛错 → 用基线兜底
-        import pipeline.iron_gate as ig_mod
         orig = SACLoader.get_chart_config
-        SACLoader.get_chart_config = lambda self: (_ for _ in ()).throw(
-            ValueError("SAC 缺 chart_config"))
+        SACLoader.get_chart_config = lambda self: (_ for _ in ()).throw(ValueError("SAC 缺 chart_config"))
         try:
             ig = IronGate(tmp.name, "unlisted_company", "cicc")
         finally:
@@ -146,6 +144,7 @@ def test_charts_actually_generate():
     导致 fig_financial_trends（dual_axis 需 revenue+profit）实际生成失败。
     """
     import matplotlib
+
     matplotlib.use("Agg")
     from pipeline.chart_pipeline import ChartPipeline
 
@@ -197,10 +196,15 @@ def test_charts_actually_generate():
 def test_chart_schema_consistency():
     """chart_schema.json 是权威定义，SAC/pipeline/enrich 必须对齐。"""
     import subprocess
+
     r = subprocess.run(
         [sys.executable, str(_ROOT / "scripts" / "check_chart_schema.py"), "--strict"],
-        capture_output=True, text=True, encoding="utf-8", errors="replace",
-        timeout=30, cwd=str(_ROOT),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        timeout=30,
+        cwd=str(_ROOT),
     )
     assert r.returncode == 0, f"图表 schema 不一致:\n{r.stdout}\n{r.stderr}"
 

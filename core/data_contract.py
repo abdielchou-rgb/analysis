@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """数据契约校验 — R78 Phase1.1。
 
 为 chart_data 和 enrich_file 定义结构约束（JSON Schema 风格），
@@ -7,9 +6,10 @@
 用法：
     from core.data_contract import validate_chart_data, validate_enrich_file, validate_enrich_item
 """
+
 from __future__ import annotations
+
 import logging
-from typing import Optional
 
 logger = logging.getLogger("2hao.data_contract")
 
@@ -114,6 +114,7 @@ def validate_enrich_file_merge(data: dict, enrich_file: str) -> tuple[bool, list
     try:
         import json
         from pathlib import Path
+
         payload = json.loads(Path(enrich_file).read_text(encoding="utf-8"))
         ok, reasons = validate_enrich_file(payload)
         if not ok:
@@ -130,8 +131,10 @@ def validate_enrich_file_merge(data: dict, enrich_file: str) -> tuple[bool, list
 
 if __name__ == "__main__":
     # 自测
-    good = {"asset": "x", "items": [
-        {"type": "fig_data", "key": "fig_market_size_global", "data": {"2024": 46}, "source": "测试"}]}
+    good = {
+        "asset": "x",
+        "items": [{"type": "fig_data", "key": "fig_market_size_global", "data": {"2024": 46}, "source": "测试"}],
+    }
     ok, reasons = validate_enrich_file(good)
     print("good enrich:", ok, reasons)
     bad = {"asset": "x", "items": [{"type": "fig_data", "key": "bad_key", "data": {}, "source": ""}]}
@@ -163,6 +166,7 @@ def check_financials_coverage(db_path: str, code: str = "") -> dict:
     """
     import sqlite3
     from pathlib import Path
+
     result = {"code": code, "tables": {}, "total_coverage": 0.0}
     if not Path(db_path).exists():
         return result
@@ -173,7 +177,8 @@ def check_financials_coverage(db_path: str, code: str = "") -> dict:
         for table in FINANCIALS_TABLES:
             rows = conn.execute(
                 f"SELECT DISTINCT field FROM financials WHERE table_name=? {where}",
-                ((table,) + params) if params else (table,)).fetchall()
+                ((table,) + params) if params else (table,),
+            ).fetchall()
             fields = {r[0] for r in rows}
             required = FINANCIALS_REQUIRED_FIELDS.get(table, [])
             present = [f for f in required if f in fields]
@@ -193,6 +198,7 @@ def check_financials_coverage(db_path: str, code: str = "") -> dict:
 if __name__ == "__main__":
     # 自测 financials
     from pathlib import Path
+
     db = Path(__file__).resolve().parent.parent / "data" / "financials.db"
     r = check_financials_coverage(str(db))
     print("financials 全库:", {k: r["tables"][k]["coverage"] for k in r["tables"]})

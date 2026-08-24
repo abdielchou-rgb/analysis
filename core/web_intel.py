@@ -2,15 +2,16 @@
 # 补 akshare 的短板: 定性数据、行业动态、竞争情报、国际视角
 
 from __future__ import annotations
-import logging, time, json, re
-from pathlib import Path
-from typing import Optional
+
+import json
+import logging
 from dataclasses import dataclass, field
 
 logger = logging.getLogger("2hao.web_intel")
 
 try:
     from tavily import TavilyClient
+
     _HAS_TAVILY = True
 except ImportError:
     _HAS_TAVILY = False
@@ -18,12 +19,14 @@ except ImportError:
 try:
     import requests
     from bs4 import BeautifulSoup
+
     _HAS_SCRAPE = True
 except ImportError:
     _HAS_SCRAPE = False
 
 try:
     import yfinance as yf
+
     _HAS_YF = True
 except ImportError:
     _HAS_YF = False
@@ -31,26 +34,30 @@ except ImportError:
 
 # ── 数据分类 ──────────────────────────────────────
 
+
 @dataclass
 class WebIntelResult:
     """网络智能采集结果"""
-    news: list = field(default_factory=list)           # 新闻动态
-    industry: list = field(default_factory=list)        # 行业信息
-    competitors: list = field(default_factory=list)     # 竞争情报
-    catalysts: list = field(default_factory=list)       # 催化刑事件
-    risks: list = field(default_factory=list)           # 风险信号
-    macro: list = field(default_factory=list)           # 宏观政策
-    raw_sources: list = field(default_factory=list)     # 原始来源记录
-    errors: list = field(default_factory=list)          # 错误记录
+
+    news: list = field(default_factory=list)  # 新闻动态
+    industry: list = field(default_factory=list)  # 行业信息
+    competitors: list = field(default_factory=list)  # 竞争情报
+    catalysts: list = field(default_factory=list)  # 催化刑事件
+    risks: list = field(default_factory=list)  # 风险信号
+    macro: list = field(default_factory=list)  # 宏观政策
+    raw_sources: list = field(default_factory=list)  # 原始来源记录
+    errors: list = field(default_factory=list)  # 错误记录
     search_count: int = 0
 
 
 # ── Tavilly 多轮搜索 ──────────────────────────────
 
-def _get_tavily() -> Optional[TavilyClient]:
+
+def _get_tavily() -> TavilyClient | None:
     if not _HAS_TAVILY:
         return None
     import os
+
     key = os.environ.get("TAVILY_API_KEY", "")
     if not key:
         logger.debug("Tavily: no API key")
@@ -83,12 +90,14 @@ def search_tavily_multi(client: TavilyClient, queries: list[dict]) -> list[dict]
                 url = r.get("url", "")
                 if url and url not in seen_urls:
                     seen_urls.add(url)
-                    all_results.append({
-                        "url": url,
-                        "title": r.get("title", ""),
-                        "content": r.get("content", "")[:500],
-                        "query_reason": reason,
-                    })
+                    all_results.append(
+                        {
+                            "url": url,
+                            "title": r.get("title", ""),
+                            "content": r.get("content", "")[:500],
+                            "query_reason": reason,
+                        }
+                    )
             logger.info("  Tavily [%s]: %d results for '%s'", reason, len(results), q[:40])
         except Exception as e:
             logger.debug("Tavily query '%s' failed: %s", q[:30], e)
@@ -117,13 +126,12 @@ TARGET_SITES = {
 }
 
 
-def scrape_simple(url: str) -> Optional[str]:
+def scrape_simple(url: str) -> str | None:
     """简单HTTP抓取（无需JS渲染）"""
     if not _HAS_SCRAPE:
         return None
     try:
-        resp = requests.get(url, timeout=10,
-                            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
+        resp = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, "html.parser")
         # 提取文本
@@ -137,6 +145,7 @@ def scrape_simple(url: str) -> Optional[str]:
 
 
 # ── yfinance 国际视角 ─────────────────────────────
+
 
 def yfinance_intel(asset_code: str = "") -> dict:
     """yfinance 提供的额外数据（无法从akshare获得）"""
@@ -179,8 +188,10 @@ def yfinance_intel(asset_code: str = "") -> dict:
 
 # ── 主入口 ──────────────────────────────────────
 
-def collect_all(asset: str = "", asset_code: str = "",
-                industry: str = "", report_type: str = "listed_company") -> WebIntelResult:
+
+def collect_all(
+    asset: str = "", asset_code: str = "", industry: str = "", report_type: str = "listed_company"
+) -> WebIntelResult:
     """运行所有网络智能采集"""
     result = WebIntelResult()
     result.search_count = 0
@@ -188,7 +199,8 @@ def collect_all(asset: str = "", asset_code: str = "",
     # 1. Tavily多轮搜索
     client = _get_tavily()
     if client:
-        from core.search_planner import plan_queries, plan_macro_queries
+        from core.search_planner import plan_macro_queries, plan_queries
+
         # 资产查询
         queries = plan_queries(asset, report_type, industry)
         # 宏观查询
@@ -211,8 +223,7 @@ def collect_all(asset: str = "", asset_code: str = "",
             else:
                 result.news.append(r)
             result.raw_sources.append(r.get("url", ""))
-        logger.info("WebIntel Tavily: %d results from %d queries",
-                    len(all_results), len(queries) + len(macro_q))
+        logger.info("WebIntel Tavily: %d results from %d queries", len(all_results), len(queries) + len(macro_q))
 
     # 2. yfinance国际数据
     yf_data = yfinance_intel(asset_code)

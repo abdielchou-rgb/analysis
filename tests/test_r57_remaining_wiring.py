@@ -4,7 +4,8 @@
   1. global_leaders 海外营收占比（31家）→ data_basement 消费
   2. consensus_prices 目标价可用性标注 → data_basement 读取（驱动降级策略）
 """
-import os
+
+import os  # noqa: F401  (dead-import debt)
 import sys
 from pathlib import Path
 
@@ -16,6 +17,7 @@ if str(_ROOT) not in sys.path:
 def test_load_global_leaders_overseas():
     """global_leaders 应返回海外营收占比（行业匹配中国龙头）。"""
     from core.data_basement import load_global_leaders
+
     gl = load_global_leaders(industry="光伏")
     if gl is None:
         return  # 沙箱数据缺失时跳过
@@ -26,6 +28,7 @@ def test_load_global_leaders_overseas():
 def test_load_global_leaders_code_match():
     """global_leaders ticker 匹配应保留。"""
     from core.data_basement import load_global_leaders
+
     # NVDA 应存在
     gl = load_global_leaders(code="NVDA")
     # 若数据存在则验证
@@ -36,6 +39,7 @@ def test_load_global_leaders_code_match():
 def test_load_consensus_target_price():
     """consensus_prices 应读取目标价可用性标注。"""
     from core.data_basement import load_consensus_target_price
+
     tp = load_consensus_target_price("600519")
     if tp is None:
         return
@@ -45,6 +49,7 @@ def test_load_consensus_target_price():
 def test_consensus_unavailable_drives_downgrade():
     """目标价不可得标注应驱动降级（target_price_available=false）。"""
     from core.data_basement import load_consensus_target_price
+
     tp = load_consensus_target_price("600519")
     if tp is None:
         return
@@ -55,6 +60,7 @@ def test_consensus_unavailable_drives_downgrade():
 def test_build_merges_r57_keys():
     """build_basement_data_dict 应合并 R57 keys（ind_leader/target_price）。"""
     from core.data_basement import build_basement_data_dict
+
     # 用光伏测试（global_leaders 有光伏行业中国龙头）
     d = build_basement_data_dict("光伏")
     r57_keys = [k for k in d if k.startswith(("ind_leader", "target_price"))]
@@ -66,6 +72,7 @@ def test_build_merges_r57_keys():
 
 if __name__ == "__main__":
     import traceback
+
     passed = failed = 0
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

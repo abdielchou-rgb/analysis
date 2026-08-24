@@ -7,9 +7,9 @@
 """
 
 import sys
-import os
-import importlib
 from pathlib import Path
+
+from harness.pipeline_contract import IRON_GATE_CONTRACT
 
 _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
@@ -57,7 +57,10 @@ DataCollectorV5 返回空数据时，不得编造数据替代。如实报告"数
 def generate_pipeline_overview() -> str:
     """从合约生成管线概览 Markdown"""
     try:
-        from harness.pipeline_contract import SCHEDULER_CONTRACT, E2E_ORCHESTRATOR_CONTRACT
+        from harness.pipeline_contract import (  # noqa: F401  (availability probe)
+            E2E_ORCHESTRATOR_CONTRACT,
+            SCHEDULER_CONTRACT,
+        )
     except ImportError:
         # Fallback inline
         return ""
@@ -68,8 +71,11 @@ def generate_pipeline_overview() -> str:
     lines.append("  └→ E2EOrchestratorV2")
     for step, desc in E2E_ORCHESTRATOR_CONTRACT["steps"]:
         lines.append(f"       ├→ {step} — {desc}")
-    lines.append("  └→ IronGate (24 项检查, min_score={:.2f})".format(
-        IRON_GATE_CONTRACT["min_score"] if 'IRON_GATE_CONTRACT' in dir() else 0.55))
+    lines.append(
+        "  └→ IronGate (24 项检查, min_score={:.2f})".format(
+            IRON_GATE_CONTRACT["min_score"] if "IRON_GATE_CONTRACT" in dir() else 0.55
+        )
+    )
     lines.append("  └→ export (DOCX / PDF / PPTX)")
     lines.append("```")
     return "\n".join(lines)
@@ -106,6 +112,7 @@ def generate_sdd_report() -> str:
 
 if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser(description="2hao SDD Doc Generator")
     parser.add_argument("--output", "-o", default="", help="输出目录")
     args = parser.parse_args()

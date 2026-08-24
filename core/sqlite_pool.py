@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 统一 SQLite 连接管理（Unified SQLite Connection Manager）— R48 并发根治
 
@@ -11,12 +10,13 @@
   3. 写操作加 threading.Lock 串行化（单写者模式）
   4. 进程级：多进程并发写同一 db 时，用 filelock 兜底
 """
+
 from __future__ import annotations
+
+import logging
 import sqlite3
 import threading
-import logging
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger("2hao.sqlite")
 
@@ -59,11 +59,9 @@ def get_connection(db_path: str | Path, read_only: bool = False) -> sqlite3.Conn
 def _open_connection(path: str, read_only: bool = False) -> sqlite3.Connection:
     try:
         if read_only:
-            conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True,
-                                   timeout=BUSY_TIMEOUT_MS / 1000)
+            conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True, timeout=BUSY_TIMEOUT_MS / 1000)
         else:
-            conn = sqlite3.connect(path, timeout=BUSY_TIMEOUT_MS / 1000,
-                                   check_same_thread=False)
+            conn = sqlite3.connect(path, timeout=BUSY_TIMEOUT_MS / 1000, check_same_thread=False)
         # WAL 模式：读写并行、写写排队
         if not read_only:
             conn.execute("PRAGMA journal_mode=WAL")

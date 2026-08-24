@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 本地数据底座读取器 — 读取 Marvis 构建的新数据源，转成 chart_data 可消费的格式。
 
@@ -11,11 +10,13 @@ R9（2026-08-01 数据底座接入）：让资金面/行业基线/公司事件�
 供 data_dict 构建 + section_writer 注入 prompt + IronGate 校验。
 FP2 合规：所有数据点带 source（akshare_* / 本地库），不编造。
 """
+
 from __future__ import annotations
+
 import json
+import logging
 import re
 import sqlite3
-import logging
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
@@ -52,8 +53,9 @@ def load_capital_flow(code: str | None = None, limit: int = 30) -> dict | None:
     try:
         # 北向资金：市场级日度净流入（无个股维度，取最近值/5日均）
         rows = conn.execute(
-            "SELECT date, net_flow FROM northbound_daily "
-            "WHERE net_flow IS NOT NULL ORDER BY date DESC LIMIT ?", (limit,)).fetchall()
+            "SELECT date, net_flow FROM northbound_daily WHERE net_flow IS NOT NULL ORDER BY date DESC LIMIT ?",
+            (limit,),
+        ).fetchall()
         if rows:
             flows = [r["net_flow"] for r in rows if r["net_flow"] is not None]
             if flows:
@@ -65,8 +67,8 @@ def load_capital_flow(code: str | None = None, limit: int = 30) -> dict | None:
 
         # 两融余额（市场级）
         mrows = conn.execute(
-            "SELECT date, margin_balance FROM margin_daily "
-            "WHERE margin_balance IS NOT NULL ORDER BY date DESC LIMIT 1").fetchall()
+            "SELECT date, margin_balance FROM margin_daily WHERE margin_balance IS NOT NULL ORDER BY date DESC LIMIT 1"
+        ).fetchall()
         if mrows:
             result["margin_balance_latest"] = round(mrows[0]["margin_balance"] / 1e8, 2)  # 亿元
             result["margin_latest_date"] = str(mrows[0]["date"])
@@ -77,11 +79,12 @@ def load_capital_flow(code: str | None = None, limit: int = 30) -> dict | None:
             frows = conn.execute(
                 "SELECT fund_name, stock_name, shares, market_value FROM fund_holding "
                 "WHERE stock_code=? AND shares > 0 ORDER BY market_value DESC LIMIT 5",
-                (code,)).fetchall()
+                (code,),
+            ).fetchall()
             if frows:
                 result["fund_holdings"] = [
-                    {"fund": r["fund_name"] or "—", "shares": r["shares"],
-                     "market_value": r["market_value"]} for r in frows
+                    {"fund": r["fund_name"] or "—", "shares": r["shares"], "market_value": r["market_value"]}
+                    for r in frows
                 ]
                 result["_fund_source"] = "akshare"
     except Exception as e:
@@ -125,7 +128,7 @@ def load_industry_baseline(industry_hint: str = "") -> dict | None:
             pes = [s["pe_ttm"] for s in sectors if s.get("pe_ttm") is not None]
             best = {
                 "sector_name": "全市场",
-                "pe_ttm_median": sorted(pes)[len(pes)//2] if pes else None,
+                "pe_ttm_median": sorted(pes)[len(pes) // 2] if pes else None,
                 "n_sectors": len(sectors),
             }
         if best and "sector_name" not in best:
@@ -153,7 +156,8 @@ def load_company_events(code: str, limit: int = 20) -> dict | None:
         erows = conn.execute(
             "SELECT report_date, revenue, net_profit FROM earnings "
             "WHERE ticker=? AND revenue > 0 ORDER BY report_date DESC LIMIT 2",
-            (code,)).fetchall()
+            (code,),
+        ).fetchall()
         if erows:
             latest = erows[0]
             result["latest_report_date"] = str(latest["report_date"])
@@ -162,20 +166,26 @@ def load_company_events(code: str, limit: int = 20) -> dict | None:
             result["_earnings_source"] = "akshare"
 
         # 分红/增减持计数
-        result["dividend_count"] = conn.execute(
-            "SELECT COUNT(*) FROM dividends WHERE ticker=?", (code,)).fetchone()[0]
+        result["dividend_count"] = conn.execute("SELECT COUNT(*) FROM dividends WHERE ticker=?", (code,)).fetchone()[0]
         result["share_change_count"] = conn.execute(
-            "SELECT COUNT(*) FROM share_changes WHERE ticker=?", (code,)).fetchone()[0]
+            "SELECT COUNT(*) FROM share_changes WHERE ticker=?", (code,)
+        ).fetchone()[0]
 
         # 最近增减持事件
         sc = conn.execute(
             "SELECT change_date, shareholder, change_type, change_shares FROM share_changes "
             "WHERE ticker=? AND change_shares != 0 ORDER BY change_date DESC LIMIT 5",
-            (code,)).fetchall()
+            (code,),
+        ).fetchall()
         if sc:
             result["recent_share_changes"] = [
-                {"date": r["change_date"], "shareholder": r["shareholder"],
-                 "type": r["change_type"], "shares": r["change_shares"]} for r in sc
+                {
+                    "date": r["change_date"],
+                    "shareholder": r["shareholder"],
+                    "type": r["change_type"],
+                    "shares": r["change_shares"],
+                }
+                for r in sc
             ]
     except Exception as e:
         logger.debug("[BASEMENT] company_events 读取失败: %s", e)
@@ -200,6 +210,7 @@ def build_basement_data_dict(asset: str = "") -> dict:
         # R26（2026-08-02 全量修复缺陷1）：统一资产解析层
         try:
             from core.asset_resolver import resolve_asset
+
             _a = resolve_asset(asset)
             code = _a.code
             asset_name = _a.name
@@ -446,15 +457,18 @@ def load_industry_driver(industry: str) -> list | None:
     for ind, items in d.items():
         if industry in str(ind) or (str(ind) in industry and len(str(ind)) >= 4):
             return items if isinstance(items, list) else None
-    core = (industry.replace("行业", "").replace("产业", "").replace("制造", "")
-            .replace("公司", "").strip())
+    core = industry.replace("行业", "").replace("产业", "").replace("制造", "").replace("公司", "").strip()
     if len(core) >= 2:
         for ind, items in d.items():
             if core in str(ind) or (str(ind) in core and len(str(ind)) >= 4):
                 return items if isinstance(items, list) else None
     # 近义词兜底：传感器行业 → 仪器仪表/工控/消费电子
-    SYN = {"传感": ["仪器仪表", "工控", "消费电子"], "机器人": ["机器人", "工控"],
-           "半导体": ["半导体", "半导体设备"], "智能穿戴": ["消费电子", "科技"]}
+    SYN = {
+        "传感": ["仪器仪表", "工控", "消费电子"],
+        "机器人": ["机器人", "工控"],
+        "半导体": ["半导体", "半导体设备"],
+        "智能穿戴": ["消费电子", "科技"],
+    }
     for kw, alts in SYN.items():
         if kw in core:
             for alt in alts:
@@ -496,8 +510,7 @@ def load_industry_chain(industry: str) -> dict | None:
             return c
     # 2) 反向包含（如 industry="传感器行业"，链条目名="半导体"）
     #    对"XX行业/XX产业/XX制造"后缀做短词匹配
-    core = (industry.replace("行业", "").replace("产业", "").replace("制造", "")
-            .replace("公司", "").strip())
+    core = industry.replace("行业", "").replace("产业", "").replace("制造", "").replace("公司", "").strip()
     if len(core) >= 2:
         for c in chains:
             if not isinstance(c, dict):
@@ -547,8 +560,7 @@ def load_penetration(industry: str) -> dict | None:
             return p
     # 2) 短词兜底（2026-08-03 防误匹配：反向包含方向要求链名 ≥4 字，
     #    避免"传感器"⊂"气体传感器"类通用头名词误命中专用条目）
-    core = (industry.replace("行业", "").replace("产业", "").replace("制造", "")
-            .replace("公司", "").strip())
+    core = industry.replace("行业", "").replace("产业", "").replace("制造", "").replace("公司", "").strip()
     if len(core) >= 2:
         for p in ps:
             if isinstance(p, dict):
@@ -585,11 +597,13 @@ def load_global_leaders(code: str = "", industry: str = "") -> dict | None:
                     _cn_leaders.append(l)
         if _cn_leaders:
             _top = max(_cn_leaders, key=lambda x: x.get("overseas_revenue_pct", 0))
-            return {"industry": _top.get("industry", ""),
-                    "company": _top.get("company", ""),
-                    "ticker": _top.get("ticker", ""),
-                    "overseas_revenue_pct": _top.get("overseas_revenue_pct"),
-                    "overseas_revenue_pct_source": _top.get("overseas_revenue_pct_source", "")}
+            return {
+                "industry": _top.get("industry", ""),
+                "company": _top.get("company", ""),
+                "ticker": _top.get("ticker", ""),
+                "overseas_revenue_pct": _top.get("overseas_revenue_pct"),
+                "overseas_revenue_pct_source": _top.get("overseas_revenue_pct_source", ""),
+            }
     return None
 
 
@@ -624,8 +638,7 @@ def load_us_stock(code: str) -> dict | None:
     if conn is None:
         return None
     try:
-        r = conn.execute(
-            "SELECT * FROM us_stocks WHERE ticker=? ORDER BY as_of DESC LIMIT 1", (code,)).fetchone()
+        r = conn.execute("SELECT * FROM us_stocks WHERE ticker=? ORDER BY as_of DESC LIMIT 1", (code,)).fetchone()
         if r:
             return dict(r)
         return None
@@ -792,9 +805,9 @@ def load_global_industry_players(industry: str) -> dict | None:
     result = {"gip_player_count": len(players)}
     for i, p in enumerate(players[:5]):
         if isinstance(p, dict):
-            result[f"gip_player_{i+1}"] = str(p.get("name", ""))[:40]
+            result[f"gip_player_{i + 1}"] = str(p.get("name", ""))[:40]
             if p.get("market_share_est"):
-                result[f"gip_share_{i+1}"] = float(p["market_share_est"])
+                result[f"gip_share_{i + 1}"] = float(p["market_share_est"])
     return result if result else None
 
 
@@ -876,9 +889,9 @@ def load_global_market_segments(industry: str) -> dict | None:
         result["gms_segment_count"] = len(segs)
         for i, (seg_name, seg_data) in enumerate(list(segs.items())[:3]):
             if isinstance(seg_data, dict):
-                result[f"gms_seg_{i+1}"] = str(seg_name)[:20]
+                result[f"gms_seg_{i + 1}"] = str(seg_name)[:20]
                 if seg_data.get("global"):
-                    result[f"gms_seg{i+1}_global"] = seg_data["global"]
+                    result[f"gms_seg{i + 1}_global"] = seg_data["global"]
     return result if result else None
 
 
@@ -911,8 +924,10 @@ def load_unlisted_players(industry: str) -> dict | None:
         if isinstance(p, dict):
             name = str(p.get("name", ""))[:30]
             threat = str(p.get("threat_level", ""))[:10]
-            result[f"ulp_{i+1}"] = f"{name}({threat})"
+            result[f"ulp_{i + 1}"] = f"{name}({threat})"
     return result if result else None
+
+
 # ─────────────────────────────────────────────
 def load_stock_fund_flow(code: str, limit: int = 30) -> dict | None:
     """读取个股资金面 stock_fund_flow 表 → 扁平指标。
@@ -927,7 +942,9 @@ def load_stock_fund_flow(code: str, limit: int = 30) -> dict | None:
         # 北向持仓（最新值 + 5日均）
         nr = conn.execute(
             "SELECT date, value FROM stock_fund_flow WHERE code=? AND metric='north_hold_shares' "
-            "AND value IS NOT NULL ORDER BY date DESC LIMIT ?", (code, limit)).fetchall()
+            "AND value IS NOT NULL ORDER BY date DESC LIMIT ?",
+            (code, limit),
+        ).fetchall()
         if nr:
             vals = [r["value"] for r in nr]
             result["north_hold_latest"] = round(vals[0], 2)
@@ -937,7 +954,9 @@ def load_stock_fund_flow(code: str, limit: int = 30) -> dict | None:
         # 两融余额（最新）
         mr = conn.execute(
             "SELECT date, value FROM stock_fund_flow WHERE code=? AND metric='margin_balance' "
-            "AND value IS NOT NULL ORDER BY date DESC LIMIT 1", (code,)).fetchone()
+            "AND value IS NOT NULL ORDER BY date DESC LIMIT 1",
+            (code,),
+        ).fetchone()
         if mr:
             result["margin_balance_latest"] = round(mr["value"] / 1e8, 2)  # 亿元
             result["margin_balance_date"] = str(mr["date"])
@@ -945,7 +964,9 @@ def load_stock_fund_flow(code: str, limit: int = 30) -> dict | None:
         # 龙虎榜净买（最新）
         lr = conn.execute(
             "SELECT date, value FROM stock_fund_flow WHERE code=? AND metric='lhb_net_buy' "
-            "AND value IS NOT NULL ORDER BY date DESC LIMIT 1", (code,)).fetchone()
+            "AND value IS NOT NULL ORDER BY date DESC LIMIT 1",
+            (code,),
+        ).fetchone()
         if lr:
             result["lhb_net_buy_latest"] = round(lr["value"], 2)
             result["lhb_date"] = str(lr["date"])
@@ -970,12 +991,20 @@ def load_consensus(code: str) -> dict | None:
         return None
     result = {}
     try:
-        r = conn.execute(
-            "SELECT * FROM consensus WHERE code=? ORDER BY as_of DESC LIMIT 1", (code,)).fetchone()
+        r = conn.execute("SELECT * FROM consensus WHERE code=? ORDER BY as_of DESC LIMIT 1", (code,)).fetchone()
         if r:
-            for col in ["eps_2026e", "eps_2027e", "eps_2028e", "target_price_avg",
-                        "rating_buy", "rating_hold", "rating_sell", "n_analysts",
-                        "revision_slope", "revision_breadth"]:
+            for col in [
+                "eps_2026e",
+                "eps_2027e",
+                "eps_2028e",
+                "target_price_avg",
+                "rating_buy",
+                "rating_hold",
+                "rating_sell",
+                "n_analysts",
+                "revision_slope",
+                "revision_breadth",
+            ]:
                 val = r[col]
                 if val is not None:
                     result[col] = float(val) if isinstance(val, (int, float)) else val
@@ -985,12 +1014,13 @@ def load_consensus(code: str) -> dict | None:
                 result["_has_revision_slope"] = True
             else:
                 # P3-audit 2026-08-24 回退链：最新快照常缺 revision 字段
-                #（扩采批扫覆盖有限），回退①取历史最近非空快照；
+                # （扩采批扫覆盖有限），回退①取历史最近非空快照；
                 # 回退②用最近两个快照的 eps_2026e/rating_buy 现算。
                 row2 = conn.execute(
                     "SELECT as_of, revision_slope, revision_breadth FROM consensus "
                     "WHERE code=? AND revision_slope IS NOT NULL ORDER BY as_of DESC LIMIT 1",
-                    (code,)).fetchone()
+                    (code,),
+                ).fetchone()
                 if row2:
                     result["revision_slope"] = float(row2["revision_slope"])
                     result["_revision_as_of"] = str(row2["as_of"])
@@ -1001,12 +1031,14 @@ def load_consensus(code: str) -> dict | None:
                     snaps = conn.execute(
                         "SELECT as_of, eps_2026e, rating_buy, n_analysts FROM consensus "
                         "WHERE code=? AND eps_2026e IS NOT NULL ORDER BY as_of DESC LIMIT 2",
-                        (code,)).fetchall()
+                        (code,),
+                    ).fetchall()
                     if len(snaps) == 2 and snaps[1]["eps_2026e"]:
                         prev_eps = float(snaps[1]["eps_2026e"])
                         if abs(prev_eps) > 1e-9:
                             result["revision_slope"] = round(
-                                (float(snaps[0]["eps_2026e"]) - prev_eps) / abs(prev_eps), 4)
+                                (float(snaps[0]["eps_2026e"]) - prev_eps) / abs(prev_eps), 4
+                            )
                             result["_revision_computed"] = True
                             result["_has_revision_slope"] = True
                         try:
@@ -1039,7 +1071,9 @@ def load_governance(code: str) -> dict | None:
         # 股东户数最新
         sc = conn.execute(
             "SELECT date, value FROM governance WHERE code=? AND metric='shareholder_count' "
-            "AND value IS NOT NULL ORDER BY date DESC LIMIT 1", (code,)).fetchone()
+            "AND value IS NOT NULL ORDER BY date DESC LIMIT 1",
+            (code,),
+        ).fetchone()
         if sc:
             result["shareholder_count_latest"] = round(sc["value"], 0)
             result["shareholder_count_date"] = str(sc["date"])
@@ -1047,7 +1081,9 @@ def load_governance(code: str) -> dict | None:
         # ESG 最新
         esg = conn.execute(
             "SELECT date, value, extra FROM governance WHERE code=? AND metric='esg_score' "
-            "AND value IS NOT NULL ORDER BY date DESC LIMIT 1", (code,)).fetchone()
+            "AND value IS NOT NULL ORDER BY date DESC LIMIT 1",
+            (code,),
+        ).fetchone()
         if esg:
             result["esg_score_latest"] = round(esg["value"], 2)
             result["esg_grade"] = str(esg["extra"])[:20]
@@ -1056,7 +1092,9 @@ def load_governance(code: str) -> dict | None:
         # 质押比例最新
         pr = conn.execute(
             "SELECT date, value FROM governance WHERE code=? AND metric='pledge_ratio' "
-            "AND value IS NOT NULL ORDER BY date DESC LIMIT 1", (code,)).fetchone()
+            "AND value IS NOT NULL ORDER BY date DESC LIMIT 1",
+            (code,),
+        ).fetchone()
         if pr:
             result["pledge_ratio_latest"] = round(pr["value"], 2)
             result["_pledge_source"] = "akshare: stock_gpzy_pledge_ratio_em"
@@ -1105,7 +1143,8 @@ def load_valuation_knowledge(code: str, asset_name: str = "") -> dict | None:
         # 注入错误估值参数，导致 DCF 估值偏差 2–3 倍。改为返回 None + warning。
         logger.warning(
             "[BASEMENT] 未匹配到估值模型（asset=%s, code=%s），跳过估值知识注入",
-            asset_name, code,
+            asset_name,
+            code,
         )
         return None
     if not best:

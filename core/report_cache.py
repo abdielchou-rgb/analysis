@@ -21,7 +21,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-import os
+import os  # noqa: F401  (dead-import debt)
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -71,8 +71,7 @@ class ReportCache:
     """Persistent cache of report scaffolds for diff-based regeneration."""
 
     @staticmethod
-    def find_existing(asset_code: str,
-                       report_type: str) -> Optional[dict]:
+    def find_existing(asset_code: str, report_type: str) -> Optional[dict]:
         """Find most recent cached scaffold for an asset + type.
 
         Returns: {
@@ -141,9 +140,26 @@ class ReportCache:
         # 提取行业关键词（从asset名或report_type推断）
         sector_keywords = set()
         asset_lower = (asset or "").lower()
-        for kw in ["传感器", "sensor", "芯片", "半导体", "机器人", "新能源", "电池",
-                    "医药", "消费", "化工", "汽车", "光伏", "锂电", "液位", "油位",
-                    "气体", "磁致", "雷达"]:
+        for kw in [
+            "传感器",
+            "sensor",
+            "芯片",
+            "半导体",
+            "机器人",
+            "新能源",
+            "电池",
+            "医药",
+            "消费",
+            "化工",
+            "汽车",
+            "光伏",
+            "锂电",
+            "液位",
+            "油位",
+            "气体",
+            "磁致",
+            "雷达",
+        ]:
             if kw.lower() in asset_lower:
                 sector_keywords.add(kw)
 
@@ -168,20 +184,21 @@ class ReportCache:
                 match = brief_type == report_type
 
             if match:
-                results.append({
-                    "asset": brief_asset or key.split(":")[0],
-                    "report_type": brief_type,
-                    "rating": brief.get("rating", latest.get("rating", "")),
-                    "target_price": brief.get("target_price", latest.get("target_price", "")),
-                    "thesis": brief.get("thesis", latest.get("thesis", ""))[:200],
-                    "date": latest.get("created_at", ""),
-                })
+                results.append(
+                    {
+                        "asset": brief_asset or key.split(":")[0],
+                        "report_type": brief_type,
+                        "rating": brief.get("rating", latest.get("rating", "")),
+                        "target_price": brief.get("target_price", latest.get("target_price", "")),
+                        "thesis": brief.get("thesis", latest.get("thesis", ""))[:200],
+                        "date": latest.get("created_at", ""),
+                    }
+                )
 
         return results[:limit]
 
     @staticmethod
-    def diff(new_scaffold: ArgumentScaffold,
-             old_cache: dict) -> dict:
+    def diff(new_scaffold: ArgumentScaffold, old_cache: dict) -> dict:
         """Diff new scaffold against cached version.
 
         Returns: {
@@ -192,10 +209,7 @@ class ReportCache:
           "new_fingerprint": str,
         }
         """
-        old_sections = {
-            s["section_id"]: s
-            for s in old_cache.get("scaffold", {}).get("sections", [])
-        }
+        old_sections = {s["section_id"]: s for s in old_cache.get("scaffold", {}).get("sections", [])}
 
         changed = []
         unchanged = []
@@ -220,8 +234,7 @@ class ReportCache:
         }
 
     @staticmethod
-    def list_history(asset_code: str, report_type: str,
-                     limit: int = 5) -> list[dict]:
+    def list_history(asset_code: str, report_type: str, limit: int = 5) -> list[dict]:
         """List scaffold history for an asset."""
         cache = _get_cache()
         key = f"{asset_code}:{report_type}"

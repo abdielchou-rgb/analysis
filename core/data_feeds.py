@@ -2,26 +2,45 @@
 # 不依赖付费API，用 RSS/HTTP 抓取/PDF解析 获取额外数据维度
 
 from __future__ import annotations
-import logging, time, json, re, csv, io
+
+import csv
+import logging
+import re
+import time
+from collections.abc import Callable
 from pathlib import Path
-from dataclasses import dataclass, field
-from typing import Optional, Callable
 
 logger = logging.getLogger("2hao.data_feeds")
 
 ROOT = Path(__file__).resolve().parent.parent
 
-try: import requests; _HAS_REQUESTS = True
-except ImportError: _HAS_REQUESTS = False
+try:
+    import requests
 
-try: from bs4 import BeautifulSoup; _HAS_BS4 = True
-except ImportError: _HAS_BS4 = False
+    _HAS_REQUESTS = True
+except ImportError:
+    _HAS_REQUESTS = False
 
-try: import feedparser; _HAS_FEEDPARSER = True
-except ImportError: _HAS_FEEDPARSER = False
+try:
+    from bs4 import BeautifulSoup
 
-try: from pdfminer.high_level import extract_text; _HAS_PDFMINER = True
-except ImportError: _HAS_PDFMINER = False
+    _HAS_BS4 = True
+except ImportError:
+    _HAS_BS4 = False
+
+try:
+    import feedparser  # noqa: F401  (availability probe)
+
+    _HAS_FEEDPARSER = True
+except ImportError:
+    _HAS_FEEDPARSER = False
+
+try:
+    from pdfminer.high_level import extract_text
+
+    _HAS_PDFMINER = True
+except ImportError:
+    _HAS_PDFMINER = False
 
 
 # ── 1. RSS行业新闻聚合 ─────────────────────────
@@ -63,16 +82,19 @@ def fetch_rss(url: str) -> list[dict]:
         return []
     try:
         import feedparser
+
         feed = feedparser.parse(url)
         items = []
         for entry in feed.entries[:10]:
-            items.append({
-                "title": entry.get("title", ""),
-                "link": entry.get("link", ""),
-                "summary": entry.get("summary", "")[:300],
-                "published": str(entry.get("published", "")),
-                "source": "rss",
-            })
+            items.append(
+                {
+                    "title": entry.get("title", ""),
+                    "link": entry.get("link", ""),
+                    "summary": entry.get("summary", "")[:300],
+                    "published": str(entry.get("published", "")),
+                    "source": "rss",
+                }
+            )
         return items
     except Exception as e:
         logger.debug("RSS %s: %s", url[:30], e)
@@ -84,8 +106,7 @@ def fetch_web_simple(url: str, selector: str = "body") -> list[dict]:
     if not _HAS_REQUESTS or not _HAS_BS4:
         return []
     try:
-        resp = requests.get(url, timeout=10,
-                            headers={"User-Agent": "Mozilla/5.0"})
+        resp = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"})
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, "html.parser")
         elements = soup.select(selector) if selector else [soup]
@@ -133,7 +154,7 @@ REPORT_DIRS = [
 ]
 
 
-def extract_report_metadata(filepath: Path) -> Optional[dict]:
+def extract_report_metadata(filepath: Path) -> dict | None:
     """从PDF报告提取元数据和关键结论"""
     if not _HAS_PDFMINER or filepath.suffix.lower() not in (".pdf", ".md", ".txt"):
         return None
@@ -221,8 +242,7 @@ def search_patents(company: str, keyword: str = "") -> dict:
     try:
         query = f"{company} {keyword}".strip()
         url = f"https://patents.google.com/?q={query}&language=ZHONGWEN"
-        resp = requests.get(url, timeout=10,
-                            headers={"User-Agent": "Mozilla/5.0"})
+        resp = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"})
         if resp.status_code == 200:
             # 粗略估算专利数
             count_match = re.search(r"约\s*([\d,]+)\s*条结果", resp.text)
@@ -241,19 +261,21 @@ def search_patents(company: str, keyword: str = "") -> dict:
 
 # ── 5. CSV/Excel 外部数据导入器 ────────────────
 
-def import_external_csv(filepath: str) -> Optional[list[dict]]:
+
+def import_external_csv(filepath: str) -> list[dict] | None:
     """导入CSV格式的外部数据"""
     path = Path(filepath)
     if not path.exists():
         return None
     try:
         if path.suffix.lower() == ".csv":
-            with open(path, "r", encoding="utf-8", errors="replace") as f:
+            with open(path, encoding="utf-8", errors="replace") as f:
                 reader = csv.DictReader(f)
                 return [row for row in reader][:100]
         elif path.suffix.lower() in (".xls", ".xlsx"):
             try:
                 import pandas as pd
+
                 df = pd.read_excel(str(path))
                 return df.to_dict(orient="records")[:100]
             except ImportError:
@@ -265,6 +287,7 @@ def import_external_csv(filepath: str) -> Optional[list[dict]]:
 
 # ── 6. 可插拔Feed注册表 ────────────────────────
 
+
 class FeedRegistry:
     """可插拔的数据Feed注册表"""
 
@@ -275,7 +298,7 @@ class FeedRegistry:
         self._feeds[name] = {"fn": fn, "desc": desc}
         logger.info("Feed registered: %s - %s", name, desc)
 
-    def run(self, name: str, **kwargs) -> Optional[list[dict]]:
+    def run(self, name: str, **kwargs) -> list[dict] | None:
         feed = self._feeds.get(name)
         if not feed:
             logger.warning("Feed not found: %s", name)
@@ -283,7 +306,7 @@ class FeedRegistry:
         try:
             t0 = time.time()
             result = feed["fn"](**kwargs)
-            logger.info("Feed %s: %.0fms", name, (time.time()-t0)*1000)
+            logger.info("Feed %s: %.0fms", name, (time.time() - t0) * 1000)
             return result
         except Exception as e:
             logger.warning("Feed %s failed: %s", name, e)
@@ -295,16 +318,13 @@ class FeedRegistry:
 
 # 全局注册表
 _feeds = FeedRegistry()
-_feeds.register("industry_news", lambda industry="": collect_industry_news(industry),
-                "行业RSS新闻聚合")
-_feeds.register("local_reports", lambda industry="": scan_local_reports(industry),
-                "本地PDF报告元数据提取")
-_feeds.register("patents", lambda company="", keyword="": search_patents(company, keyword),
-                "Google专利搜索")
-_feeds.register("company_basics", lambda asset="", industry="": infer_company_basics(asset, industry),
-                "公司基本信息推断")
-_feeds.register("csv_import", lambda filepath="": import_external_csv(filepath),
-                "CSV/Excel外部数据导入")
+_feeds.register("industry_news", lambda industry="": collect_industry_news(industry), "行业RSS新闻聚合")
+_feeds.register("local_reports", lambda industry="": scan_local_reports(industry), "本地PDF报告元数据提取")
+_feeds.register("patents", lambda company="", keyword="": search_patents(company, keyword), "Google专利搜索")
+_feeds.register(
+    "company_basics", lambda asset="", industry="": infer_company_basics(asset, industry), "公司基本信息推断"
+)
+_feeds.register("csv_import", lambda filepath="": import_external_csv(filepath), "CSV/Excel外部数据导入")
 
 
 def run_feeds(feed_names: list[str], **kwargs) -> dict:

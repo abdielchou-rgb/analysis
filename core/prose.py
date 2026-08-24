@@ -9,16 +9,18 @@ Design:
 
 from __future__ import annotations
 
-import json, logging, os, re
-from typing import Optional
-
-from core.models import ArgumentScaffold, ArgumentSection, KnowledgePackage, WritingBrief
+import logging
+import os
 
 logger = logging.getLogger("v51.t2b.prose")
 
 _HAS_OPENAI = False
-try: from openai import OpenAI; _HAS_OPENAI = True
-except ImportError: pass
+try:
+    from openai import OpenAI  # noqa: F401  (availability probe)
+
+    _HAS_OPENAI = True
+except ImportError:
+    pass
 
 DEEPSEEK_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
 HAS_LLM = bool(DEEPSEEK_KEY)
@@ -52,7 +54,12 @@ def _fmt_ev(section, kp):
             src = f"（来源：{dp.source}）" if dp.source else ""
             parts.append(f"{dp.name}约{dp.value}{dp.unit or ''}{src}")
     if parts:
-        return "关键数据：" + "；".join(parts[:3]) + "。" + ("此外，" + "；".join(parts[3:5]) + "。" if len(parts) > 3 else "")
+        return (
+            "关键数据："
+            + "；".join(parts[:3])
+            + "。"
+            + ("此外，" + "；".join(parts[3:5]) + "。" if len(parts) > 3 else "")
+        )
     return "相关数据需进一步调研。"
 
 
@@ -63,17 +70,33 @@ def _render_template(section, kp, brief):
     gt = "数据缺口：" + "；".join(section.data_gaps[:3]) + "（待补充）" if section.data_gaps else ""
     ct = section.counter_thesis or "反方观点需进一步论证。"
     kv = brief.key_variable or "需补充关键变量"
-    fi = "\n".join(f"{i+1}. {item}" for i, item in enumerate(section.sub_points or [
-        "核心指标连续两个报告期不及预期", "与判断方向相反的结构性变化出现",
-        "关键假设被宏观或行业变化证伪"], 3))
-    ctx = {"section_title": section.title, "thesis": section.thesis or "",
-           "evidence_text": et or "相关数据待补充。", "data_gap_text": gt,
-           "counter_text": ct, "market_consensus": brief.market_consensus or "市场一致预期",
-           "our_view_statement": f"我们判断{brief.our_view or section.thesis}" if (brief.our_view or section.thesis) else "需补充核心判断。",
-           "key_variable": kv, "key_variable_text": f"重点关注《{kv}》的变化趋势。",
-           "counter_view": ct, "falsify_items": fi}
-    try: return tpl.format(**ctx)
-    except KeyError: return f"## {section.title}\n\n{section.thesis}\n\n{et}"
+    fi = "\n".join(
+        f"{i + 1}. {item}"
+        for i, item in enumerate(
+            section.sub_points
+            or ["核心指标连续两个报告期不及预期", "与判断方向相反的结构性变化出现", "关键假设被宏观或行业变化证伪"],
+            3,
+        )
+    )
+    ctx = {
+        "section_title": section.title,
+        "thesis": section.thesis or "",
+        "evidence_text": et or "相关数据待补充。",
+        "data_gap_text": gt,
+        "counter_text": ct,
+        "market_consensus": brief.market_consensus or "市场一致预期",
+        "our_view_statement": f"我们判断{brief.our_view or section.thesis}"
+        if (brief.our_view or section.thesis)
+        else "需补充核心判断。",
+        "key_variable": kv,
+        "key_variable_text": f"重点关注《{kv}》的变化趋势。",
+        "counter_view": ct,
+        "falsify_items": fi,
+    }
+    try:
+        return tpl.format(**ctx)
+    except KeyError:
+        return f"## {section.title}\n\n{section.thesis}\n\n{et}"
 
 
 def _build_prompt(section, kp, brief, style_profile) -> str:
@@ -91,9 +114,26 @@ def _build_prompt(section, kp, brief, style_profile) -> str:
     cs = section.counter_thesis or "需补充反方观点"
 
     # 可用来源白名单 —— Karpathy: 提前阻止而非事后验证
-    valid_sources = {"eastmoney", "年报", "公告", "公司年报", "交易所", "证监会",
-                     "赛迪顾问", "Yole", "ICV Tank", "行业测算", "wind", "bloomberg",
-                     "公司官网", "招股书", "定期报告", "行业公开报道", "系统计算", "tencent_kline"}
+    valid_sources = {
+        "eastmoney",
+        "年报",
+        "公告",
+        "公司年报",
+        "交易所",
+        "证监会",
+        "赛迪顾问",
+        "Yole",
+        "ICV Tank",
+        "行业测算",
+        "wind",
+        "bloomberg",
+        "公司官网",
+        "招股书",
+        "定期报告",
+        "行业公开报道",
+        "系统计算",
+        "tencent_kline",
+    }
     all_valid = "、".join(sorted(valid_sources))
     used_str = "、".join(sorted(sources_used)) if sources_used else all_valid
 
@@ -120,14 +160,16 @@ def _build_prompt(section, kp, brief, style_profile) -> str:
 直接输出此节正文，不含元信息。"""
 
 
-def _call_deepseek(prompt: str) -> Optional[str]:
+def _call_deepseek(prompt: str) -> str | None:
     try:
         from openai import OpenAI
+
         client = OpenAI(api_key=DEEPSEEK_KEY, base_url="https://api.deepseek.com")
         resp = client.chat.completions.create(
             model="deepseek-v4-pro",
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=1500, temperature=0.5,
+            max_tokens=1500,
+            temperature=0.5,
         )
         return resp.choices[0].message.content
     except Exception as e:

@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """test_module_version.py — P0-2 模块版本管理单测（2026-08-07）"""
+
 import tempfile
 from pathlib import Path
 

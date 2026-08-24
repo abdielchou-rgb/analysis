@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """skill_composer.py — 柔性化定制写作：技能组合 + 框架注册表动态组装（2026-08-07）
 
 从"固定 SAC 模板"升级为"技能组合动态组装"：
@@ -13,10 +12,12 @@
   plan = compose_skill_plan(req)
   # plan: {"frameworks": [...], "focus_dims": [...], "depth": "mid", "params": {...}}
 """
+
 from __future__ import annotations
-import os, json, logging
+
+import json
+import logging
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger("2hao.skill_composer")
 
@@ -86,7 +87,7 @@ def parse_requirement(requirement: str, report_type: str = "") -> dict:
     }
 
 
-def compose_skill_plan(req: dict, registry: Optional[dict] = None) -> dict:
+def compose_skill_plan(req: dict, registry: dict | None = None) -> dict:
     """按需求组装技能方案：选框架 + 定参数 + 加权维度。
 
     registry: 框架注册表（默认 load_registry）。效果记录用于权重调整（自演化）。
@@ -107,8 +108,7 @@ def compose_skill_plan(req: dict, registry: Optional[dict] = None) -> dict:
             continue
         eff = effects.get(fid, {})
         score = cfg.get("priority", 9) - eff.get("penalty", 0)
-        chosen.append({"id": fid, "name": cfg.get("name", fid),
-                       "priority": score, "effect": eff})
+        chosen.append({"id": fid, "name": cfg.get("name", fid), "priority": score, "effect": eff})
     chosen.sort(key=lambda x: x["priority"])
 
     depth = req.get("depth", "mid")
@@ -124,7 +124,7 @@ def compose_skill_plan(req: dict, registry: Optional[dict] = None) -> dict:
         "report_type": req.get("report_type", "listed_company"),
         "depth": depth,
         "audience": req.get("audience", "general"),
-        "frameworks": chosen[:dcfg["modules"] // 4 + 3],  # 模块数驱动框架数
+        "frameworks": chosen[: dcfg["modules"] // 4 + 3],  # 模块数驱动框架数
         "focus_dims": focus,
         "dim_weights": dim_weights,
         "params": dcfg,
@@ -143,15 +143,22 @@ def record_effect(framework_id: str, success: bool, delta_score: float = 0.0):
     else:
         eff["penalty"] = eff.get("penalty", 0) + 1.0  # 失败 → 惩罚增加
     _save_effects(effects)
-    logger.info("[SKILL-COMPOSER] 框架 %s 效果记录: uses=%d wins=%d penalty=%.1f",
-                framework_id, eff["uses"], eff["wins"], eff["penalty"])
+    logger.info(
+        "[SKILL-COMPOSER] 框架 %s 效果记录: uses=%d wins=%d penalty=%.1f",
+        framework_id,
+        eff["uses"],
+        eff["wins"],
+        eff["penalty"],
+    )
 
 
 # ── 内部工具 ─────────────────────────────────────────
 
+
 def _load_registry() -> dict:
     try:
         import yaml
+
         with open(REGISTRY_FILE, encoding="utf-8") as f:
             return yaml.safe_load(f) or {}
     except Exception as e:
@@ -171,7 +178,6 @@ def _load_effects() -> dict:
 def _save_effects(effects: dict):
     try:
         EFFECT_FILE.parent.mkdir(parents=True, exist_ok=True)
-        EFFECT_FILE.write_text(json.dumps(effects, ensure_ascii=False, indent=1),
-                               encoding="utf-8")
+        EFFECT_FILE.write_text(json.dumps(effects, ensure_ascii=False, indent=1), encoding="utf-8")
     except OSError as e:
         logger.warning("[SKILL-COMPOSER] 效果记录写盘失败: %s", e)

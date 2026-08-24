@@ -2,10 +2,11 @@
 prediction_validator.py - Scheduled task that validates expired predictions against real data.
 Runs as a daily/scripted task: python -m core.prediction_validator
 """
-import json, logging, os, sys
+
+import logging
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import List, Optional
 
 logger = logging.getLogger("2hao.prediction_validator")
 
@@ -16,7 +17,7 @@ sys.path.insert(0, str(_ROOT))
 class PredictionValidator:
     """Validate expired predictions against real market data"""
 
-    def __init__(self, storage_path: Optional[str] = None, industry: str = ""):
+    def __init__(self, storage_path: str | None = None, industry: str = ""):
         if storage_path is None:
             storage_path = str(_ROOT / "data" / "forward_picks" / "track_record.json")
         self.storage_path = storage_path
@@ -38,6 +39,7 @@ class PredictionValidator:
     def _load(self):
         """Load current predictions"""
         from core.tools.track_record import TrackRecordManager
+
         self.tm = TrackRecordManager(self.storage_path)
 
     def validate_all(self) -> dict:
@@ -74,23 +76,22 @@ class PredictionValidator:
                 results["validated"] += 1
             else:
                 # Mark as requires_human_review
-                self.tm.update_outcome(pred.id, "requires_human_review",
-                                       "需要人工验证: " + outcome.get("reason", "数据不可用"))
+                self.tm.update_outcome(
+                    pred.id, "requires_human_review", "需要人工验证: " + outcome.get("reason", "数据不可用")
+                )
                 results["failed"] += 1
             results["details"].append(outcome)
 
         if results["total"] > 0:
             self.tm._save()
-            logger.info("Validated %d of %d expired predictions",
-                       results["validated"], results["total"])
+            logger.info("Validated %d of %d expired predictions", results["validated"], results["total"])
 
         return results
 
     def _get_prediction_type(self, bold_call: str, direction: str) -> str:
         """Classify prediction type: price/financial/qualitative."""
         price_keywords = ["目标价", "股价", "估值", "上涨", "下跌", "price", "target"]
-        financial_keywords = ["营收", "净利", "收", "增长", "增", "利润率", "ROE", "EPS",
-                             "毛利率", "capex", "投资回报"]
+        financial_keywords = ["营收", "净利", "收", "增长", "增", "利润率", "ROE", "EPS", "毛利率", "capex", "投资回报"]
         if any(kw in bold_call for kw in price_keywords):
             return "price"
         if any(kw in bold_call for kw in financial_keywords):
@@ -99,9 +100,15 @@ class PredictionValidator:
 
     def _validate_prediction(self, pred) -> dict:
         """Validate a single prediction against market data."""
-        result = {"prediction_id": pred.id, "asset": pred.asset,
-                  "bold_call": pred.bold_call[:80], "validated": False,
-                  "outcome": "pending", "detail": "", "reason": ""}
+        result = {
+            "prediction_id": pred.id,
+            "asset": pred.asset,
+            "bold_call": pred.bold_call[:80],
+            "validated": False,
+            "outcome": "pending",
+            "detail": "",
+            "reason": "",
+        }
 
         # Classify prediction type
         pred_type = self._get_prediction_type(pred.bold_call, pred.direction)
@@ -130,8 +137,7 @@ class PredictionValidator:
             # Get price at maturity
             horizon_days = {"3m": 90, "6m": 180, "12m": 365, "unknown": 180}
             days = horizon_days.get(pred.time_horizon, 180)
-            maturity_date = (datetime.strptime(pred.made_date, "%Y-%m-%d")
-                           + timedelta(days=days)).strftime("%Y-%m-%d")
+            maturity_date = (datetime.strptime(pred.made_date, "%Y-%m-%d") + timedelta(days=days)).strftime("%Y-%m-%d")
 
             price_after = self._get_price(pred.asset, maturity_date)
             if not price_after:
@@ -154,38 +160,40 @@ class PredictionValidator:
 
             result["validated"] = True
             result["outcome"] = "correct" if correct else "incorrect"
-            result["detail"] = (f"入场价: {price_before:.2f}, "
-                               f"到期价: {price_after:.2f}, "
-                               f"变动: {change*100:.1f}%, "
-                               f"判断: {pred.direction}, "
-                               f"阈值: {threshold:.0%}, "
-                               f"预测类型: {pred_type}")
+            result["detail"] = (
+                f"入场价: {price_before:.2f}, "
+                f"到期价: {price_after:.2f}, "
+                f"变动: {change * 100:.1f}%, "
+                f"判断: {pred.direction}, "
+                f"阈值: {threshold:.0%}, "
+                f"预测类型: {pred_type}"
+            )
 
         except Exception as e:
             result["reason"] = str(e)[:100]
 
         return result
 
-    def _get_price(self, asset: str, date_str: str) -> Optional[float]:
+    def _get_price(self, asset: str, date_str: str) -> float | None:
         """Get price from akshare"""
         try:
             import akshare as ak
+
             code = self._asset_to_code(asset)
             if not code:
                 return None
-            df = ak.stock_zh_a_hist(symbol=code, period="daily",
-                                    start_date=date_str, end_date=date_str,
-                                    adjust="qfq")
+            df = ak.stock_zh_a_hist(symbol=code, period="daily", start_date=date_str, end_date=date_str, adjust="qfq")
             if df is not None and len(df) > 0:
                 return float(df.iloc[0]["收盘"])
         except Exception:
             pass
         return None
 
-    def _get_price_yfinance(self, asset: str, date_str: str) -> Optional[float]:
+    def _get_price_yfinance(self, asset: str, date_str: str) -> float | None:
         """Get price from yfinance"""
         try:
             import yfinance as yf
+
             ticker = yf.Ticker(asset)
             hist = ticker.history(start=date_str, end=date_str)
             if hist is not None and len(hist) > 0:
@@ -204,19 +212,15 @@ class PredictionValidator:
         """Get validation statistics"""
         self._load()
         total = len(self.tm.record.predictions)
-        resolved = sum(1 for p in self.tm.record.predictions
-                      if p.outcome in ("correct", "incorrect"))
-        correct = sum(1 for p in self.tm.record.predictions
-                     if p.outcome == "correct")
+        resolved = sum(1 for p in self.tm.record.predictions if p.outcome in ("correct", "incorrect"))
+        correct = sum(1 for p in self.tm.record.predictions if p.outcome == "correct")
         return {
             "total": total,
             "resolved": resolved,
             "correct": correct,
             "incorrect": resolved - correct,
-            "pending": sum(1 for p in self.tm.record.predictions
-                          if p.outcome == "pending"),
-            "requires_review": sum(1 for p in self.tm.record.predictions
-                                  if p.outcome == "requires_human_review"),
+            "pending": sum(1 for p in self.tm.record.predictions if p.outcome == "pending"),
+            "requires_review": sum(1 for p in self.tm.record.predictions if p.outcome == "requires_human_review"),
             "accuracy": correct / resolved if resolved > 0 else 0,
         }
 
@@ -252,23 +256,24 @@ def validate_forward_picks_csv(horizon_days: int = 365) -> dict:
 
     返回 {total, expired, validated, hit, miss, pending_after}
     """
-    from core.forward_picks import ForwardPicksDB
     import datetime as _dt
-    from pathlib import Path as _Path
+
+    from core.forward_picks import ForwardPicksDB
 
     db = ForwardPicksDB()
     picks = db.load_all()
     if not picks:
-        return {"total": 0, "expired": 0, "validated": 0, "hit": 0,
-                "miss": 0, "pending_after": 0}
+        return {"total": 0, "expired": 0, "validated": 0, "hit": 0, "miss": 0, "pending_after": 0}
 
     today = _dt.date.today()
     now = today.strftime("%Y-%m-%d")
-    expired = [p for p in picks
-               if p.verification_status == "pending"
-               and p.created_at
-               and (today - _dt.datetime.strptime(p.created_at[:10], "%Y-%m-%d").date()
-                    ).days >= horizon_days]
+    expired = [
+        p
+        for p in picks
+        if p.verification_status == "pending"
+        and p.created_at
+        and (today - _dt.datetime.strptime(p.created_at[:10], "%Y-%m-%d").date()).days >= horizon_days
+    ]
     validated = 0
     hit = 0
     miss = 0
@@ -280,6 +285,7 @@ def validate_forward_picks_csv(horizon_days: int = 365) -> dict:
             skipped += 1
             continue
         from core.data_backends import _query_local_qlib_price
+
         q = _query_local_qlib_price(code)
         if not q or len(q["prices"]) < 2:
             skipped += 1

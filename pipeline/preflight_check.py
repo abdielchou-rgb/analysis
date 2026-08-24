@@ -10,9 +10,9 @@
 绝不裸奔。
 """
 
-import sys
 import importlib
 import logging
+import sys
 from pathlib import Path
 
 _ANALYST_ROOT = Path(__file__).resolve().parent.parent
@@ -140,9 +140,9 @@ class PreflightChecker:
 
     def _report(self) -> bool:
         passed = len(self.errors) == 0
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"Preflight Check: {'PASS' if passed else 'FAIL'}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         if self.errors:
             print(f"\n  [!] 阻断性错误 ({len(self.errors)}):")
             for e in self.errors:
@@ -152,11 +152,11 @@ class PreflightChecker:
             for w in self.warnings:
                 print(f"      - {w}")
         if passed:
-            print(f"\n  ✅ 所有核心模块就绪，管线可以安全启动。")
+            print("\n  ✅ 所有核心模块就绪，管线可以安全启动。")
         else:
-            print(f"\n  ❌ 存在阻断性错误，管线无法启动。")
-            print(f"     请修复上述错误后重试。")
-        print(f"{'='*60}\n")
+            print("\n  ❌ 存在阻断性错误，管线无法启动。")
+            print("     请修复上述错误后重试。")
+        print(f"{'=' * 60}\n")
         return passed
 
 
@@ -168,5 +168,6 @@ def check(report_type: str = "industry_deep") -> bool:
 
 if __name__ == "__main__":
     import sys
+
     rt = sys.argv[1] if len(sys.argv) > 1 else "industry_deep"
     sys.exit(0 if check(rt) else 1)

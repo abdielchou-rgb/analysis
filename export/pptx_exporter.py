@@ -11,17 +11,17 @@
 """
 
 from __future__ import annotations
+
 import logging
-import os
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger("v51.export.pptx")
 
 try:
     from pptx import Presentation
-    from pptx.util import Inches, Pt, Emu
     from pptx.dml.color import RGBColor
+    from pptx.util import Emu, Inches, Pt  # noqa: F401  (availability probe)
+
     _HAS_PPTX = True
 except ImportError:
     _HAS_PPTX = False
@@ -50,9 +50,9 @@ TEMPLATE_MAP = {
 }
 
 
-def export_pptx(report_md: str, style_id: str = "cicc",
-                chart_paths: dict[str, str] = None,
-                output_path: str = "") -> Optional[str]:
+def export_pptx(
+    report_md: str, style_id: str = "cicc", chart_paths: dict[str, str] = None, output_path: str = ""
+) -> str | None:
     """将报告导出为 PPTX。
 
     从 templates/{style_id}/slides.potx 读取模板，填充内容。
@@ -66,9 +66,7 @@ def export_pptx(report_md: str, style_id: str = "cicc",
     if not _HAS_PPTX:
         # P1-4（2026-08-07）：原逻辑 return None 静默跳过，导致调用方无法区分
         # "PPTX 未产出"与"导出失败"。改为明确报错。
-        raise RuntimeError(
-            "python-pptx 未安装，无法生成 PPTX。请执行: pip install python-pptx"
-        )
+        raise RuntimeError("python-pptx 未安装，无法生成 PPTX。请执行: pip install python-pptx")
 
     style = get_palette(style_id)
     colors = style["palette"]
@@ -88,28 +86,30 @@ def export_pptx(report_md: str, style_id: str = "cicc",
     # 清除默认 slide（如果有模板则保留模板格式）
     for _ in range(len(prs.slides) - 1, 0, -1):
         try:
-            rId = prs.slides._sldIdLst[-1].get('{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id')
+            rId = prs.slides._sldIdLst[-1].get(
+                "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id"
+            )
             if rId:
                 prs.part.drop_rel(rId)
         except Exception:
             pass
 
     # 从 markdown 解析章节和段落
-    lines = report_md.split('\n')
+    lines = report_md.split("\n")
     slide_content = []
     current_title = ""
 
     for line in lines:
-        if line.startswith('# ') or line.startswith('## '):
+        if line.startswith("# ") or line.startswith("## "):
             if current_title:
                 slide_content.append({"title": current_title, "body": [], "has_chart": False, "tables": []})
-            level = line.count('#')
-            current_title = line.lstrip('#').strip()
+            level = line.count("#")
+            current_title = line.lstrip("#").strip()
         elif line.strip() and current_title:
             slide_content[-1]["body"].append(line.strip()) if slide_content and current_title else None
 
         # 检测 markdown 表格（该 slide 包含表格）
-        if '|' in line and '---' not in line and current_title and slide_content:
+        if "|" in line and "---" not in line and current_title and slide_content:
             slide_content[-1].setdefault("tables", []).append(line)
 
     if current_title and (not slide_content or slide_content[-1].get("title") != current_title):
@@ -124,6 +124,7 @@ def export_pptx(report_md: str, style_id: str = "cicc",
     if not chart_list:
         try:
             from pathlib import Path as _P
+
             _charts_dir = _P(__file__).resolve().parent.parent / "output" / "charts"
             if _charts_dir.exists():
                 _pngs = sorted(_charts_dir.glob("*.png"))
@@ -135,9 +136,28 @@ def export_pptx(report_md: str, style_id: str = "cicc",
 
     # 在关键章节插入图表（核心判断、财务分析、估值分析等）
     # R30 增强：每个含图表关键词的章节分配一张图（从图池顺序取，允许复用）
-    chart_keywords = ["核心判断", "核心分歧", "财务", "估值", "收入", "利润", "竞争",
-                      "KPI", "用户指标", "广告", "AI", "电商", "概况", "格局",
-                      "风险", "现金流", "资产负债", "盈利", "DCF", "敏感性"]
+    chart_keywords = [
+        "核心判断",
+        "核心分歧",
+        "财务",
+        "估值",
+        "收入",
+        "利润",
+        "竞争",
+        "KPI",
+        "用户指标",
+        "广告",
+        "AI",
+        "电商",
+        "概况",
+        "格局",
+        "风险",
+        "现金流",
+        "资产负债",
+        "盈利",
+        "DCF",
+        "敏感性",
+    ]
     assigned_indices = set()
     chart_pool_idx = 0
     for sec in slide_content:
@@ -196,11 +216,11 @@ def export_pptx(report_md: str, style_id: str = "cicc",
                 title_placeholder = ph
                 break
         if title_placeholder:
-            title_placeholder.text = title.replace('### ', '').replace('## ', '').replace('# ', '')
+            title_placeholder.text = title.replace("### ", "").replace("## ", "").replace("# ", "")
         else:
             # fallback: add textbox
             txbox = slide.shapes.add_textbox(Inches(0.5), Inches(0.3), Inches(9), Inches(0.8))
-            txbox.text_frame.text = title.replace('### ', '').replace('## ', '').replace('# ', '')
+            txbox.text_frame.text = title.replace("### ", "").replace("## ", "").replace("# ", "")
 
         # 标题
         if slide.shapes.title:
@@ -223,11 +243,11 @@ def export_pptx(report_md: str, style_id: str = "cicc",
             # 提取表头作为 slide 正文
             table_lines = []
             for tbl_line in tables[:8]:
-                cells = [c.strip() for c in tbl_line.split('|') if c.strip()]
+                cells = [c.strip() for c in tbl_line.split("|") if c.strip()]
                 if cells:
-                    table_lines.append(' | '.join(cells[:4]))
+                    table_lines.append(" | ".join(cells[:4]))
             if table_lines:
-                table_text = '\n'.join(table_lines[:6])
+                table_text = "\n".join(table_lines[:6])
                 has_table_text = True
             else:
                 has_table_text = False
@@ -252,7 +272,7 @@ def export_pptx(report_md: str, style_id: str = "cicc",
         if has_table_text and not chart_inserted:
             if body_text_idx > 0:
                 p = tf.add_paragraph()
-                p.text = ''
+                p.text = ""
                 p.space_after = Pt(2)
             for tbl_line in table_lines[:5]:
                 p = tf.add_paragraph()

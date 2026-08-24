@@ -1,20 +1,21 @@
 # Data Feeds Pipeline Node — 将RSS/PDF/专利/推断 接入管线
 
 from __future__ import annotations
-import logging, json
-from pathlib import Path
+
+import logging
+
 from core.data_feeds import (
-    _feeds, collect_industry_news, scan_local_reports,
-    search_patents, infer_company_basics,
+    collect_industry_news,
+    infer_company_basics,
+    search_patents,
 )
-from core.pw_collector import batch_extract_reports, extract_xueqiu_sentiment
 from core.extra_collectors import collect_all_extra
+from core.pw_collector import batch_extract_reports
 
 logger = logging.getLogger("2hao.data_feeds_node")
 
 
-def run_all_feeds(asset: str = "", industry: str = "",
-                  asset_code: str = "") -> dict:
+def run_all_feeds(asset: str = "", industry: str = "", asset_code: str = "") -> dict:
     """运行所有数据Feed，返回聚合结果"""
     context = {}
 
@@ -40,7 +41,7 @@ def run_all_feeds(asset: str = "", industry: str = "",
     basics = infer_company_basics(asset, industry)
     if basics:
         context["feed_basics"] = basics
-        logger.info("Feed basics: %s %s", basics.get("ownership","?"), basics.get("board","?"))
+        logger.info("Feed basics: %s %s", basics.get("ownership", "?"), basics.get("board", "?"))
 
     # 4. 专利搜索
     patents = search_patents(asset[:10])
@@ -48,15 +49,14 @@ def run_all_feeds(asset: str = "", industry: str = "",
         context["feed_patents"] = patents
         logger.info("Feed patents: %d for %s", patents["patent_count"], asset[:10])
 
-
     # 5. Extra collectors (Xueqiu + job signals)
     extra = collect_all_extra(asset, asset_code, industry)
     if extra:
         context["extra_sentiment"] = extra.get("xueqiu", {})
         context["extra_jobs"] = extra.get("job_signals", {})
-        logger.info("Extra: xueqiu=%s jobs=%s",
-                    "Y" if extra.get("xueqiu") else "N",
-                    "Y" if extra.get("job_signals") else "N")
+        logger.info(
+            "Extra: xueqiu=%s jobs=%s", "Y" if extra.get("xueqiu") else "N", "Y" if extra.get("job_signals") else "N"
+        )
 
     return context
 
@@ -76,12 +76,14 @@ def data_feeds_node(node_id: str, context: dict) -> dict:
     elif asset:
         # 从行业分类器推断
         from core.tools.business_model_classifier import classify_by_text
+
         biz = classify_by_text(asset, "?")
         if biz.industry_tags:
             industry = biz.industry_tags[0]
 
     # 提取股票代码
     import re
+
     code_match = re.search(r"(\d{6})", asset)
     asset_code = code_match.group(1) if code_match else ""
 
@@ -93,13 +95,26 @@ def data_feeds_node(node_id: str, context: dict) -> dict:
     collected = context.get("collected_data")
     if not isinstance(collected, dict):
         collected = {}
-    for k in ("feed_news", "feed_news_raw", "feed_reports", "feed_report_count",
-              "feed_target_reports", "feed_basics", "feed_patents",
-              "extra_sentiment", "extra_jobs"):
+    for k in (
+        "feed_news",
+        "feed_news_raw",
+        "feed_reports",
+        "feed_report_count",
+        "feed_target_reports",
+        "feed_basics",
+        "feed_patents",
+        "extra_sentiment",
+        "extra_jobs",
+    ):
         if k in ctx:
             collected[k] = ctx[k]
     context["collected_data"] = collected
 
-    logger.info("DataFeeds node: asset=%s industry=%s feeds=%d merged=%d",
-                asset, industry, len(ctx), len([k for k in ctx if k.startswith("feed_") or k.startswith("extra_")]))
+    logger.info(
+        "DataFeeds node: asset=%s industry=%s feeds=%d merged=%d",
+        asset,
+        industry,
+        len(ctx),
+        len([k for k in ctx if k.startswith("feed_") or k.startswith("extra_")]),
+    )
     return ctx

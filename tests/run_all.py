@@ -5,7 +5,9 @@ Target: 70+ tests covering core infrastructure + new adapter layers.
 
 from __future__ import annotations
 
-import sys, py_compile, time
+import py_compile
+import sys
+import time
 from pathlib import Path
 
 # R43（2026-08-02）：统一 stdout 编码，消除 GBK 环境的 UnicodeDecodeError 线程告警。
@@ -32,16 +34,19 @@ def t(name, ok, detail=""):
 
 # 1. All modules compile
 modules = [
-    "core/models.py", "main.py",
+    "core/models.py",
+    "main.py",
     "core/input.py",
     "core/protocol.py",
     "core/evidence.py",
     "data/engine.py",
     "core/compute/valuation/scenario.py",  # R7: compute/__init__.py 不存在，改用真实路径
-    "core/argument.py", "core/style.py",
+    "core/argument.py",
+    "core/style.py",
     "core/edit.py",
     "core/verify.py",
-    "export/__init__.py", "export/expandable_report.py",
+    "export/__init__.py",
+    "export/expandable_report.py",
     "core/metrics.py",
     "core/styles/profiles.py",
 ]
@@ -57,31 +62,41 @@ for m in modules:
         t(f"compile {m}", False, f"FILE NOT FOUND: {path}")
 
 # 2. Schema
-from core.models import *
+from core.models import *  # noqa: F403  (legacy runner 聚合入口)
+
 b = WritingBrief(asset="test")
 t("brief default", b.brief_id != "")
 b2 = WritingBrief.from_dict(b.to_dict())
 t("brief roundtrip", b2.asset == "test")
-s = ArgumentScaffold(brief_id="t", title="t", core_disagreement={},
-    sections=[ArgumentSection(section_id="s1", title="t", thesis="t")])
-t("scaffold", len(s.sections)==1 and s.sections[0].section_id=="s1")
+s = ArgumentScaffold(
+    brief_id="t", title="t", core_disagreement={}, sections=[ArgumentSection(section_id="s1", title="t", thesis="t")]
+)
+t("scaffold", len(s.sections) == 1 and s.sections[0].section_id == "s1")
 d = Deliverable(report_md="# T")
 t("deliverable", d.report_md == "# T")
 kp = KnowledgePackage()
-t("kp empty", len(kp.data_points)==0)
+t("kp empty", len(kp.data_points) == 0)
 e = EditCase(case_id="e1", correction_type=EditingType.BIASED_JUDGMENT)
 t("edit case", e.correction_type == EditingType.BIASED_JUDGMENT)
 
 # 3. Styles
 from core.styles.profiles import get_style, list_styles
+
 t("has 7 styles", len(list_styles()) >= 7)
 t("gs name", get_style("goldman_sachs")["name"] == "Goldman Sachs")
 
 # 4. Research protocol
 from core.protocol import SACToResearchProtocol
+
 gen = SACToResearchProtocol()
-sac = SACEntry(sac_id="sac_industry_deep", name="t", applies_to=["industry"],
-    required_dimensions=[], evidence_requirements={}, forbidden_patterns=[])
+sac = SACEntry(
+    sac_id="sac_industry_deep",
+    name="t",
+    applies_to=["industry"],
+    required_dimensions=[],
+    evidence_requirements={},
+    forbidden_patterns=[],
+)
 for depth in ["brief", "standard", "deep"]:
     p = gen.generate(sac, "t", output_depth=depth)
     t(f"proto {depth}", len(p.tasks) > 0)
@@ -91,13 +106,20 @@ t("brief has 9 serenity steps", sum(1 for t in pb.tasks if t.task_id.startswith(
 t("brief has 12 mece dims", sum(1 for t in pb.tasks if not t.task_id.startswith("s0")) == 12)
 
 # 4b. Listed company protocol
-sac2 = SACEntry(sac_id="sac_listed_company", name="t", applies_to=["all"],
-    required_dimensions=[], evidence_requirements={}, forbidden_patterns=[])
+sac2 = SACEntry(
+    sac_id="sac_listed_company",
+    name="t",
+    applies_to=["all"],
+    required_dimensions=[],
+    evidence_requirements={},
+    forbidden_patterns=[],
+)
 p2 = gen.generate(sac2, "t", output_depth="standard")
 t("listed dims >= 9", len([t for t in p2.tasks]) >= 9)
 
 # 5. Style Compiler
 from core.style import StyleCompiler
+
 sc = StyleCompiler()
 r = sc.compile("值得注意的是，营收增长15%。")
 t("compiler removes AI", "值得注意的是" not in r.compiled)
@@ -108,24 +130,28 @@ t("compiler no crash", True, f"compiled len={len(r2.compiled)} (短文本无套�
 
 # 6. SAC Gate
 from core.verify import SACGate
+
 gate = SACGate()
 t("gate checkable", gate.check(s, kp).get("passed") is not None)
 kp_sac = KnowledgePackage()
-kp_sac.sac = SACEntry(sac_id="test", required_dimensions=[],
-    evidence_requirements={}, forbidden_patterns=[])
+kp_sac.sac = SACEntry(sac_id="test", required_dimensions=[], evidence_requirements={}, forbidden_patterns=[])
 t("gate empty passes", gate.check(s, kp_sac).get("passed"))
 
 # 7. Data pipeline
 # R5（2026-07-31 Marvis 二轮审计）：EastMoneyEngine 网络调用不可复现，
 # 加 try/except 降级为 WARN（CacheEngine 才是稳定路径）
-from data.engine import EastMoneyEngine, CacheEngine, DataQuery
+from data.engine import CacheEngine, DataQuery, EastMoneyEngine
+
 try:
     em = EastMoneyEngine()
     em_result = em.fetch(DataQuery(assets=["000000"]))
     t("em no crash", em_result.source != "")
 except Exception as e:
-    t("em no crash (degraded: network unavailable)", True,
-      f"EastMoney network unavailable, degraded to WARN: {str(e)[:60]}")
+    t(
+        "em no crash (degraded: network unavailable)",
+        True,
+        f"EastMoney network unavailable, degraded to WARN: {str(e)[:60]}",
+    )
 lc = CacheEngine()
 r_lc = lc.fetch(DataQuery(assets=["600519"]))
 t("cache returns", len(r_lc.points) >= 1)
@@ -133,27 +159,42 @@ t("cache has name", r_lc.points[0].name != "")
 
 # 8. NEW: T2a real argument engine
 from core.argument import ArgumentEngine
+
 ae = ArgumentEngine()
 test_kp = KnowledgePackage()
-test_kp.sac = SACEntry(sac_id="sac_listed_company",
+test_kp.sac = SACEntry(
+    sac_id="sac_listed_company",
     required_dimensions=[
-        {"id": "core_disagreement", "question": "核心分歧", "evidence_min": 1,
-         "counter_evidence": True, "position": "page_2"},
+        {
+            "id": "core_disagreement",
+            "question": "核心分歧",
+            "evidence_min": 1,
+            "counter_evidence": True,
+            "position": "page_2",
+        },
         {"id": "business_model", "question": "商业模式", "evidence_min": 1},
-    ], evidence_requirements={}, forbidden_patterns=[])
+    ],
+    evidence_requirements={},
+    forbidden_patterns=[],
+)
 scaffold = ae.design(
-    WritingBrief(asset="贵州茅台", asset_code="600519",
-                 market_consensus="45%天花板", our_view="可突破50%",
-                 key_variable="i茅台增速"),
-    test_kp)
+    WritingBrief(
+        asset="贵州茅台",
+        asset_code="600519",
+        market_consensus="45%天花板",
+        our_view="可突破50%",
+        key_variable="i茅台增速",
+    ),
+    test_kp,
+)
 t("t2a produces sections", len(scaffold.sections) > 0)
 t("t2a has core dims", any("core_disagreement" in s.section_id for s in scaffold.sections))
 
 # 9. NEW: Expandable report
-from export.expandable_report import ExpandableReport, BriefCard
+from export.expandable_report import BriefCard, ExpandableReport
+
 er = ExpandableReport("Test")
-er.brief_cards = [BriefCard(title="Test Card", content="Test content",
-                             expand_to_section_id="dim_test")]
+er.brief_cards = [BriefCard(title="Test Card", content="Test content", expand_to_section_id="dim_test")]
 er.deep_sections = {"dim_test": "## Deep analysis"}
 html = er.to_html()
 t("expandable html", "Test Card" in html and "Deep analysis" in html)
@@ -162,10 +203,10 @@ t("expandable html", "Test Card" in html and "Deep analysis" in html)
 # R5：core.learn 可能缺失（不同环境），降级为 WARN 不中断
 try:
     from core.learn import EditHistory
+
     t("edit learning exists", EditHistory is not None)
 except ImportError:
-    t("edit learning exists (degraded)", True,
-      "core.learn not available in this env, degraded to WARN")
+    t("edit learning exists (degraded)", True, "core.learn not available in this env, degraded to WARN")
 
 # ═══════════════════════════════════════════════════════════════
 # V51 Extended Tests (47 → 105+)
@@ -174,7 +215,10 @@ except ImportError:
 # ── 11. Data Source Manager ──────────────────────────────────
 
 from data.datasource_manager import (
-    DataSourceManager, CircuitBreaker, EngineConfig, data_manager,
+    CircuitBreaker,
+    DataSourceManager,
+    EngineConfig,
+    data_manager,
 )
 
 t("datasource_manager importable", DataSourceManager is not None)
@@ -202,10 +246,14 @@ mgr = DataSourceManager()
 t("manager initially empty", len(mgr.registered_engines) == 0)
 
 called = []
+
+
 def mock_fetch(q):
     called.append(q)
     from data.engine import DataResponse
+
     return DataResponse(points=[], source="mock")
+
 
 mgr.register("mock", mock_fetch, priority=0, timeout=5.0, max_retries=1)
 t("manager has 1 engine", len(mgr.registered_engines) == 1)
@@ -214,10 +262,11 @@ t("engine health shows mock", "mock" in mgr.engine_health())
 
 # Test fetch_with_fallback via direct call (skip threading edge)
 from data.engine import DataQuery
+
 q = DataQuery(assets=["600519"])
 # Direct engine access
 result = mock_fetch(q)
-t("mock fetch returns DataResponse", hasattr(result, 'source'))
+t("mock fetch returns DataResponse", hasattr(result, "source"))
 t("mock fetch was called", len(called) == 1)
 
 # Reset circuits
@@ -247,21 +296,26 @@ t("consensus empty without akshare", isinstance(points, list))
 # ── 13. Conviction Fix Verification ──────────────────────────
 
 from core.conviction import ArgumentScaffold
+
 t("conviction imports ArgumentScaffold", ArgumentScaffold is not None)
 
 import importlib
+
 import core.compute.valuation
+
 importlib.reload(core.compute.valuation)
 val_mod = core.compute.valuation
 t("valuation init loads", val_mod is not None)
 
 # Verify format_scenario_for_report resolves correctly
 from core.compute.valuation.scenario import format_scenario_for_report
+
 t("format_scenario from scenario module", callable(format_scenario_for_report))
 t("valuation __getattr__ resolves scenario", callable(val_mod.format_scenario_for_report))
 
 # Verify SOTP functions still resolve
 from core.compute.valuation.sotp import compute_sotp, format_sotp_for_report
+
 t("sotp compute exists", callable(compute_sotp))
 t("sotp format exists", callable(format_sotp_for_report))
 t("valuation __getattr__ resolves sotp", callable(val_mod.compute_sotp))
@@ -290,8 +344,7 @@ for py_file in project_root.rglob("*.py"):
     except Exception:
         pass
 
-t("no bare except in core modules", len(bare_except_files) == 0,
-  f"Bare except found in: {bare_except_files}")
+t("no bare except in core modules", len(bare_except_files) == 0, f"Bare except found in: {bare_except_files}")
 
 # ── 15. Async Pipeline Tests ─────────────────────────────────
 
@@ -304,25 +357,30 @@ t("async pipeline has kline", callable(getattr(async_pipeline, "fetch_kline", No
 
 # Verify KLineEngine now has fetch_kline_raw
 from data.engine import KLineEngine
+
 engine = KLineEngine()
-t("kline engine has fetch_kline_raw", hasattr(engine, 'fetch_kline_raw'))
+t("kline engine has fetch_kline_raw", hasattr(engine, "fetch_kline_raw"))
 
 # ── 16. Report Cache & Evidence Chain Tests ────────────────────
 
 from core.report_cache import ReportCache
+
 rc = ReportCache()
 t("report cache created", rc is not None)
 
 from core.evidence_chain import build_evidence_appendix, evidence_stats
+
 t("evidence appendix exists", callable(build_evidence_appendix))
 t("evidence stats exists", callable(evidence_stats))
 
 from core.evidence import EvidenceLevel
+
 t("evidence level enum exists", EvidenceLevel is not None)
 
 # ── 17. Style Module Tests ─────────────────────────────────────
 
-from core.style import StyleCompiler, CompiledText, strip_aigc_metadata
+from core.style import CompiledText, StyleCompiler, strip_aigc_metadata
+
 sc = StyleCompiler()
 t("style compiler exists", sc is not None)
 t("compiled text model exists", CompiledText is not None)
@@ -330,38 +388,47 @@ t("strip aigc metadata callable", callable(strip_aigc_metadata))
 
 # ── 18. Edit / Learning Modules ────────────────────────────────
 
-from core.edit import EditEngine, EditClassifier, EditingType
+from core.edit import EditEngine, EditingType
+
 et = EditingType
 t("editing type enum", et is not None)
 ee = EditEngine()
 t("edit engine exists", ee is not None)
 
-from core.edit_learn import EditOrchestrator, EditDatabase
+from core.edit_learn import EditOrchestrator
+
 eo = EditOrchestrator()
 t("edit orchestrator exists", eo is not None)
 
-from core.edit_history import EditDatabase as EHDB, inject_preferences
+from core.edit_history import EditDatabase as EHDB
+from core.edit_history import inject_preferences
+
 t("edit history DB exists", EHDB is not None)
 t("inject preferences callable", callable(inject_preferences))
 
 # ── 19. Prose Engine Tests ─────────────────────────────────────
 
 from core.prose import ProseEngine
+
 pe = ProseEngine()
 t("prose engine exists", pe is not None)
 
 from core.styles.profiles import get_style, list_styles
+
 t("get_style exists", callable(get_style))
 t("list_styles exists", callable(list_styles))
 
 # ── 20. Cognitive Baseline & Protocol Edge Cases ───────────────
 
 from core.cognitive_baseline import CognitiveBaseline
+
 t("cognitive baseline class exists", CognitiveBaseline is not None)
 t("list_all callable", callable(CognitiveBaseline.list_all))
 t("list_all returns list", isinstance(CognitiveBaseline.list_all(), list))
 
-from core.protocol import EvidenceItem as ProtoEvidenceItem, ResearchProtocol
+from core.protocol import EvidenceItem as ProtoEvidenceItem
+from core.protocol import ResearchProtocol
+
 ei2 = ProtoEvidenceItem("test", "body")
 t("protocol evidence item", ei2 is not None)
 t("research protocol exists", ResearchProtocol is not None)
@@ -387,21 +454,23 @@ for pt in pts_valid:
 # 21e. DataPoint has required fields
 if pts_valid:
     dp = pts_valid[0]
-    t("DataPoint has name", hasattr(dp, 'name') and dp.name != "")
-    t("DataPoint has value", hasattr(dp, 'value'))
-    t("DataPoint has source", hasattr(dp, 'source') and dp.source != "")
-    t("DataPoint has source_level", hasattr(dp, 'source_level'))
+    t("DataPoint has name", hasattr(dp, "name") and dp.name != "")
+    t("DataPoint has value", hasattr(dp, "value"))
+    t("DataPoint has source", hasattr(dp, "source") and dp.source != "")
+    t("DataPoint has source_level", hasattr(dp, "source_level"))
 
 # ── 21f. Consensus connector with mock DataFrame ───────────────
-import data.consensus_connector as cc_mod
 
 try:
     import pandas as pd
-    mock_df = pd.DataFrame({
-        "predictRevenue": [1e10],
-        "predictNetProfit": [2e9],
-        "predictPER": [25.0],
-    })
+
+    mock_df = pd.DataFrame(
+        {
+            "predictRevenue": [1e10],
+            "predictNetProfit": [2e9],
+            "predictPER": [25.0],
+        }
+    )
     empty_df = pd.DataFrame()
     t("consensus empty DataFrame handles gracefully", True)
 except ImportError:
@@ -409,7 +478,7 @@ except ImportError:
 
 # ── 22. V51 Optimisation: datasource_manager lazy init ────────
 
-from data.datasource_manager import _builtin_initialized, _init_builtin_engines, data_manager as dm2
+from data.datasource_manager import data_manager as dm2
 
 # 22a. Before init, singleton may have 0 engines (lazy init not yet triggered)
 # Reset to test lazy behaviour
@@ -418,6 +487,7 @@ dm2._engines.clear()
 
 # Force re-init
 import data.datasource_manager as dsm
+
 dsm._builtin_initialized = False
 dsm._init_builtin_engines()
 t("lazy init registers engines", len(dm2.registered_engines) >= 3)
@@ -482,34 +552,41 @@ t("cb failure count reset on success", cb5._failures == 0)
 # 24a. Test that slow engines are handled by ThreadPoolExecutor timeout
 mgr3 = DataSourceManager()
 
+
 def slow_fetch(q):
     time.sleep(5.0)
     from data.engine import DataResponse
+
     return DataResponse(points=[], source="slow")
+
 
 def fast_fetch(q):
     from data.engine import DataResponse
+
     return DataResponse(points=[DataPoint(name="fast", value=1, source="fast")], source="fast")
+
 
 mgr3.register("slow", slow_fetch, priority=0, timeout=0.2, max_retries=0, circuit_threshold=10)
 mgr3.register("fast", fast_fetch, priority=1, timeout=5.0, max_retries=0)
 
 q_to = DataQuery(assets=["600519"])
 result_to = mgr3.fetch_with_fallback(q_to)
-t("timeout falls back to fast engine", hasattr(result_to, 'points') and len(result_to.points) > 0)
+t("timeout falls back to fast engine", hasattr(result_to, "points") and len(result_to.points) > 0)
 t("fast engine returned data", result_to.source == "fast")
 
 # 24b. All engines fail → DataResponse with error
 mgr4 = DataSourceManager()
 
+
 def always_fail(q):
     raise RuntimeError("simulated failure")
+
 
 mgr4.register("fail1", always_fail, priority=0, timeout=5.0, max_retries=0, circuit_threshold=10)
 mgr4.register("fail2", always_fail, priority=1, timeout=5.0, max_retries=0, circuit_threshold=10)
 
 result_fail = mgr4.fetch_with_fallback(q_to)
-t("all fail returns DataResponse", hasattr(result_fail, 'error'))
+t("all fail returns DataResponse", hasattr(result_fail, "error"))
 t("all fail has error message", result_fail.error != "")
 
 # ── 25. V51 Optimisation: KLineEngine fetch_kline_raw ─────────
@@ -565,6 +642,7 @@ t("EngineConfig default circuit_threshold", ec2.circuit_threshold == 5)
 # ── 27. V52 数据兜底桥接层（pipeline/data_enrichment.py）──
 try:
     from tests.test_data_enrichment import run as enrich_test_run
+
     _np, _nf = enrich_test_run()
     n_pass += _np
     n_fail += _nf
@@ -574,6 +652,7 @@ except Exception as e:
 # ── 28. R2 一致性引擎（pipeline/consistency_engine.py）──
 try:
     from tests.test_consistency_engine import run as consistency_test_run
+
     _np, _nf = consistency_test_run()
     n_pass += _np
     n_fail += _nf
@@ -584,14 +663,22 @@ except Exception as e:
 try:
     import ast as _ast
     import pathlib as _pl
+
     _violations = []
     # 只扫关键文件（避免 rglob 遍历全项目超时）
     _scan_files = [
-        "core/conviction.py", "core/data_provenance.py", "core/extra_collectors.py",
-        "core/model_extractor.py", "core/prose.py", "core/style.py",
-        "pipeline/chart_assembler.py", "pipeline/chart_pipeline.py",
-        "pipeline/section_writer.py", "pipeline/e2e_orchestrator.py",
-        "pipeline/consistency_engine.py", "pipeline/iron_gate.py",
+        "core/conviction.py",
+        "core/data_provenance.py",
+        "core/extra_collectors.py",
+        "core/model_extractor.py",
+        "core/prose.py",
+        "core/style.py",
+        "pipeline/chart_assembler.py",
+        "pipeline/chart_pipeline.py",
+        "pipeline/section_writer.py",
+        "pipeline/e2e_orchestrator.py",
+        "pipeline/consistency_engine.py",
+        "pipeline/iron_gate.py",
         "core/compute/valuation/scenario.py",
     ]
     for _f in _scan_files:
@@ -599,16 +686,16 @@ try:
         if not _py.exists():
             continue
         try:
-            _src = _py.read_text(encoding='utf-8')
+            _src = _py.read_text(encoding="utf-8")
             _tree = _ast.parse(_src)
             _uses_os = _imports_os = False
             for _node in _ast.walk(_tree):
-                if isinstance(_node, _ast.Attribute) and isinstance(_node.value, _ast.Name) and _node.value.id == 'os':
+                if isinstance(_node, _ast.Attribute) and isinstance(_node.value, _ast.Name) and _node.value.id == "os":
                     _uses_os = True
                 if isinstance(_node, _ast.Import):
-                    if any(_a.name == 'os' or _a.name.startswith('os.') for _a in _node.names):
+                    if any(_a.name == "os" or _a.name.startswith("os.") for _a in _node.names):
                         _imports_os = True
-                if isinstance(_node, _ast.ImportFrom) and _node.module and _node.module.startswith('os'):
+                if isinstance(_node, _ast.ImportFrom) and _node.module and _node.module.startswith("os"):
                     _imports_os = True
             if _uses_os and not _imports_os:
                 _violations.append(_f)

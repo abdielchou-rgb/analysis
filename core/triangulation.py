@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """三角验证模块 — R79 P2-1 无一手数据的深度打法。
 
 顶级分析师没有一手数据时，用三种独立方法测算同一指标，交叉验证。
@@ -16,13 +15,16 @@
         {"method": "对标外推", "value": 47, "basis": "中国172亿÷占全球35%"},
     ])
 """
+
 from __future__ import annotations
-from dataclasses import dataclass, field
+
+from dataclasses import dataclass
 
 
 @dataclass
 class TriangulationResult:
     """三角验证结果。"""
+
     values: list
     methods: list
     low: float = 0.0
@@ -72,18 +74,25 @@ def triangulate(estimates: list[dict]) -> TriangulationResult:
         note += "建议显式标注口径差异"
 
     return TriangulationResult(
-        values=values, methods=methods,
-        low=low, high=high, midpoint=midpoint,
-        spread_pct=spread, consistent=consistent, note=note,
+        values=values,
+        methods=methods,
+        low=low,
+        high=high,
+        midpoint=midpoint,
+        spread_pct=spread,
+        consistent=consistent,
+        note=note,
     )
 
 
 if __name__ == "__main__":
     # 自测：全球油位传感器市场
-    r = triangulate([
-        {"method": "自上而下", "value": 50, "basis": "工业传感器600亿美元×物位占比8%"},
-        {"method": "自下而上", "value": 52, "basis": "100万座加油站×单站液位仪5000元"},
-        {"method": "对标外推", "value": 47, "basis": "中国172亿元÷中国占全球35%"},
-    ])
+    r = triangulate(
+        [
+            {"method": "自上而下", "value": 50, "basis": "工业传感器600亿美元×物位占比8%"},
+            {"method": "自下而上", "value": 52, "basis": "100万座加油站×单站液位仪5000元"},
+            {"method": "对标外推", "value": 47, "basis": "中国172亿元÷中国占全球35%"},
+        ]
+    )
     print(r.to_text())
     print(f"consistent={r.consistent}, spread={r.spread_pct:.0%}")

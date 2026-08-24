@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """contract_manufacturing.py — 代工/合作生产测算（2026-08-07）
 
 柯力油位场景直接需要：算清"接不接久通的油位传感器代工"的投入产出。
@@ -24,11 +23,12 @@
       "discount_rate": 0.10,          # 折现率
   })
 """
+
 from __future__ import annotations
-import math
+
 import logging
+import math
 from dataclasses import dataclass, field
-from typing import Optional
 
 logger = logging.getLogger("2hao.contract_manufacturing")
 
@@ -36,26 +36,27 @@ logger = logging.getLogger("2hao.contract_manufacturing")
 @dataclass
 class CMResult:
     """代工测算结果。"""
+
     # 成本与盈亏平衡
-    unit_contribution: float = 0.0        # 单位贡献（售价-变动成本）
-    contribution_margin: float = 0.0      # 贡献毛利率
-    breakeven_units: float = 0.0          # 盈亏平衡量（只/年）
+    unit_contribution: float = 0.0  # 单位贡献（售价-变动成本）
+    contribution_margin: float = 0.0  # 贡献毛利率
+    breakeven_units: float = 0.0  # 盈亏平衡量（只/年）
     breakeven_capacity_util: float = 0.0  # 盈亏平衡产能利用率
-    payback_years: float = 0.0            # 静态回收期（年）
+    payback_years: float = 0.0  # 静态回收期（年）
     # 投入产出
-    total_investment: float = 0.0         # 总投入（capex+首年opex）
-    year5_revenue: float = 0.0            # 第5年收入（满产）
-    year5_gross_profit: float = 0.0       # 第5年毛利
-    year5_net_contribution: float = 0.0   # 第5年净贡献（毛利-固定opex）
-    npv: float = 0.0                      # 5年 NPV（折现）
-    irr: float = 0.0                      # IRR
+    total_investment: float = 0.0  # 总投入（capex+首年opex）
+    year5_revenue: float = 0.0  # 第5年收入（满产）
+    year5_gross_profit: float = 0.0  # 第5年毛利
+    year5_net_contribution: float = 0.0  # 第5年净贡献（毛利-固定opex）
+    npv: float = 0.0  # 5年 NPV（折现）
+    irr: float = 0.0  # IRR
     # 转移定价（ALP 独立交易原则）
     transfer_price_range: tuple = (0.0, 0.0)  # 关联交易合理价格区间
     # 战略期权
-    option_value: float = 0.0             # 战略期权价值（BS 近似）
-    strategic_total: float = 0.0          # NPV + 期权
+    option_value: float = 0.0  # 战略期权价值（BS 近似）
+    strategic_total: float = 0.0  # NPV + 期权
     # 结论
-    verdict: str = ""                     # 建议
+    verdict: str = ""  # 建议
     reasons: list = field(default_factory=list)
     assumptions: dict = field(default_factory=dict)
 
@@ -103,8 +104,7 @@ def calculate_contract_manufacturing(params: dict) -> CMResult:
         rev = units * price
         gross = units * r.unit_contribution
         net = gross - opex_year
-        yearly.append({"year": yr, "units": units, "revenue": rev,
-                       "gross_profit": gross, "net_contribution": net})
+        yearly.append({"year": yr, "units": units, "revenue": rev, "gross_profit": gross, "net_contribution": net})
     r.year5_revenue = yearly[-1]["revenue"]
     r.year5_gross_profit = yearly[-1]["gross_profit"]
     r.year5_net_contribution = yearly[-1]["net_contribution"]
@@ -138,7 +138,7 @@ def calculate_contract_manufacturing(params: dict) -> CMResult:
     x = opex_year  # 行权价（维持经营的固定成本）
     if s > 0 and x > 0:
         t = horizon
-        d1 = (math.log(s / x) + (disc + 0.5 * vol ** 2) * t) / (vol * math.sqrt(t))
+        d1 = (math.log(s / x) + (disc + 0.5 * vol**2) * t) / (vol * math.sqrt(t))
         d2 = d1 - vol * math.sqrt(t)
         nd1 = 0.5 * (1 + math.erf(d1 / math.sqrt(2)))
         nd2 = 0.5 * (1 + math.erf(d2 / math.sqrt(2)))
@@ -156,11 +156,11 @@ def calculate_contract_manufacturing(params: dict) -> CMResult:
     else:
         reasons.append(f"回收期 {r.payback_years:.1f} 年偏长")
     if r.npv > 0:
-        reasons.append(f"NPV {r.npv/1e4:.0f}万为正，5年创造价值")
+        reasons.append(f"NPV {r.npv / 1e4:.0f}万为正，5年创造价值")
     else:
-        reasons.append(f"NPV {r.npv/1e4:.0f}万为负，5年净投入")
+        reasons.append(f"NPV {r.npv / 1e4:.0f}万为负，5年净投入")
     if r.option_value > abs(r.npv):
-        reasons.append(f"战略期权价值 {r.option_value/1e4:.0f}万 > 5年NPV，期权属性强（进入新市场）")
+        reasons.append(f"战略期权价值 {r.option_value / 1e4:.0f}万 > 5年NPV，期权属性强（进入新市场）")
     r.reasons = reasons
 
     if r.npv > 0 and r.payback_years <= 4:
@@ -178,12 +178,12 @@ def format_summary(r: CMResult) -> str:
         "=== 代工/合作生产测算 ===",
         f"盈亏平衡量: {r.breakeven_units:,.0f}只/年（产能利用率 {r.breakeven_capacity_util:.0%}）",
         f"单位贡献: {r.unit_contribution:,.0f}元/只（贡献毛利率 {r.contribution_margin:.0%}）",
-        f"总投入: {r.total_investment/1e4:,.0f}万元",
-        f"第5年收入: {r.year5_revenue/1e4:,.0f}万元，净贡献 {r.year5_net_contribution/1e4:,.0f}万元",
-        f"NPV(5年,10%折现): {r.npv/1e4:,.0f}万元，IRR: {r.irr:.1%}",
+        f"总投入: {r.total_investment / 1e4:,.0f}万元",
+        f"第5年收入: {r.year5_revenue / 1e4:,.0f}万元，净贡献 {r.year5_net_contribution / 1e4:,.0f}万元",
+        f"NPV(5年,10%折现): {r.npv / 1e4:,.0f}万元，IRR: {r.irr:.1%}",
         f"静态回收期: {r.payback_years:.1f}年",
         f"转移定价合理区间: {r.transfer_price_range[0]:,.0f}~{r.transfer_price_range[1]:,.0f}元/只",
-        f"战略期权价值: {r.option_value/1e4:,.0f}万元（总价值 NPV+期权 = {r.strategic_total/1e4:,.0f}万元）",
+        f"战略期权价值: {r.option_value / 1e4:,.0f}万元（总价值 NPV+期权 = {r.strategic_total / 1e4:,.0f}万元）",
         f"结论: {r.verdict}",
     ]
     if r.reasons:
@@ -198,11 +198,14 @@ def _calc_irr(cf: list, guess: float = 0.1, max_iter: int = 100) -> float:
     """IRR 计算（优先 numpy-financial，回退牛顿迭代）。"""
     try:
         import numpy_financial as npf
+
         return float(npf.irr(cf))
     except Exception:
         pass
+
     def npv_at(rate):
         return sum(cf[t] / (1 + rate) ** t for t in range(len(cf)))
+
     r0 = guess
     for _ in range(max_iter):
         f = npv_at(r0)

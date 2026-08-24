@@ -15,14 +15,13 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Optional
-
-import pandas as pd
 
 from core.models import AnnualFinancials, StructuredData
+
 # V57: conditional import - fall back gracefully if V30 unavailable
 try:
     from compute.V30_compute.layer1_data.connectors.a_share import BaostockConnector
+
     _HAS_V30 = True
 except ImportError:
     _HAS_V30 = False
@@ -34,25 +33,26 @@ logger = logging.getLogger("v30.valuation.comparable")
 @dataclass
 class ComparableResult:
     """可比公司估值分析结果。"""
+
     company: str
     stock_code: str
-    metrics: dict                           # {metric_name: {company_or_industry: value}}
-    company_values: dict                     # 标的公司各指标值
-    peer_percentiles: dict                   # {metric: 标的公司在可比组中的百分位}
-    avg_premium_discount: dict               # {metric: 相对行业平均的溢价/折价%}
-    peer_list: list[str]                     # 可比公司代码列表
-    peer_names: list[str]                    # 可比公司名称列表
-    industry_avg: dict                       # 行业平均值
-    target_implied_values: dict              # 基于可比倍数推算的目标估值
+    metrics: dict  # {metric_name: {company_or_industry: value}}
+    company_values: dict  # 标的公司各指标值
+    peer_percentiles: dict  # {metric: 标的公司在可比组中的百分位}
+    avg_premium_discount: dict  # {metric: 相对行业平均的溢价/折价%}
+    peer_list: list[str]  # 可比公司代码列表
+    peer_names: list[str]  # 可比公司名称列表
+    industry_avg: dict  # 行业平均值
+    target_implied_values: dict  # 基于可比倍数推算的目标估值
     warnings: list[str] = field(default_factory=list)
 
 
 def compute_comparable(
     l1_data: StructuredData,
-    peer_codes: Optional[list[str]] = None,
-    peer_names: Optional[list[str]] = None,
-    start_year: Optional[int] = None,
-    end_year: Optional[int] = None,
+    peer_codes: list[str] | None = None,
+    peer_names: list[str] | None = None,
+    start_year: int | None = None,
+    end_year: int | None = None,
 ) -> ComparableResult:
     """
     可比公司估值分析。
@@ -117,15 +117,21 @@ def compute_comparable(
 
     # ── 3. 构建多维度对标矩阵 ──
     metric_names = [
-        "pe_ttm", "pb", "ps", "ev_ebitda",
-        "gross_margin", "net_margin", "roe",
-        "revenue_yoy", "profit_yoy",
+        "pe_ttm",
+        "pb",
+        "ps",
+        "ev_ebitda",
+        "gross_margin",
+        "net_margin",
+        "roe",
+        "revenue_yoy",
+        "profit_yoy",
     ]
 
     # 组织指标数据: {metric: {company: value}}
     metrics_organized: dict[str, dict] = {}
     for metric in metric_names:
-        metric_dict: dict[str, Optional[float]] = {}
+        metric_dict: dict[str, float | None] = {}
         metric_dict[company] = target_metrics.get("metrics", {}).get(metric)
         for entry in peer_data:
             peer_name = entry.get("name", "")
@@ -253,21 +259,25 @@ def compute_comparable_with_existing_data(
 
     peer_data = []
     for entry, code, name in zip(peer_data_list, peer_codes, peer_names):
-        m = _extract_peer_metrics(
-            entry["latest"], entry.get("earliest"), name or code
-        )
+        m = _extract_peer_metrics(entry["latest"], entry.get("earliest"), name or code)
         peer_data.append(m)
 
     # 与原方法相同的对标逻辑
     metric_names = [
-        "pe_ttm", "pb", "ps", "ev_ebitda",
-        "gross_margin", "net_margin", "roe",
-        "revenue_yoy", "profit_yoy",
+        "pe_ttm",
+        "pb",
+        "ps",
+        "ev_ebitda",
+        "gross_margin",
+        "net_margin",
+        "roe",
+        "revenue_yoy",
+        "profit_yoy",
     ]
 
     metrics_organized: dict[str, dict] = {}
     for metric in metric_names:
-        metric_dict: dict[str, Optional[float]] = {}
+        metric_dict: dict[str, float | None] = {}
         metric_dict[company] = company_values.get(metric)
         for entry in peer_data:
             peer_name = entry.get("name", "")
@@ -347,12 +357,12 @@ def compute_comparable_with_existing_data(
 
 
 def _extract_peer_metrics(
-    latest: Optional[AnnualFinancials],
-    earliest: Optional[AnnualFinancials],
+    latest: AnnualFinancials | None,
+    earliest: AnnualFinancials | None,
     name: str,
 ) -> dict:
     """从年度财务数据提取可比指标。"""
-    metrics: dict[str, Optional[float]] = {}
+    metrics: dict[str, float | None] = {}
 
     if latest is None:
         return {"name": name, "metrics": metrics}
@@ -391,7 +401,7 @@ def _extract_peer_metrics(
     return {"name": name, "metrics": metrics, "latest": latest, "earliest": earliest}
 
 
-def _safe_div(a: Optional[float], b: Optional[float]) -> Optional[float]:
+def _safe_div(a: float | None, b: float | None) -> float | None:
     """安全除法。"""
     if a is None or b is None or b == 0:
         return None
@@ -404,7 +414,7 @@ def _filter_outliers(values: list[float], n_stds: float = 3.0) -> list[float]:
         return values
     mean_val = sum(values) / len(values)
     variance = sum((v - mean_val) ** 2 for v in values) / len(values)
-    std_val = variance ** 0.5
+    std_val = variance**0.5
     return [v for v in values if abs(v - mean_val) <= n_stds * std_val]
 
 

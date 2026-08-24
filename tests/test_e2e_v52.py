@@ -1,15 +1,19 @@
 """V52 E2E integration tests."""
-import sys, os
+
+import os
+import sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from core.quality_scorer import QualityScorer
 from core.enforcer import Enforcer
+from core.quality_scorer import QualityScorer
 
 
 def test_modules_import():
-    from core.quality_scorer import QualityScorer as QS
-    from core.enforcer import Enforcer as Enf
     from core.calibration import CalibrationDashboard as CD
+    from core.enforcer import Enforcer as Enf
+    from core.quality_scorer import QualityScorer as QS
+
     assert QS is QualityScorer
     assert Enf is Enforcer
     assert CD is not None

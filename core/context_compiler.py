@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """context_compiler.py — 上下文模板程序化（P3，轻量 DSPy 式，2026-08-07）
 
 把"上下文工程模板"从手写升级为参数化程序化生成（DSPy 思想的轻量落地，零重依赖）。
@@ -12,11 +11,12 @@
                         requirement="评估市场规模/投入产出比",
                         data={...}, compute_summaries=[...])
 """
+
 from __future__ import annotations
+
 import json
 import logging
 from dataclasses import dataclass, field
-from typing import Optional
 
 logger = logging.getLogger("2hao.context_compiler")
 
@@ -26,10 +26,9 @@ logger = logging.getLogger("2hao.context_compiler")
 FRAMEWORK_FIT = {
     # 政策/合规驱动（油位/环保/安监类）
     "policy_driven": {
-        "must": ["产业生命周期", "利润池/卡位", "商业模式分类", "政策传导", "竞争格局",
-                 "国产替代传导", "技术路线"],
+        "must": ["产业生命周期", "利润池/卡位", "商业模式分类", "政策传导", "竞争格局", "国产替代传导", "技术路线"],
         "misfit_note": "宏观 DDM 三要素（盈利/流动性/风险偏好）为股票估值框架，"
-                       "对政策/内需驱动行业适配度低——除非报告明确涉及估值，否则不注入",
+        "对政策/内需驱动行业适配度低——除非报告明确涉及估值，否则不注入",
     },
     # 周期/流动性驱动（宏观敏感类）
     "macro_driven": {
@@ -45,11 +44,21 @@ FRAMEWORK_FIT = {
 
 # 行业关键词 → 驱动类型
 _DRIVER_HINTS = {
-    "油位": "policy_driven", "液位": "policy_driven", "传感器": "policy_driven",
-    "环保": "policy_driven", "安监": "policy_driven", "危化品": "policy_driven",
-    "加油站": "policy_driven", "半导体": "tech_driven", "芯片": "tech_driven",
-    "ai": "tech_driven", "人工智能": "tech_driven", "新能源": "macro_driven",
-    "地产": "macro_driven", "基建": "macro_driven", "消费": "macro_driven",
+    "油位": "policy_driven",
+    "液位": "policy_driven",
+    "传感器": "policy_driven",
+    "环保": "policy_driven",
+    "安监": "policy_driven",
+    "危化品": "policy_driven",
+    "加油站": "policy_driven",
+    "半导体": "tech_driven",
+    "芯片": "tech_driven",
+    "ai": "tech_driven",
+    "人工智能": "tech_driven",
+    "新能源": "macro_driven",
+    "地产": "macro_driven",
+    "基建": "macro_driven",
+    "消费": "macro_driven",
 }
 
 
@@ -70,8 +79,7 @@ def framework_fit_prompt(industry_hint: str = "") -> str:
     fit = FRAMEWORK_FIT.get(driver, {})
     must = fit.get("must", [])
     misfit = fit.get("misfit_note", "")
-    lines = ["=== 行业分析框架适配清单（必须覆盖）===",
-             f"行业驱动类型: {driver}"]
+    lines = ["=== 行业分析框架适配清单（必须覆盖）===", f"行业驱动类型: {driver}"]
     for fw in must:
         lines.append(f"- 必须覆盖: {fw}")
     if misfit:
@@ -112,6 +120,7 @@ SEGMENT_CONFIG = {
 @dataclass
 class ContextTemplate:
     """参数化上下文模板。"""
+
     asset: str = ""
     report_type: str = "decision_memo"
     requirement: str = ""
@@ -189,22 +198,33 @@ class ContextTemplate:
         return "\n".join(blocks)
 
 
-def compile_context(asset: str, report_type: str = "decision_memo",
-                    requirement: str = "", data: Optional[dict] = None,
-                    compute_summaries: Optional[list] = None,
-                    facts_prompt: str = "", industry_hint: str = "") -> str:
+def compile_context(
+    asset: str,
+    report_type: str = "decision_memo",
+    requirement: str = "",
+    data: dict | None = None,
+    compute_summaries: list | None = None,
+    facts_prompt: str = "",
+    industry_hint: str = "",
+) -> str:
     """便捷入口：参数化生成上下文 prompt。
 
     自动从 requirement 派生意图（intent_parser）+ 组装模板。
     industry_hint 触发框架适配检查（按行业注入适用框架，防错配）。
     """
     from core.intent_parser import IntentParser
+
     plan = IntentParser().parse(asset, report_type, requirement)
     tpl = ContextTemplate(
-        asset=asset, report_type=report_type, requirement=requirement,
-        client=plan["client"], decision_point=plan["decision_point"],
+        asset=asset,
+        report_type=report_type,
+        requirement=requirement,
+        client=plan["client"],
+        decision_point=plan["decision_point"],
         must_answer_questions=plan["must_answer_questions"],
-        data=data or {}, compute_summaries=compute_summaries or [],
-        facts_prompt=facts_prompt, industry_hint=industry_hint,
+        data=data or {},
+        compute_summaries=compute_summaries or [],
+        facts_prompt=facts_prompt,
+        industry_hint=industry_hint,
     )
     return tpl.compile()

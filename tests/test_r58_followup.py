@@ -5,7 +5,7 @@
   - 四大审计规则确定性检查（financial_fraud_signals）
   - 知识库维护自动化脚本
 """
-import os
+
 import sys
 from pathlib import Path
 
@@ -25,8 +25,9 @@ def test_compute_engine_has_consolidation():
 def test_consolidation_runs():
     """compute_engine._run_consolidation 应返回整合阶段。"""
     from pipeline.compute_engine import ComputeEngine
+
     ce = ComputeEngine()
-    data = {'chart_data': {'fig_valuation': {'industry': '半导体', 'cr3': 45}}}
+    data = {"chart_data": {"fig_valuation": {"industry": "半导体", "cr3": 45}}}
     r = ce._run_consolidation(data)
     assert r.get("status") == "ok", f"应返回ok: {r}"
     assert "consolidation_stage" in r, f"应含整合阶段: {list(r.keys())}"
@@ -37,24 +38,32 @@ def test_consolidation_runs():
 def test_fraud_check_registered():
     """IronGate 应注册 financial_fraud_signals 检查。"""
     from pipeline.iron_gate import IronGate
+
     assert hasattr(IronGate, "_check_financial_fraud_signals")
 
 
 def test_fraud_check_detects():
     """财务异常 data_dict 应触发造假信号。"""
     import json
+
     from pipeline.iron_gate import IronGate
-    text = ("本报告分析某公司。2024年营收12亿元，净利2.1亿元。"
-            "我们判断成长期，预计营收增长30%。我们看好龙头。") * 6
+
+    text = ("本报告分析某公司。2024年营收12亿元，净利2.1亿元。我们判断成长期，预计营收增长30%。我们看好龙头。") * 6
     gate = IronGate.from_text(text, report_type="listed_company", style="cicc")
     gate.asset = "test_fraud_r58"
     gate.sac_id = "test_fraud_r58"
     dd = {
-        "revenue_trend_2023": 9.0, "revenue_trend_2024": 12.0,
-        "receivable_2023": 3.0, "receivable_2024": 4.5,  # 应收增速50%
-        "operating_cashflow_latest": 0.6, "net_profit_latest": 2.1,  # OCF/净利=0.29
-        "margin_2022": 39.8, "margin_2023": 40.1, "margin_2024": 40.0,  # 波动0.3pct
-        "other_receivable_latest": 2.0, "revenue_latest": 12.0,  # 17%
+        "revenue_trend_2023": 9.0,
+        "revenue_trend_2024": 12.0,
+        "receivable_2023": 3.0,
+        "receivable_2024": 4.5,  # 应收增速50%
+        "operating_cashflow_latest": 0.6,
+        "net_profit_latest": 2.1,  # OCF/净利=0.29
+        "margin_2022": 39.8,
+        "margin_2023": 40.1,
+        "margin_2024": 40.0,  # 波动0.3pct
+        "other_receivable_latest": 2.0,
+        "revenue_latest": 12.0,  # 17%
     }
     p = _ROOT / "output" / "test_fraud_r58_data_dict.json"
     p.parent.mkdir(exist_ok=True)
@@ -79,8 +88,8 @@ def test_refresh_script_exists():
 def test_refresh_detects_changes():
     """refresh 脚本应能扫描并检测文件变化。"""
     import importlib.util
-    spec = importlib.util.spec_from_file_location(
-        "refresh_kb", _ROOT / "scripts" / "refresh_knowledge_base.py")
+
+    spec = importlib.util.spec_from_file_location("refresh_kb", _ROOT / "scripts" / "refresh_knowledge_base.py")
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     current = mod.scan_files()
@@ -102,6 +111,7 @@ def test_marvis_r58_instruction():
 
 if __name__ == "__main__":
     import traceback
+
     passed = failed = 0
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

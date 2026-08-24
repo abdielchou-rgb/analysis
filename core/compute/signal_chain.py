@@ -1,5 +1,7 @@
 """信号链自动计算引擎 — 先行/同步/滞后指标"""
+
 from __future__ import annotations
+
 from dataclasses import dataclass
 
 
@@ -13,7 +15,7 @@ class SignalResult:
 
 class SignalChainEngine:
     """自动信号链计算。预置通用信号库。"""
-    
+
     SIGNALS = {
         "leading": [
             {"name": "PMI新订单", "source": "国家统计局", "description": "制造业新订单指数，领先1-2个季度"},

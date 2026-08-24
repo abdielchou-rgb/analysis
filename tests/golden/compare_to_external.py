@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """自产报告 vs 外部真实研报对比 — R80 Phase2 评估端独立。
 
 把 2hao 产出与真实券商研报用同一组指标对比，量化差距。
@@ -6,8 +5,11 @@
 用法：
     python tests/golden/compare_to_external.py "output/油位传感器_重做报告.md" "tests/golden_external/xx.pdf"
 """
-import re, sys
+
+import re
+import sys
 from pathlib import Path
+
 _ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(_ROOT))
 
@@ -22,6 +24,7 @@ def extract_text(path: str) -> str:
         # 简版提取：pdf 用 pdfplumber 若可用
         try:
             import pdfplumber
+
             with pdfplumber.open(p) as pdf:
                 return "".join(pg.extract_text() or "" for pg in pdf.pages)
         except Exception:

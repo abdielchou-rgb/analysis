@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """R85（2026-08-07）P0 治理回归测试 — decision_memo 图表层修复。
 
 覆盖：
@@ -11,6 +10,7 @@
 """
 
 from __future__ import annotations
+
 import sys
 from pathlib import Path
 
@@ -18,11 +18,11 @@ _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-import pytest  # noqa: E402
+
 from pipeline.data_enrichment import (  # noqa: E402
-    DataSufficiencyChecker,
     DECISION_MEMO_CRITICAL_FIG_KEYS,
     DECISION_MEMO_MIN_FIG_KEYS,
+    DataSufficiencyChecker,
 )
 
 
@@ -69,12 +69,11 @@ def test_dm_empty_structure_insufficient():
     chart = {
         "fig_market_size_global": {"2024": 300, "2025": 360},
         "fig_market_size_china": {"2024": 90, "2025": 110},
-        "fig_industry_chain": {"_placeholder": {}},       # 空结构（无有效标量）
+        "fig_industry_chain": {"_placeholder": {}},  # 空结构（无有效标量）
         "fig_competitive_landscape": {"_placeholder": {}},  # 空结构
         # fig_production_path / fig_roadmap 缺失
     }
-    r = DataSufficiencyChecker.check({"chart_data": chart},
-                                     report_type="decision_memo")
+    r = DataSufficiencyChecker.check({"chart_data": chart}, report_type="decision_memo")
     assert r["sufficient"] is False
 
 
@@ -95,10 +94,12 @@ def test_listed_company_strict_unchanged():
 
 def test_listed_company_full_sufficient():
     """listed_company：双图齐备 → sufficient（行为不变）。"""
-    data = {"chart_data": {
-        "fig_revenue_trend": {"2023": 10, "2024": 12},
-        "fig_profitability": {"2023": 1, "2024": 1.5},
-    }}
+    data = {
+        "chart_data": {
+            "fig_revenue_trend": {"2023": 10, "2024": 12},
+            "fig_profitability": {"2023": 1, "2024": 1.5},
+        }
+    }
     r = DataSufficiencyChecker.check(data)
     assert r["sufficient"] is True
 
@@ -114,17 +115,22 @@ def test_dm_constants_align_sac():
     """decision_memo 关键图键常量与 SAC chart_config 图集一致（6 图）。"""
     assert len(DECISION_MEMO_CRITICAL_FIG_KEYS) == 6
     assert set(DECISION_MEMO_CRITICAL_FIG_KEYS) == {
-        "fig_market_size_global", "fig_market_size_china",
-        "fig_industry_chain", "fig_competitive_landscape",
-        "fig_production_path", "fig_roadmap",
+        "fig_market_size_global",
+        "fig_market_size_china",
+        "fig_industry_chain",
+        "fig_competitive_landscape",
+        "fig_production_path",
+        "fig_roadmap",
     }
     assert DECISION_MEMO_MIN_FIG_KEYS == 4
 
 
 def test_chart_pipeline_fig_map_has_dm_fallback():
     """chart_pipeline fig_map 含 fig_production_path / fig_roadmap 兜底映射。"""
-    from pipeline.chart_pipeline import ChartPipeline
     import inspect
+
+    from pipeline.chart_pipeline import ChartPipeline
+
     src = inspect.getsource(ChartPipeline._extract_real_data)
     assert '"fig_production_path"' in src and '"fig_roadmap"' in src
     # 兜底来源指向可用测算类键

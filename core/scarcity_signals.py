@@ -19,10 +19,10 @@ FP4 设计：
 """
 
 from __future__ import annotations
-import re
+
 import logging
+import re
 from dataclasses import dataclass, field
-from typing import Optional
 
 logger = logging.getLogger("v51.scarcity")
 
@@ -37,8 +37,8 @@ class BottleneckDef:
     name: str = ""
     description: str = ""
     trigger_conditions: list[str] = field(default_factory=list)  # SAC Gate 检测条件
-    signal_keywords: list[str] = field(default_factory=list)    # 在正文中检测的信号词
-    positive_patterns: list[str] = field(default_factory=list)   # 应出现的判断句式（正则）
+    signal_keywords: list[str] = field(default_factory=list)  # 在正文中检测的信号词
+    positive_patterns: list[str] = field(default_factory=list)  # 应出现的判断句式（正则）
     weight: float = 1.0  # 在 scarcity_score 中的权重
 
 
@@ -103,16 +103,17 @@ BOTTLENECKS = [
 class BottleneckCoverage:
     bottleneck_id: str = ""
     bottleneck_name: str = ""
-    activated: bool = False           # SAC Gate 是否触发
-    signal_keyword_hits: int = 0      # 信号关键词命中数
-    positive_pattern_hits: int = 0    # 判断句式命中数
-    covered: bool = False             # 是否充分覆盖
+    activated: bool = False  # SAC Gate 是否触发
+    signal_keyword_hits: int = 0  # 信号关键词命中数
+    positive_pattern_hits: int = 0  # 判断句式命中数
+    covered: bool = False  # 是否充分覆盖
     note: str = ""
 
 
 @dataclass
 class ScarcityReport:
     """稀缺性洞察覆盖报告"""
+
     total_activated: int = 0
     total_covered: int = 0
     coverages: list[BottleneckCoverage] = field(default_factory=list)

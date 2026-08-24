@@ -5,12 +5,12 @@
 """
 
 from dataclasses import dataclass, field
-from typing import Optional, Any
 
 
 @dataclass
 class Port:
     """管线节点的输入/输出端口定义"""
+
     name: str
     type_hint: str  # e.g., "dict", "str", "list[Path]"
     description: str
@@ -20,6 +20,7 @@ class Port:
 @dataclass
 class PipelineNodeContract:
     """管线节点的完整合约定义"""
+
     node_id: str
     description: str
     inputs: list[Port] = field(default_factory=list)
@@ -71,13 +72,30 @@ E2E_ORCHESTRATOR_CONTRACT = {
 
 IRON_GATE_CONTRACT = {
     "checks": [
-        "content_volume", "content_density", "aigc_fingerprint", "human_sense",
-        "sac_coverage", "chart_density", "data_traceability", "format_consistency",
-        "forbidden_patterns", "persuasion_architecture", "table_density",
-        "moat_analysis", "decision_gate", "dcf_sensitivity", "so_what_chain",
-        "bold_call", "chart_analysis_quality", "personal_narrative",
-        "section_continuity", "table_quality_md", "placeholder_charts",
-        "markdown_artifacts", "multi_model", "data_fidelity",
+        "content_volume",
+        "content_density",
+        "aigc_fingerprint",
+        "human_sense",
+        "sac_coverage",
+        "chart_density",
+        "data_traceability",
+        "format_consistency",
+        "forbidden_patterns",
+        "persuasion_architecture",
+        "table_density",
+        "moat_analysis",
+        "decision_gate",
+        "dcf_sensitivity",
+        "so_what_chain",
+        "bold_call",
+        "chart_analysis_quality",
+        "personal_narrative",
+        "section_continuity",
+        "table_quality_md",
+        "placeholder_charts",
+        "markdown_artifacts",
+        "multi_model",
+        "data_fidelity",
     ],
     "min_score": 0.55,
     "hard_fail": [],

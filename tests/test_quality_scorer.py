@@ -1,12 +1,16 @@
 """Tests for QualityScorer."""
-import sys, os
+
+import os
+import sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from core.quality_scorer import QualityScorer
 
 
-def _report(urgency=True, surprise=True, numbers=True, reasoning=True,
-            sections=True, evidence=True, action=True, precision=True):
+def _report(
+    urgency=True, surprise=True, numbers=True, reasoning=True, sections=True, evidence=True, action=True, precision=True
+):
     parts = ["# Report\n"]
     if urgency:
         parts.append("关键分歧在于市场忽略了茅台的定价能力。\n")
@@ -25,15 +29,19 @@ def _report(urgency=True, surprise=True, numbers=True, reasoning=True,
     else:
         parts.append("产能和价格是因素。\n")
     if sections:
-        parts.extend([
-            "## 核心分歧：我们认为市场低估了定价权\n",
-            "## 估值分析：我们认为估值合理\n",
-            "## 风险提示：我们认为需关注风险\n",
-        ])
+        parts.extend(
+            [
+                "## 核心分歧：我们认为市场低估了定价权\n",
+                "## 估值分析：我们认为估值合理\n",
+                "## 风险提示：我们认为需关注风险\n",
+            ]
+        )
     else:
         parts.append("## 单一章节\n")
     if evidence:
-        parts.append("从我的行业经验来看，公司年报数据（来源：年报），直销收入占比45%。从历史规律来看，白酒行业十年周期上行期批价持续创新高。\n")
+        parts.append(
+            "从我的行业经验来看，公司年报数据（来源：年报），直销收入占比45%。从历史规律来看，白酒行业十年周期上行期批价持续创新高。\n"
+        )
     else:
         parts.append("直销收入表现良好。\n")
     if action:
@@ -61,8 +69,9 @@ def test_full_report_passes():
 
 def test_poor_report_fails():
     scorer = QualityScorer()
-    text = _report(urgency=False, surprise=False, numbers=False, reasoning=False,
-                   evidence=False, action=False, precision=False)
+    text = _report(
+        urgency=False, surprise=False, numbers=False, reasoning=False, evidence=False, action=False, precision=False
+    )
     result = scorer.score(text)
     assert result.overall <= 0.65, f"Expected <= 0.65, got {result.overall}"
 

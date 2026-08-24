@@ -1,16 +1,18 @@
-# -*- coding: utf-8 -*-
 """IronGate 检查 Mixin — data_quality 类检查。
 
 R61（2026-08-03 迁移）：由 scripts/migrate_iron_gate.py 自动生成。
 方法原样迁移自 pipeline/iron_gate.py，签名不变，IronGate 继承后行为零变化。
 """
 
+import json
+import re
 
-from pipeline.checks.base import GateCheckResult, detect_value_conflicts, logger, _ROOT
-import json, os, re
+from pipeline.checks.base import _ROOT, GateCheckResult, detect_value_conflicts, logger
+
 
 class DataQualityChecksMixin:
     """data_quality 类检查方法。"""
+
     def _check_data_traceability(self) -> GateCheckResult:
         """FP2a: Source coverage verification (name + org + date).
 
@@ -18,6 +20,7 @@ class DataQualityChecksMixin:
         标准改为：实质性段落（含数据/判断，非表格/标题）中 ≥30% 有来源标注。
         """
         import re
+
         text = self.report_text or ""
         paragraphs = text.split("\n\n")
         # 实质性段落：含数字/判断/来源，排除表格与纯标题
@@ -25,33 +28,37 @@ class DataQualityChecksMixin:
         for para in paragraphs:
             if not para or len(para) < 20:
                 continue
-            if re.match(r'^\s*\|', para):  # markdown 表格
+            if re.match(r"^\s*\|", para):  # markdown 表格
                 continue
-            if re.match(r'^#+\s', para):   # 标题
+            if re.match(r"^#+\s", para):  # 标题
                 continue
-            if re.search(r'\d+\.?\d*\s*[%亿万千元]|(?:我们认为|我们判断|预计|有望|看好|审慎)', para):
+            if re.search(r"\d+\.?\d*\s*[%亿万千元]|(?:我们认为|我们判断|预计|有望|看好|审慎)", para):
                 substantive.append(para)
         total = len(substantive)
         if total == 0:
-            return GateCheckResult("data_traceability", False, 0.0,
-                                  "No substantive paragraphs")
+            return GateCheckResult("data_traceability", False, 0.0, "No substantive paragraphs")
         scored = 0
         depth_sum = 0
         for para in substantive:
             # R91（2026-08-10）：识别 2hao 四元组标注 (A)/(E)/(F)/(B) ——
             # STANDARDS.md 要求"证据标注含 A/E/F/B"，这是报告的主要溯源方式。
             # 此前只认"来源/据/年报"等词，导致 73% 带 (A)/(E) 标注的报告仅算 7% 覆盖。
-            _has_ae_tag = bool(re.search(r'[\(\[（]\s*[AEFB]\s*[\)\]）]', para))
+            _has_ae_tag = bool(re.search(r"[\(\[（]\s*[AEFB]\s*[\)\]）]", para))
             # Level 1: Any source mention（来源词 或 A/E/F/B 标注）
-            has_mention = bool(re.search(r'(?:来源|source|据|根据|sourced|披露|年报|公告)', para, re.I)) or _has_ae_tag
+            has_mention = bool(re.search(r"(?:来源|source|据|根据|sourced|披露|年报|公告)", para, re.I)) or _has_ae_tag
             if not has_mention:
                 continue
             # Level 2: Organization/institution name
-            has_org = bool(re.search(r'(?:证券|研究|咨询|研究院|协会|局|署|社|Bank|Securities|Insights|Institute|TrendForce|Gartner|Wind|Bloomberg)', para))
+            has_org = bool(
+                re.search(
+                    r"(?:证券|研究|咨询|研究院|协会|局|署|社|Bank|Securities|Insights|Institute|TrendForce|Gartner|Wind|Bloomberg)",
+                    para,
+                )
+            )
             # Level 3: Specific date/time reference
-            has_date = bool(re.search(r'\d{4}年\d{1,2}月|\d{4}-\d{2}-\d{2}|20\d{2}年', para))
+            has_date = bool(re.search(r"\d{4}年\d{1,2}月|\d{4}-\d{2}-\d{2}|20\d{2}年", para))
             # (A)实际标注 = 最强来源可信度（官方/年报级），深度计为 3
-            _has_a = bool(re.search(r'[\(\[（]\s*A\s*[\)\]）]', para))
+            _has_a = bool(re.search(r"[\(\[（]\s*A\s*[\)\]）]", para))
             depth = 3 if _has_a else (2 if has_org else 1)
             depth = 3 if (has_org and has_date) else depth
             depth_sum += depth
@@ -67,12 +74,12 @@ class DataQualityChecksMixin:
         _four_tuple = 0
         _four_tuple_total = 0
         for para in substantive:
-            _src_mentions = re.findall(r'(?:数据来源|资料来源)[：:]([^。；\n]{0,40})', para)
+            _src_mentions = re.findall(r"(?:数据来源|资料来源)[：:]([^。；\n]{0,40})", para)
             for _m in _src_mentions:
                 _four_tuple_total += 1
-                _has_year = bool(re.search(r'20\d{2}', _m))
-                _has_scope = bool(re.search(r'全球|中国|公司|行业|亿元|%', _m))
-                _has_conf = bool(re.search(r'估算|约|大约|区间|置信', _m))
+                _has_year = bool(re.search(r"20\d{2}", _m))
+                _has_scope = bool(re.search(r"全球|中国|公司|行业|亿元|%", _m))
+                _has_conf = bool(re.search(r"估算|约|大约|区间|置信", _m))
                 if _has_year or _has_scope or _has_conf:
                     _four_tuple += 1
         _tetra_note = ""
@@ -83,8 +90,12 @@ class DataQualityChecksMixin:
             if _tetra_coverage < 0.30:
                 passed = False
                 score = min(score, 0.5)
-        return GateCheckResult("data_traceability", passed, score,
-                              f"source_coverage={coverage:.0%} depth={avg_depth}/3 ({scored}/{total} paras){_tetra_note}")
+        return GateCheckResult(
+            "data_traceability",
+            passed,
+            score,
+            f"source_coverage={coverage:.0%} depth={avg_depth}/3 ({scored}/{total} paras){_tetra_note}",
+        )
 
     def _check_annotation_types(self) -> GateCheckResult:
         """FP2a: A/E/F/B 证据标注检查（2026-08-01 新增）。
@@ -94,71 +105,77 @@ class DataQualityChecksMixin:
         标准：报告正文中四种标注至少出现 3 种，且 A(实际) 是必须的。
         """
         import re
+
         text = self.report_text or ""
         if not text or len(text) < 50:
-            return GateCheckResult("annotation_types", False, 0.0,
-                                  "报告太短，无法评估标注")
+            return GateCheckResult("annotation_types", False, 0.0, "报告太短，无法评估标注")
         # 匹配 (A)/(E)/(F)/(B) 或 [A]/[E]/[F]/[B] 标注（括号紧跟数字）
         found = set()
         for marker in "AEFB":
             # 匹配 "(A)" "[A]" "(A型)" 等，需在数字/单位附近
-            if re.search(r'[\(\[（]\s*' + marker + r'\s*[\)\]）]', text):
+            if re.search(r"[\(\[（]\s*" + marker + r"\s*[\)\]）]", text):
                 found.add(marker)
             # 也匹配 "12.3亿(A)" 这种
-            if re.search(r'\d[\d,.]*\s*(?:亿|万|%|元)?\s*[\(\[（]\s*' + marker + r'\s*[\)\]）]', text):
+            if re.search(r"\d[\d,.]*\s*(?:亿|万|%|元)?\s*[\(\[（]\s*" + marker + r"\s*[\)\]）]", text):
                 found.add(marker)
         # A(实际) 必须存在；整体至少 3 种
-        has_a = 'A' in found
+        has_a = "A" in found
         total_ok = len(found) >= 3
         passed = has_a and total_ok
         missing = [m for m in "AEFB" if m not in found]
         score = min(1.0, len(found) / 4)
-        return GateCheckResult("annotation_types", passed, score,
-                              f"标注覆盖: {'/'.join(sorted(found)) or '无'} 缺失: {','.join(missing) or '无'} (需≥3种含A)")
+        return GateCheckResult(
+            "annotation_types",
+            passed,
+            score,
+            f"标注覆盖: {'/'.join(sorted(found)) or '无'} 缺失: {','.join(missing) or '无'} (需≥3种含A)",
+        )
 
     def _check_data_type_annotation(self) -> GateCheckResult:
         """FP2a: Verify that (A)/(E)/(F)/(B) annotations are used throughout the report.
-        
+
         Checks for data type markers: (A)=Actual, (E)=Estimate, (F)=Forecast, (B)=Benchmark.
         """
         text = self.report_text or ""
         if len(text) < 500:
             return GateCheckResult("data_type_annotation", True, 1.0, "Text too short, skipped", severity="warning")
-        
+
         import re
+
         # Count (A), (E), (F), (B) annotations
-        a_count = len(re.findall(r'A', text))
-        e_count = len(re.findall(r'E(?!\w)', text))
-        f_count = len(re.findall(r'F(?!\w)', text))
-        b_count = len(re.findall(r'B(?!\w)', text))
-        
+        a_count = len(re.findall(r"A", text))
+        e_count = len(re.findall(r"E(?!\w)", text))
+        f_count = len(re.findall(r"F(?!\w)", text))
+        b_count = len(re.findall(r"B(?!\w)", text))
+
         # Also check for the explicit forms (half-width + full-width)
-        explicit_a = len(re.findall(r'\(A\)|（A）|Actual', text))
-        explicit_e = len(re.findall(r'\(E\)|（E）|Estimate', text))
-        explicit_f = len(re.findall(r'\(F\)|（F）|Forecast', text))
-        explicit_b = len(re.findall(r'\(B\)|（B）|Benchmark', text))
-        
+        explicit_a = len(re.findall(r"\(A\)|（A）|Actual", text))
+        explicit_e = len(re.findall(r"\(E\)|（E）|Estimate", text))
+        explicit_f = len(re.findall(r"\(F\)|（F）|Forecast", text))
+        explicit_b = len(re.findall(r"\(B\)|（B）|Benchmark", text))
+
         total = explicit_a + explicit_e + explicit_f + explicit_b
         coverage = min(1.0, total / 5.0)  # Expect at least 5 annotations
         has_all_types = (explicit_a > 0 and explicit_e > 0) or (explicit_a > 2 and explicit_e > 1)
-        
+
         passed = total >= 3  # At least 3 total annotations
         score = min(1.0, total / 5.0)
-        
+
         details = f"A={explicit_a} E={explicit_e} F={explicit_f} B={explicit_b} total={total} score={score:.2f}"
         return GateCheckResult("data_type_annotation", passed, score, details)
 
     def _check_data_fidelity(self) -> GateCheckResult:
         """Check data fidelity: revenue/profit numbers should be reasonable"""
         import re
+
         text = self.report_text or ""
-        
+
         # Look for revenue/profit numbers in the text
         rev_patterns = re.findall(r"营收[约达为]?[：:]?\s*(\d+\.?\d*)", text)
         profit_patterns = re.findall(r"(?:净利|归母净利)[润约达为]?[：:]?\s*(-?\d+\.?\d*)", text)
-        
+
         issues = []
-        
+
         # Check if revenue numbers are reasonable (A-share companies typically 1-1000+ billion)
         for v in rev_patterns[:5]:
             val = float(v)
@@ -166,22 +183,25 @@ class DataQualityChecksMixin:
                 issues.append("Revenue %.0f unusually high" % val)
             if val == 0:
                 issues.append("Revenue is 0 - likely missing data")
-        
+
         # Check profit-loss consistency
         for v in profit_patterns[:3]:
             val = float(v)
             if abs(val) > 1000:  # Very large loss/profit
                 issues.append("Profit %.0f unusually large" % val)
-        
+
         if issues:
             score = max(0.3, 1.0 - len(issues) * 0.2)
         else:
             score = 1.0
-        
+
         score = max(score, 0.3)  # Floor at 0.3
-        return GateCheckResult(name="data_fidelity", passed=score >= 0.5, score=score,
-                               details="Checks:%d Issues:%d Score:%.2f" % (
-                                   len(rev_patterns) + len(profit_patterns), len(issues), score))
+        return GateCheckResult(
+            name="data_fidelity",
+            passed=score >= 0.5,
+            score=score,
+            details="Checks:%d Issues:%d Score:%.2f" % (len(rev_patterns) + len(profit_patterns), len(issues), score),
+        )
 
     def _check_source_entity(self) -> GateCheckResult:
         """R82 P2：来源标注实体化——拦截"公司年报/公司公告/券商研究报告"等无实体标注。
@@ -190,13 +210,14 @@ class DataQualityChecksMixin:
         标注幻觉比不标注更危险——赋予虚假可信度。要求来源必须含具体实体（公司名/报告名/日期）。
         """
         import re
+
         text = self.report_text or ""
         if not text:
             return GateCheckResult("source_entity", True, 1.0, "无文本")
         # 无实体的空泛来源标注
         vague_patterns = [
-            r'来源[：:]\s*(公司年报|公司公告|公司年度报告|券商研究报告|公开行业资料|行业报告)\s*[）)]',
-            r'来源[：:]\s*(公司年报|公司公告|公司年度报告|券商研究报告|公开行业资料|行业报告)\s*[^）)]{0,0}',
+            r"来源[：:]\s*(公司年报|公司公告|公司年度报告|券商研究报告|公开行业资料|行业报告)\s*[）)]",
+            r"来源[：:]\s*(公司年报|公司公告|公司年度报告|券商研究报告|公开行业资料|行业报告)\s*[^）)]{0,0}",
         ]
         hits = []
         for pat in vague_patterns:
@@ -206,14 +227,18 @@ class DataQualityChecksMixin:
         unique = list(set(hits))
         if unique:
             return GateCheckResult(
-                "source_entity", False, max(0.1, 0.5 - len(unique) * 0.05),
+                "source_entity",
+                False,
+                max(0.1, 0.5 - len(unique) * 0.05),
                 f"来源标注无实体(P1): {len(unique)} 处'公司年报/公司公告'式空泛标注——须写具体公司名+报告名+日期",
-                severity="error")
+                severity="error",
+            )
         return GateCheckResult("source_entity", True, 1.0, "来源标注已实体化")
 
     def _check_data_source_accuracy(self) -> GateCheckResult:
         """Check revenue/profit numbers don't contradict known data"""
         import re
+
         text = self.report_text or ""
         rev_matches = re.findall(r"营收[约达为]?[：:]?\s*(\d+\.?\d*)", text)
         issues = []
@@ -222,8 +247,12 @@ class DataQualityChecksMixin:
             if val > 5000:
                 issues.append("Revenue %.0fbn unusually high" % val)
         score = max(0.3, 1.0 - len(issues) * 0.2)
-        return GateCheckResult(name="data_source_accuracy", passed=score >= 0.5, score=score,
-                               details="RevenueCheck:%d Issues:%d Score:%.2f" % (len(rev_matches), len(issues), score))
+        return GateCheckResult(
+            name="data_source_accuracy",
+            passed=score >= 0.5,
+            score=score,
+            details="RevenueCheck:%d Issues:%d Score:%.2f" % (len(rev_matches), len(issues), score),
+        )
 
     def _check_data_dict_refs(self) -> GateCheckResult:
         """R7: 共享数据字典数值引用校验。
@@ -237,25 +266,30 @@ class DataQualityChecksMixin:
         预测值(E)/(F)、推导值（毛利率/ROE 区间）不在拦截范围，避免误杀分析产出。
         """
         try:
-            from core.data_dict import validate_numeric_refs, load_data_dict_from_cache
+            from core.data_dict import load_data_dict_from_cache, validate_numeric_refs
         except ImportError as e:
-            return GateCheckResult(name="data_dict_refs", passed=True, score=1.0,
-                                   severity="warning",
-                                   details=f"data_dict module unavailable: {e}")
+            return GateCheckResult(
+                name="data_dict_refs",
+                passed=True,
+                score=1.0,
+                severity="warning",
+                details=f"data_dict module unavailable: {e}",
+            )
 
         text = self.report_text or ""
         if not text:
-            return GateCheckResult(name="data_dict_refs", passed=False, score=0.0,
-                                   severity="error", details="report empty")
+            return GateCheckResult(
+                name="data_dict_refs", passed=False, score=0.0, severity="error", details="report empty"
+            )
 
         # 1. 未解析的 {ref:key} 占位符
-        unresolved = re.findall(r'\{ref:([A-Za-z0-9_一-鿿]+)\}', text)
+        unresolved = re.findall(r"\{ref:([A-Za-z0-9_一-鿿]+)\}", text)
 
         # 2. 数值引用校验（用缓存的 data_dict）
         # 修复（2026-08-01 IronGate 第 2 轮）：资产名绑定时精确加载
         # <asset>_data_dict.json，加载失败则直接返回空（不兜底取最新文件），
         # 杜绝思必驰报告加载柯力传感/传感器行业字典导致的跨资产串标误报。
-        asset = getattr(self, 'asset', '') or getattr(self, 'sac_id', '')
+        asset = getattr(self, "asset", "") or getattr(self, "sac_id", "")
         if asset:
             _cache_path = _ROOT / "output" / f"{asset}_data_dict.json"
             data_dict = {}
@@ -270,14 +304,17 @@ class DataQualityChecksMixin:
 
         if unresolved:
             det = f"{len(unresolved)} 个未解析数据引用: {unresolved[:5]}"
-            return GateCheckResult(name="data_dict_refs", passed=False, score=0.3,
-                                   severity="error", details=det)
+            return GateCheckResult(name="data_dict_refs", passed=False, score=0.3, severity="error", details=det)
 
         if not data_dict:
             # 无数据字典可校验（数据层缺失），不阻断（降级为 warning）
-            return GateCheckResult(name="data_dict_refs", passed=True, score=1.0,
-                                   severity="warning",
-                                   details="无数据字典可校验（数据层为空）")
+            return GateCheckResult(
+                name="data_dict_refs",
+                passed=True,
+                score=1.0,
+                severity="warning",
+                details="无数据字典可校验（数据层为空）",
+            )
 
         vr = validate_numeric_refs(text, data_dict)
         # 高置信冲突检测：正文出现数据字典中已知的"标签+年份"，但数值不同 → 数据打架。
@@ -286,19 +323,33 @@ class DataQualityChecksMixin:
         # 游离数字过多 + 存在高置信冲突 → 阻断；仅游离多 → warning
         if conflicts:
             det = f"{len(conflicts)} 处数据冲突(正文与数据字典口径打架): {conflicts[:3]}"
-            return GateCheckResult(name="data_dict_refs", passed=False,
-                                   score=max(0.1, 1.0 - 0.3 * len(conflicts)),
-                                   severity="error", details=det)
+            return GateCheckResult(
+                name="data_dict_refs",
+                passed=False,
+                score=max(0.1, 1.0 - 0.3 * len(conflicts)),
+                severity="error",
+                details=det,
+            )
         if vr["unverified"] > 12:
-            det = (f"{vr['verified']} 个数值匹配数据字典, {vr['unverified']} 个游离"
-                   f"(无同源，可能为分析推导值): {vr['unverified_values'][:5]}")
-            return GateCheckResult(name="data_dict_refs", passed=True,
-                                   score=max(0.5, 1.0 - 0.05*vr["unverified"]),
-                                   severity="warning", details=det)
-        det = (f"{vr['verified']} 个数值匹配数据字典, {vr['unverified']} 个游离(阈值内)")
-        return GateCheckResult(name="data_dict_refs", passed=True,
-                               score=max(0.6, 1.0 - 0.05*vr["unverified"]),
-                               severity="warning", details=det)
+            det = (
+                f"{vr['verified']} 个数值匹配数据字典, {vr['unverified']} 个游离"
+                f"(无同源，可能为分析推导值): {vr['unverified_values'][:5]}"
+            )
+            return GateCheckResult(
+                name="data_dict_refs",
+                passed=True,
+                score=max(0.5, 1.0 - 0.05 * vr["unverified"]),
+                severity="warning",
+                details=det,
+            )
+        det = f"{vr['verified']} 个数值匹配数据字典, {vr['unverified']} 个游离(阈值内)"
+        return GateCheckResult(
+            name="data_dict_refs",
+            passed=True,
+            score=max(0.6, 1.0 - 0.05 * vr["unverified"]),
+            severity="warning",
+            details=det,
+        )
 
     def _check_data_conflicts(self) -> GateCheckResult:
         """R28（2026-08-02 方向B）：数据口径冲突检测。
@@ -307,18 +358,18 @@ class DataQualityChecksMixin:
         用 data_caliber 的冲突检测器 + 正文数值提取。
         防"毛利率 5.0% vs 34.5%"、"PE 65x vs 79.79x"这类硬伤。
         """
-        import re as _re
         text = self.report_text or ""
         if len(text) < 300:
-            return GateCheckResult("data_conflicts", True, 1.0,
-                                   "text too short, skipped", severity="warning")
+            return GateCheckResult("data_conflicts", True, 1.0, "text too short, skipped", severity="warning")
         issues = []
         # 1. 用 data_dict 冲突检测（数据层矛盾）
         try:
-            from core.data_caliber import detect_value_conflicts, check_report_units
+            from core.data_caliber import check_report_units, detect_value_conflicts
+
             data_dict = {}
             try:
                 from core.data_dict import load_data_dict_from_cache
+
                 data_dict = load_data_dict_from_cache(self.asset or "")
             except Exception:
                 pass
@@ -326,8 +377,7 @@ class DataQualityChecksMixin:
                 conflicts = detect_value_conflicts(data_dict)
                 for c in conflicts:
                     if c["severity"] == "error":
-                        issues.append(f"数据冲突[{c['indicator']}]: 值差异 {c['gap_pct']}% "
-                                      f"{c['entries']}")
+                        issues.append(f"数据冲突[{c['indicator']}]: 值差异 {c['gap_pct']}% {c['entries']}")
         except Exception as _e:
             logger.debug("[R28-CONFLICT] %s", _e)
         # 2. 单位标注检查（正文大数值无单位）
@@ -339,10 +389,11 @@ class DataQualityChecksMixin:
             pass
         passed = len(issues) == 0
         det = f"数据冲突/单位问题: {len(issues)} 项" + (": " + "; ".join(issues[:3]) if issues else "")
-        return GateCheckResult("data_conflicts", passed, 1.0 if passed else 0.5,
-                               det, severity="error" if issues else "warning")
+        return GateCheckResult(
+            "data_conflicts", passed, 1.0 if passed else 0.5, det, severity="error" if issues else "warning"
+        )
 
-    def _check_downstream_consistency(self) -> 'GateCheckResult':
+    def _check_downstream_consistency(self) -> "GateCheckResult":
         """2026-08-07：下行/时间线/假设集中度一致性（油位 v2.3 硬伤落地）。
 
         拦截三类"给老板拍板"的硬伤：
@@ -352,11 +403,11 @@ class DataQualityChecksMixin:
         """
         text = self.report_text or ""
         if len(text) < 300:
-            return GateCheckResult("downstream_consistency", True, 1.0,
-                                   "text too short, skipped", severity="warning")
+            return GateCheckResult("downstream_consistency", True, 1.0, "text too short, skipped", severity="warning")
         issues = []
         try:
             from core.data_caliber import run_downstream_checks
+
             r = run_downstream_checks(text)
             for group_key in ("downstream", "timeline", "assumption"):
                 for item in r.get(group_key, []):
@@ -368,10 +419,11 @@ class DataQualityChecksMixin:
             logger.debug("[DOWNSTREAM] %s", _e)
         passed = len(issues) == 0
         det = f"下行一致性: {len(issues)} 项" + (": " + "; ".join(issues[:3]) if issues else "")
-        return GateCheckResult("downstream_consistency", passed, 1.0 if passed else 0.5,
-                               det, severity="error" if issues else "warning")
+        return GateCheckResult(
+            "downstream_consistency", passed, 1.0 if passed else 0.5, det, severity="error" if issues else "warning"
+        )
 
-    def _check_business_logic(self) -> 'GateCheckResult':
+    def _check_business_logic(self) -> "GateCheckResult":
         """2026-08-08：业务逻辑检测（圆桌 Codex 建议）。
 
         拦截"业务逻辑断点"——语义级，非数字一致性：
@@ -381,25 +433,27 @@ class DataQualityChecksMixin:
         """
         text = self.report_text or ""
         if len(text) < 300:
-            return GateCheckResult("business_logic", True, 1.0,
-                                   "text too short, skipped", severity="warning")
+            return GateCheckResult("business_logic", True, 1.0, "text too short, skipped", severity="warning")
         try:
             from core.business_logic_gate import check_business_logic
+
             r = check_business_logic(text)
             issues = []
             for item in r.get("issues", []):
                 if item.get("severity") == "error":
                     issues.append(item["issue"])
             passed = len(issues) == 0
-            det = f"业务逻辑: {r.get('error_count',0)}err/{r.get('warning_count',0)}warn" + \
-                  (": " + "; ".join(issues[:2]) if issues else "")
-            return GateCheckResult("business_logic", passed, 1.0 if passed else 0.5,
-                                   det, severity="error" if issues else "warning")
+            det = f"业务逻辑: {r.get('error_count', 0)}err/{r.get('warning_count', 0)}warn" + (
+                ": " + "; ".join(issues[:2]) if issues else ""
+            )
+            return GateCheckResult(
+                "business_logic", passed, 1.0 if passed else 0.5, det, severity="error" if issues else "warning"
+            )
         except Exception as _e:
             logger.debug("[BUSINESS-LOGIC] %s", _e)
             return GateCheckResult("business_logic", True, 1.0, "skip", severity="warning")
 
-    def _check_relation_consistency(self) -> 'GateCheckResult':
+    def _check_relation_consistency(self) -> "GateCheckResult":
         """2026-08-08：身份关系检测（久通控股事故落地）。
 
         检测报告是否把子公司/关联方当外部合作方分析——
@@ -407,22 +461,22 @@ class DataQualityChecksMixin:
         """
         text = self.report_text or ""
         if len(text) < 300:
-            return GateCheckResult("relation_consistency", True, 1.0,
-                                   "text too short, skipped", severity="warning")
+            return GateCheckResult("relation_consistency", True, 1.0, "text too short, skipped", severity="warning")
         try:
             from core.relation_gate import check_relation_consistency
+
             r = check_relation_consistency(text, self.asset_relation if hasattr(self, "asset_relation") else "")
             issues = [i["issue"] for i in r.get("issues", []) if i["severity"] == "error"]
             passed = len(issues) == 0
-            det = f"身份关系: {r.get('inferred_relation') or '未知'}" + \
-                  (": " + "; ".join(issues[:2]) if issues else "")
-            return GateCheckResult("relation_consistency", passed, 1.0 if passed else 0.5,
-                                   det, severity="error" if issues else "warning")
+            det = f"身份关系: {r.get('inferred_relation') or '未知'}" + (": " + "; ".join(issues[:2]) if issues else "")
+            return GateCheckResult(
+                "relation_consistency", passed, 1.0 if passed else 0.5, det, severity="error" if issues else "warning"
+            )
         except Exception as _e:
             logger.debug("[RELATION-GATE] %s", _e)
             return GateCheckResult("relation_consistency", True, 1.0, "skip", severity="warning")
 
-    def _check_arithmetic_audit(self) -> 'GateCheckResult':
+    def _check_arithmetic_audit(self) -> "GateCheckResult":
         """R35（2026-08-02）：算术校验层——报告数字反向验算。
 
         背景：柯力报告 Gate 0.9447 PASS 却含 2 个 P0 算术错误——
@@ -434,10 +488,10 @@ class DataQualityChecksMixin:
           4. EPS→净利→CAGR 桥校验（EPS×股本=净利，增速需可解释）
         """
         import re as _re
+
         text = self.report_text or ""
         if len(text) < 300:
-            return GateCheckResult("arithmetic_audit", True, 1.0,
-                                   "text too short, skipped", severity="warning")
+            return GateCheckResult("arithmetic_audit", True, 1.0, "text too short, skipped", severity="warning")
         issues = []
 
         # ── 1. 占比/比率反向验算 ──────────────────────────────
@@ -445,17 +499,19 @@ class DataQualityChecksMixin:
         # 例（柯力案）："318.29万股，占总股本约0.24%（基于总市值131.23亿元、股价46.73元）"
         # "股"与"占"间允许逗号/空白；总股本与占比间允许括号注（"（基于...）"），限长60。
         for m in _re.finditer(
-                r'(\d+(?:\.\d+)?)\s*(万股|亿股|股)[，,\s]*(?:仅|约|已)?占(?:总)?股本'
-                r'[^。；\n]{0,60}?(?:约|为|占)?(\d+(?:\.\d+)?)%', text):
+            r"(\d+(?:\.\d+)?)\s*(万股|亿股|股)[，,\s]*(?:仅|约|已)?占(?:总)?股本"
+            r"[^。；\n]{0,60}?(?:约|为|占)?(\d+(?:\.\d+)?)%",
+            text,
+        ):
             try:
                 num = float(m.group(1))
                 unit = m.group(2)
                 pct_claimed = float(m.group(3))
                 # 从上下文找总股本
-                before = text[max(0, m.start() - 120):m.start()]
+                before = text[max(0, m.start() - 120) : m.start()]
                 # 找 "总股本约X亿股" 或 "X亿股" 或反推股本
-                shares_b = _re.search(r'总股本(?:约|为)?(\d+(?:\.\d+)?)\s*亿股', before)
-                shares_b2 = _re.search(r'总股本(?:约|为)?(\d+(?:\.\d+)?)\s*亿股', text[m.end():m.end()+80])
+                shares_b = _re.search(r"总股本(?:约|为)?(\d+(?:\.\d+)?)\s*亿股", before)
+                shares_b2 = _re.search(r"总股本(?:约|为)?(\d+(?:\.\d+)?)\s*亿股", text[m.end() : m.end() + 80])
                 shares = None
                 if shares_b:
                     shares = float(shares_b.group(1)) * 1e4  # 亿股→万股
@@ -463,8 +519,8 @@ class DataQualityChecksMixin:
                     shares = float(shares_b2.group(1)) * 1e4
                 else:
                     # 从"总市值X元、股价Y元"反推股本
-                    mcap = _re.search(r'总市值(?:约|为)?(\d+(?:\.\d+)?)\s*亿元', before)
-                    price = _re.search(r'(?:股价|现价|当前价)[^\d]{0,6}(\d+(?:\.\d+)?)', before)
+                    mcap = _re.search(r"总市值(?:约|为)?(\d+(?:\.\d+)?)\s*亿元", before)
+                    price = _re.search(r"(?:股价|现价|当前价)[^\d]{0,6}(\d+(?:\.\d+)?)", before)
                     if mcap and price:
                         shares = float(mcap.group(1)) * 1e8 / float(price.group(1)) / 1e4  # →万股
                 if shares and shares > 0:
@@ -472,9 +528,10 @@ class DataQualityChecksMixin:
                     actual_pct = num_shares / shares * 100
                     if abs(actual_pct - pct_claimed) / max(actual_pct, 1e-9) > 0.3:
                         issues.append(
-                            f"占比验算错误: {num}{unit}占总股本{shares/1e4:.2f}亿股="
+                            f"占比验算错误: {num}{unit}占总股本{shares / 1e4:.2f}亿股="
                             f"{actual_pct:.2f}%，报告写{pct_claimed}%"
-                            f"（偏差{(actual_pct-pct_claimed)/actual_pct*100:+.0f}%）")
+                            f"（偏差{(actual_pct - pct_claimed) / actual_pct * 100:+.0f}%）"
+                        )
             except (ValueError, TypeError, ZeroDivisionError):
                 continue
 
@@ -482,8 +539,10 @@ class DataQualityChecksMixin:
         # 模式："区间X-Y元，中值约Z"（柯力案：42-64元中值53.50，实为53.0）
         # "中值"与数字间只允许少量修饰（约/为/达/是），防止贪婪吃数字。
         for m in _re.finditer(
-                r'(\d+(?:\.\d+)?)\s*[-–—]\s*(\d+(?:\.\d+)?)\s*元[^。；\n]{0,60}?'
-                r'(?:中值|中间值|均值)[^。；\n]{0,6}?(?:约|为|达|是)?\s*(\d+(?:\.\d+)?)\s*元', text):
+            r"(\d+(?:\.\d+)?)\s*[-–—]\s*(\d+(?:\.\d+)?)\s*元[^。；\n]{0,60}?"
+            r"(?:中值|中间值|均值)[^。；\n]{0,6}?(?:约|为|达|是)?\s*(\d+(?:\.\d+)?)\s*元",
+            text,
+        ):
             try:
                 lo, hi = float(m.group(1)), float(m.group(2))
                 mid_claimed = float(m.group(3))
@@ -491,37 +550,39 @@ class DataQualityChecksMixin:
                 if abs(mid_actual - mid_claimed) / max(mid_actual, 1e-9) > 0.02:
                     issues.append(
                         f"估值区间中值错误: [{lo}-{hi}]元中值应为{mid_actual:.1f}元，"
-                        f"报告写{mid_claimed}元（偏差{(mid_claimed-mid_actual)/mid_actual*100:+.1f}%）")
+                        f"报告写{mid_claimed}元（偏差{(mid_claimed - mid_actual) / mid_actual * 100:+.1f}%）"
+                    )
             except (ValueError, TypeError, ZeroDivisionError):
                 continue
 
         # ── 3. 目标价空间校验 ─────────────────────────────────
         # 模式："目标价X元，较现价Y元有Z%空间" 或 "目标价X元对应+Z%"
         for m in _re.finditer(
-                r'目标价[：:为]?(\d+(?:\.\d+)?)\s*元[^。；]{0,30}?'
-                r'(?:较|相对)?(?:现价|当前价|股价)[^\d]{0,6}(\d+(?:\.\d+)?)\s*元[^。；]{0,30}?'
-                r'(?:约|有|为)?([+-]?\d+(?:\.\d+)?)%', text):
+            r"目标价[：:为]?(\d+(?:\.\d+)?)\s*元[^。；]{0,30}?"
+            r"(?:较|相对)?(?:现价|当前价|股价)[^\d]{0,6}(\d+(?:\.\d+)?)\s*元[^。；]{0,30}?"
+            r"(?:约|有|为)?([+-]?\d+(?:\.\d+)?)%",
+            text,
+        ):
             try:
                 tp, cp, up_claimed = float(m.group(1)), float(m.group(2)), float(m.group(3))
                 up_actual = (tp / cp - 1) * 100
                 if abs(up_actual - up_claimed) > 1.0:
                     issues.append(
-                        f"目标价空间错误: 目标价{tp}元 vs 现价{cp}元= {up_actual:+.1f}%，"
-                        f"报告写{up_claimed:+.1f}%")
+                        f"目标价空间错误: 目标价{tp}元 vs 现价{cp}元= {up_actual:+.1f}%，报告写{up_claimed:+.1f}%"
+                    )
             except (ValueError, TypeError, ZeroDivisionError):
                 continue
 
         # ── 4. EPS→净利→CAGR 桥校验 ──────────────────────────
         # 模式："EPS X元×股本Y亿股" 或 报告给出 EPS 但净利无法匹配
         # 检测：若报告同时给出 EPS、总股本、净利润，验算 EPS×股本=净利
-        for m in _re.finditer(
-                r'(?:2027E|2026E|2028E)\s*EPS[^\d]{0,4}(\d+(?:\.\d+)?)\s*元', text):
+        for m in _re.finditer(r"(?:2027E|2026E|2028E)\s*EPS[^\d]{0,4}(\d+(?:\.\d+)?)\s*元", text):
             try:
                 eps = float(m.group(1))
                 # 找总股本
-                shares_b = _re.search(r'总股本(?:约|为)?(\d+(?:\.\d+)?)\s*亿股', text[:m.end()+200])
+                shares_b = _re.search(r"总股本(?:约|为)?(\d+(?:\.\d+)?)\s*亿股", text[: m.end() + 200])
                 # 找净利
-                net_m = _re.search(r'2027年?净(?:利润|利)(?:约|为)?(\d+(?:\.\d+)?)\s*亿', text[:m.end()+300])
+                net_m = _re.search(r"2027年?净(?:利润|利)(?:约|为)?(\d+(?:\.\d+)?)\s*亿", text[: m.end() + 300])
                 if shares_b and net_m:
                     shares = float(shares_b.group(1))
                     net_actual = eps * shares  # EPS×亿股=亿元
@@ -530,7 +591,8 @@ class DataQualityChecksMixin:
                         issues.append(
                             f"EPS桥校验: {eps}元×{shares}亿股={net_actual:.2f}亿元，"
                             f"报告2027净利写{net_claimed}亿元（偏差"
-                            f"{(net_actual-net_claimed)/net_claimed*100:+.0f}%）")
+                            f"{(net_actual - net_claimed) / net_claimed * 100:+.0f}%）"
+                        )
             except (ValueError, TypeError, ZeroDivisionError):
                 continue
 
@@ -539,7 +601,7 @@ class DataQualityChecksMixin:
         det = f"算术校验: {len(issues)} 项错误" + (": " + "; ".join(issues[:3]) if issues else "无")
         return GateCheckResult("arithmetic_audit", passed, score, det, severity="error")
 
-    def _check_invariant_audit(self) -> 'GateCheckResult':
+    def _check_invariant_audit(self) -> "GateCheckResult":
         """R46（2026-08-02）：不变量断言层——物理不可能事件拦截。
 
         背景：r11 报告 Gate 0.9487 全绿却含 5 类数据硬伤——
@@ -554,20 +616,22 @@ class DataQualityChecksMixin:
           5. 毛利率在合理区间（0-80%，超区间为错误）
         """
         import re as _re
+
         text = self.report_text or ""
         if len(text) < 300:
-            return GateCheckResult("invariant_audit", True, 1.0,
-                                   "text too short, skipped", severity="warning")
+            return GateCheckResult("invariant_audit", True, 1.0, "text too short, skipped", severity="warning")
         issues = []
 
         # ── 1. 流通市值 ≤ 总市值 ──────────────────────────────
         # 模式："融资余额X亿元，占流通市值比为Y%" → 反推流通市值
-        mcap_m = _re.search(r'总市值(?:约|为)?(\d+(?:\.\d+)?)\s*亿元', text)
+        mcap_m = _re.search(r"总市值(?:约|为)?(\d+(?:\.\d+)?)\s*亿元", text)
         if mcap_m:
             mcap = float(mcap_m.group(1))
             for fm in _re.finditer(
-                    r'融资余额(?:约|为)?(\d+(?:\.\d+)?)\s*亿元[^。；]{0,30}?'
-                    r'占流通市值比为?(\d+(?:\.\d+)?)%', text):
+                r"融资余额(?:约|为)?(\d+(?:\.\d+)?)\s*亿元[^。；]{0,30}?"
+                r"占流通市值比为?(\d+(?:\.\d+)?)%",
+                text,
+            ):
                 try:
                     bal = float(fm.group(1))
                     pct = float(fm.group(2))
@@ -575,21 +639,24 @@ class DataQualityChecksMixin:
                     if implied_float > 0 and implied_float > mcap * 1.05:
                         issues.append(
                             f"流通市值矛盾: 融资余额{bal}亿占流通市值{pct}%→流通市值"
-                            f"{implied_float:.1f}亿 > 总市值{mcap}亿（物理不可能）")
+                            f"{implied_float:.1f}亿 > 总市值{mcap}亿（物理不可能）"
+                        )
                 except (ValueError, TypeError, ZeroDivisionError):
                     continue
 
         # ── 2. 持股数 × 股价 = 持股市值 ───────────────────────
         # 模式："北向资金持有X万股，持股市值Y亿元" 或 "持股X万股（市值Y亿元）"（r12 括号式）
         for m in _re.finditer(
-                r'(?:北向资金|外资)[^。；]{0,15}?(\d+(?:\.\d+)?)\s*万股'
-                r'[^。；]{0,20}?(?:[（(]?(?:持股市值|市值)|持股市值)[：:]?'
-                r'(?:约|为)?(\d+(?:\.\d+)?)\s*亿元', text):
+            r"(?:北向资金|外资)[^。；]{0,15}?(\d+(?:\.\d+)?)\s*万股"
+            r"[^。；]{0,20}?(?:[（(]?(?:持股市值|市值)|持股市值)[：:]?"
+            r"(?:约|为)?(\d+(?:\.\d+)?)\s*亿元",
+            text,
+        ):
             try:
                 shares_wan = float(m.group(1))  # 万股
                 mkt_value_yi = float(m.group(2))  # 亿元
                 # 找收盘价（报告通常给出"当前价46.73元"/"收盘46.73元"/"股价46.73元"）
-                price = _re.search(r'(?:收盘|股价|现价|当前价)[^\d]{0,6}(46\.\d+)', text)
+                price = _re.search(r"(?:收盘|股价|现价|当前价)[^\d]{0,6}(46\.\d+)", text)
                 if price:
                     px = float(price.group(1))
                     implied_value = shares_wan * 1e4 * px / 1e8  # 万股→股→元→亿
@@ -597,15 +664,16 @@ class DataQualityChecksMixin:
                         issues.append(
                             f"持股市值矛盾: {shares_wan}万股×{px}元={implied_value:.2f}亿"
                             f"≠报告市值{mkt_value_yi}亿（偏差"
-                            f"{(mkt_value_yi-implied_value)/implied_value*100:+.0f}%）")
+                            f"{(mkt_value_yi - implied_value) / implied_value * 100:+.0f}%）"
+                        )
             except (ValueError, TypeError, ZeroDivisionError):
                 continue
 
         # ── 3. PE × 净利 ≈ 市值（估值勾稽）────────────────────
         # 模式："PE(TTM) X倍" + 净利 + 总市值
-        pe_m = _re.search(r'PE\s*[（(]?(?:TTM|动态|静态)[）)]?\s*(\d+(?:\.\d+)?)\s*倍', text)
-        net_m = _re.search(r'净利(?:润)?(?:约|为|达)?(\d+(?:\.\d+)?)\s*亿', text)
-        mcap_m2 = _re.search(r'总市值(?:约|为)?(\d+(?:\.\d+)?)\s*亿元', text)
+        pe_m = _re.search(r"PE\s*[（(]?(?:TTM|动态|静态)[）)]?\s*(\d+(?:\.\d+)?)\s*倍", text)
+        net_m = _re.search(r"净利(?:润)?(?:约|为|达)?(\d+(?:\.\d+)?)\s*亿", text)
+        mcap_m2 = _re.search(r"总市值(?:约|为)?(\d+(?:\.\d+)?)\s*亿元", text)
         if pe_m and net_m and mcap_m2:
             try:
                 pe = float(pe_m.group(1))
@@ -615,7 +683,8 @@ class DataQualityChecksMixin:
                 if abs(implied_mcap - mcap) / mcap > 0.3:
                     issues.append(
                         f"PE勾稽矛盾: PE {pe}倍×净利{net}亿={implied_mcap:.1f}亿"
-                        f"≠市值{mcap}亿（隐含净利口径与市值不匹配）")
+                        f"≠市值{mcap}亿（隐含净利口径与市值不匹配）"
+                    )
             except (ValueError, TypeError, ZeroDivisionError):
                 pass
 
@@ -630,17 +699,17 @@ class DataQualityChecksMixin:
             wacc = 0.0
             g = 0.0
             # 从 enrich dcf_sensitivity_params 或报告提取参数
-            fcff_m = _re.search(r'FCFF\s*(?:约|为|=)?\s*(\d+(?:\.\d+)?)\s*亿', text)
+            fcff_m = _re.search(r"FCFF\s*(?:约|为|=)?\s*(\d+(?:\.\d+)?)\s*亿", text)
             if fcff_m:
                 fcff_base = float(fcff_m.group(1))
-            wacc_m = _re.search(r'WACC[^\d]{0,6}(\d+(?:\.\d+)?)%', text)
+            wacc_m = _re.search(r"WACC[^\d]{0,6}(\d+(?:\.\d+)?)%", text)
             if wacc_m:
                 wacc = float(wacc_m.group(1)) / 100
-            g_m = _re.search(r'永续增长[率]?[^\d]{0,6}(\d+(?:\.\d+)?)%', text)
+            g_m = _re.search(r"永续增长[率]?[^\d]{0,6}(\d+(?:\.\d+)?)%", text)
             if g_m:
                 g = float(g_m.group(1)) / 100
             # FCFF 增速：报告通常写"2026E +15%、2027E +12%"或"2026E增速15%"
-            rates = _re.findall(r'20\d\dE\s*[+约]?\s*(\d+)%', text)
+            rates = _re.findall(r"20\d\dE\s*[+约]?\s*(\d+)%", text)
             if rates:
                 fcff_rates = [float(r) / 100 for r in rates[:3]]
             if fcff_base > 0 and wacc > 0 and fcff_rates:
@@ -649,14 +718,12 @@ class DataQualityChecksMixin:
                 for rate in fcff_rates:
                     fcffs.append(fcffs[-1] * (1 + rate))
                 fcffs = fcffs[1:]  # 3 年预测
-                pv_explicit = sum(f / (1 + wacc) ** (i + 1)
-                                  for i, f in enumerate(fcffs))
+                pv_explicit = sum(f / (1 + wacc) ** (i + 1) for i, f in enumerate(fcffs))
                 tv = fcffs[-1] * (1 + g) / (wacc - g) if wacc > g else 0
                 pv_tv = tv / (1 + wacc) ** len(fcffs)
                 dcf_total = pv_explicit + pv_tv
                 # 报告声称的 DCF 市值区间
-                dcf_claim = _re.findall(
-                    r'(?:DCF|公允市值)[^。；]{0,20}?(\d{2,3})\s*[-–—]\s*(\d{2,3})\s*亿', text)
+                dcf_claim = _re.findall(r"(?:DCF|公允市值)[^。；]{0,20}?(\d{2,3})\s*[-–—]\s*(\d{2,3})\s*亿", text)
                 if dcf_claim and dcf_total > 0:
                     lo = float(dcf_claim[0][0])
                     hi = float(dcf_claim[0][1])
@@ -664,8 +731,9 @@ class DataQualityChecksMixin:
                     if dcf_total < lo * 0.5:
                         issues.append(
                             f"DCF循环论证: 按报告参数复算公允市值≈{dcf_total:.0f}亿"
-                            f"（FCFF{fcff_base}亿/WACC{wacc*100:.0f}%/g{g*100:.0f}%），"
-                            f"报告声称{lo}-{hi}亿（差{hi/dcf_total:.1f}倍）")
+                            f"（FCFF{fcff_base}亿/WACC{wacc * 100:.0f}%/g{g * 100:.0f}%），"
+                            f"报告声称{lo}-{hi}亿（差{hi / dcf_total:.1f}倍）"
+                        )
         except (ValueError, TypeError, ZeroDivisionError):
             pass
 
@@ -674,9 +742,8 @@ class DataQualityChecksMixin:
         # 报告若写"最悲观情形目标价仍高于当前价"但按参数复算远低于 → 拦截。
         # 模式：敏感性矩阵含多个 WACC×g 组合的估值，或"悲观/乐观"情景描述。
         # 简化：检测"悲观"语境下的目标价与"当前价"的关系。
-        _curr_price = _re.search(r'当前价[^\d]{0,6}(\d+(?:\.\d+)?)', text)
-        _bear_tp = _re.findall(
-            r'(?:悲观|最悲观|下行情景)[^。；]{0,40}?(\d+(?:\.\d+)?)\s*元', text)
+        _curr_price = _re.search(r"当前价[^\d]{0,6}(\d+(?:\.\d+)?)", text)
+        _bear_tp = _re.findall(r"(?:悲观|最悲观|下行情景)[^。；]{0,40}?(\d+(?:\.\d+)?)\s*元", text)
         if _curr_price and _bear_tp:
             try:
                 px = float(_curr_price.group(1))
@@ -686,11 +753,12 @@ class DataQualityChecksMixin:
                     # "仍高于当前价" → 用下一句检测矛盾表述
                     if _btv < px * 0.7:
                         # 找该目标价后是否紧跟"高于/高于当前价"
-                        _after = text[text.find(_bt) + len(_bt):text.find(_bt) + len(_bt) + 60]
+                        _after = text[text.find(_bt) + len(_bt) : text.find(_bt) + len(_bt) + 60]
                         if any(k in _after for k in ("高于", "仍高于", "高于当前")):
                             issues.append(
                                 f"敏感性单调性矛盾: 悲观情形目标价{_btv}元 vs 当前价{px}元"
-                                f"（隐含{(_btv/px-1)*100:+.0f}%），报告却称'仍高于当前价'")
+                                f"（隐含{(_btv / px - 1) * 100:+.0f}%），报告却称'仍高于当前价'"
+                            )
             except (ValueError, TypeError, ZeroDivisionError):
                 pass
 
@@ -699,7 +767,7 @@ class DataQualityChecksMixin:
         det = f"不变量审计: {len(issues)} 项" + (": " + "; ".join(issues[:3]) if issues else "无")
         return GateCheckResult("invariant_audit", passed, score, det, severity="error")
 
-    def _check_valuation_integrity(self) -> 'GateCheckResult':
+    def _check_valuation_integrity(self) -> "GateCheckResult":
         """R53审计（2026-08-03 P0-1）：估值链四方勾稽硬规则——估值闭环。
 
         背景：气体传感器圆桌审计复核坐实"估值链四方矛盾"——
@@ -715,13 +783,13 @@ class DataQualityChecksMixin:
         data_dict 不可用时退化为报告内部自洽检查。
         """
         import re as _re
+
         text = self.report_text or ""
         if len(text) < 300:
-            return GateCheckResult("valuation_integrity", True, 1.0,
-                                   "text too short, skipped", severity="warning")
+            return GateCheckResult("valuation_integrity", True, 1.0, "text too short, skipped", severity="warning")
 
         # 加载 data_dict（资产名绑定，与 financial_value_consistency 同源）
-        asset = getattr(self, 'asset', '') or getattr(self, 'sac_id', '')
+        asset = getattr(self, "asset", "") or getattr(self, "sac_id", "")
         data_dict = {}
         if asset:
             _cache_path = _ROOT / "output" / f"{asset}_data_dict.json"
@@ -765,29 +833,27 @@ class DataQualityChecksMixin:
 
         # ── 报告内部提取 ───────────────────────────────────────
         # 总股本（亿股）
-        rpt_shares = _re.search(r'总股本(?:约|为)?(\d+(?:\.\d+)?)\s*亿股', text)
+        rpt_shares = _re.search(r"总股本(?:约|为)?(\d+(?:\.\d+)?)\s*亿股", text)
         # 总市值（亿元）
-        rpt_mcap = _re.search(r'总市值(?:约|为)?(\d+(?:\.\d+)?)\s*亿元', text)
+        rpt_mcap = _re.search(r"总市值(?:约|为)?(\d+(?:\.\d+)?)\s*亿元", text)
         # 股价（元）
-        rpt_price = _re.search(r'(?:当前价|现价|股价|收盘价|收盘)[^\d]{0,6}(\d+(?:\.\d+)?)\s*元', text)
+        rpt_price = _re.search(r"(?:当前价|现价|股价|收盘价|收盘)[^\d]{0,6}(\d+(?:\.\d+)?)\s*元", text)
         # 净利（亿元）——"净利X亿" / "净利润X亿"
-        rpt_net = _re.search(r'净利(?:润)?(?:约|为|达)?(\d+(?:\.\d+)?)\s*亿', text)
+        rpt_net = _re.search(r"净利(?:润)?(?:约|为|达)?(\d+(?:\.\d+)?)\s*亿", text)
 
         # ── 1. 净利 = EPS × 总股本 ─────────────────────────────
         # 覆盖两类 EPS 表述：
         #   a. "2027E EPS X元"（R35 原有，预测期模式）
         #   b. "2025E动态PE X倍对应EPS约Y元"（PE 表述，圆桌审计漏检点）
         eps_vals = []  # (eps, context)
-        for m in _re.finditer(
-                r'(?:20\d\dE|20\d\d年|20\d\d)\s*EPS[^\d]{0,4}(\d+(?:\.\d+)?)\s*元', text):
+        for m in _re.finditer(r"(?:20\d\dE|20\d\d年|20\d\d)\s*EPS[^\d]{0,4}(\d+(?:\.\d+)?)\s*元", text):
             try:
                 eps_vals.append((float(m.group(1)), m.group(0)[:30]))
             except (ValueError, TypeError):
                 continue
         # b. "2025E动态PE 42倍对应EPS约Y元"（PE 表述，圆桌审计漏检点）
         #    允许 PE 与 EPS 间有"42倍"等修饰（中间 [^\d] 不能有数字，故用 [^。；\n]）
-        for m in _re.finditer(
-                r'PE[^。；\n]{0,30}?EPS(?:约|为)?(\d+(?:\.\d+)?)\s*元', text):
+        for m in _re.finditer(r"PE[^。；\n]{0,30}?EPS(?:约|为)?(\d+(?:\.\d+)?)\s*元", text):
             try:
                 eps_vals.append((float(m.group(1)), m.group(0)[:30]))
             except (ValueError, TypeError):
@@ -821,7 +887,8 @@ class DataQualityChecksMixin:
                         issues.append(
                             f"估值勾稽①净利=EPS×股本: EPS{_e}元×{shares:.2f}亿股="
                             f"{net_implied:.2f}亿 ≠ {_ref_name}{_ref:.2f}亿"
-                            f"（偏差{(net_implied-_ref)/_ref*100:+.0f}%）")
+                            f"（偏差{(net_implied - _ref) / _ref * 100:+.0f}%）"
+                        )
 
         # ── 2. 总市值 = 股价 × 总股本 ──────────────────────────
         # 校验需"市值 + 价格 + 股本"三要素，任一来源（外部锚或报告）皆可。
@@ -835,8 +902,7 @@ class DataQualityChecksMixin:
                     _implied = ext_price * ext_shares
                     _ref_name = "外部锚"
                 elif rpt_price:
-                    _sh = ext_shares if ext_shares else (
-                        float(rpt_shares.group(1)) if rpt_shares else 0)
+                    _sh = ext_shares if ext_shares else (float(rpt_shares.group(1)) if rpt_shares else 0)
                     _implied = float(rpt_price.group(1)) * _sh
                     _ref_name = "股价×股本"
                 else:
@@ -846,7 +912,8 @@ class DataQualityChecksMixin:
                         issues.append(
                             f"估值勾稽②市值=股价×股本: 股价×股本={_implied:.1f}亿"
                             f"≠报告市值{_rpt_mcap}亿（偏差"
-                            f"{(_implied-_rpt_mcap)/_rpt_mcap*100:+.0f}%）")
+                            f"{(_implied - _rpt_mcap) / _rpt_mcap * 100:+.0f}%）"
+                        )
             except (ValueError, TypeError, ZeroDivisionError):
                 pass
 
@@ -854,8 +921,10 @@ class DataQualityChecksMixin:
         # 模式："目标价X元，对应PE Y倍" → 隐含EPS = X/Y，应与报告 EPS 或
         #     外部净利/股本反推的 EPS 一致。
         for m in _re.finditer(
-                r'目标价[^\d]{0,15}?(\d+(?:\.\d+)?)\s*元[^。；]{0,40}?'
-                r'对应PE[^\d]{0,6}(\d+(?:\.\d+)?)\s*倍', text):
+            r"目标价[^\d]{0,15}?(\d+(?:\.\d+)?)\s*元[^。；]{0,40}?"
+            r"对应PE[^\d]{0,6}(\d+(?:\.\d+)?)\s*倍",
+            text,
+        ):
             try:
                 tp = float(m.group(1))
                 pe = float(m.group(2))
@@ -875,7 +944,8 @@ class DataQualityChecksMixin:
                     issues.append(
                         f"估值勾稽③目标价/PE=EPS: 目标价{tp}元/PE{pe}倍=EPS{implied_eps:.2f}元"
                         f"≠{_ref_name}（偏差"
-                        f"{(implied_eps-_ref_eps)/_ref_eps*100:+.0f}%）")
+                        f"{(implied_eps - _ref_eps) / _ref_eps * 100:+.0f}%）"
+                    )
             except (ValueError, TypeError, ZeroDivisionError):
                 continue
 
@@ -888,7 +958,7 @@ class DataQualityChecksMixin:
         det = f"估值勾稽: {len(issues)} 项矛盾" + (": " + "; ".join(issues[:3]) if issues else "无")
         return GateCheckResult("valuation_integrity", passed, score, det, severity="error")
 
-    def _check_financial_value_consistency(self) -> 'GateCheckResult':
+    def _check_financial_value_consistency(self) -> "GateCheckResult":
         """R38（2026-08-02）：财务数值一致性——报告中的毛利率/营收/净利
         与 data_dict 真实值冲突检测。
 
@@ -897,12 +967,14 @@ class DataQualityChecksMixin:
         本检查用 data_dict 的真实值作为基准，检测报告是否写了明显矛盾的财务数。
         """
         import re as _re
+
         text = self.report_text or ""
         if len(text) < 300:
-            return GateCheckResult("financial_value_consistency", True, 1.0,
-                                   "text too short, skipped", severity="warning")
+            return GateCheckResult(
+                "financial_value_consistency", True, 1.0, "text too short, skipped", severity="warning"
+            )
         # 加载 data_dict（资产名绑定）
-        asset = getattr(self, 'asset', '') or getattr(self, 'sac_id', '')
+        asset = getattr(self, "asset", "") or getattr(self, "sac_id", "")
         data_dict = {}
         if asset:
             _cache_path = _ROOT / "output" / f"{asset}_data_dict.json"
@@ -912,8 +984,7 @@ class DataQualityChecksMixin:
                 except Exception:
                     pass
         if not data_dict:
-            return GateCheckResult("financial_value_consistency", True, 1.0,
-                                   "无 data_dict，跳过", severity="warning")
+            return GateCheckResult("financial_value_consistency", True, 1.0, "无 data_dict，跳过", severity="warning")
 
         issues = []
         # ── 1. 毛利率一致性：用最新实际毛利率（margin_YYYY）做基准 ──
@@ -929,26 +1000,26 @@ class DataQualityChecksMixin:
             latest_y = max(margins.keys())
             latest_margin = margins[latest_y]
             # 报告中的毛利率表述（"毛利率X%"），排除预测区间与历史序列
-            for m in _re.finditer(
-                    r'毛利率[^。；\n]{0,15}?(\d{2}(?:\.\d+)?)%', text):
+            for m in _re.finditer(r"毛利率[^。；\n]{0,15}?(\d{2}(?:\.\d+)?)%", text):
                 try:
                     gm = float(m.group(1))
                     # 只检查"当前/维持/实际"语境，跳过预测区间（34-36%这种）
-                    ctx_before = text[max(0, m.start() - 25):m.start()]
+                    ctx_before = text[max(0, m.start() - 25) : m.start()]
                     if any(k in ctx_before for k in ("维持", "当前", "实际", "2025", "现有")):
                         # 报告值 vs 最新实际值，偏差 >15% 且方向矛盾（报告远低于实际）
                         if gm < latest_margin * 0.85:
                             issues.append(
                                 f"毛利率矛盾: 报告写『{gm}%』但 data_dict 最新实际"
                                 f"margin_{latest_y}={latest_margin}%（偏差"
-                                f"{(latest_margin-gm)/latest_margin*100:+.0f}%）")
+                                f"{(latest_margin - gm) / latest_margin * 100:+.0f}%）"
+                            )
                 except (ValueError, TypeError):
                     continue
 
         # ── 2. PE 口径一致性：多个 PE 值但无口径标注 ──
         # 正文/附录出现明显不同的 PE 值（如 79.79 vs 44.63）且未说明口径 → 拦截
         pe_vals = set()
-        for m in _re.finditer(r'PE[^。；\n]{0,20}?(\d{2}(?:\.\d+)?)\s*倍', text):
+        for m in _re.finditer(r"PE[^。；\n]{0,20}?(\d{2}(?:\.\d+)?)\s*倍", text):
             try:
                 pe_vals.add(float(m.group(1)))
             except (ValueError, TypeError):
@@ -965,22 +1036,22 @@ class DataQualityChecksMixin:
                 has_ttm = "TTM" in text or "ttm" in text
                 has_fwd = "前瞻" in text or "2027E" in text
                 if not (has_static and (has_ttm or has_fwd)):
-                    issues.append(
-                        f"PE口径混乱: 正文出现多个PE值 {pe_list}，差异>50%"
-                        f"且未明确区分静态/TTM/前瞻口径")
+                    issues.append(f"PE口径混乱: 正文出现多个PE值 {pe_list}，差异>50%且未明确区分静态/TTM/前瞻口径")
                 else:
                     # 有口径标注，但检查是否"同一口径下仍冲突"（图注数据未同步）
                     # 若最小 PE 出现在"图注/图表"语境且无对应口径说明 → 疑似未同步
                     for _pv in pe_list:
-                        _pctx = text[max(0, text.find(str(_pv)) - 40):text.find(str(_pv)) + 20]
+                        _pctx = text[max(0, text.find(str(_pv)) - 40) : text.find(str(_pv)) + 20]
                         if any(k in _pctx for k in ("图", "表", "附录", "对比")):
                             # 图表中的 PE 值，检查是否有明确口径
-                            _has_label = any(k in _pctx for k in
-                                             ("静态", "TTM", "动态", "前瞻", "2025", "2026", "2027"))
+                            _has_label = any(
+                                k in _pctx for k in ("静态", "TTM", "动态", "前瞻", "2025", "2026", "2027")
+                            )
                             if not _has_label and _pv < pe_list[-1] * 0.7:
                                 issues.append(
                                     f"图表PE未同步: 附录图表PE {_pv} 与正文最高 {pe_list[-1]} 差异大，"
-                                    f"图表数据可能未随正文口径更新")
+                                    f"图表数据可能未随正文口径更新"
+                                )
                             break
 
         passed = len(issues) == 0
@@ -988,10 +1059,9 @@ class DataQualityChecksMixin:
         # R91（2026-08-10）：行业报告财务多值豁免——industry_deep 常并列多家公司
         # 的不同 PE/毛利率（中国卫星52 vs 铖昌80），属正常横向对比，降级 warning。
         _sev = "warning" if getattr(self, "report_type", "") == "industry_deep" else "error"
-        return GateCheckResult("financial_value_consistency", passed,
-                               1.0 if passed else 0.5, det, severity=_sev)
+        return GateCheckResult("financial_value_consistency", passed, 1.0 if passed else 0.5, det, severity=_sev)
 
-    def _check_financial_fraud_signals(self) -> 'GateCheckResult':
+    def _check_financial_fraud_signals(self) -> "GateCheckResult":
         """R58（2026-08-03）：四大审计确定性检查——财务造假信号。
 
         规则来源：methodology_audit_deep.json（fraud_signals/revenue_recognition/
@@ -1002,13 +1072,11 @@ class DataQualityChecksMixin:
           4. 其他应收/总收入 > 10% → 资金占用嫌疑
         无 data_dict 或数据不足时跳过（不误报）。
         """
-        import re as _re
         text = self.report_text or ""
         if len(text) < 300:
-            return GateCheckResult("financial_fraud_signals", True, 1.0,
-                                   "text too short, skipped", severity="warning")
+            return GateCheckResult("financial_fraud_signals", True, 1.0, "text too short, skipped", severity="warning")
         # 加载 data_dict
-        asset = getattr(self, 'asset', '') or getattr(self, 'sac_id', '')
+        asset = getattr(self, "asset", "") or getattr(self, "sac_id", "")
         data_dict = {}
         if asset:
             _cache_path = _ROOT / "output" / f"{asset}_data_dict.json"
@@ -1018,8 +1086,7 @@ class DataQualityChecksMixin:
                 except Exception:
                     pass
         if not data_dict:
-            return GateCheckResult("financial_fraud_signals", True, 1.0,
-                                   "无 data_dict，跳过", severity="warning")
+            return GateCheckResult("financial_fraud_signals", True, 1.0, "无 data_dict，跳过", severity="warning")
 
         issues = []
 
@@ -1044,8 +1111,9 @@ class DataQualityChecksMixin:
                 if _rec_growth is not None and _rev_growth > 0:
                     if _rec_growth - _rev_growth > 0.20:
                         issues.append(
-                            f"收入确认激进: 应收增速{_rec_growth*100:.0f}% - 收入增速"
-                            f"{_rev_growth*100:.0f}% > 20pct（回款风险）")
+                            f"收入确认激进: 应收增速{_rec_growth * 100:.0f}% - 收入增速"
+                            f"{_rev_growth * 100:.0f}% > 20pct（回款风险）"
+                        )
             except (TypeError, ValueError, ZeroDivisionError):
                 pass
 
@@ -1056,8 +1124,7 @@ class DataQualityChecksMixin:
             try:
                 ratio = float(_ocf) / float(_net)
                 if ratio < 0.5 and float(_net) > 0:
-                    issues.append(
-                        f"利润质量差: 经营现金流/净利 = {ratio:.2f} < 0.5（应计利润过高）")
+                    issues.append(f"利润质量差: 经营现金流/净利 = {ratio:.2f} < 0.5（应计利润过高）")
             except (TypeError, ValueError, ZeroDivisionError):
                 pass
 
@@ -1072,8 +1139,7 @@ class DataQualityChecksMixin:
         if len(_margins) >= 3:
             vals = [_margins[y] for y in sorted(_margins)[-3:]]
             if max(vals) - min(vals) < 1.0:
-                issues.append(
-                    f"毛利率多年波动 {max(vals)-min(vals):.1f}pct < 1pct（可能粉饰平滑）")
+                issues.append(f"毛利率多年波动 {max(vals) - min(vals):.1f}pct < 1pct（可能粉饰平滑）")
 
         # 4. 其他应收/总收入 > 10%
         _other_rec = data_dict.get("other_receivable_latest")
@@ -1082,8 +1148,7 @@ class DataQualityChecksMixin:
             try:
                 ratio = float(_other_rec) / float(_total_rev)
                 if ratio > 0.10:
-                    issues.append(
-                        f"其他应收/总收入 = {ratio:.0%} > 10%（资金占用/体外循环嫌疑）")
+                    issues.append(f"其他应收/总收入 = {ratio:.0%} > 10%（资金占用/体外循环嫌疑）")
             except (TypeError, ValueError, ZeroDivisionError):
                 pass
 
@@ -1100,18 +1165,25 @@ class DataQualityChecksMixin:
         同时校验多估值锚一致性（PE 法与 DCF 法差值 >20% 必须交代取值逻辑）。
         """
         import re as _re
+
         text = self.report_text or ""
         if len(text) < 300:
-            return GateCheckResult("rating_target_consistency", True, 1.0,
-                                   "text too short, skipped", severity="warning")
+            return GateCheckResult(
+                "rating_target_consistency", True, 1.0, "text too short, skipped", severity="warning"
+            )
         # R45（2026-08-02 P2-2）：评级-目标价一致性是上市公司概念。
         # 行业/非上市报告若提及"增持/买入"或目标价，会被评级-空间错配误判；
         # 非上市也无现价概念。非 listed 类型跳过评级-空间检查（保留多估值锚一致性）。
         if self.report_type != "listed_company":
             # 仅保留多估值锚一致性检查（如适用），评级-空间检查跳过
             issues = []
-            return GateCheckResult("rating_target_consistency", True, 1.0,
-                                   f"{self.report_type} 无评级-目标价概念，跳过", severity="warning")
+            return GateCheckResult(
+                "rating_target_consistency",
+                True,
+                1.0,
+                f"{self.report_type} 无评级-目标价概念，跳过",
+                severity="warning",
+            )
         issues = []
         # 提取评级
         rating = ""
@@ -1120,8 +1192,8 @@ class DataQualityChecksMixin:
                 rating = kw
                 break
         # 提取目标价和现价
-        tp = re.findall(r'目标价[^\d]{0,6}(\d{2,3}(?:\.\d+)?)\s*元', text)
-        cp = re.findall(r'(?:现价|当前股价|当前价)[^\d]{0,6}(\d{2,3}(?:\.\d+)?)', text)
+        tp = re.findall(r"目标价[^\d]{0,6}(\d{2,3}(?:\.\d+)?)\s*元", text)
+        cp = re.findall(r"(?:现价|当前股价|当前价)[^\d]{0,6}(\d{2,3}(?:\.\d+)?)", text)
         if tp and cp:
             target = float(tp[0])
             price = float(cp[0])
@@ -1130,17 +1202,21 @@ class DataQualityChecksMixin:
                 if rating in ("增持", "买入", "强烈推荐", "推荐") and upside < 10:
                     issues.append(
                         f"评级-空间错配: 评级『{rating}』但目标价{target}元较现价{price}元仅+{upside:.1f}%空间"
-                        f"（增持/买入通常要求≥10%，建议降级中性或重新论证）")
+                        f"（增持/买入通常要求≥10%，建议降级中性或重新论证）"
+                    )
         # 多估值锚一致性：提取 PE 法目标价 和 DCF 目标价
         # R32（2026-08-02）：放宽正则以覆盖"PE估值：...对应目标价40-48元"
         # 这种区间表述（原正则 {0,4} 太短匹配不到），并支持"X元/X-Y元"两种形态。
         pe_targets = []
         for m in re.finditer(
-                r'PE(?:法|估值)?[^\d]{0,16}?(?:目标价|目标价位|对应)[^\d]{0,6}(\d{2,3}(?:\.\d+)?)\s*元', text):
+            r"PE(?:法|估值)?[^\d]{0,16}?(?:目标价|目标价位|对应)[^\d]{0,6}(\d{2,3}(?:\.\d+)?)\s*元", text
+        ):
             pe_targets.append(m.group(1))
         dcf_targets = []
         for m in re.finditer(
-                r'DCF(?:法|公允|估值|价值)?[^\d]{0,16}?(?:目标价|目标价位|对应|公允市值约)[^\d]{0,8}(\d{2,3}(?:\.\d+)?)\s*元', text):
+            r"DCF(?:法|公允|估值|价值)?[^\d]{0,16}?(?:目标价|目标价位|对应|公允市值约)[^\d]{0,8}(\d{2,3}(?:\.\d+)?)\s*元",
+            text,
+        ):
             dcf_targets.append(m.group(1))
         if pe_targets and dcf_targets:
             try:
@@ -1149,14 +1225,15 @@ class DataQualityChecksMixin:
                 if abs(pe_v - dcf_v) / max(dcf_v, 1e-9) > 0.2:
                     issues.append(
                         f"估值锚不一致: PE法目标{pe_v}元 vs DCF法目标{dcf_v}元，差异>20%，"
-                        f"正文必须交代最终取值的加权逻辑")
+                        f"正文必须交代最终取值的加权逻辑"
+                    )
             except (ValueError, TypeError):
                 pass
         # R32：多目标价金额自相矛盾（同一报告出现两个综合目标价且差异>6%）
         # 柯力案：结论"目标价51.60元" vs §6.3"综合目标价48元"。
         # 正则捕获"目标价X元"，排除区间（X-Y元）与敏感性矩阵（无目标价前缀）。
         tp_amounts = []
-        for m in re.finditer(r'(?:目标价|目标价位)[：:]?\s*(\d{2,3}(?:\.\d+)?)\s*元', text):
+        for m in re.finditer(r"(?:目标价|目标价位)[：:]?\s*(\d{2,3}(?:\.\d+)?)\s*元", text):
             val = float(m.group(1))
             if val not in tp_amounts:
                 tp_amounts.append(val)
@@ -1166,11 +1243,11 @@ class DataQualityChecksMixin:
             if (tp_base - tp_min) / max(tp_base, 1e-9) > 0.06:
                 issues.append(
                     f"目标价自相矛盾: 正文出现多个目标价 {tp_amounts}，"
-                    f"差异>6%（最高{tp_base}元 vs 最低{tp_min}元），必须统一为单一结论")
+                    f"差异>6%（最高{tp_base}元 vs 最低{tp_min}元），必须统一为单一结论"
+                )
         passed = len(issues) == 0
         det = f"评级/估值一致性: {len(issues)} 项" + (": " + "; ".join(issues[:3]) if issues else "")
-        return GateCheckResult("rating_target_consistency", passed,
-                               1.0 if passed else 0.5, det, severity="error")
+        return GateCheckResult("rating_target_consistency", passed, 1.0 if passed else 0.5, det, severity="error")
 
     def _check_numeric_chain_consistency(self) -> GateCheckResult:
         """R88（2026-08-10）：数值链自洽校验——行业报告分散式数值的独立验算。
@@ -1193,10 +1270,12 @@ class DataQualityChecksMixin:
              （覆盖"4450+8520+7530+9350=约2.99万亿"）
         """
         import re as _re
+
         text = self.report_text or ""
         if len(text) < 300:
-            return GateCheckResult("numeric_chain_consistency", True, 1.0,
-                                   "text too short, skipped", severity="warning")
+            return GateCheckResult(
+                "numeric_chain_consistency", True, 1.0, "text too short, skipped", severity="warning"
+            )
         issues = []
         _TOL = 0.05
 
@@ -1210,7 +1289,7 @@ class DataQualityChecksMixin:
         # 策略：找"占...市场约Z%"结构，然后在"占"前 260 字内找最近的"X万亿元/亿元"作分子，
         # 在"占"后 120 字内找"Y亿美元/亿元"作分母。
         _fx = 7.0
-        _fx_m = _re.search(r'汇率[^\d]{0,4}(\d+(?:\.\d+)?)', text)
+        _fx_m = _re.search(r"汇率[^\d]{0,4}(\d+(?:\.\d+)?)", text)
         if _fx_m:
             try:
                 _fx = float(_fx_m.group(1))
@@ -1218,25 +1297,26 @@ class DataQualityChecksMixin:
                 pass
 
         for m in _re.finditer(
-                r'(?:占|占全|占市场|占全球)[^\n。；]{0,4}?'
-                r'(?:全球|全球市场|市场|总规模|总市场)'
-                r'[^。；\n]{0,25}?(?:约|为|占|达)?\s*(\d+(?:\.\d+)?)\s*%', text):
+            r"(?:占|占全|占市场|占全球)[^\n。；]{0,4}?"
+            r"(?:全球|全球市场|市场|总规模|总市场)"
+            r"[^。；\n]{0,25}?(?:约|为|占|达)?\s*(\d+(?:\.\d+)?)\s*%",
+            text,
+        ):
             try:
                 pct_claimed = float(m.group(1))
                 if not (0.01 < pct_claimed < 1000):
                     continue
                 # 分子：占前同一句内（不跨句号）找"X万亿/亿元"，窗口 200 字
-                before = text[max(0, m.start() - 200):m.start()]
+                before = text[max(0, m.start() - 200) : m.start()]
                 # 若"占"前有句号，截到句号后（防止跨句串数）
                 _last_period = before.rfind("。")
                 if _last_period >= 0:
-                    before = before[_last_period + 1:]
+                    before = before[_last_period + 1 :]
                 # 分子必须是"占"前紧邻的金额（前 30 字内优先），否则可能把
                 # "国内收入11.81亿元，占总收入75.76%"这种合法表述误配——
                 # 该表述的占比(75.76%)就是直接声明，无需分母验算，且分母不在句中。
                 num_m = None
-                for nm in reversed(list(_re.finditer(
-                        r'(\d+(?:\.\d+)?)\s*(万亿元|亿元|万亿美元|亿美元)', before))):
+                for nm in reversed(list(_re.finditer(r"(\d+(?:\.\d+)?)\s*(万亿元|亿元|万亿美元|亿美元)", before))):
                     num_m = nm
                     break
                 if not num_m:
@@ -1247,16 +1327,17 @@ class DataQualityChecksMixin:
                 num = float(num_m.group(1))
                 num_unit = num_m.group(2)
                 # 分母：占后 100 字内"Y亿美元/亿元"（优先紧邻）
-                after = text[m.end():m.end() + 100]
+                after = text[m.end() : m.end() + 100]
                 # 若"占后"跨句号则截断（分母须同句）
                 _nxt_period = after.find("。")
                 if _nxt_period >= 0:
                     after = after[:_nxt_period]
-                den_m = _re.search(r'(\d+(?:\.\d+)?)\s*(万亿美元|亿美元|亿元)', after)
+                den_m = _re.search(r"(\d+(?:\.\d+)?)\s*(万亿美元|亿美元|亿元)", after)
                 if not den_m:
                     continue
                 den = float(den_m.group(1))
                 den_unit = den_m.group(2)
+
                 # 归一化到亿元
                 def _to_yi(v, u):
                     if u == "万亿元":
@@ -1268,6 +1349,7 @@ class DataQualityChecksMixin:
                     if u == "亿元":
                         return v
                     return v
+
                 num_yi = _to_yi(num, num_unit)
                 den_yi = _to_yi(den, den_unit)
                 # 币种归一：美元×汇率→人民币
@@ -1279,12 +1361,12 @@ class DataQualityChecksMixin:
                     continue
                 actual_pct = num_yi / den_yi * 100
                 # 数量级/比例偏差：实际与声称差 >2倍，或相对偏差>20%
-                if abs(actual_pct - pct_claimed) / max(actual_pct, 1e-9) > 0.20 or \
-                   abs(pct_claimed - actual_pct) > 5:
+                if abs(actual_pct - pct_claimed) / max(actual_pct, 1e-9) > 0.20 or abs(pct_claimed - actual_pct) > 5:
                     issues.append(
                         f"占比数量级错误: {_fmt(num)}{num_unit}占{_fmt(den)}{den_unit}="
                         f"{actual_pct:.1f}%，报告写{pct_claimed:.1f}%"
-                        f"（差{abs(actual_pct-pct_claimed)/max(actual_pct,1e-9)*100:.0f}%）")
+                        f"（差{abs(actual_pct - pct_claimed) / max(actual_pct, 1e-9) * 100:.0f}%）"
+                    )
             except (ValueError, TypeError, ZeroDivisionError):
                 continue
 
@@ -1294,16 +1376,14 @@ class DataQualityChecksMixin:
         # 注意：这是"声称的算术"，必须精确匹配（容差 <0.01%）。
         # 商业航天案：0.70×55=38.5，报告写 38.40（尾数错误），0.26% 偏差，
         # 若用 0.5% 容差会被吞掉。声称的等号表示"恒等"，差一位都不行。
-        for m in _re.finditer(
-                r'(\d+(?:\.\d+)?)\s*[×xX*]\s*(\d+(?:\.\d+)?)\s*[=＝]\s*(\d+(?:\.\d+)?)', text):
+        for m in _re.finditer(r"(\d+(?:\.\d+)?)\s*[×xX*]\s*(\d+(?:\.\d+)?)\s*[=＝]\s*(\d+(?:\.\d+)?)", text):
             try:
                 a, b, c = float(m.group(1)), float(m.group(2)), float(m.group(3))
                 if a > 0 and b > 0 and c > 0 and 0.1 < a < 100 and 1 < b < 200:
                     prod = a * b
                     # 精确容差：声称的乘积必须与实算几乎一致（<0.01%）
                     if abs(prod - c) / max(prod, 1e-9) > 0.0001:
-                        issues.append(
-                            f"乘积验算错误: {_fmt(a)}×{_fmt(b)}={_fmt(prod)}，报告写{_fmt(c)}")
+                        issues.append(f"乘积验算错误: {_fmt(a)}×{_fmt(b)}={_fmt(prod)}，报告写{_fmt(c)}")
             except (ValueError, TypeError, ZeroDivisionError):
                 continue
         # 场景B：目标价与 PE/EPS 显式绑定（括号内自洽结构）
@@ -1312,10 +1392,12 @@ class DataQualityChecksMixin:
         # 仅当"目标价"与"PE"与"EPS"同句且通过"基于/对应"绑定才验算，
         # 避免把多估值锚（PE30 vs PE35 各自目标价）串配。
         for m in _re.finditer(
-                r'目标价[^。；\n]{0,30}?(\d+(?:\.\d+)?)\s*元[^。；\n]{0,25}?'
-                r'(?:基于|对应|取)[^。；\n]{0,15}?'
-                r'(\d+(?:\.\d+)?)\s*倍\s*PE[^。；\n]{0,20}?'
-                r'(?:对应|EPS|每股收益)[^\d]{0,6}(\d+(?:\.\d+)?)\s*元', text):
+            r"目标价[^。；\n]{0,30}?(\d+(?:\.\d+)?)\s*元[^。；\n]{0,25}?"
+            r"(?:基于|对应|取)[^。；\n]{0,15}?"
+            r"(\d+(?:\.\d+)?)\s*倍\s*PE[^。；\n]{0,20}?"
+            r"(?:对应|EPS|每股收益)[^\d]{0,6}(\d+(?:\.\d+)?)\s*元",
+            text,
+        ):
             try:
                 tp, pe, eps = float(m.group(1)), float(m.group(2)), float(m.group(3))
                 if tp > 0 and pe > 0 and eps > 0 and 1 < pe < 200 and 0 < eps < 100:
@@ -1323,8 +1405,8 @@ class DataQualityChecksMixin:
                     # 该绑定应自洽：EPS×PE ≈ 目标价（<5% 容差，估值取整可接受）
                     if abs(implied - tp) / max(implied, 1e-9) > 0.05:
                         issues.append(
-                            f"目标价链错误: EPS{_fmt(eps)}×PE{_fmt(pe)}={_fmt(implied)}元，"
-                            f"报告目标价写{_fmt(tp)}元")
+                            f"目标价链错误: EPS{_fmt(eps)}×PE{_fmt(pe)}={_fmt(implied)}元，报告目标价写{_fmt(tp)}元"
+                        )
             except (ValueError, TypeError, ZeroDivisionError):
                 continue
 
@@ -1335,27 +1417,27 @@ class DataQualityChecksMixin:
         # 关键：跳过**情景/敏感性目标价**（"双杀情景...目标价30元"）——这些是分情景值，
         # 合法地与现价产生负空间/大空间，只有结论/综合目标价才应对照上行空间验算。
         _SCENARIO_MARKERS = ("情景", "概率", "悲观", "双杀", "牛市", "中性", "乐观", "下行", "上行")
-        for m in _re.finditer(r'目标价[^=\d]{0,10}(\d+(?:\.\d+)?)\s*元', text):
+        for m in _re.finditer(r"目标价[^=\d]{0,10}(\d+(?:\.\d+)?)\s*元", text):
             try:
                 tp = float(m.group(1))
                 if not (1 < tp < 1000):
                     continue
                 # 情景过滤：目标价前 40 字或后 40 字内出现情景词 → 跳过
-                _ctx_before = text[max(0, m.start() - 40):m.start()]
-                _ctx_after = text[m.end():m.end() + 40]
+                _ctx_before = text[max(0, m.start() - 40) : m.start()]
+                _ctx_after = text[m.end() : m.end() + 40]
                 if any(mk in _ctx_before or mk in _ctx_after for mk in _SCENARIO_MARKERS):
                     continue
-                seg = text[max(0, m.start() - 300):m.end() + 400]
+                seg = text[max(0, m.start() - 300) : m.end() + 400]
                 # 找现价（明写或隐含）
                 cp = None
-                cp_m = _re.search(r'(?:现价|当前股价|当前价|收盘价)[^\d]{0,6}(\d+(?:\.\d+)?)\s*元', seg)
+                cp_m = _re.search(r"(?:现价|当前股价|当前价|收盘价)[^\d]{0,6}(\d+(?:\.\d+)?)\s*元", seg)
                 if cp_m:
                     cp = float(cp_m.group(1))
                 else:
                     # 隐含现价：当前股价对应PE Y倍 × EPS Z元
                     # 商业航天案：'当前股价对应2025年PE约52倍' + EPS约0.59元（前文）
-                    pe_m = _re.search(r'(?:对应|对应PE|PE\(TTM\)|当前PE|PE)[^\d]{0,4}(\d{1,3}(?:\.\d+)?)\s*倍', seg)
-                    eps_m = _re.search(r'EPS(?:约|为)?\s*(\d+(?:\.\d+)?)\s*元', seg)
+                    pe_m = _re.search(r"(?:对应|对应PE|PE\(TTM\)|当前PE|PE)[^\d]{0,4}(\d{1,3}(?:\.\d+)?)\s*倍", seg)
+                    eps_m = _re.search(r"EPS(?:约|为)?\s*(\d+(?:\.\d+)?)\s*元", seg)
                     if pe_m and eps_m:
                         try:
                             pe_v = float(pe_m.group(1))
@@ -1368,9 +1450,10 @@ class DataQualityChecksMixin:
                 # 长句才进入推导段，300 字窗口会漏，商业航天案实测）
                 # 区间处理："约15-20%" → 15 后是 "-20%"；"约15%" → 15 后直接 "%"。
                 up_m = _re.search(
-                    r'(?:上行空间|上涨空间)[^\d]{0,8}(?:约|为)?\s*'
-                    r'(\d+(?:\.\d+)?)(?:\s*%|\s*[-~至到]\s*(\d+(?:\.\d+)?)\s*%)',
-                    text[m.end():m.end() + 500])
+                    r"(?:上行空间|上涨空间)[^\d]{0,8}(?:约|为)?\s*"
+                    r"(\d+(?:\.\d+)?)(?:\s*%|\s*[-~至到]\s*(\d+(?:\.\d+)?)\s*%)",
+                    text[m.end() : m.end() + 500],
+                )
                 if cp and cp > 0 and up_m:
                     up_lo = float(up_m.group(1))
                     up_hi = float(up_m.group(2)) if up_m.group(2) else up_lo
@@ -1381,7 +1464,7 @@ class DataQualityChecksMixin:
                         # 与声称区间吻合（如汇川案 PE法27.4 vs DCF 70-80，上行空间
                         # 20-38% 对应 70-80），说明声称空间属于另一锚，非本锚矛盾。
                         _alt_ok = False
-                        for _am in _re.finditer(r'(\d+(?:\.\d+)?)\s*元', seg):
+                        for _am in _re.finditer(r"(\d+(?:\.\d+)?)\s*元", seg):
                             try:
                                 _alt_tp = float(_am.group(1))
                                 if abs(_alt_tp - tp) < 1e-6 or _alt_tp <= 0:
@@ -1395,7 +1478,8 @@ class DataQualityChecksMixin:
                         if not _alt_ok:
                             issues.append(
                                 f"目标价空间错误: 目标价{tp}元 vs 隐含现价{cp:.2f}元=+{actual:.1f}%，"
-                                f"报告写{up_lo:g}-{up_hi:g}%")
+                                f"报告写{up_lo:g}-{up_hi:g}%"
+                            )
             except (ValueError, TypeError, ZeroDivisionError):
                 continue
 
@@ -1404,19 +1488,24 @@ class DataQualityChecksMixin:
         # 覆盖"火箭发射制造约4450亿元、卫星制造约8520亿元...合计约2.99万亿元"
         # 注意：数字可能带千分位逗号（"4,450亿元"），正则须兼容，否则 4450 被拆成 4 和 450。
         for m in _re.finditer(
-                r'(\d[\d,]*\.?\d*)\s*亿元[^。；\n]{0,15}?(\d[\d,]*\.?\d*)\s*亿元[^。；\n]{0,15}?'
-                r'(\d[\d,]*\.?\d*)\s*亿元[^。；\n]{0,15}?(\d[\d,]*\.?\d*)\s*亿元[^。；\n]{0,30}?'
-                r'(?:合计|总计|总和)[^。；\n]{0,10}?(?:约|为)?\s*(\d[\d,]*\.?\d*)\s*万亿元', text):
+            r"(\d[\d,]*\.?\d*)\s*亿元[^。；\n]{0,15}?(\d[\d,]*\.?\d*)\s*亿元[^。；\n]{0,15}?"
+            r"(\d[\d,]*\.?\d*)\s*亿元[^。；\n]{0,15}?(\d[\d,]*\.?\d*)\s*亿元[^。；\n]{0,30}?"
+            r"(?:合计|总计|总和)[^。；\n]{0,10}?(?:约|为)?\s*(\d[\d,]*\.?\d*)\s*万亿元",
+            text,
+        ):
             try:
+
                 def _num(s):
                     return float(s.replace(",", ""))
+
                 parts = [_num(m.group(i)) for i in range(1, 5)]
                 total_claimed = _num(m.group(5))
                 total_actual = sum(parts) / 1e4  # 亿元→万亿元
                 if abs(total_actual - total_claimed) / max(total_claimed, 1e-9) > _TOL:
                     issues.append(
                         f"细分合计错误: {parts[0]:.0f}+{parts[1]:.0f}+{parts[2]:.0f}+{parts[3]:.0f}"
-                        f"={total_actual:.2f}万亿元，报告写{total_claimed:.2f}万亿元")
+                        f"={total_actual:.2f}万亿元，报告写{total_claimed:.2f}万亿元"
+                    )
             except (ValueError, TypeError, ZeroDivisionError):
                 continue
 
@@ -1437,30 +1526,40 @@ class DataQualityChecksMixin:
             # R2（2026-07-31 Marvis 审计）：引擎不可用必须显式失败，
             # 不能 passed=True 假装通过（否则数据一致性检查形同虚设）
             logger.error("[CONSISTENCY] engine unavailable: %s", e)
-            return GateCheckResult(name="cross_section_consistency", passed=False,
-                                   score=0.1, severity="error",
-                                   details=f"consistency_engine unavailable: {e}")
+            return GateCheckResult(
+                name="cross_section_consistency",
+                passed=False,
+                score=0.1,
+                severity="error",
+                details=f"consistency_engine unavailable: {e}",
+            )
         text = self.report_text or ""
         result = check_consistency(text)
         if result["passed"]:
             n_clusters = len(result["clusters"])
-            return GateCheckResult(name="cross_section_consistency", passed=True,
-                                   score=1.0,
-                                   details=f"no cross-section conflicts ({n_clusters} clusters)")
+            return GateCheckResult(
+                name="cross_section_consistency",
+                passed=True,
+                score=1.0,
+                details=f"no cross-section conflicts ({n_clusters} clusters)",
+            )
         conflicts = result["conflicts"]
         # R91（2026-08-10）：行业报告跨段多值豁免——行业报告"细分 vs 总量"（9350亿导航
         # 细分 vs 2.83万亿广义总量）是正常包含关系，降级 warning。
         _sev = "warning" if getattr(self, "report_type", "") == "industry_deep" else "error"
-        return GateCheckResult(name="cross_section_consistency", passed=False,
-                               score=max(0.1, 1.0 - 0.3 * len(conflicts)),
-                               severity=_sev,
-                               details=f"{len(conflicts)} conflicts: {'; '.join(conflicts[:3])}")
+        return GateCheckResult(
+            name="cross_section_consistency",
+            passed=False,
+            score=max(0.1, 1.0 - 0.3 * len(conflicts)),
+            severity=_sev,
+            details=f"{len(conflicts)} conflicts: {'; '.join(conflicts[:3])}",
+        )
 
     def _check_synthesis_consistency(self) -> GateCheckResult:
         """Check if meta-reasoning synthesis was run and contradictions resolved"""
         text = self.report_text or ""
-        has_synthesis = bool(re.search(r'synthesis|meta.reasoning|consensus|合成|共识|综合判断', text))
-        has_contradiction = bool(re.search(r'contradiction|矛盾|冲突|分歧|conflict|不一致', text))
+        has_synthesis = bool(re.search(r"synthesis|meta.reasoning|consensus|合成|共识|综合判断", text))
+        has_contradiction = bool(re.search(r"contradiction|矛盾|冲突|分歧|conflict|不一致", text))
 
         if has_synthesis and not has_contradiction:
             score = 1.0
@@ -1477,8 +1576,10 @@ class DataQualityChecksMixin:
 
         return GateCheckResult(
             name="synthesis_consistency",
-            score=score, passed=passed,
-            severity="warning" if score < 0.6 else "info", details=details
+            score=score,
+            passed=passed,
+            severity="warning" if score < 0.6 else "info",
+            details=details,
         )
 
     def _check_evidence_layer(self) -> GateCheckResult:
@@ -1486,14 +1587,15 @@ class DataQualityChecksMixin:
         text = self.report_text or ""
         if len(text) < 500:
             return GateCheckResult("evidence_layer", True, 1.0, "text too short, skipped", severity="warning")
-        
+
         import re
+
         # Find numeric claims (in Chinese financial context)
         # Match: numbers with 亿/万/百分比 or standalone large numbers
-        claims = re.findall(r'(?:\d+\.?\d*[亿万千百]|\d+\.?\d*%|\d{4,}[\u4e00-\u9fff]*)', text)
+        claims = re.findall(r"(?:\d+\.?\d*[亿万千百]|\d+\.?\d*%|\d{4,}[\u4e00-\u9fff]*)", text)
         if len(claims) < 3:
             return GateCheckResult("evidence_layer", True, 0.7, f"only {len(claims)} claims found")
-        
+
         covered = 0
         for claim in claims:
             # Find position and check surrounding 100 chars for source
@@ -1503,11 +1605,10 @@ class DataQualityChecksMixin:
             start = max(0, pos - 100)
             end = min(len(text), pos + len(claim) + 100)
             context = text[start:end]
-            if re.search(r'(?:来源|据|数据|source|根据|年报|报告|公告|研报|数据来源)', context):
+            if re.search(r"(?:来源|据|数据|source|根据|年报|报告|公告|研报|数据来源)", context):
                 covered += 1
-        
+
         ratio = covered / len(claims)
         score = min(1.0, ratio)
         passed = score >= 0.3  # 30%+ of claims have source nearby
-        return GateCheckResult("evidence_layer", passed, score, 
-                              f"{covered}/{len(claims)} claims sourced ({score:.2f})")
+        return GateCheckResult("evidence_layer", passed, score, f"{covered}/{len(claims)} claims sourced ({score:.2f})")

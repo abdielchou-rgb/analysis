@@ -23,10 +23,10 @@
 
 from __future__ import annotations
 
+import logging
 import random
 import re
-import logging
-from typing import Any, Optional
+from typing import Any
 
 from core.sacs import SACLoader
 
@@ -70,7 +70,7 @@ class ProbabilisticDeepCheck:
         self,
         report_type: str = "industry_deep",
         trigger_probability: float = 0.20,
-        random_seed: Optional[int] = None,
+        random_seed: int | None = None,
     ):
         self.report_type = report_type
         self.probability = max(0.0, min(1.0, trigger_probability))
@@ -154,7 +154,7 @@ class ProbabilisticDeepCheck:
 
         # 确定性检查摘要
         det = result.get("deterministic", {})
-        lines.append(f"\n## 确定性检查")
+        lines.append("\n## 确定性检查")
         lines.append(f"  总体通过: {'是' if det.get('overall_passed', False) else '否'}")
         lines.append(f"  SAC维度覆盖率: {det.get('sac_coverage', {}).get('score', 0):.0%}")
 
@@ -172,7 +172,9 @@ class ProbabilisticDeepCheck:
 
         # 逻辑链完整性
         lc = det.get("logic_chain_completeness", {})
-        lines.append(f"  逻辑链完整性: {lc.get('coverage', 0):.0%} ({lc.get('covered_steps', 0)}/{lc.get('total_steps', 0)})")
+        lines.append(
+            f"  逻辑链完整性: {lc.get('coverage', 0):.0%} ({lc.get('covered_steps', 0)}/{lc.get('total_steps', 0)})"
+        )
 
         # 数据可追溯性
         dt = det.get("data_traceability", {})
@@ -181,7 +183,7 @@ class ProbabilisticDeepCheck:
         # 概率性检查摘要
         prob = result.get("probabilistic", {})
         triggered = result.get("probabilistic_triggered", False)
-        lines.append(f"\n## 概率性深度检查")
+        lines.append("\n## 概率性深度检查")
         lines.append(f"  本批次触发: {'是' if triggered else '否（未抽中，跳过）'}")
 
         if triggered:
@@ -197,12 +199,12 @@ class ProbabilisticDeepCheck:
                 lines.append(f"    数据来源: {dim_result.get('source_count', 0)} 处")
                 issues = dim_result.get("issues", [])
                 if issues:
-                    lines.append(f"    问题:")
+                    lines.append("    问题:")
                     for issue in issues:
                         lines.append(f"      - {issue}")
 
             if not prob.get("overall_passed", False):
-                lines.append(f"\n  ⚠ 深度检查未通过，建议重写对应维度。")
+                lines.append("\n  ⚠ 深度检查未通过，建议重写对应维度。")
 
         lines.append("\n" + "=" * 64)
         return "\n".join(lines)
@@ -271,10 +273,7 @@ class ProbabilisticDeepCheck:
         results["data_traceability"] = self._check_data_traceability(text)
 
         # 5. 总体判定
-        all_passed = all(
-            r.get("passed", False) if isinstance(r, dict) else False
-            for r in results.values()
-        )
+        all_passed = all(r.get("passed", False) if isinstance(r, dict) else False for r in results.values())
         results["overall_passed"] = all_passed
 
         return results
@@ -523,7 +522,9 @@ class ProbabilisticDeepCheck:
         found_terms = [t for t in check_terms if t in combined]
         keyword_score = len(found_terms) / len(check_terms) if check_terms else 0.0
         if keyword_score < 0.5:
-            issues.append(f"关键词覆盖不足（{keyword_score:.0%}），仅找到 {len(found_terms)}/{len(check_terms)} 个关键概念")
+            issues.append(
+                f"关键词覆盖不足（{keyword_score:.0%}），仅找到 {len(found_terms)}/{len(check_terms)} 个关键概念"
+            )
 
         # 5. required_elements 强制检查
         missing_required = [r for r in required if r not in combined]
@@ -552,9 +553,7 @@ class ProbabilisticDeepCheck:
 
     # ── 辅助方法 ──────────────────────────────────────────────────────────
 
-    def _locate_dimension_text(
-        self, text: str, dim_id: str, check_terms: set, required: list
-    ) -> list[str]:
+    def _locate_dimension_text(self, text: str, dim_id: str, check_terms: set, required: list) -> list[str]:
         """定位文本中属于特定维度的段落。
 
         策略：找到包含 required_elements 或检查关键词的段落，
@@ -631,23 +630,46 @@ class ProbabilisticDeepCheck:
         """SAC 加载失败时的兜底维度列表。"""
         fallback = {
             "industry_deep": [
-                "bold_call", "core_disagreement", "industry_boundary",
-                "life_cycle", "policy", "market_size", "supply_demand",
-                "profit_pool", "competitive", "technology", "capital_market",
+                "bold_call",
+                "core_disagreement",
+                "industry_boundary",
+                "life_cycle",
+                "policy",
+                "market_size",
+                "supply_demand",
+                "profit_pool",
+                "competitive",
+                "technology",
+                "capital_market",
             ],
             "listed_company": [
-                "core_disagreement", "business_model", "financial_analysis",
-                "competitive_position", "growth_drivers", "governance_esg",
-                "valuation_assessment", "falsification", "catalyst",
+                "core_disagreement",
+                "business_model",
+                "financial_analysis",
+                "competitive_position",
+                "growth_drivers",
+                "governance_esg",
+                "valuation_assessment",
+                "falsification",
+                "catalyst",
             ],
             "unlisted_company": [
-                "data_declaration", "company_profile", "funding_history",
-                "business_kpi", "competitive_moat", "valuation_estimate",
-                "exit_analysis", "due_diligence", "falsification",
+                "data_declaration",
+                "company_profile",
+                "funding_history",
+                "business_kpi",
+                "competitive_moat",
+                "valuation_estimate",
+                "exit_analysis",
+                "due_diligence",
+                "falsification",
             ],
             "earnings_notes": [
-                "headline", "key_surprise", "segment_analysis",
-                "balance_cashflow", "outlook_implication",
+                "headline",
+                "key_surprise",
+                "segment_analysis",
+                "balance_cashflow",
+                "outlook_implication",
             ],
         }
         return fallback.get(self.report_type, fallback["industry_deep"])
@@ -655,15 +677,23 @@ class ProbabilisticDeepCheck:
 
 # ── CLI 入口 ──────────────────────────────────────────────────────────────
 
+
 def main():
     import argparse
     import json
 
     parser = argparse.ArgumentParser(description="2hao-analyst ProbabilisticDeepCheck")
     parser.add_argument("report_path", help="报告文件路径")
-    parser.add_argument("--type", default="industry_deep", choices=[
-        "industry_deep", "listed_company", "unlisted_company", "earnings_notes",
-    ])
+    parser.add_argument(
+        "--type",
+        default="industry_deep",
+        choices=[
+            "industry_deep",
+            "listed_company",
+            "unlisted_company",
+            "earnings_notes",
+        ],
+    )
     parser.add_argument("--probability", type=float, default=0.20, help="概率性触发概率 (0.0-1.0)")
     parser.add_argument("--seed", type=int, help="随机种子（可复现测试用）")
     parser.add_argument("--json", action="store_true", help="输出 JSON 格式")
@@ -696,4 +726,5 @@ def main():
 if __name__ == "__main__":
     import sys
     from pathlib import Path
+
     sys.exit(main())

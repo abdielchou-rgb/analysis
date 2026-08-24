@@ -15,18 +15,19 @@ Architecture:
 """
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
-from typing import Optional
 from statistics import median
 
-from core.financial_types import resolve_metric, reconcile_granularities
+from core.financial_types import reconcile_granularities, resolve_metric
 
 logger = logging.getLogger("v52.cross_validator")
 
 
 class SourceLevel:
     """信源可信度权重"""
+
     WEIGHTS = {
         "L0_computed": 1.0,
         "L1_filing": 0.95,
@@ -45,6 +46,7 @@ class SourceLevel:
 @dataclass
 class CrossCheckResult:
     """单个数据点的交叉验证结果"""
+
     metric_name: str
     granularity: str = ""
     values: list[float] = field(default_factory=list)
@@ -52,7 +54,7 @@ class CrossCheckResult:
     source_levels: list[str] = field(default_factory=list)
     unit: str = ""
     median_value: float = 0.0
-    mad: float = 0.0           # Median Absolute Deviation
+    mad: float = 0.0  # Median Absolute Deviation
     max_deviation_pct: float = 0.0
     has_outlier: bool = False
     outlier_indices: list[int] = field(default_factory=list)
@@ -64,15 +66,16 @@ class CrossCheckResult:
 @dataclass
 class CrossValidationReport:
     """完整交叉验证报告"""
+
     asset: str = ""
     total_metrics: int = 0
     consistent_metrics: int = 0
-    flagged_metrics: int = 0      # >15% discrepancy
-    severe_flagged: int = 0       # >30% discrepancy
+    flagged_metrics: int = 0  # >15% discrepancy
+    severe_flagged: int = 0  # >30% discrepancy
     results: list[CrossCheckResult] = field(default_factory=list)
     granularity_warnings: list[str] = field(default_factory=list)
     overall_confidence: float = 0.0
-    passed: bool = True            # Iron Gate blocking decision
+    passed: bool = True  # Iron Gate blocking decision
     summary: str = ""
     recommendations: list[str] = field(default_factory=list)
 
@@ -80,17 +83,15 @@ class CrossValidationReport:
 class CrossValidator:
     """外部交叉验证引擎 — Iron Gate 外环"""
 
-    DISCREPANCY_WARN = 0.15    # >15% → warning
+    DISCREPANCY_WARN = 0.15  # >15% → warning
     DISCREPANCY_SEVERE = 0.30  # >30% → severe warning
-    DISCREPANCY_BLOCK = 0.50   # >50% → consider blocking (not auto)
+    DISCREPANCY_BLOCK = 0.50  # >50% → consider blocking (not auto)
 
     def __init__(self):
         self.warn_threshold = self.DISCREPANCY_WARN
         self.severe_threshold = self.DISCREPANCY_SEVERE
 
-    def validate(
-        self, data_points: list, asset: str = "", text: str = ""
-    ) -> CrossValidationReport:
+    def validate(self, data_points: list, asset: str = "", text: str = "") -> CrossValidationReport:
         """执行外部交叉验证。
 
         Args:
@@ -103,12 +104,14 @@ class CrossValidator:
         """
         if not data_points:
             return CrossValidationReport(
-                asset=asset, passed=True,
+                asset=asset,
+                passed=True,
                 recommendations=["数据为空，跳过交叉验证"],
             )
 
         # Step 1: 按指标名分组
         from collections import defaultdict
+
         by_metric: dict[str, list] = defaultdict(list)
         for dp in data_points:
             if not hasattr(dp, "name") or not hasattr(dp, "value"):
@@ -145,22 +148,17 @@ class CrossValidator:
         recommendations = []
         if flagged:
             recommendations.append(
-                f"建议复审 {len(flagged)} 个指标的多源差异："
-                + "、".join(r.metric_name for r in flagged[:5])
+                f"建议复审 {len(flagged)} 个指标的多源差异：" + "、".join(r.metric_name for r in flagged[:5])
             )
         if gran_warnings:
             recommendations.extend(gran_warnings)
         if len(dps_by_num_sources := [r for r in results if len(r.sources) < 2]):
             recommendations.append(
-                f"建议对以下指标增加冗余信源："
-                + "、".join(r.metric_name for r in dps_by_num_sources[:3])
+                "建议对以下指标增加冗余信源：" + "、".join(r.metric_name for r in dps_by_num_sources[:3])
             )
 
         # Overall confidence: average of all weighted_confidences
-        overall_conf = (
-            sum(r.weighted_confidence for r in results) / len(results)
-            if results else 1.0
-        )
+        overall_conf = sum(r.weighted_confidence for r in results) / len(results) if results else 1.0
 
         # Non-blocking: 交叉验证不阻塞管线，差异 >50% 才建议阻塞
         passed = True
@@ -188,9 +186,7 @@ class CrossValidator:
             recommendations=recommendations,
         )
 
-    def _compare_single_metric(
-        self, metric_name: str, dps: list
-    ) -> Optional[CrossCheckResult]:
+    def _compare_single_metric(self, metric_name: str, dps: list) -> CrossCheckResult | None:
         """对单个指标的多源数据点做比对。"""
         values = []
         sources = []
@@ -233,10 +229,8 @@ class CrossValidator:
 
         # 加权信度
         weights = [SourceLevel.weight(lv) for lv in source_levels]
-        weighted_conf = (
-            sum(w * (1 - min(abs(v - med) / max(abs(med), 1), 1))
-                for v, w in zip(values, weights))
-            / max(sum(weights), 1)
+        weighted_conf = sum(w * (1 - min(abs(v - med) / max(abs(med), 1), 1)) for v, w in zip(values, weights)) / max(
+            sum(weights), 1
         )
 
         metric = resolve_metric(metric_name)
@@ -247,13 +241,13 @@ class CrossValidator:
             outlier_details = []
             for idx in outlier_indices:
                 outlier_details.append(
-                    f"{sources[idx]}({values[idx]:.2f}{unit}, 偏差{deviations[idx]/max(abs(med),1)*100:.1f}%)"
+                    f"{sources[idx]}({values[idx]:.2f}{unit}, 偏差{deviations[idx] / max(abs(med), 1) * 100:.1f}%)"
                 )
             warning = f"数据差异: {', '.join(outlier_details)}"
             if max_dev_pct >= self.DISCREPANCY_SEVERE * 100:
-                warning += f" [严重]"
+                warning += " [严重]"
             if max_dev_pct >= self.DISCREPANCY_BLOCK * 100:
-                warning += f" [建议阻塞]"
+                warning += " [建议阻塞]"
 
         return CrossCheckResult(
             metric_name=metric_name,
@@ -294,12 +288,10 @@ class CrossValidator:
 
     # ── 三表勾稽验证 ───────────────────────────────────────────
     # 容忍度参数（可通过 __init__ 覆盖）
-    RECONCILIATION_TOLERANCE = 0.05   # 5% 勾稽容差（财报级通常 <1%，估计级放宽至 5%）
+    RECONCILIATION_TOLERANCE = 0.05  # 5% 勾稽容差（财报级通常 <1%，估计级放宽至 5%）
     CF_RECONCILIATION_TOLERANCE = 0.10  # 经营现金流勾稽容差（非现金项目影响，放宽至 10%）
 
-    def check_three_statement_consistency(
-        self, financials: dict
-    ) -> dict:
+    def check_three_statement_consistency(self, financials: dict) -> dict:
         """三表勾稽验证（PL ↔ BS ↔ CF）。
 
         验证三项核心勾稽关系：
@@ -354,21 +346,22 @@ class CrossValidator:
             else:
                 diff_pct = float("inf") if np_actual != 0 else 0.0
             check_passed = diff_pct <= self.RECONCILIATION_TOLERANCE
-            checks.append({
-                "name": "净利润勾稽（收入-成本-费用）",
-                "passed": check_passed,
-                "expected": round(np_expected, 4),
-                "actual": np_actual,
-                "diff_pct": round(diff_pct * 100, 2),
-                "detail": (
-                    f"预期净利润 {np_expected:.4f} 亿 vs 实际 {np_actual:.4f} 亿"
-                    f"（差异 {diff_pct*100:.2f}%）"
-                ),
-            })
+            checks.append(
+                {
+                    "name": "净利润勾稽（收入-成本-费用）",
+                    "passed": check_passed,
+                    "expected": round(np_expected, 4),
+                    "actual": np_actual,
+                    "diff_pct": round(diff_pct * 100, 2),
+                    "detail": (
+                        f"预期净利润 {np_expected:.4f} 亿 vs 实际 {np_actual:.4f} 亿（差异 {diff_pct * 100:.2f}%）"
+                    ),
+                }
+            )
             if not check_passed:
                 all_passed = False
                 warnings.append(
-                    f"净利润勾稽差异 {diff_pct*100:.2f}% > {self.RECONCILIATION_TOLERANCE*100:.0f}% 容差"
+                    f"净利润勾稽差异 {diff_pct * 100:.2f}% > {self.RECONCILIATION_TOLERANCE * 100:.0f}% 容差"
                 )
         else:
             warnings.append("净利润勾稽跳过：缺少收入或净利润数据")
@@ -381,21 +374,22 @@ class CrossValidator:
             else:
                 diff_pct = float("inf") if re_end != 0 else 0.0
             check_passed = diff_pct <= self.RECONCILIATION_TOLERANCE
-            checks.append({
-                "name": "留存收益勾稽（期初+净利润-分红）",
-                "passed": check_passed,
-                "expected": round(re_expected, 4),
-                "actual": re_end,
-                "diff_pct": round(diff_pct * 100, 2),
-                "detail": (
-                    f"预期期末留存 {re_expected:.4f} 亿 vs 实际 {re_end:.4f} 亿"
-                    f"（差异 {diff_pct*100:.2f}%）"
-                ),
-            })
+            checks.append(
+                {
+                    "name": "留存收益勾稽（期初+净利润-分红）",
+                    "passed": check_passed,
+                    "expected": round(re_expected, 4),
+                    "actual": re_end,
+                    "diff_pct": round(diff_pct * 100, 2),
+                    "detail": (
+                        f"预期期末留存 {re_expected:.4f} 亿 vs 实际 {re_end:.4f} 亿（差异 {diff_pct * 100:.2f}%）"
+                    ),
+                }
+            )
             if not check_passed:
                 all_passed = False
                 warnings.append(
-                    f"留存收益勾稽差异 {diff_pct*100:.2f}% > {self.RECONCILIATION_TOLERANCE*100:.0f}% 容差"
+                    f"留存收益勾稽差异 {diff_pct * 100:.2f}% > {self.RECONCILIATION_TOLERANCE * 100:.0f}% 容差"
                 )
         else:
             warnings.append("留存收益勾稽跳过：缺少期初/期末留存收益数据")
@@ -411,25 +405,29 @@ class CrossValidator:
             # 若有 non_cash_items，做更精细的勾稽
             np_plus_nc = np_actual + non_cash
             cf_diff_adj = abs(ocf - np_plus_nc)
-            diff_pct_adj = cf_diff_adj / max(abs(np_plus_nc), abs(ocf), 1) if max(abs(np_plus_nc), abs(ocf), 1) > 0 else 0
+            diff_pct_adj = (
+                cf_diff_adj / max(abs(np_plus_nc), abs(ocf), 1) if max(abs(np_plus_nc), abs(ocf), 1) > 0 else 0
+            )
 
             check_passed = diff_pct <= self.CF_RECONCILIATION_TOLERANCE
-            checks.append({
-                "name": "经营现金流与利润表勾稽",
-                "passed": check_passed,
-                "expected": round(np_actual, 4),
-                "actual": ocf,
-                "diff_pct": round(diff_pct * 100, 2),
-                "detail": (
-                    f"净利润 {np_actual:.4f} 亿 vs 经营现金流 {ocf:.4f} 亿"
-                    f"（差异 {diff_pct*100:.2f}%，"
-                    f"含非现金项目调整后差异 {diff_pct_adj*100:.2f}%）"
-                ),
-            })
+            checks.append(
+                {
+                    "name": "经营现金流与利润表勾稽",
+                    "passed": check_passed,
+                    "expected": round(np_actual, 4),
+                    "actual": ocf,
+                    "diff_pct": round(diff_pct * 100, 2),
+                    "detail": (
+                        f"净利润 {np_actual:.4f} 亿 vs 经营现金流 {ocf:.4f} 亿"
+                        f"（差异 {diff_pct * 100:.2f}%，"
+                        f"含非现金项目调整后差异 {diff_pct_adj * 100:.2f}%）"
+                    ),
+                }
+            )
             if not check_passed:
                 all_passed = False
                 warnings.append(
-                    f"经营现金流勾稽差异 {diff_pct*100:.2f}% > {self.CF_RECONCILIATION_TOLERANCE*100:.0f}% 容差"
+                    f"经营现金流勾稽差异 {diff_pct * 100:.2f}% > {self.CF_RECONCILIATION_TOLERANCE * 100:.0f}% 容差"
                 )
         else:
             warnings.append("经营现金流勾稽跳过：缺少经营现金流或净利润数据")
@@ -449,6 +447,7 @@ class CrossValidator:
 
 # ── 便捷函数 ────────────────────────────────────────────────
 
+
 def quick_validate(data_points: list, asset: str = "") -> CrossValidationReport:
     """单行交叉验证调用。"""
     cv = CrossValidator()
@@ -456,6 +455,9 @@ def quick_validate(data_points: list, asset: str = "") -> CrossValidationReport:
 
 
 __all__ = [
-    "CrossValidator", "CrossValidationReport", "CrossCheckResult",
-    "SourceLevel", "quick_validate",
+    "CrossValidator",
+    "CrossValidationReport",
+    "CrossCheckResult",
+    "SourceLevel",
+    "quick_validate",
 ]

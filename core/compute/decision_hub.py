@@ -19,11 +19,11 @@ from __future__ import annotations
 import json
 import logging
 import math
-import os
+import os  # noqa: F401  (dead-import debt)
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta  # noqa: F401  (dead-import debt)
 from pathlib import Path
-from typing import Optional
+from typing import Optional  # noqa: F401  (dead-import debt)
 
 logger = logging.getLogger("v51.decision_hub")
 
@@ -32,14 +32,16 @@ HISTORY_DB = Path(__file__).resolve().parent.parent / "data" / "signal_history.j
 
 # ── Data model ───────────────────────────────────────────────
 
+
 @dataclass
 class Signal:
     """单个信号。"""
+
     id: str = ""
     name: str = ""
     direction: str = "neutral"  # bull | bear | neutral
-    strength: float = 0.5       # 0.0-1.0
-    source: str = ""            # pattern / prediction / data
+    strength: float = 0.5  # 0.0-1.0
+    source: str = ""  # pattern / prediction / data
     created_at: str = ""
     metadata: dict = field(default_factory=dict)
 
@@ -47,17 +49,19 @@ class Signal:
 @dataclass
 class Decision:
     """融合后的决策输出。"""
-    bull_prob: float = 0.0      # 0.0-1.0
+
+    bull_prob: float = 0.0  # 0.0-1.0
     bear_prob: float = 0.0
     neutral_prob: float = 0.0
-    conviction: float = 0.0      # 0.0-1.0 (overall confidence)
-    dominant_signal: str = ""    # 最强信号的ID
+    conviction: float = 0.0  # 0.0-1.0 (overall confidence)
+    dominant_signal: str = ""  # 最强信号的ID
     n_signals: int = 0
     n_active_signals: int = 0
     reasoning: list[str] = field(default_factory=list)
 
 
 # ── History DB ───────────────────────────────────────────────
+
 
 def _load_history() -> dict:
     if HISTORY_DB.exists():
@@ -74,6 +78,7 @@ def _save_history(data: dict):
 
 
 # ── Decision Hub ─────────────────────────────────────────────
+
 
 class DecisionHub:
     """数学化信号融合引擎。"""
@@ -150,9 +155,7 @@ class DecisionHub:
         if total_weight > 0 and active_count >= cls.MIN_SIGNALS:
             decision.bull_prob = round(bull_weight / total_weight, 3)
             decision.bear_prob = round(bear_weight / total_weight, 3)
-            decision.neutral_prob = round(
-                max(0, 1 - decision.bull_prob - decision.bear_prob), 3
-            )
+            decision.neutral_prob = round(max(0, 1 - decision.bull_prob - decision.bear_prob), 3)
 
             # Conviction: how decisive is the signal
             net = abs(decision.bull_prob - decision.bear_prob)
@@ -177,9 +180,7 @@ class DecisionHub:
         return wins / total
 
     @classmethod
-    def _generate_reasoning(cls, signals: list[Signal],
-                             decision: Decision,
-                             history: dict) -> list[str]:
+    def _generate_reasoning(cls, signals: list[Signal], decision: Decision, history: dict) -> list[str]:
         """Generate human-readable reasoning for the decision."""
         reasons = []
 
@@ -187,20 +188,18 @@ class DecisionHub:
             direction = "看多" if decision.bull_prob > decision.bear_prob else "看空"
             reasons.append(f"信号一致{direction}（置信度{decision.conviction:.0%})")
         elif decision.conviction > 0.3:
-            reasons.append(f"信号倾向{'看多' if decision.bull_prob > decision.bear_prob else '看空'}（置信度{decision.conviction:.0%})")
+            reasons.append(
+                f"信号倾向{'看多' if decision.bull_prob > decision.bear_prob else '看空'}（置信度{decision.conviction:.0%})"
+            )
         else:
             reasons.append(f"信号分歧（看多{decision.bull_prob:.0%} / 看空{decision.bear_prob:.0%}），置信度不足")
 
         # Top signals
-        sorted_signals = sorted(
-            signals, key=lambda s: s.strength, reverse=True
-        )[:3]
+        sorted_signals = sorted(signals, key=lambda s: s.strength, reverse=True)[:3]
         for sig in sorted_signals:
             hist = history.get("signals", {}).get(sig.id, {})
             wr = cls._get_winrate(hist)
-            reasons.append(
-                f"  [{sig.direction}] {sig.name}（强度{sig.strength:.1f}，历史胜率{wr:.0%})"
-            )
+            reasons.append(f"  [{sig.direction}] {sig.name}（强度{sig.strength:.1f}，历史胜率{wr:.0%})")
 
         return reasons
 
@@ -227,8 +226,7 @@ class DecisionHub:
 
         _save_history(db)
         wr = db["signals"][signal_id]["wins"] / db["signals"][signal_id]["total"]
-        logger.info(f"Signal {signal_id}: {'correct' if correct else 'incorrect'} "
-                    f"(win rate now {wr:.0%})")
+        logger.info(f"Signal {signal_id}: {'correct' if correct else 'incorrect'} (win rate now {wr:.0%})")
 
     @classmethod
     def get_stats(cls) -> dict:
@@ -243,9 +241,7 @@ class DecisionHub:
             "tracked_signals": total_signals,
             "total_events": total_events,
             "overall_winrate": round(total_wins / total_events, 3) if total_events > 0 else 0,
-            "learned_signals": sum(
-                1 for s in signals.values() if s.get("total", 0) >= 5
-            ),
+            "learned_signals": sum(1 for s in signals.values() if s.get("total", 0) >= 5),
         }
 
     @classmethod
@@ -258,20 +254,23 @@ class DecisionHub:
                 continue
             total = hist.get("total", 0)
             wins = hist.get("wins", 0)
-            result.append({
-                "signal_id": sid,
-                "total": total,
-                "wins": wins,
-                "winrate": round(wins / total, 3) if total > 0 else 0,
-            })
+            result.append(
+                {
+                    "signal_id": sid,
+                    "total": total,
+                    "wins": wins,
+                    "winrate": round(wins / total, 3) if total > 0 else 0,
+                }
+            )
         return sorted(result, key=lambda x: -x["total"])
 
 
 # ── Convenience: Signal factory ─────────────────────────────
 
-def make_signal(signal_id: str, name: str, direction: str,
-                 strength: float, source: str = "pattern",
-                 created_at: str = "") -> Signal:
+
+def make_signal(
+    signal_id: str, name: str, direction: str, strength: float, source: str = "pattern", created_at: str = ""
+) -> Signal:
     """Factory for creating signal instances."""
     if not created_at:
         created_at = datetime.now().isoformat()
@@ -285,8 +284,7 @@ def make_signal(signal_id: str, name: str, direction: str,
     )
 
 
-def from_pattern_results(pattern_results: dict,
-                          created_at: str = "") -> list[Signal]:
+def from_pattern_results(pattern_results: dict, created_at: str = "") -> list[Signal]:
     """Convert Phase B pattern detection results to signals.
 
     Each PatternResult with non-neutral signal becomes one Signal.
@@ -295,14 +293,16 @@ def from_pattern_results(pattern_results: dict,
     for pid, pr in pattern_results.items():
         if pr.signal == "neutral":
             continue
-        signals.append(make_signal(
-            signal_id=pid,
-            name=pr.pattern_name,
-            direction=pr.signal,
-            strength=pr.confidence,
-            source="pattern",
-            created_at=created_at,
-        ))
+        signals.append(
+            make_signal(
+                signal_id=pid,
+                name=pr.pattern_name,
+                direction=pr.signal,
+                strength=pr.confidence,
+                source="pattern",
+                created_at=created_at,
+            )
+        )
     return signals
 
 
@@ -313,12 +313,14 @@ def from_phase_d_predictions(predictions: list[dict]) -> list[Signal]:
         if pred.get("status") != "pending":
             continue
         direction = "bull"  # default; could be refined from statement text
-        signals.append(make_signal(
-            signal_id=pred.get("id", ""),
-            name=pred.get("statement", "")[:40],
-            direction=direction,
-            strength=pred.get("current_confidence", 0.5),
-            source="prediction",
-            created_at=pred.get("created_at", ""),
-        ))
+        signals.append(
+            make_signal(
+                signal_id=pred.get("id", ""),
+                name=pred.get("statement", "")[:40],
+                direction=direction,
+                strength=pred.get("current_confidence", 0.5),
+                source="prediction",
+                created_at=pred.get("created_at", ""),
+            )
+        )
     return signals

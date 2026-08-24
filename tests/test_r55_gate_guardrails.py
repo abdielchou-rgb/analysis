@@ -6,7 +6,8 @@ Phase D 新增 4 个检查：
   - tam_bottomup: TAM/SAM/SOM 自底向上校验
   - regional_penetration: 区域渗透率错位判断
 """
-import os
+
+import os  # noqa: F401  (dead-import debt)
 import sys
 from pathlib import Path
 
@@ -35,6 +36,7 @@ _CLEAN = (
 
 def _run(text, check_name):
     from pipeline.iron_gate import IronGate
+
     gate = IronGate.from_text(text, report_type="industry_deep", style="cicc")
     return getattr(gate, check_name)()
 
@@ -47,7 +49,11 @@ def test_stock_pick_chain_pass():
 
 def test_stock_pick_chain_fail_without_picks():
     """无选股传导链的行业报告应拦截。"""
-    text = _CLEAN.replace("最受益标的为汉威科技", "行业整体处于成长期").replace("给予增持评级，目标价25元", "但需持续跟踪").replace("弹性最大", "")
+    text = (
+        _CLEAN.replace("最受益标的为汉威科技", "行业整体处于成长期")
+        .replace("给予增持评级，目标价25元", "但需持续跟踪")
+        .replace("弹性最大", "")
+    )
     r = _run(text, "_check_stock_pick_chain")
     assert not r.passed, f"无选股传导链应拦截: {r.details}"
 
@@ -102,7 +108,10 @@ def test_regional_penetration_pass():
 
 def test_regional_penetration_fail():
     """无区域渗透率错位判断应拦截。"""
-    text = _CLEAN.replace("渗透率中国约30%，海外领先国（日本/美国）已达60%，存在约5年错位。对标日本人均GDP路径，中国渗透率预计2028年达到50%。", "中国渗透率持续提升。")
+    text = _CLEAN.replace(
+        "渗透率中国约30%，海外领先国（日本/美国）已达60%，存在约5年错位。对标日本人均GDP路径，中国渗透率预计2028年达到50%。",
+        "中国渗透率持续提升。",
+    )
     r = _run(text, "_check_regional_penetration")
     assert not r.passed, f"无区域错位判断应拦截: {r.details}"
 
@@ -110,6 +119,7 @@ def test_regional_penetration_fail():
 def test_non_industry_skipped():
     """非行业报告（listed）应跳过护栏检查。"""
     from pipeline.iron_gate import IronGate
+
     gate = IronGate.from_text(_CLEAN, report_type="listed_company", style="cicc")
     r = gate._check_stock_pick_chain()
     assert r.passed, f"非行业报告应跳过: {r.details}"
@@ -117,6 +127,7 @@ def test_non_industry_skipped():
 
 if __name__ == "__main__":
     import traceback
+
     passed = failed = 0
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

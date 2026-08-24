@@ -4,10 +4,10 @@
 """
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
 from core.chart_engine import ChartEngine
 
@@ -24,9 +24,9 @@ class ExportResult:
     layout_warnings: str = ""  # R40：渲染层目检结果（空=通过）
 
 
-def preflight_export_checks(chart_paths: dict, need_pptx: bool = True,
-                            need_pdf: bool = False,
-                            md_refs: str = "") -> list:
+def preflight_export_checks(
+    chart_paths: dict, need_pptx: bool = True, need_pdf: bool = False, md_refs: str = ""
+) -> list:
     """P1-4（2026-08-07）：导出前预检。
 
     1) 图表存在性：chart_paths 中每个文件必须真实存在；
@@ -51,7 +51,7 @@ def preflight_export_checks(chart_paths: dict, need_pptx: bool = True,
 
     # 2. MD 正文图表引用存在性
     if md_refs:
-        refs = _re.findall(r'!\[.*?\]\((.+?)\)', md_refs)
+        refs = _re.findall(r"!\[.*?\]\((.+?)\)", md_refs)
         for ref in refs:
             if ref.startswith("http") or ref.startswith("chart:"):
                 continue
@@ -77,11 +77,15 @@ def preflight_export_checks(chart_paths: dict, need_pptx: bool = True,
         try:
             import reportlab  # noqa: F401
         except ImportError:
-            errors.append("reportlab 未安装，无法生成 PDF（LibreOffice 亦不可用时的兜底）。请执行: pip install reportlab")
+            errors.append(
+                "reportlab 未安装，无法生成 PDF（LibreOffice 亦不可用时的兜底）。请执行: pip install reportlab"
+            )
         # LibreOffice 探测（PDF 首选转换器）
         import shutil as _shutil
+
         if not (_shutil.which("libreoffice") or _shutil.which("soffice")):
             import os as _os
+
             _lo_cands = [
                 _os.path.expandvars(r"%ProgramFiles%\LibreOffice\program\soffice.exe"),
                 _os.path.expandvars(r"%ProgramFiles(x86)%\LibreOffice\program\soffice.exe"),
@@ -89,7 +93,9 @@ def preflight_export_checks(chart_paths: dict, need_pptx: bool = True,
                 "/opt/libreoffice/program/soffice",
             ]
             if not any(_os.path.isfile(c) for c in _lo_cands):
-                errors.append("LibreOffice 未安装（PDF 首选转换器缺失），将降级 reportlab；若 reportlab 缺失则 PDF 无法导出")
+                errors.append(
+                    "LibreOffice 未安装（PDF 首选转换器缺失），将降级 reportlab；若 reportlab 缺失则 PDF 无法导出"
+                )
 
     return errors
 
@@ -102,11 +108,16 @@ class IntegratedExporter:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.chart_engine = ChartEngine(output_dir=str(self.output_dir / "charts"))
 
-    def export_all(self, report_text: str, style_id: str = "cicc",
-                   data: dict = None, title: str = "",
-                   sensitivity_matrix: dict = None,
-                   forward_picks: dict = None,
-                   chart_paths: dict = None) -> ExportResult:
+    def export_all(
+        self,
+        report_text: str,
+        style_id: str = "cicc",
+        data: dict = None,
+        title: str = "",
+        sensitivity_matrix: dict = None,
+        forward_picks: dict = None,
+        chart_paths: dict = None,
+    ) -> ExportResult:
         """全量导出。
 
         Args:
@@ -144,8 +155,7 @@ class IntegratedExporter:
         if sensitivity_matrix:
             sm = sensitivity_matrix
             self.chart_engine.set_style(style_id)
-            hm = self.chart_engine.sensitivity_heatmap(
-                sm.get("matrix", []), sm.get("rows", []), sm.get("cols", []))
+            hm = self.chart_engine.sensitivity_heatmap(sm.get("matrix", []), sm.get("rows", []), sm.get("cols", []))
             if hm:
                 chart_paths["sensitivity"] = hm
 
@@ -159,8 +169,13 @@ class IntegratedExporter:
             for chart_type, path in sorted(chart_paths.items()):
                 rel = Path(path).name
                 i += 1
-                desc = {"bar": "核心指标", "pie": "构成分析", "line": "趋势",
-                        "pareto": "帕累托分析", "sensitivity": "敏感性分析"}.get(chart_type, chart_type)
+                desc = {
+                    "bar": "核心指标",
+                    "pie": "构成分析",
+                    "line": "趋势",
+                    "pareto": "帕累托分析",
+                    "sensitivity": "敏感性分析",
+                }.get(chart_type, chart_type)
                 chart_lines.append(f"![图{i}：{desc}]({rel})")
                 chart_lines.append(f"*图{i}：{desc}*\n")
 
@@ -176,8 +191,8 @@ class IntegratedExporter:
                 fp = forward_picks
                 fp_block = f"""
 ---
-**判断跟踪**：对 {fp.get('asset', '')} 的 {fp.get('direction', '')} 判断已记录至 forward_picks。
-验证周期: {fp.get('time_window', '6m')}。证伪条件: {fp.get('falsification', '见正文')}。
+**判断跟踪**：对 {fp.get("asset", "")} 的 {fp.get("direction", "")} 判断已记录至 forward_picks。
+验证周期: {fp.get("time_window", "6m")}。证伪条件: {fp.get("falsification", "见正文")}。
 """
                 embedded += fp_block
 
@@ -185,6 +200,7 @@ class IntegratedExporter:
 
         # 3. 写 md 文件（scrub AIGC artifacts）
         from export.docx_exporter import _scrub_aigc_artifacts
+
         clean_md = _scrub_aigc_artifacts(embedded)
         md_path = self.output_dir / f"{title[:20]}_{style_id}.md"
         md_path.write_text(clean_md, encoding="utf-8")
@@ -192,12 +208,14 @@ class IntegratedExporter:
 
         # 4. 导出 docx（含所有表格 + 图表嵌入）
         try:
-            from export.docx_exporter import pandoc_to_docx, markdown_to_docx
             import re
+
+            from export.docx_exporter import pandoc_to_docx
+
             docx_path = str(self.output_dir / f"{title[:20]}_{style_id}.docx")
             # 从 report_text 提取 H1 标题作为 docx 封面标题
             docx_title = title
-            h1_match = re.search(r'^# (.+)$', report_text, re.MULTILINE)
+            h1_match = re.search(r"^# (.+)$", report_text, re.MULTILINE)
             if h1_match:
                 docx_title = h1_match.group(1).strip()
             # 优先尝试Pandoc（失败时自动回退markdown_to_docx）
@@ -210,8 +228,10 @@ class IntegratedExporter:
             if docx_result and Path(docx_path).exists():
                 try:
                     from docx import Document as DocxDoc
+
                     doc = DocxDoc(docx_path)
                     from export.docx_tables import enhance_tables_in_docx
+
                     enhance_tables_in_docx(doc, embedded, result.charts, style_id)
                     doc.save(docx_path)
                     result.docx_path = docx_path
@@ -225,6 +245,7 @@ class IntegratedExporter:
             if result.docx_path:
                 try:
                     from export.docx_exporter import clean_empty_paragraphs
+
                     _removed = clean_empty_paragraphs(result.docx_path)
                     if _removed:
                         logger.info(f"[DOCX-CLEAN] 清洗 {_removed} 个空段落 → {result.docx_path}")
@@ -234,6 +255,7 @@ class IntegratedExporter:
                 # 根治"DOCX 目录为空"历史问题。
                 try:
                     from export.docx_exporter import add_static_toc
+
                     _n = add_static_toc(result.docx_path, clean_md)
                     if _n:
                         logger.info(f"[DOCX-TOC] 插入静态目录 {_n} 条目 → {result.docx_path}")
@@ -255,8 +277,10 @@ class IntegratedExporter:
         # 明确抛错，禁止调用方以为 PPTX 已产出。
         try:
             from export.pptx_exporter import export_pptx
+
             pptx_path = export_pptx(
-                report_md=embedded, style_id=style_id,
+                report_md=embedded,
+                style_id=style_id,
                 chart_paths=chart_paths,
                 output_path=str(self.output_dir / f"{title[:20]}_{style_id}.pptx"),
             )
@@ -274,8 +298,10 @@ class IntegratedExporter:
         if result.docx_path:
             try:
                 import os as _os
+
                 if _os.path.exists(result.docx_path):
                     from pipeline.iron_gate import IronGate
+
                     _ig = IronGate.__new__(IronGate)
                     _ig.report_text = clean_md
                     _ig.report_path = str(md_path)

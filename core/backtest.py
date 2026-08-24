@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """预测回测闭环 — R80 Phase5 系统端。
 
 FP5 智能演化的前提是"判断要被验证"。本模块：
@@ -10,11 +9,13 @@ FP5 智能演化的前提是"判断要被验证"。本模块：
     from core.backtest import run_backtest
     result = run_backtest()  # 对到期信号回测
 """
+
 from __future__ import annotations
+
 import csv
 import json
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 
 logger = logging.getLogger("2hao.backtest")
@@ -38,6 +39,7 @@ def _get_price_now(asset_code: str) -> float | None:
     """获取当前价格用于对账。优先 financials.db 行情，缺失返回 None。"""
     try:
         from core.data_basement import load_stock_fund_flow
+
         sf = load_stock_fund_flow(asset_code) or {}
         return sf.get("north_hold_latest")
     except Exception:
@@ -68,12 +70,14 @@ def run_backtest() -> dict:
         direction = sig.get("direction", "")
         code = sig.get("asset_code", "")
         # 这里应有真实价格对比；简化版用信号自身状态
-        results.append({
-            "signal_id": sig.get("signal_id", ""),
-            "direction": direction,
-            "status": "due_pending_validation",
-            "note": "到期待验证——需接入行情数据源做方向对账",
-        })
+        results.append(
+            {
+                "signal_id": sig.get("signal_id", ""),
+                "direction": direction,
+                "status": "due_pending_validation",
+                "note": "到期待验证——需接入行情数据源做方向对账",
+            }
+        )
     # 校准统计
     hit = sum(1 for r in results if r.get("status") == "hit")
     total_due = len(results)
@@ -95,6 +99,7 @@ def run_backtest() -> dict:
 
 if __name__ == "__main__":
     import sys
+
     if len(sys.argv) > 1 and sys.argv[1] == "--run":
         r = run_backtest()
         print(json.dumps(r, ensure_ascii=False, indent=2))

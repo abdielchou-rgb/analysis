@@ -1,11 +1,12 @@
-# -*- coding: utf-8 -*-
 """覆盖完整性与实体验证检查 Mixin。
 
 解决 R63 发现的"品牌覆盖代替实体覆盖""上市公司偏见"等系统性问题。
 """
+
 import json
 import re
 from pathlib import Path
+
 from pipeline.checks.base import GateCheckResult, logger
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -18,7 +19,7 @@ def _load_unlisted_players():
         logger.warning("unlisted_players.json 不存在: %s", path)
         return {}
     try:
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             return json.load(f)
     except Exception as e:
         logger.warning("加载 unlisted_players.json 失败: %s", e)
@@ -32,7 +33,7 @@ def _load_brand_mapping():
         logger.warning("brand_entity_mapping.json 不存在: %s", path)
         return {"mappings": []}
     try:
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             return json.load(f)
     except Exception as e:
         logger.warning("加载 brand_entity_mapping.json 失败: %s", e)
@@ -45,15 +46,25 @@ class CoverageChecksMixin:
     @staticmethod
     def _extract_core_entity_name(entity_name: str) -> str:
         """从完整实体名中提取核心名称，用于模糊匹配。
-        
+
         P0-2（2026-08-07）：提取逻辑 —— 去括号内后缀 + 去常见公司后缀。
         例：「科隆测量仪器(上海)有限公司」→「科隆测量仪器」；
         「ABB（中国）有限公司」→「ABB」。
         """
         import re as _re
-        core = _re.sub(r'[（(][^)）]*[)）]', '', entity_name).strip()
-        for suffix in ["有限公司", "股份有限公司", "有限责任公司", "分公司", "投资有限公司",
-                       "科技股份有限公司", "技术股份有限公司", "（中国）", "(中国)"]:
+
+        core = _re.sub(r"[（(][^)）]*[)）]", "", entity_name).strip()
+        for suffix in [
+            "有限公司",
+            "股份有限公司",
+            "有限责任公司",
+            "分公司",
+            "投资有限公司",
+            "科技股份有限公司",
+            "技术股份有限公司",
+            "（中国）",
+            "(中国)",
+        ]:
             core = core.replace(suffix, "").strip()
         return core
 
@@ -66,8 +77,7 @@ class CoverageChecksMixin:
         """
         report_text = getattr(self, "report_text", "")
         if not report_text:
-            return GateCheckResult(name="覆盖完整性", passed=False, score=0.0,
-                                   details="无报告文本", severity="error")
+            return GateCheckResult(name="覆盖完整性", passed=False, score=0.0, details="无报告文本", severity="error")
 
         brand_mapping = _load_brand_mapping()
         mappings = brand_mapping.get("mappings", [])
@@ -168,14 +178,9 @@ class CoverageChecksMixin:
                 continue
             brand_positions = [m.start() for m in re.finditer(re.escape(brand), report_text)]
             group_positions = [m.start() for m in re.finditer(re.escape(correct_group), report_text)]
-            matched = any(
-                any(abs(bp - gp) < 300 for gp in group_positions)
-                for bp in brand_positions
-            )
+            matched = any(any(abs(bp - gp) < 300 for gp in group_positions) for bp in brand_positions)
             if not matched:
-                group_attribution_issues.append(
-                    "品牌'%s'附近（300字符）未出现正确集团'%s'" % (brand, correct_group)
-                )
+                group_attribution_issues.append("品牌'%s'附近（300字符）未出现正确集团'%s'" % (brand, correct_group))
 
         group_deduction = len(group_attribution_issues) * 0.1
 
@@ -190,8 +195,7 @@ class CoverageChecksMixin:
         if details_parts:
             detail += " | " + " | ".join(details_parts)
 
-        return GateCheckResult(name="覆盖完整性", passed=passed, score=score,
-                               details=detail, severity="error")
+        return GateCheckResult(name="覆盖完整性", passed=passed, score=score, details=detail, severity="error")
 
     def _check_entity_verification(self) -> GateCheckResult:
         """实体验证检查。
@@ -201,8 +205,7 @@ class CoverageChecksMixin:
         """
         report_text = getattr(self, "report_text", "")
         if not report_text:
-            return GateCheckResult(name="实体验证", passed=False, score=0.0,
-                                   details="无报告文本", severity="warning")
+            return GateCheckResult(name="实体验证", passed=False, score=0.0, details="无报告文本", severity="warning")
 
         brand_mapping = _load_brand_mapping()
         unlisted_data = _load_unlisted_players()
@@ -270,9 +273,9 @@ class CoverageChecksMixin:
                     # 在 name 附近 200 字符内搜索"上市"相关词
                     pos = report_text.find(name)
                     if pos >= 0:
-                        context = report_text[max(0, pos - 100):pos + len(name) + 200]
+                        context = report_text[max(0, pos - 100) : pos + len(name) + 200]
                         # 如果上下文说"已上市"但数据标记为非上市
-                        if re.search(r'(已上市|上市公司|IPO|挂牌)', context):
+                        if re.search(r"(已上市|上市公司|IPO|挂牌)", context):
                             errors.append("'%s'在unlisted_players.json中标记为非上市，但报告称其已上市" % name)
 
         # ── 评分 ──
@@ -284,8 +287,7 @@ class CoverageChecksMixin:
         if errors:
             detail += " | 错误: %s" % "; ".join(errors[:5])
 
-        return GateCheckResult(name="实体验证", passed=passed, score=score,
-                               details=detail, severity="warning")
+        return GateCheckResult(name="实体验证", passed=passed, score=score, details=detail, severity="warning")
 
     def _check_honest_gap(self) -> GateCheckResult:
         """R79 P1-3：诚实留白机制。
@@ -300,8 +302,11 @@ class CoverageChecksMixin:
             return GateCheckResult("honest_gap", True, 1.0, "无文本")
 
         import re
+
         # 1. 留白声明检测
-        gap_decls = re.findall(r'(数据不足[^。]{0,30}|明确留白[^。]{0,30}|无权威数据[^。]{0,30}|难以量化[^。]{0,30})', text)
+        gap_decls = re.findall(
+            r"(数据不足[^。]{0,30}|明确留白[^。]{0,30}|无权威数据[^。]{0,30}|难以量化[^。]{0,30})", text
+        )
         # 2. 反硬凑：具体数字但无来源标记（A/B/E/F）
         # 找 "XX亿元" 且附近无 (A)/(B)/(E)/(F) 的段落
         # R82（2026-08-06）：标注形式兼容 (A,来源) / (A） / ，A，柯力传感公告 等紧凑与宽松写法，
@@ -309,10 +314,8 @@ class CoverageChecksMixin:
         hard_fab = []
         # R91（2026-08-10）：来源标注兼容全角括号（（A）/（E））——此前只认半角 (A)，
         # 但 2hao 报告大量使用全角（A）（40处）导致误报"无来源"。
-        _src_pat = re.compile(
-            r'[\(（][ABEF][,，）)]|[，,]\s*[ABEF][，,]|来源|据|公告|年报|报告'
-        )
-        for m in re.finditer(r'([^。\n]{0,20}?\d+(?:\.\d+)?\s*(?:亿元|亿美元|万元))', text):
+        _src_pat = re.compile(r"[\(（][ABEF][,，）)]|[，,]\s*[ABEF][，,]|来源|据|公告|年报|报告")
+        for m in re.finditer(r"([^。\n]{0,20}?\d+(?:\.\d+)?\s*(?:亿元|亿美元|万元))", text):
             seg = m.group(1)
             # R92（2026-08-10）：来源上下文窗口扩至"整段"而非前后 20/70 字符。
             # 此前的窄窗口把"2024年营收61.03亿元...（2024年度报告，A）"这种段落级
@@ -320,30 +323,36 @@ class CoverageChecksMixin:
             # 段落里即为合法引用，非硬凑。整段判断显著降低误报。
             _p_start = text.rfind("\n\n", 0, m.start(1))
             _p_end = text.find("\n\n", m.end(1))
-            _para = text[(_p_start if _p_start >= 0 else 0):(_p_end if _p_end >= 0 else len(text))]
+            _para = text[(_p_start if _p_start >= 0 else 0) : (_p_end if _p_end >= 0 else len(text))]
             if _src_pat.search(_para):
                 continue  # 段落已有来源标注 → 合法
             # 兜底：段落无标注时退回局部窗口判断（兼容短段落）
-            ctx = text[max(0, m.start(1) - 20): min(len(text), m.end(1) + 70)]
+            ctx = text[max(0, m.start(1) - 20) : min(len(text), m.end(1) + 70)]
             if _src_pat.search(ctx):
                 continue
             # 排除明显估算词开头的（如"约""预计"）
-            if not re.match(r'^(约|预计|估算|大致)', seg.strip()):
+            if not re.match(r"^(约|预计|估算|大致)", seg.strip()):
                 hard_fab.append(seg.strip()[:40])
 
         if gap_decls and not hard_fab:
             return GateCheckResult(
-                "honest_gap", True, 1.0,
+                "honest_gap",
+                True,
+                1.0,
                 f"诚实留白: {len(gap_decls)} 处声明数据不足并留白（+credit），无硬凑",
-                severity="info")
+                severity="info",
+            )
         if hard_fab and len(hard_fab) >= 3:
             return GateCheckResult(
-                "honest_gap", False, max(0.1, 0.5 - len(hard_fab) * 0.05),
+                "honest_gap",
+                False,
+                max(0.1, 0.5 - len(hard_fab) * 0.05),
                 f"疑似硬凑数据(P1): {len(hard_fab)} 处具体数字无来源标注——应声明留白或标注来源",
-                severity="warning")
-        return GateCheckResult("honest_gap", True, 0.8,
-                               f"留白声明 {len(gap_decls)} 处；无来源数字 {len(hard_fab)} 处",
-                               severity="info")
+                severity="warning",
+            )
+        return GateCheckResult(
+            "honest_gap", True, 0.8, f"留白声明 {len(gap_decls)} 处；无来源数字 {len(hard_fab)} 处", severity="info"
+        )
 
     def _check_sub_element_coverage(self) -> GateCheckResult:
         """R74（2026-08-05 P0）：子要素覆盖率检查——根治 SAC 覆盖被游戏化。
@@ -355,27 +364,29 @@ class CoverageChecksMixin:
         """
         report_text = getattr(self, "report_text", "")
         if not report_text:
-            return GateCheckResult(name="子要素覆盖", passed=False, score=0.0,
-                                   details="无报告文本", severity="error")
+            return GateCheckResult(name="子要素覆盖", passed=False, score=0.0, details="无报告文本", severity="error")
 
         try:
             from core.sacs import SACLoader
+
             sac = SACLoader(self.report_type)
         except Exception:
-            return GateCheckResult(name="子要素覆盖", passed=True, score=1.0,
-                                   details="SAC 不可用，跳过子要素检查", severity="info")
+            return GateCheckResult(
+                name="子要素覆盖", passed=True, score=1.0, details="SAC 不可用，跳过子要素检查", severity="info"
+            )
 
-        all_dims = sac.get_dimension_ids() if hasattr(sac, 'get_dimension_ids') else []
+        all_dims = sac.get_dimension_ids() if hasattr(sac, "get_dimension_ids") else []
         if not all_dims:
-            return GateCheckResult(name="子要素覆盖", passed=True, score=1.0,
-                                   details="无维度定义，跳过", severity="info")
+            return GateCheckResult(
+                name="子要素覆盖", passed=True, score=1.0, details="无维度定义，跳过", severity="info"
+            )
 
         uncovered = []
         covered_count = 0
         total_sub_elements = 0
 
         for dim_id in all_dims:
-            dim = sac.get_dimension(dim_id) if hasattr(sac, 'get_dimension') else {}
+            dim = sac.get_dimension(dim_id) if hasattr(sac, "get_dimension") else {}
             if not isinstance(dim, dict):
                 continue
             sub_elems = dim.get("required_sub_elements", [])
@@ -385,7 +396,7 @@ class CoverageChecksMixin:
             # （连维度名/核心词都不出现），视为 FP8 维度裁剪，其 sub_elements 不计入缺口。
             # 否则"写了维度但缺子要素"仍被拦截，杜绝软覆盖伪装。
             _dim_probe = dim.get("question", "") or dim.get("name", "")
-            _probe_words = [w for w in re.findall(r'[一-龥]{2,6}', _dim_probe)[:4] if w]
+            _probe_words = [w for w in re.findall(r"[一-龥]{2,6}", _dim_probe)[:4] if w]
             if _probe_words and not any(w in report_text for w in _probe_words):
                 continue  # 维度被裁剪，豁免其子要素
             total_sub_elements += len(sub_elems)
@@ -399,20 +410,23 @@ class CoverageChecksMixin:
                 uncovered.append(f"{dim_id}: 缺{len(dim_uncovered)}/{len(sub_elems)}子要素")
 
         if total_sub_elements == 0:
-            return GateCheckResult(name="子要素覆盖", passed=True, score=1.0,
-                                   details="无 required_sub_elements 定义（需补 SAC YAML）", severity="info")
+            return GateCheckResult(
+                name="子要素覆盖",
+                passed=True,
+                score=1.0,
+                details="无 required_sub_elements 定义（需补 SAC YAML）",
+                severity="info",
+            )
 
         coverage_ratio = covered_count / total_sub_elements if total_sub_elements > 0 else 1.0
         passed = coverage_ratio >= 0.70
         score = 0.3 + 0.7 * coverage_ratio
 
-        detail = (f"子要素覆盖: {covered_count}/{total_sub_elements} "
-                  f"({coverage_ratio:.0%}，阈值70%)")
+        detail = f"子要素覆盖: {covered_count}/{total_sub_elements} ({coverage_ratio:.0%}，阈值70%)"
         if uncovered:
             detail += " | 缺口: " + "; ".join(uncovered[:5])
 
-        return GateCheckResult(name="子要素覆盖", passed=passed, score=score,
-                               details=detail, severity="error")
+        return GateCheckResult(name="子要素覆盖", passed=passed, score=score, details=detail, severity="error")
 
     def _check_client_questions_coverage(self) -> GateCheckResult:
         """R83：委托方必答问题覆盖率检查（decision_memo 核心）。
@@ -428,49 +442,87 @@ class CoverageChecksMixin:
         """
         report_text = getattr(self, "report_text", "")
         if not report_text:
-            return GateCheckResult(name="委托方问题覆盖", passed=True, score=1.0,
-                                   details="无报告文本", severity="warning")
+            return GateCheckResult(
+                name="委托方问题覆盖", passed=True, score=1.0, details="无报告文本", severity="warning"
+            )
         try:
             from core.report_planner import build_report_plan
+
             # R84：优先用 Gate 注入的 client_questions（scheduler 传），
             # 否则退回 report_planner 默认
             _cq = getattr(self, "client_questions", None) or []
             plan = build_report_plan(self.report_type, client_questions=_cq)
             client_qs = plan.get("client_questions", [])
         except Exception as e:
-            return GateCheckResult(name="委托方问题覆盖", passed=True, score=0.8,
-                                   details=f"规划器不可用: {str(e)[:60]}", severity="warning")
+            return GateCheckResult(
+                name="委托方问题覆盖",
+                passed=True,
+                score=0.8,
+                details=f"规划器不可用: {str(e)[:60]}",
+                severity="warning",
+            )
         # decision_memo 之外的类型若无注入问题，不强制（保持后向兼容）
         if self.report_type != "decision_memo" and not client_qs:
-            return GateCheckResult(name="委托方问题覆盖", passed=True, score=1.0,
-                                   details="非决策备忘录，跳过", severity="warning")
+            return GateCheckResult(
+                name="委托方问题覆盖", passed=True, score=1.0, details="非决策备忘录，跳过", severity="warning"
+            )
 
         # 问题→关键词表（用于判断正文是否触及该问题）
         # 对每个必答问题，正文需要出现"问题主题词 + 结论信号"才算回答
         _conclusion_signals = [
-            "值得", "不值得", "建议", "可行", "不可行", "判断", "结论",
-            "最坏", "损失", "路线", "里程碑", "第一步", "投入", "回报",
-            "卡位", "放量", "承接", "进入", "延伸",
+            "值得",
+            "不值得",
+            "建议",
+            "可行",
+            "不可行",
+            "判断",
+            "结论",
+            "最坏",
+            "损失",
+            "路线",
+            "里程碑",
+            "第一步",
+            "投入",
+            "回报",
+            "卡位",
+            "放量",
+            "承接",
+            "进入",
+            "延伸",
         ]
         # 全文是否含结论信号（全局一次判定，避免逐问题重复）
         _has_conclusion = any(sig in report_text for sig in _conclusion_signals)
         # 常见噪声二元组（问题里的连接词/虚词，不参与匹配）
         _noise_bigrams = {
-            "如果", "什么", "能否", "如何", "是否", "可以", "需要", "以及",
-            "相关", "重点", "进行", "给出", "明确", "具体", "对应", "以及",
+            "如果",
+            "什么",
+            "能否",
+            "如何",
+            "是否",
+            "可以",
+            "需要",
+            "以及",
+            "相关",
+            "重点",
+            "进行",
+            "给出",
+            "明确",
+            "具体",
+            "对应",
+            "以及",
         }
         missed = []
         for q in client_qs:
             qcore = q.replace("【委托方必答】", "").strip()
-            _strip = re.sub(r'[？?。！：、（）()—–\-]', '，', qcore)
+            _strip = re.sub(r"[？?。！：、（）()—–\-]", "，", qcore)
             # 提取 2 字中文二元组作为主题词（宽松但稳健：报告改写表述也能命中）
             _bigrams = set()
-            _cn_seq = re.findall(r'[一-鿿]{2,}', _strip)
+            _cn_seq = re.findall(r"[一-鿿]{2,}", _strip)
             for _seg in _cn_seq:
                 if len(_seg) < 2:
                     continue
                 for _i in range(len(_seg) - 1):
-                    _bg = _seg[_i:_i + 2]
+                    _bg = _seg[_i : _i + 2]
                     if _bg not in _noise_bigrams:
                         _bigrams.add(_bg)
             if not _bigrams:
@@ -480,13 +532,15 @@ class CoverageChecksMixin:
                 missed.append(f"{qcore[:30]}")
         if missed:
             return GateCheckResult(
-                name="委托方问题覆盖", passed=False,
+                name="委托方问题覆盖",
+                passed=False,
                 score=max(0.1, 1.0 - 0.25 * len(missed)),
-                details=f"委托方必答问题未得到明确回答({len(missed)}/{len(client_qs)}): "
-                        + "; ".join(missed[:5]),
-                severity="error")
-        return GateCheckResult(name="委托方问题覆盖", passed=True, score=1.0,
-                               details=f"委托方必答问题全部覆盖({len(client_qs)}条)")
+                details=f"委托方必答问题未得到明确回答({len(missed)}/{len(client_qs)}): " + "; ".join(missed[:5]),
+                severity="error",
+            )
+        return GateCheckResult(
+            name="委托方问题覆盖", passed=True, score=1.0, details=f"委托方必答问题全部覆盖({len(client_qs)}条)"
+        )
 
     def _check_entity_anchoring(self) -> GateCheckResult:
         """R84：委托方实体锚定检查（decision_memo 核心）。
@@ -504,10 +558,10 @@ class CoverageChecksMixin:
         """
         report_text = getattr(self, "report_text", "")
         if not report_text:
-            return GateCheckResult(name="实体锚定", passed=True, score=1.0,
-                                   details="无报告文本", severity="warning")
+            return GateCheckResult(name="实体锚定", passed=True, score=1.0, details="无报告文本", severity="warning")
         try:
             from core.report_planner import build_report_plan
+
             # R84：优先用 Gate 注入的 client_questions（scheduler 传），
             # 否则退回 report_planner 默认（decision_memo 有默认问题但无实体锚定）
             _cq = getattr(self, "client_questions", None) or []
@@ -515,11 +569,17 @@ class CoverageChecksMixin:
             must_contain = plan.get("must_contain", [])
             forbidden_swap = plan.get("forbidden_swap", [])
         except Exception as e:
-            return GateCheckResult(name="实体锚定", passed=True, score=0.8,
-                                   details=f"规划器不可用: {str(e)[:60]}", severity="warning")
+            return GateCheckResult(
+                name="实体锚定", passed=True, score=0.8, details=f"规划器不可用: {str(e)[:60]}", severity="warning"
+            )
         if self.report_type != "decision_memo" and not must_contain:
-            return GateCheckResult(name="实体锚定", passed=True, score=1.0,
-                                   details="非决策备忘录或未注入实体锚定，跳过", severity="warning")
+            return GateCheckResult(
+                name="实体锚定",
+                passed=True,
+                score=1.0,
+                details="非决策备忘录或未注入实体锚定，跳过",
+                severity="warning",
+            )
 
         missing = [ent for ent in must_contain if ent not in report_text]
         present_forbidden = [ent for ent in forbidden_swap if ent in report_text]
@@ -527,15 +587,23 @@ class CoverageChecksMixin:
         if missing:
             issues.append(f"缺失关键实体({len(missing)}): {', '.join(missing[:5])}")
         if present_forbidden:
-            issues.append(f"出现禁止场景({len(present_forbidden)}): {', '.join(present_forbidden[:5])}——可能写错行业/换叙事")
+            issues.append(
+                f"出现禁止场景({len(present_forbidden)}): {', '.join(present_forbidden[:5])}——可能写错行业/换叙事"
+            )
         if issues:
             return GateCheckResult(
-                name="实体锚定", passed=False,
+                name="实体锚定",
+                passed=False,
                 score=max(0.1, 1.0 - 0.2 * (len(missing) + len(present_forbidden))),
                 details="委托方实体锚定失败: " + "; ".join(issues),
-                severity="error")
-        return GateCheckResult(name="实体锚定", passed=True, score=1.0,
-                               details=f"委托方实体锚定通过({len(must_contain)}实体必须+{len(forbidden_swap)}禁令)")
+                severity="error",
+            )
+        return GateCheckResult(
+            name="实体锚定",
+            passed=True,
+            score=1.0,
+            details=f"委托方实体锚定通过({len(must_contain)}实体必须+{len(forbidden_swap)}禁令)",
+        )
 
     def _check_decision_engine_citation(self) -> GateCheckResult:
         """R84：决策引擎数值引用检查（decision_memo 内容层）。
@@ -551,31 +619,37 @@ class CoverageChecksMixin:
         """
         report_text = getattr(self, "report_text", "")
         if self.report_type != "decision_memo":
-            return GateCheckResult(name="决策引擎引用", passed=True, score=1.0,
-                                   details="非决策备忘录，跳过", severity="warning")
+            return GateCheckResult(
+                name="决策引擎引用", passed=True, score=1.0, details="非决策备忘录，跳过", severity="warning"
+            )
         if not report_text or len(report_text) < 300:
-            return GateCheckResult(name="决策引擎引用", passed=True, score=1.0,
-                                   details="文本过短跳过", severity="warning")
+            return GateCheckResult(
+                name="决策引擎引用", passed=True, score=1.0, details="文本过短跳过", severity="warning"
+            )
 
         missing = []
         # 1. 卡位评分（决策引擎产出的 3.94/5 或相似 X.X/5 模式）
-        if not re.search(r'\d\.\d{1,2}\s*/\s*5', report_text):
+        if not re.search(r"\d\.\d{1,2}\s*/\s*5", report_text):
             missing.append("卡位评分(X.X/5)")
         # 2. 最坏损失金额（必须含"最坏"+"亿/万"金额锚定）
-        if not re.search(r'最坏[^。]{0,30}[损失|情景][^。]{0,20}[亿万元]', report_text):
+        if not re.search(r"最坏[^。]{0,30}[损失|情景][^。]{0,20}[亿万元]", report_text):
             missing.append("最坏损失金额锚定")
         # 3. 投入金额（含"投入"+"亿/万"）
-        if not re.search(r'投入[^。]{0,30}[亿万元]', report_text):
+        if not re.search(r"投入[^。]{0,30}[亿万元]", report_text):
             missing.append("投入金额")
         if missing:
             return GateCheckResult(
-                name="决策引擎引用", passed=False,
+                name="决策引擎引用",
+                passed=False,
                 score=max(0.1, 1.0 - 0.3 * len(missing)),
-                details="决策备忘录缺少决策引擎确定性数值: " + "; ".join(missing)
-                        + "——须引用 DecisionEngine 产出，禁止自行编造量级",
-                severity="error")
-        return GateCheckResult(name="决策引擎引用", passed=True, score=1.0,
-                               details="决策引擎数值已引用（卡位评分/最坏损失/投入）")
+                details="决策备忘录缺少决策引擎确定性数值: "
+                + "; ".join(missing)
+                + "——须引用 DecisionEngine 产出，禁止自行编造量级",
+                severity="error",
+            )
+        return GateCheckResult(
+            name="决策引擎引用", passed=True, score=1.0, details="决策引擎数值已引用（卡位评分/最坏损失/投入）"
+        )
 
     def _check_narrative_consistency(self) -> GateCheckResult:
         """R85：叙事一致性检查——防止"答对了问题但答错了生意"。
@@ -592,38 +666,77 @@ class CoverageChecksMixin:
         """
         report_text = getattr(self, "report_text", "")
         if self.report_type != "decision_memo":
-            return GateCheckResult(name="叙事一致性", passed=True, score=1.0,
-                                   details="非决策备忘录，跳过", severity="warning")
+            return GateCheckResult(
+                name="叙事一致性", passed=True, score=1.0, details="非决策备忘录，跳过", severity="warning"
+            )
         if not report_text or len(report_text) < 300:
-            return GateCheckResult(name="叙事一致性", passed=True, score=1.0,
-                                   details="文本过短跳过", severity="warning")
+            return GateCheckResult(
+                name="叙事一致性", passed=True, score=1.0, details="文本过短跳过", severity="warning"
+            )
 
         # 委托方真实生意的场景特定实体（与 enrich 数据一致，非行业泛词）
         # 用"场景特定词"而非"油位/液位"等泛词——泛词无法区分加油站生意 vs 车规生意
-        _key_entities = ["加油站", "危化品", "防渗改造", "华虹", "久通", "磁致伸缩",
-                         "托肯恒山", "富仁高科", "TDK", "中石化", "储运", "罐车",
-                         "双层罐", "替换窗口", "SIS", "物位"]
+        _key_entities = [
+            "加油站",
+            "危化品",
+            "防渗改造",
+            "华虹",
+            "久通",
+            "磁致伸缩",
+            "托肯恒山",
+            "富仁高科",
+            "TDK",
+            "中石化",
+            "储运",
+            "罐车",
+            "双层罐",
+            "替换窗口",
+            "SIS",
+            "物位",
+        ]
         # 另一个行业的异质实体（enrich 未提供的叙事）
-        _foreign_entities = ["商用车", "车规", "汽车油箱", "国四", "整车厂", "IATF16949",
-                             "苏奥传感", "奥联电子", "武汉凡谷", "燃油车", "乘用车",
-                             "工程机械", "挖掘机", "尿素", "DPF", "SCR"]
+        _foreign_entities = [
+            "商用车",
+            "车规",
+            "汽车油箱",
+            "国四",
+            "整车厂",
+            "IATF16949",
+            "苏奥传感",
+            "奥联电子",
+            "武汉凡谷",
+            "燃油车",
+            "乘用车",
+            "工程机械",
+            "挖掘机",
+            "尿素",
+            "DPF",
+            "SCR",
+        ]
 
         _key_cnt = sum(report_text.count(e) for e in _key_entities)
         _foreign_cnt = sum(report_text.count(e) for e in _foreign_entities)
         # 关键实体至少出现一次才做比较（否则数据都没用上）
         if _key_cnt == 0:
-            return GateCheckResult(name="叙事一致性", passed=False, score=0.1,
-                                   details=f"关键实体 0 次出现——报告未使用委托方生意的任何数据",
-                                   severity="error")
+            return GateCheckResult(
+                name="叙事一致性",
+                passed=False,
+                score=0.1,
+                details="关键实体 0 次出现——报告未使用委托方生意的任何数据",
+                severity="error",
+            )
         if _foreign_cnt > _key_cnt * 1.2:
             return GateCheckResult(
-                name="叙事一致性", passed=False,
+                name="叙事一致性",
+                passed=False,
                 score=max(0.1, 1.0 - 0.15 * (_foreign_cnt / max(_key_cnt, 1))),
                 details=f"叙事漂移: 异质实体({_foreign_cnt}次)超过关键实体({_key_cnt}次)1.2倍——"
-                        f"报告可能在讲另一个行业(如商用车车规)，而非委托方的加油站/危化品油位生意",
-                severity="error")
-        return GateCheckResult(name="叙事一致性", passed=True, score=1.0,
-                               details=f"叙事一致(关键{_key_cnt}次 vs 异质{_foreign_cnt}次)")
+                f"报告可能在讲另一个行业(如商用车车规)，而非委托方的加油站/危化品油位生意",
+                severity="error",
+            )
+        return GateCheckResult(
+            name="叙事一致性", passed=True, score=1.0, details=f"叙事一致(关键{_key_cnt}次 vs 异质{_foreign_cnt}次)"
+        )
 
     def _check_data_point_citation(self) -> GateCheckResult:
         """R85：数据点引用审计——enrich 关键数值/实体必须出现在正文。
@@ -636,11 +749,13 @@ class CoverageChecksMixin:
         """
         report_text = getattr(self, "report_text", "")
         if self.report_type != "decision_memo":
-            return GateCheckResult(name="数据点引用", passed=True, score=1.0,
-                                   details="非决策备忘录，跳过", severity="warning")
+            return GateCheckResult(
+                name="数据点引用", passed=True, score=1.0, details="非决策备忘录，跳过", severity="warning"
+            )
         if not report_text or len(report_text) < 300:
-            return GateCheckResult(name="数据点引用", passed=True, score=1.0,
-                                   details="文本过短跳过", severity="warning")
+            return GateCheckResult(
+                name="数据点引用", passed=True, score=1.0, details="文本过短跳过", severity="warning"
+            )
 
         # 关键数据点：数值 + 实体（来自 enrich v086 与 DecisionEngine）
         data_points = [
@@ -658,19 +773,25 @@ class CoverageChecksMixin:
         ]
         missing = []
         for label, patterns in data_points:
-            if not any(re.search(p, report_text) if p.startswith("\\") else p in report_text
-                       for p in patterns):
+            if not any(re.search(p, report_text) if p.startswith("\\") else p in report_text for p in patterns):
                 missing.append(label)
 
         if len(missing) > 3:  # 允许少量缺失（如评分正则边界），>3 视为数据继承失败
             return GateCheckResult(
-                name="数据点引用", passed=False,
+                name="数据点引用",
+                passed=False,
                 score=max(0.1, 1.0 - 0.15 * len(missing)),
-                details=f"关键数据点缺失({len(missing)}/{len(data_points)}): " + "; ".join(missing[:6])
-                        + "——enrich 数据未继承进正文",
-                severity="error")
-        return GateCheckResult(name="数据点引用", passed=True, score=1.0,
-                               details=f"关键数据点已引用({len(data_points)-len(missing)}/{len(data_points)})")
+                details=f"关键数据点缺失({len(missing)}/{len(data_points)}): "
+                + "; ".join(missing[:6])
+                + "——enrich 数据未继承进正文",
+                severity="error",
+            )
+        return GateCheckResult(
+            name="数据点引用",
+            passed=True,
+            score=1.0,
+            details=f"关键数据点已引用({len(data_points) - len(missing)}/{len(data_points)})",
+        )
 
     def _check_source_reliability(self) -> GateCheckResult:
         """R87：数据源可信度检查——门禁锚定的 enrich 数据本身必须可信。
@@ -691,16 +812,18 @@ class CoverageChecksMixin:
         """
         report_text = getattr(self, "report_text", "")
         if self.report_type != "decision_memo":
-            return GateCheckResult(name="数据源可信度", passed=True, score=1.0,
-                                   details="非决策备忘录，跳过", severity="warning")
+            return GateCheckResult(
+                name="数据源可信度", passed=True, score=1.0, details="非决策备忘录，跳过", severity="warning"
+            )
         if not report_text or len(report_text) < 300:
-            return GateCheckResult(name="数据源可信度", passed=True, score=1.0,
-                                   details="文本过短跳过", severity="warning")
+            return GateCheckResult(
+                name="数据源可信度", passed=True, score=1.0, details="文本过短跳过", severity="warning"
+            )
 
         # 已知幻觉对（原幻觉值 → 修正值）。报告若含原幻觉值且缺修正值 → FAIL。
         # 来源：R87 enrich v087_corrected 的 correction_note
         _corrections = [
-            ("TDK", "爱知制钢|VAC"),          # 磁致伸缩波导丝：TDK垄断(幻觉) → 爱知制钢/VAC主导(正确)
+            ("TDK", "爱知制钢|VAC"),  # 磁致伸缩波导丝：TDK垄断(幻觉) → 爱知制钢/VAC主导(正确)
             ("2019.*防渗|防渗改造.*2019", "水十条"),  # 政策：2019防渗62%(幻觉) → 2015水十条(正确)
         ]
         issues = []
@@ -713,19 +836,24 @@ class CoverageChecksMixin:
                 # 两者并存 → 警告（可能是对比论证，放行）
                 issues.append(f"幻觉值[{_fake_pat}]与修正值并存，需确认是否对比语境")
         # 华虹主业：若报告断言华虹有油位产线/IATF16949已有，且无"需另取/新建"声明 → 疑似沿用幻觉
-        if re.search(r"华虹[^。]{0,30}(已有.*(油位|IATF)|现有.*产线)", report_text) and \
-           not re.search(r"华虹[^。]{0,40}(需另取|需新建|矿山物联网)", report_text):
+        if re.search(r"华虹[^。]{0,30}(已有.*(油位|IATF)|现有.*产线)", report_text) and not re.search(
+            r"华虹[^。]{0,40}(需另取|需新建|矿山物联网)", report_text
+        ):
             issues.append("华虹产能/认证断言需核实(疑似沿用'华虹有油位产线'幻觉)")
 
         if issues:
             return GateCheckResult(
-                name="数据源可信度", passed=False,
+                name="数据源可信度",
+                passed=False,
                 score=max(0.1, 1.0 - 0.25 * len(issues)),
-                details="数据源可信度问题: " + "; ".join(issues[:5])
-                        + "——enrich 已标注 corrected/unverified，报告应改用修正值或标注(E)",
-                severity="error")
-        return GateCheckResult(name="数据源可信度", passed=True, score=1.0,
-                               details="数据源可信度通过(未沿用已知幻觉值)")
+                details="数据源可信度问题: "
+                + "; ".join(issues[:5])
+                + "——enrich 已标注 corrected/unverified，报告应改用修正值或标注(E)",
+                severity="error",
+            )
+        return GateCheckResult(
+            name="数据源可信度", passed=True, score=1.0, details="数据源可信度通过(未沿用已知幻觉值)"
+        )
 
     def _check_industry_baseline_gap(self) -> GateCheckResult:
         """行业底座缺口提示（R77 P0-2，warning 级）。
@@ -739,8 +867,9 @@ class CoverageChecksMixin:
         """
         report_text = getattr(self, "report_text", "")
         if not report_text:
-            return GateCheckResult(name="行业底座缺口", passed=True, score=1.0,
-                                   details="无报告文本", severity="warning")
+            return GateCheckResult(
+                name="行业底座缺口", passed=True, score=1.0, details="无报告文本", severity="warning"
+            )
 
         unlisted = _load_unlisted_players()
         industry_keys = set(unlisted.keys())
@@ -754,7 +883,10 @@ class CoverageChecksMixin:
             _industry_hints.append(asset)
         # 从报告前 2000 字找 "XX行业/XX传感器" 等
         head = report_text[:2000]
-        for m in re.finditer(r'([一-龥]{2,8}?(?:传感器|仪表|设备|物流|芯片|医药|机器人|电池|算力|材料|软件|消费|汽车|光伏|风电|储能))行业?', head):
+        for m in re.finditer(
+            r"([一-龥]{2,8}?(?:传感器|仪表|设备|物流|芯片|医药|机器人|电池|算力|材料|软件|消费|汽车|光伏|风电|储能))行业?",
+            head,
+        ):
             kw = m.group(1)
             if kw not in _industry_hints:
                 _industry_hints.append(kw)
@@ -767,10 +899,12 @@ class CoverageChecksMixin:
                 missing.append(hint)
 
         if missing:
-            detail = ("行业底座缺口（unlisted_players.json 缺条目）: " +
-                      ", ".join(missing[:5]) +
-                      "——建议补采该行业非上市玩家清单，覆盖检查参考价值受限")
-            return GateCheckResult(name="行业底座缺口", passed=True, score=0.5,
-                                   details=detail, severity="warning")
-        return GateCheckResult(name="行业底座缺口", passed=True, score=1.0,
-                               details="行业底座覆盖正常", severity="warning")
+            detail = (
+                "行业底座缺口（unlisted_players.json 缺条目）: "
+                + ", ".join(missing[:5])
+                + "——建议补采该行业非上市玩家清单，覆盖检查参考价值受限"
+            )
+            return GateCheckResult(name="行业底座缺口", passed=True, score=0.5, details=detail, severity="warning")
+        return GateCheckResult(
+            name="行业底座缺口", passed=True, score=1.0, details="行业底座覆盖正常", severity="warning"
+        )

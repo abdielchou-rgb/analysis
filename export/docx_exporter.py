@@ -2,29 +2,33 @@
 """docx_exporter.py — Template-based DOCX rendering (Phase 2).
 Uses cicc.dotx template with predefined styles instead of programmatic generation.
 """
-import os, re, logging, tempfile
+
+import logging
+import os
+import re
 from pathlib import Path
+
 from docx import Document
-from docx.shared import Pt, Inches, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.oxml.ns import qn
+from docx.shared import Inches, Pt, RGBColor
 
 logger = logging.getLogger("2hao.docx_exporter")
 
 ROOT = Path(__file__).resolve().parent.parent
 
+
 class TemplateDocxExporter:
     """DOCX exporter using .dotx template with predefined styles."""
-    
+
     STYLE_MAP = {
-        'h1': 'CICCH1',
-        'h2': 'CICCH2',
-        'h3': 'CICCH2',
-        'body': 'CICCBody',
-        'title': 'CICCTitle',
-        'takeaway': 'CICCKeyTakeaway',
+        "h1": "CICCH1",
+        "h2": "CICCH2",
+        "h3": "CICCH2",
+        "body": "CICCBody",
+        "title": "CICCTitle",
+        "takeaway": "CICCKeyTakeaway",
     }
-    
+
     def __init__(self, style_id="cicc"):
         self.style_id = style_id
         template_path = ROOT / "templates" / (style_id + ".dotx")
@@ -34,34 +38,34 @@ class TemplateDocxExporter:
         else:
             self.template = None
             logger.warning("Template not found: %s, using empty", template_path)
-    
+
     def export(self, md_text, output_path, title="", subtitle="", author="2hao Analyst"):
         """Convert markdown to DOCX using template."""
         if self.template:
             doc = Document(self.template)
         else:
             doc = Document()
-        
+
         # Clear sample content from template
         for p in doc.paragraphs:
             p.clear()
         # Remove sample tables
         for tbl in doc.tables:
             tbl._element.getparent().remove(tbl._element)
-        
+
         # Parse markdown into sections
-        lines = md_text.split('\n')
+        lines = md_text.split("\n")
         i = 0
         in_table = False
         table_rows = []
         header_row = []
-        
+
         while i < len(lines):
             line = lines[i]
             stripped = line.strip()
-            
+
             # Skip empty lines and separators
-            if not stripped or stripped.startswith('---'):
+            if not stripped or stripped.startswith("---"):
                 if in_table:
                     self._add_table(doc, header_row, table_rows)
                     in_table = False
@@ -69,14 +73,14 @@ class TemplateDocxExporter:
                     header_row = []
                 i += 1
                 continue
-            
+
             # Handle tables
-            if '|' in stripped and '---' in stripped:
+            if "|" in stripped and "---" in stripped:
                 # Table separator row - skip
                 i += 1
                 continue
-            if stripped.startswith('|') and stripped.endswith('|'):
-                cells = [c.strip() for c in stripped.split('|')[1:-1]]
+            if stripped.startswith("|") and stripped.endswith("|"):
+                cells = [c.strip() for c in stripped.split("|")[1:-1]]
                 if not in_table:
                     header_row = cells
                     in_table = True
@@ -84,73 +88,73 @@ class TemplateDocxExporter:
                     table_rows.append(cells)
                 i += 1
                 continue
-            
+
             # Flush any open table
             if in_table:
                 self._add_table(doc, header_row, table_rows)
                 in_table = False
                 table_rows = []
                 header_row = []
-            
+
             # Headings
-            if stripped.startswith('# '):
-                self._add_paragraph(doc, stripped[2:].strip(), 'title')
-            elif stripped.startswith('## '):
-                self._add_paragraph(doc, stripped[3:].strip(), 'h1')
-            elif stripped.startswith('### '):
-                self._add_paragraph(doc, stripped[4:].strip(), 'h2')
-            
+            if stripped.startswith("# "):
+                self._add_paragraph(doc, stripped[2:].strip(), "title")
+            elif stripped.startswith("## "):
+                self._add_paragraph(doc, stripped[3:].strip(), "h1")
+            elif stripped.startswith("### "):
+                self._add_paragraph(doc, stripped[4:].strip(), "h2")
+
             # Bold takeaways
-            elif stripped.startswith('**') and stripped.endswith('**'):
-                self._add_paragraph(doc, stripped.strip('*'), 'takeaway')
-            
+            elif stripped.startswith("**") and stripped.endswith("**"):
+                self._add_paragraph(doc, stripped.strip("*"), "takeaway")
+
             # Images - skip (handled by content_placer)
-            elif stripped.startswith('!['):
+            elif stripped.startswith("!["):
                 # Image reference - try to embed from path
-                img_match = re.match(r'!\[.*\]\((.+)\)', stripped)
+                img_match = re.match(r"!\[.*\]\((.+)\)", stripped)
                 if img_match:
                     img_path = img_match.group(1)
                     self._add_image(doc, img_path)
-            
+
             # Regular paragraphs
             elif len(stripped) > 10:
-                self._add_paragraph(doc, stripped, 'body')
-            
+                self._add_paragraph(doc, stripped, "body")
+
             # Short lines as body
             elif stripped:
-                self._add_paragraph(doc, stripped, 'body')
-            
+                self._add_paragraph(doc, stripped, "body")
+
             i += 1
-        
+
         # Final flush
         if in_table:
             self._add_table(doc, header_row, table_rows)
-        
+
         # Set document title
         if title:
             # Update first paragraph if it's a title
             for p in doc.paragraphs:
-                if p.style and 'Title' in str(p.style.name):
+                if p.style and "Title" in str(p.style.name):
                     p.text = title
                     break
-        
+
         # Save
         output_path = str(output_path)
         doc.save(output_path)
         logger.info("DOCX saved: %s (%d KB)", output_path, os.path.getsize(output_path) // 1024)
         return output_path
-    
-    def _add_paragraph(self, doc, text, style_key='body'):
+
+    def _add_paragraph(self, doc, text, style_key="body"):
         """Add paragraph with mapped style."""
-        style_name = self.STYLE_MAP.get(style_key, 'CICCBody')
+        style_name = self.STYLE_MAP.get(style_key, "CICCBody")
         p = doc.add_paragraph(text, style=style_name)
-        
+
         # Clean up any bold markers in text
         for run in p.runs:
-            run.text = run.text.replace('**', '')
-        
+            run.text = run.text.replace("**", "")
+
         return p
-    
+
     def _add_table(self, doc, headers, rows):
         """Add formatted table."""
         if not headers and not rows:
@@ -158,10 +162,10 @@ class TemplateDocxExporter:
         ncols = max(len(headers), max((len(r) for r in rows), default=0))
         if ncols == 0:
             return
-        
+
         table = doc.add_table(rows=1 + len(rows), cols=ncols)
-        table.style = 'Table Grid'
-        
+        table.style = "Table Grid"
+
         # Headers
         for i, h in enumerate(headers):
             if i < ncols:
@@ -172,8 +176,8 @@ class TemplateDocxExporter:
                         run.font.bold = True
                         run.font.size = Pt(9)
                         run.font.color.rgb = RGBColor(0x00, 0x33, 0x66)
-                        run.font.name = 'Arial'
-        
+                        run.font.name = "Arial"
+
         # Data rows
         for ri, row in enumerate(rows):
             for ci, val in enumerate(row):
@@ -183,9 +187,9 @@ class TemplateDocxExporter:
                     for p in cell.paragraphs:
                         for run in p.runs:
                             run.font.size = Pt(9)
-        
+
         doc.add_paragraph()  # spacing after table
-    
+
     def _add_image(self, doc, img_path):
         """Add image to document, resizing to fit page width."""
         if not os.path.isfile(img_path):
@@ -197,7 +201,7 @@ class TemplateDocxExporter:
             last_p = doc.paragraphs[-1]
             last_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             # Add caption
-            caption = doc.add_paragraph(os.path.basename(img_path), style='CICCBody')
+            caption = doc.add_paragraph(os.path.basename(img_path), style="CICCBody")
             caption.alignment = WD_ALIGN_PARAGRAPH.CENTER
             for run in caption.runs:
                 run.font.size = Pt(8)
@@ -218,7 +222,9 @@ if __name__ == "__main__":
 
 def export_docx(report_md, output_path, title=None, subtitle=None, author=None):
     exporter = TemplateDocxExporter()
-    return exporter.export(report_md, output_path, title=title or "", subtitle=subtitle or "", author=author or "2hao Analyst")
+    return exporter.export(
+        report_md, output_path, title=title or "", subtitle=subtitle or "", author=author or "2hao Analyst"
+    )
 
 
 def markdown_to_docx(md_text, output_path, title="", subtitle="", author="2hao Analyst"):
@@ -239,10 +245,10 @@ def add_static_toc(docx_path: str, md_text: str) -> int:
     生成静态目录段落插入正文前（封面后），读者一眼可见章节结构。
     返回插入的目录条目数。
     """
-    import re as _re
+    from pathlib import Path as _P
+
     from docx import Document as _Doc
     from docx.shared import Pt as _Pt
-    from pathlib import Path as _P
 
     if not md_text or not _P(docx_path).exists():
         return 0
@@ -275,7 +281,6 @@ def add_static_toc(docx_path: str, md_text: str) -> int:
                 insert_idx = i + 1
                 break
         # 用 XML 插入：在封面段落后追加"目录标题 + 条目"（保持顺序）
-        from docx.oxml.ns import qn as _qn
         anchor = doc.paragraphs[insert_idx - 1]._p
         # 目录标题
         toc_title = doc.add_paragraph("目  录")
@@ -307,7 +312,6 @@ def pandoc_to_docx(markdown_path, output_path, style="cicc"):
     返回生成的 docx 路径；失败返回 None（由调用方回退）。
     """
     from pathlib import Path as _P
-    import shutil as _sh
 
     md_p = _P(markdown_path)
     out_p = _P(output_path)
@@ -316,9 +320,11 @@ def pandoc_to_docx(markdown_path, output_path, style="cicc"):
     try:
         # 尝试 pandoc（若系统已安装）
         import subprocess
+
         r = subprocess.run(
             ["pandoc", str(md_p), "-o", str(out_p)],
-            capture_output=True, timeout=60,
+            capture_output=True,
+            timeout=60,
         )
         if r.returncode == 0 and out_p.exists():
             return str(out_p)
@@ -343,15 +349,14 @@ def clean_empty_paragraphs(docx_path: str) -> int:
 
     返回删除的空段落数。
     """
-    import zipfile
-    import shutil
     import re as _re
+    import shutil
+    import zipfile
     from pathlib import Path as _P
 
     p = _P(docx_path)
     if not p.exists():
         return 0
-    import tempfile
     tmp = p.with_suffix(".tmp.docx")
     removed = 0
     try:
@@ -360,6 +365,7 @@ def clean_empty_paragraphs(docx_path: str) -> int:
             if "word/document.xml" not in names:
                 return 0
             doc_xml = zin.read("word/document.xml").decode("utf-8")
+
             # 删除空段落：<w:p ...>...</w:p> 且无 <w:t>、无 <w:drawing>、无 <w:tbl>
             def _is_empty_para(m):
                 nonlocal removed
@@ -372,6 +378,7 @@ def clean_empty_paragraphs(docx_path: str) -> int:
                     removed += 1
                     return ""
                 return m.group(0)
+
             doc_xml = _re.sub(r"<w:p\b[^>]*>(.*?)</w:p>", _is_empty_para, doc_xml, flags=_re.S)
             # 写回
             with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as zout:
@@ -381,7 +388,7 @@ def clean_empty_paragraphs(docx_path: str) -> int:
                         data = doc_xml.encode("utf-8")
                     zout.writestr(item, data)
         shutil.move(str(tmp), str(p))
-    except Exception as e:
+    except Exception:
         try:
             if tmp.exists():
                 tmp.unlink()
@@ -402,10 +409,10 @@ def _scrub_aigc_artifacts(md_text: str) -> str:
       4. 括号计数残留（"共6个环节（6）"）
     """
     import re as _re
+
     text = md_text or ""
     # 1. AGENT_ENRICH_SOURCES 注释块（含内容）
-    text = _re.sub(r"<!--\s*AGENT_ENRICH_SOURCES.*?/AGENT_ENRICH_SOURCES\s*-->",
-                   "", text, flags=_re.S)
+    text = _re.sub(r"<!--\s*AGENT_ENRICH_SOURCES.*?/AGENT_ENRICH_SOURCES\s*-->", "", text, flags=_re.S)
     text = _re.sub(r"<!--\s*/?AGENT_ENRICH_SOURCES\s*-->", "", text)
     # 2. 内部字段名（公司研究素材.xxx）——连同前后连接词一起清除
     text = _re.sub(r"[^。；\n]*公司研究素材\.[A-Za-z_0-9]+[^。；\n]*[。；]?", "", text)

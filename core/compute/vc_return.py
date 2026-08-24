@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """vc_return.py — VC 回报模型（2026-08-08 非上市 PE/VC）
 
 顶级 PE/VC 拍板依据：投入×稀释×终局估值×概率 → MOIC/IRR。
@@ -10,8 +9,9 @@
   from core.compute.vc_return import VcReturnModel, build_prompt
   r = VcReturnModel(invest=1000, exit_value=50000, dilution=0.15, years=5, exit_prob=0.3)
 """
+
 from __future__ import annotations
-import math
+
 import logging
 from dataclasses import dataclass
 
@@ -20,11 +20,11 @@ logger = logging.getLogger("2hao.vc_return")
 
 @dataclass
 class VcReturnModel:
-    invest: float = 0          # 本轮投入（万）
-    exit_value: float = 0      # 退出估值（万）
-    dilution: float = 0.1      # 稀释后持股比例（0-1）
-    years: float = 5           # 持有年限
-    exit_prob: float = 0.5     # 退出概率（0-1）
+    invest: float = 0  # 本轮投入（万）
+    exit_value: float = 0  # 退出估值（万）
+    dilution: float = 0.1  # 稀释后持股比例（0-1）
+    years: float = 5  # 持有年限
+    exit_prob: float = 0.5  # 退出概率（0-1）
 
     def moic(self) -> float:
         """回报倍数。"""
@@ -57,6 +57,8 @@ class VcReturnModel:
 
 
 def build_prompt(r: VcReturnModel) -> str:
-    return (f"VC 回报模型：投入{r.invest:,.0f}万 × 稀释后持股{r.dilution:.0%} × 退出估值{r.exit_value:,.0f}万 "
-            f"× 退出概率{r.exit_prob:.0%} → MOIC {r.moic():.1f}x / IRR {r.irr():.1%} / "
-            f"风险调整MOIC {r.risk_adjusted_moic():.1f}x（{r.verdict()}）")
+    return (
+        f"VC 回报模型：投入{r.invest:,.0f}万 × 稀释后持股{r.dilution:.0%} × 退出估值{r.exit_value:,.0f}万 "
+        f"× 退出概率{r.exit_prob:.0%} → MOIC {r.moic():.1f}x / IRR {r.irr():.1%} / "
+        f"风险调整MOIC {r.risk_adjusted_moic():.1f}x（{r.verdict()}）"
+    )

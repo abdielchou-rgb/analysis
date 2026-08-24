@@ -9,10 +9,13 @@
 """
 
 from __future__ import annotations
-import json, logging, time, hashlib, sys
-from pathlib import Path
+
+import hashlib
+import logging
+import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Optional
+from typing import Any
 
 logger = logging.getLogger("2hao.agent_graph")
 
@@ -22,15 +25,17 @@ NODE_PASSED = "passed"
 NODE_FAILED = "failed"
 NODE_SKIPPED = "skipped"
 
+
 @dataclass
 class NodeResult:
     node_id: str
     status: str = NODE_PENDING
     output: Any = None
-    error: Optional[str] = None
+    error: str | None = None
     duration_ms: float = 0.0
     output_hash: str = ""
     validation_issues: list = field(default_factory=list)
+
 
 @dataclass
 class GraphResult:
@@ -55,7 +60,7 @@ class AgentGraph:
         validators: list[Callable] = None,
         timeout_s: int = 300,
         description: str = "",
-                 desc: str = "",
+        desc: str = "",
         output_contract: dict[str, dict] = None,
     ):
         """注册管线节点。
@@ -67,13 +72,16 @@ class AgentGraph:
           - keys: 对 dict 类型进一步检查子 key 是否存在
         """
         self._nodes[node_id] = {
-            "fn": fn, "deps": deps or [], "validators": validators or [],
-            "timeout_s": timeout_s, "description": description or desc or node_id,
+            "fn": fn,
+            "deps": deps or [],
+            "validators": validators or [],
+            "timeout_s": timeout_s,
+            "description": description or desc or node_id,
             "output_contract": output_contract or {},
         }
         self._results[node_id] = NodeResult(node_id=node_id)
 
-    def _check_deps(self, node_id: str) -> Optional[str]:
+    def _check_deps(self, node_id: str) -> str | None:
         deps = self._nodes[node_id]["deps"]
         for dep_id in deps:
             dep_result = self._results.get(dep_id)
@@ -89,8 +97,7 @@ class AgentGraph:
         result.status = NODE_RUNNING
         # R78（2026-08-05）：trace 日志——带 trace_id 记录节点执行，跨环节可追溯。
         _trace_id = (context or {}).get("trace_id", "")
-        logger.info("  [TRACE %s] AgentGraph exec: %s (%s)",
-                    _trace_id or "-", node_id, node["description"][:60])
+        logger.info("  [TRACE %s] AgentGraph exec: %s (%s)", _trace_id or "-", node_id, node["description"][:60])
         t0 = time.time()
         try:
             # P2-audit 2026-08-24：timeout_s 此前存入 dict 后从未使用——
@@ -101,18 +108,17 @@ class AgentGraph:
             if _timeout_s > 0:
                 from concurrent.futures import ThreadPoolExecutor
                 from concurrent.futures import TimeoutError as _FutureTimeout
+
                 with ThreadPoolExecutor(max_workers=1, thread_name_prefix=f"ag-{node_id}") as _ex:
                     _fut = _ex.submit(node["fn"], node_id, context)
                     try:
                         output = _fut.result(timeout=_timeout_s)
                     except _FutureTimeout:
-                        raise TimeoutError(
-                            f"node '{node_id}' exceeded timeout_s={_timeout_s}s") from None
+                        raise TimeoutError(f"node '{node_id}' exceeded timeout_s={_timeout_s}s") from None
             else:
                 output = node["fn"](node_id, context)
             # R78：节点完成 trace
-            logger.info("  [TRACE %s] AgentGraph done: %s (%.1fs)",
-                        _trace_id or "-", node_id, time.time() - t0)
+            logger.info("  [TRACE %s] AgentGraph done: %s (%.1fs)", _trace_id or "-", node_id, time.time() - t0)
             # Auto-merge dict output into context for downstream nodes
             if isinstance(output, dict):
                 context.update(output)
@@ -125,15 +131,22 @@ class AgentGraph:
                     logger.log(
                         logging.WARNING if v.severity == "warning" else logging.ERROR,
                         "  [Contract] %s: %s expected=%s actual=%s preview=%s",
-                        node_id, v.key, v.expected_type, v.actual_type, v.value_preview)
+                        node_id,
+                        v.key,
+                        v.expected_type,
+                        v.actual_type,
+                        v.value_preview,
+                    )
                     contract_issues.append(
                         f"contract {'error' if v.severity == 'error' else 'warning'}: "
-                        f"{v.key} expected {v.expected_type} got {v.actual_type}")
+                        f"{v.key} expected {v.expected_type} got {v.actual_type}"
+                    )
             issues = []
             for validator in node["validators"]:
                 try:
                     v_issues = validator(node_id, output)
-                    if v_issues: issues.extend(v_issues)
+                    if v_issues:
+                        issues.extend(v_issues)
                 except Exception as e:
                     issues.append(f"validator error: {e}")
             duration = (time.time() - t0) * 1000
@@ -182,11 +195,12 @@ class AgentGraph:
         passed = all(r.status == NODE_PASSED for r in self._results.values() if r.status != NODE_SKIPPED)
         return GraphResult(passed=passed, nodes=self._results, total_duration_ms=total_time, failed_nodes=failed)
 
-    def _topological_sort(self) -> Optional[list[str]]:
+    def _topological_sort(self) -> list[str] | None:
         in_degree = {nid: 0 for nid in self._nodes}
         for nid, node in self._nodes.items():
             for dep in node["deps"]:
-                if dep not in in_degree: in_degree[dep] = 0
+                if dep not in in_degree:
+                    in_degree[dep] = 0
                 in_degree[nid] = in_degree.get(nid, 0) + 1
         queue = [nid for nid, deg in in_degree.items() if deg == 0]
         sorted_list = []
@@ -200,14 +214,13 @@ class AgentGraph:
                         queue.append(other_nid)
         return sorted_list if len(sorted_list) == len(self._nodes) else None
 
-    def get_result(self, node_id: str) -> Optional[NodeResult]:
+    def get_result(self, node_id: str) -> NodeResult | None:
         return self._results.get(node_id)
 
     def summary(self) -> str:
         lines = [f"AgentGraph: {self.name}"]
         for nid, r in self._results.items():
-            icon = {"passed": "+", "failed": "-", "pending": ".",
-                    "running": ">", "skipped": "x"}.get(r.status, "?")
+            icon = {"passed": "+", "failed": "-", "pending": ".", "running": ">", "skipped": "x"}.get(r.status, "?")
             desc = self._nodes[nid]["description"][:50] if nid in self._nodes else nid
             lines.append(f"  [{icon}] {nid}: {desc} ({r.duration_ms:.0f}ms)")
             if r.validation_issues:
@@ -216,14 +229,18 @@ class AgentGraph:
             if r.error:
                 lines.append(f"     error: {r.error[:80]}")
         return "\n".join(lines)
+
+
 @dataclass
 class ContractViolation:
     """输出契约违例 — 节点产出不符合预期类型/结构"""
+
     key: str
     expected_type: str
     actual_type: str
     value_preview: str = ""
     severity: str = "warning"  # warning | error
+
 
 def _check_contract(ctx: dict, contract: dict) -> list[ContractViolation]:
     """校验 context 中的 key 是否符合 output_contract 定义的类型/结构"""
@@ -232,25 +249,38 @@ def _check_contract(ctx: dict, contract: dict) -> list[ContractViolation]:
         actual = ctx.get(key)
         if actual is None:
             if spec.get("required", False):
-                violations.append(ContractViolation(
-                    key=key, expected_type=str(spec.get("type", "any")),
-                    actual_type="NoneType", value_preview="None",
-                    severity=spec.get("severity", "warning")))
+                violations.append(
+                    ContractViolation(
+                        key=key,
+                        expected_type=str(spec.get("type", "any")),
+                        actual_type="NoneType",
+                        value_preview="None",
+                        severity=spec.get("severity", "warning"),
+                    )
+                )
             continue
         expected_type = spec.get("type")
         if expected_type and not isinstance(actual, expected_type):
-            violations.append(ContractViolation(
-                key=key, expected_type=expected_type.__name__,
-                actual_type=type(actual).__name__,
-                value_preview=str(actual)[:80],
-                severity=spec.get("severity", "warning")))
+            violations.append(
+                ContractViolation(
+                    key=key,
+                    expected_type=expected_type.__name__,
+                    actual_type=type(actual).__name__,
+                    value_preview=str(actual)[:80],
+                    severity=spec.get("severity", "warning"),
+                )
+            )
         # 对 dict/list 类型的 key 做子字段校验
         sub_keys = spec.get("keys", [])
         if sub_keys and isinstance(actual, dict):
             for sk in sub_keys:
                 if sk not in actual:
-                    violations.append(ContractViolation(
-                        key=f"{key}.{sk}", expected_type="present",
-                        actual_type="missing",
-                        severity=spec.get("severity", "warning")))
+                    violations.append(
+                        ContractViolation(
+                            key=f"{key}.{sk}",
+                            expected_type="present",
+                            actual_type="missing",
+                            severity=spec.get("severity", "warning"),
+                        )
+                    )
     return violations

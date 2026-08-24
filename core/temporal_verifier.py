@@ -20,12 +20,10 @@ FP4 设计：
 """
 
 from __future__ import annotations
-import json
+
 import logging
-from datetime import datetime, timedelta
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Optional
+from datetime import datetime, timedelta
 
 from core.cognitive_baseline import CognitiveBaseline
 
@@ -36,11 +34,11 @@ logger = logging.getLogger("v51.temporal_verifier")
 # ═══════════════════════════════════════════════════════════════
 
 PREDICTION_WEIGHTS = {
-    "directional": 0.20,   # 方向性预测："沪深300在6个月内上涨"
-    "range": 0.30,         # 区间预测："目标价45-50元"
-    "event": 0.25,         # 事件预测："Q2财报收入超预期"
-    "trend": 0.15,         # 趋势预测："行业集中度12个月内从60%提升至70%"
-    "bold_call": 0.10,     # Bold Call ："XX公司将在18个月内被收购"
+    "directional": 0.20,  # 方向性预测："沪深300在6个月内上涨"
+    "range": 0.30,  # 区间预测："目标价45-50元"
+    "event": 0.25,  # 事件预测："Q2财报收入超预期"
+    "trend": 0.15,  # 趋势预测："行业集中度12个月内从60%提升至70%"
+    "bold_call": 0.10,  # Bold Call ："XX公司将在18个月内被收购"
 }
 
 # 各预测类型的评分函数
@@ -70,7 +68,8 @@ def score_directional(prediction_text: str, actual_outcome: str) -> float:
 def score_range(prediction_text: str, actual_value: float) -> float:
     """区间预测评分。"""
     import re
-    range_match = re.search(r'(\d+[\.\d]*)-\s*(\d+[\.\d]*)', prediction_text)
+
+    range_match = re.search(r"(\d+[\.\d]*)-\s*(\d+[\.\d]*)", prediction_text)
     if range_match:
         low, high = float(range_match.group(1)), float(range_match.group(2))
         if low <= actual_value <= high:
@@ -100,7 +99,13 @@ def score_trend(prediction_text: str, actual_trend: dict) -> float:
     """趋势预测评分。"""
     text = prediction_text.lower()
     actual_pct = actual_trend.get("actual_change_pct", 0)
-    predicted_dir = "up" if any(w in text for w in ["提升", "增长", "上升", "扩大"]) else "down" if any(w in text for w in ["下降", "降低", "缩小"]) else "neutral"
+    predicted_dir = (
+        "up"
+        if any(w in text for w in ["提升", "增长", "上升", "扩大"])
+        else "down"
+        if any(w in text for w in ["下降", "降低", "缩小"])
+        else "neutral"
+    )
     actual_dir = "up" if actual_pct > 0 else "down"
     if predicted_dir == actual_dir:
         return 1.0
@@ -131,6 +136,7 @@ def score_bold_call(prediction_text: str, actual_outcome: str) -> float:
 @dataclass
 class TemporalResult:
     """一次时序验证的结果。"""
+
     asset_code: str = ""
     total_predictions: int = 0
     verified_count: int = 0
@@ -155,16 +161,19 @@ class TemporalVerifier:
     def __init__(self):
         self.recorder = PredictionRecorder()
 
-    def record_prediction(self, asset_code: str, prediction_type: str,
-                          prediction_text: str, time_window: str = "6m",
-                          metadata: dict = None) -> None:
+    def record_prediction(
+        self,
+        asset_code: str,
+        prediction_type: str,
+        prediction_text: str,
+        time_window: str = "6m",
+        metadata: dict = None,
+    ) -> None:
         """报告生成时记录一个预测。"""
-        self.recorder.record(asset_code, prediction_type, prediction_text,
-                             time_window, metadata or {})
+        self.recorder.record(asset_code, prediction_type, prediction_text, time_window, metadata or {})
         logger.info(f"Prediction recorded for {asset_code}: [{prediction_type}] {prediction_text[:60]}...")
 
-    def run_lookback(self, asset_code: str, actual_outcomes: dict,
-                     lookback_months: int = 6) -> TemporalResult:
+    def run_lookback(self, asset_code: str, actual_outcomes: dict, lookback_months: int = 6) -> TemporalResult:
         """回头看：对比预测与实际。"""
         baseline = CognitiveBaseline.load(asset_code)
         predictions = baseline.get("prediction_history", [])
@@ -253,11 +262,13 @@ class TemporalVerifier:
 
         # 记录验证历史
         validation_history = baseline.get("validation_history", [])
-        validation_history.append({
-            "timestamp": datetime.now().isoformat(),
-            "prediction_accuracy": result.prediction_accuracy,
-            "predictions_verified": result.verified_count,
-        })
+        validation_history.append(
+            {
+                "timestamp": datetime.now().isoformat(),
+                "prediction_accuracy": result.prediction_accuracy,
+                "predictions_verified": result.verified_count,
+            }
+        )
         baseline["validation_history"] = validation_history
 
         CognitiveBaseline.save(asset_code, baseline)
@@ -284,10 +295,12 @@ class PredictionRecorder:
     """负责将预测写入 CognitiveBaseline。"""
 
     @staticmethod
-    def record(asset_code: str, prediction_type: str, prediction_text: str,
-               time_window: str = "6m", metadata: dict = None) -> None:
+    def record(
+        asset_code: str, prediction_type: str, prediction_text: str, time_window: str = "6m", metadata: dict = None
+    ) -> None:
         """写入一条预测到 CognitiveBaseline。"""
         import hashlib
+
         pred_id = hashlib.md5(f"{asset_code}_{prediction_text}_{datetime.now().isoformat()}".encode()).hexdigest()[:12]
 
         prediction_entry = {

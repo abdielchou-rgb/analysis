@@ -2,12 +2,14 @@
 data_provenance.py V2 - Data lineage tracking system.
 Every data point in a report is traceable back to its source.
 """
+
 from __future__ import annotations
-import json, logging, os, re, time
-from dataclasses import dataclass, asdict, field
+
+import logging
+import os
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, List, Dict
 
 logger = logging.getLogger("2hao.data_provenance")
 
@@ -27,40 +29,50 @@ SOURCE_LEVELS = {
 @dataclass
 class DataSource:
     """Single data point source record"""
-    metric: str                      # 指标名称: "2024年营收"
-    value: str                       # 数值: "150亿元"
-    source_level: str                # L1-L6
-    source_name: str                 # 具体来源: "Wind/公司公告"
-    source_url: str = ""             # URL (if available)
-    fetch_time: str = ""             # 采集时间
-    confidence: float = 0.0          # 0.0-1.0
-    cross_validated: bool = False    # 是否交叉验证
-    note: str = ""                   # 备注
+
+    metric: str  # 指标名称: "2024年营收"
+    value: str  # 数值: "150亿元"
+    source_level: str  # L1-L6
+    source_name: str  # 具体来源: "Wind/公司公告"
+    source_url: str = ""  # URL (if available)
+    fetch_time: str = ""  # 采集时间
+    confidence: float = 0.0  # 0.0-1.0
+    cross_validated: bool = False  # 是否交叉验证
+    note: str = ""  # 备注
 
 
 class DataLineageTracker:
     """Track data lineage throughout the pipeline"""
 
     def __init__(self):
-        self._sources: List[DataSource] = []
+        self._sources: list[DataSource] = []
         self._start_time = datetime.now()
 
-    def record(self, metric: str, value: str, source_name: str,
-               source_level: str = "L4_media", source_url: str = "",
-               confidence: Optional[float] = None, cross_validated: bool = False,
-               note: str = "", is_inferred: bool = False) -> DataSource:
+    def record(
+        self,
+        metric: str,
+        value: str,
+        source_name: str,
+        source_level: str = "L4_media",
+        source_url: str = "",
+        confidence: float | None = None,
+        cross_validated: bool = False,
+        note: str = "",
+        is_inferred: bool = False,
+    ) -> DataSource:
         """Record a data source (is_inferred=True marks LLM-inferred sources)."""
         if source_level not in SOURCE_LEVELS:
             source_level = "L4_media"
         if confidence is None:
             confidence = SOURCE_LEVELS[source_level]["weight"]
         if is_inferred:
-            note = (note + " | [AI推测来源——非确凿来源，需人工核实]" if note
-                    else "[AI推测来源——非确凿来源，需人工核实]")
+            note = note + " | [AI推测来源——非确凿来源，需人工核实]" if note else "[AI推测来源——非确凿来源，需人工核实]"
         ds = DataSource(
-            metric=metric, value=str(value),
+            metric=metric,
+            value=str(value),
             source_level=source_level,
-            source_name=source_name, source_url=source_url,
+            source_name=source_name,
+            source_url=source_url,
             fetch_time=datetime.now().isoformat(),
             confidence=confidence,
             cross_validated=cross_validated,
@@ -69,13 +81,13 @@ class DataLineageTracker:
         self._sources.append(ds)
         return ds
 
-    def get_all(self) -> List[DataSource]:
+    def get_all(self) -> list[DataSource]:
         return self._sources.copy()
 
-    def get_by_metric(self, metric_keyword: str) -> List[DataSource]:
+    def get_by_metric(self, metric_keyword: str) -> list[DataSource]:
         return [s for s in self._sources if metric_keyword.lower() in s.metric.lower()]
 
-    def summary(self) -> Dict:
+    def summary(self) -> dict:
         """Get summary statistics"""
         by_level = {}
         by_source = {}
@@ -86,7 +98,9 @@ class DataLineageTracker:
             "total_points": len(self._sources),
             "by_level": by_level,
             "by_source": by_source,
-            "pct_L1_L2": sum(v for k, v in by_level.items() if k in ("L1_official", "L2_professional")) / max(len(self._sources), 1) * 100,
+            "pct_L1_L2": sum(v for k, v in by_level.items() if k in ("L1_official", "L2_professional"))
+            / max(len(self._sources), 1)
+            * 100,
             "cross_validated": sum(1 for s in self._sources if s.cross_validated),
             "avg_confidence": sum(s.confidence for s in self._sources) / max(len(self._sources), 1),
         }
@@ -97,7 +111,9 @@ class DataLineageTracker:
             return ""
         lines = []
         lines.append("\n\n### 数据溯源与可信度")
-        lines.append(f"> 共追踪 {len(self._sources)} 个数据点 | 采集时间: {self._start_time.strftime('%Y-%m-%d %H:%M')}\n")
+        lines.append(
+            f"> 共追踪 {len(self._sources)} 个数据点 | 采集时间: {self._start_time.strftime('%Y-%m-%d %H:%M')}\n"
+        )
         lines.append("| 指标 | 数值 | 来源等级 | 来源 | 置信度 | 交叉验证 |")
         lines.append("|------|------|---------|------|:------:|:--------:|")
 
@@ -105,12 +121,16 @@ class DataLineageTracker:
             level_label = SOURCE_LEVELS.get(s.source_level, {}).get("label", s.source_level)
             cv = "是" if s.cross_validated else "否"
             inferred = "⚠ AI推测" if "AI推测来源" in (s.note or "") else ""
-            lines.append(f"| {s.metric} | {s.value} | {level_label}{inferred} | {s.source_name} | {s.confidence:.0%} | {cv} |")
+            lines.append(
+                f"| {s.metric} | {s.value} | {level_label}{inferred} | {s.source_name} | {s.confidence:.0%} | {cv} |"
+            )
 
         summary = self.summary()
-        lines.append(f"\n**来源质量**: L1-L2占比 {summary['pct_L1_L2']:.0f}% | "
-                     f"平均置信度 {summary['avg_confidence']:.0%} | "
-                     f"交叉验证 {summary['cross_validated']}处")
+        lines.append(
+            f"\n**来源质量**: L1-L2占比 {summary['pct_L1_L2']:.0f}% | "
+            f"平均置信度 {summary['avg_confidence']:.0%} | "
+            f"交叉验证 {summary['cross_validated']}处"
+        )
         return "\n".join(lines)
 
 
@@ -120,11 +140,12 @@ class DataProvenance:
     def __init__(self):
         self.tracker = DataLineageTracker()
 
-    def collect_from_tavily(self, asset: str) -> List[DataSource]:
+    def collect_from_tavily(self, asset: str) -> list[DataSource]:
         """Extract provenance from Tavily search results"""
         results = []
         try:
             from tavily import TavilyClient
+
             key = os.environ.get("TAVILY_API_KEY", "")
             if not key:
                 logger.debug("Tavily key not available")
@@ -137,25 +158,29 @@ class DataProvenance:
                     for s in sources[:2]:
                         title = s.get("title", "")
                         url = s.get("url", "")
-                        results.append(DataSource(
-                            metric=query, value=title[:80],
-                            source_level="L4_media",
-                            source_name=url[:60] if url else "Tavily",
-                            source_url=url,
-                            fetch_time=datetime.now().isoformat(),
-                            confidence=0.6,
-                        ))
+                        results.append(
+                            DataSource(
+                                metric=query,
+                                value=title[:80],
+                                source_level="L4_media",
+                                source_name=url[:60] if url else "Tavily",
+                                source_url=url,
+                                fetch_time=datetime.now().isoformat(),
+                                confidence=0.6,
+                            )
+                        )
                 except Exception:
                     continue
         except Exception:
             pass
         return results
 
-    def collect_from_deepseek(self, asset: str, context: str = "") -> List[DataSource]:
+    def collect_from_deepseek(self, asset: str, context: str = "") -> list[DataSource]:
         """Ask DeepSeek to extract data sources from context"""
         results = []
         try:
             from core.deepseek_client import DeepSeekClient
+
             client = DeepSeekClient()
             prompt = f"""从以下文本中提取所有带数据的陈述，列出每个数据的来源。
 
@@ -174,21 +199,24 @@ class DataProvenance:
                             level = parts[3] if len(parts) >= 4 else "L4_media"
                             if level not in SOURCE_LEVELS:
                                 level = "L4_media"
-                            results.append(DataSource(
-                                metric=parts[0][:60],
-                                value=parts[1][:60],
-                                source_level=level,
-                                source_name=parts[2][:60],
-                                fetch_time=datetime.now().isoformat(),
-                                confidence=SOURCE_LEVELS[level]["weight"],
-                                is_inferred=True,
-                            ))
+                            results.append(
+                                DataSource(
+                                    metric=parts[0][:60],
+                                    value=parts[1][:60],
+                                    source_level=level,
+                                    source_name=parts[2][:60],
+                                    fetch_time=datetime.now().isoformat(),
+                                    confidence=SOURCE_LEVELS[level]["weight"],
+                                    is_inferred=True,
+                                )
+                            )
         except Exception as e:
             logger.debug("DeepSeek provenance extraction failed: %s", e)
         return results
 
-    def collect(self, data_points: list = None, asset: str = "",
-                report_sections: dict = None, context: str = "") -> dict:
+    def collect(
+        self, data_points: list = None, asset: str = "", report_sections: dict = None, context: str = ""
+    ) -> dict:
         """Collect provenance data from multiple sources"""
         # Clear previous
         self.tracker = DataLineageTracker()
@@ -196,17 +224,22 @@ class DataProvenance:
         # 1. From Tavily
         tavily_sources = self.collect_from_tavily(asset)
         for s in tavily_sources:
-            self.tracker.record(s.metric, s.value, s.source_name,
-                               source_level=s.source_level, source_url=s.source_url,
-                               confidence=s.confidence)
+            self.tracker.record(
+                s.metric,
+                s.value,
+                s.source_name,
+                source_level=s.source_level,
+                source_url=s.source_url,
+                confidence=s.confidence,
+            )
 
         # 2. From context via DeepSeek
         if context:
             ds_sources = self.collect_from_deepseek(asset, context)
             for s in ds_sources:
-                self.tracker.record(s.metric, s.value, s.source_name,
-                                   source_level=s.source_level,
-                                   confidence=s.confidence)
+                self.tracker.record(
+                    s.metric, s.value, s.source_name, source_level=s.source_level, confidence=s.confidence
+                )
 
         # 3. From explicit data_points
         if data_points:
@@ -235,4 +268,4 @@ class DataProvenance:
         return report_text.rstrip() + "\n" + section
 
 
-__all__ = ["DataProvenance", "DataLineageTracker", "DataSource", "ProvenanceEntry", "ProvenanceReport"]
+__all__ = ["DataProvenance", "DataLineageTracker", "DataSource"]

@@ -3,7 +3,8 @@
 Marvis 交付 4 个全球视野数据文件（global_industry_players/regional_penetration/
 global_market_segments/unlisted_players），data_basement 接入消费。
 """
-import os
+
+import os  # noqa: F401  (dead-import debt)
 import sys
 from pathlib import Path
 
@@ -15,14 +16,20 @@ if str(_ROOT) not in sys.path:
 def test_loaders_exist():
     """4 个 R55 loader 应存在。"""
     from core import data_basement as db
-    for fn in ["load_global_industry_players", "load_regional_penetration",
-               "load_global_market_segments", "load_unlisted_players"]:
+
+    for fn in [
+        "load_global_industry_players",
+        "load_regional_penetration",
+        "load_global_market_segments",
+        "load_unlisted_players",
+    ]:
         assert hasattr(db, fn), f"{fn} 缺失"
 
 
 def test_global_players_loaded():
     """全球玩家映射 loader 应返回玩家数据。"""
     from core.data_basement import load_global_industry_players
+
     r = load_global_industry_players("气体传感器")
     if r is None:
         return  # 沙箱无数据文件时跳过
@@ -33,6 +40,7 @@ def test_global_players_loaded():
 def test_regional_penetration_loaded():
     """区域渗透率 loader 应返回中国/领先国渗透率。"""
     from core.data_basement import load_regional_penetration
+
     r = load_regional_penetration("气体传感器")
     if r is None:
         return
@@ -43,6 +51,7 @@ def test_regional_penetration_loaded():
 def test_market_segments_loaded():
     """细分市场规模 loader 应返回全球TAM。"""
     from core.data_basement import load_global_market_segments
+
     r = load_global_market_segments("气体传感器")
     if r is None:
         return
@@ -52,6 +61,7 @@ def test_market_segments_loaded():
 def test_unlisted_players_loaded():
     """非上市玩家 loader 应返回威胁度判断。"""
     from core.data_basement import load_unlisted_players
+
     r = load_unlisted_players("气体传感器")
     if r is None:
         return
@@ -62,6 +72,7 @@ def test_unlisted_players_loaded():
 def test_basement_merges_r55():
     """build_basement_data_dict 应合并 R55 数据（gip_/rp_/gms_/ulp_）。"""
     from core.data_basement import build_basement_data_dict
+
     d = build_basement_data_dict("气体传感器")
     r55_keys = [k for k in d if k.startswith(("gip_", "rp_", "gms_", "ulp_"))]
     if not r55_keys:
@@ -71,6 +82,7 @@ def test_basement_merges_r55():
 
 if __name__ == "__main__":
     import traceback
+
     passed = failed = 0
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

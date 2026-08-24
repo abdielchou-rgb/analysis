@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """中美竞争/地缘政治分析引擎 — R78 全量优化。
 
 对标顶级机构（高盛政策时间线 / 大摩双轨情景 / 中金国产替代映射）：
@@ -13,7 +12,9 @@
     result = eng.analyze(industry_hint="半导体")
     geo_str = eng.build_injection(result)
 """
+
 from __future__ import annotations
+
 import json
 import logging
 from pathlib import Path
@@ -80,10 +81,18 @@ class GeopoliticalEngine:
             prob_deco = min(0.85, max(0.15, 0.5 + (restrict - relax) / max(total, 1) * 0.4))
         return {
             "tracks": [
-                {"name": "脱钩加速", "probability": round(prob_deco, 2),
-                 "impact": "negative", "note": f"{restrict} 项压制事件"},
-                {"name": "缓和/再挂钩", "probability": round(1 - prob_deco, 2),
-                 "impact": "positive", "note": f"{relax} 项缓和事件"},
+                {
+                    "name": "脱钩加速",
+                    "probability": round(prob_deco, 2),
+                    "impact": "negative",
+                    "note": f"{restrict} 项压制事件",
+                },
+                {
+                    "name": "缓和/再挂钩",
+                    "probability": round(1 - prob_deco, 2),
+                    "impact": "positive",
+                    "note": f"{relax} 项缓和事件",
+                },
             ]
         }
 
@@ -99,11 +108,13 @@ class GeopoliticalEngine:
         # 通用替代逻辑（行业可覆盖）
         mapping = []
         for a in sorted(affected)[:5]:
-            mapping.append({
-                "affected_segment": a,
-                "substitution_direction": "国产替代加速",
-                "beneficiary_note": f"{a} 环节受管制 → 国产厂商承接替代需求",
-            })
+            mapping.append(
+                {
+                    "affected_segment": a,
+                    "substitution_direction": "国产替代加速",
+                    "beneficiary_note": f"{a} 环节受管制 → 国产厂商承接替代需求",
+                }
+            )
         return mapping
 
     def exposure_metrics(self, industry_hint: str = "") -> dict:
@@ -146,7 +157,9 @@ class GeopoliticalEngine:
         if tl:
             lines.append("### 政策时间线（近6条）")
             for ev in tl:
-                lines.append(f"- {ev.get('date', '?')} | {ev.get('title', ev.get('event', ''))} | 影响: {ev.get('impact', ev.get('affected_segment', '行业'))}")
+                lines.append(
+                    f"- {ev.get('date', '?')} | {ev.get('title', ev.get('event', ''))} | 影响: {ev.get('impact', ev.get('affected_segment', '行业'))}"
+                )
         # 双轨情景
         sc = result.get("scenarios", {})
         tracks = sc.get("tracks", [])
@@ -163,13 +176,16 @@ class GeopoliticalEngine:
         # 量化指标
         exp = result.get("exposure", {})
         if exp:
-            lines.append(f"### 量化指标: 对美暴露度 {exp.get('us_exposure', 'N/A')}/10，"
-                         f"自主可控度 {exp.get('self_controllability', 'N/A')}/10（{exp.get('basis', '')}）")
+            lines.append(
+                f"### 量化指标: 对美暴露度 {exp.get('us_exposure', 'N/A')}/10，"
+                f"自主可控度 {exp.get('self_controllability', 'N/A')}/10（{exp.get('basis', '')}）"
+            )
         return "\n".join(lines)
 
 
 if __name__ == "__main__":
     import sys
+
     target = sys.argv[1] if len(sys.argv) > 1 else "半导体"
     eng = GeopoliticalEngine()
     r = eng.analyze(target)

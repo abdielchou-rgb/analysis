@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 HTML 报告导出器 — R30 模块3（排版修复）：排版中立解
 
@@ -9,7 +8,9 @@ DOCX 空段落、PPTX 0图暴露导出链路脆弱。HTML 是排版的"中立解
 
 用法：export_html(md_text, output_path, chart_paths, title)
 """
+
 from __future__ import annotations
+
 import base64
 import logging
 import re
@@ -21,8 +22,12 @@ _ROOT = Path(__file__).resolve().parent.parent
 
 # 机构风格配色
 STYLE_CICC = {
-    "primary": "#003366", "accent": "#c8102e", "bg": "#ffffff",
-    "text": "#1a1a1a", "muted": "#666666", "border": "#e0e0e0",
+    "primary": "#003366",
+    "accent": "#c8102e",
+    "bg": "#ffffff",
+    "text": "#1a1a1a",
+    "muted": "#666666",
+    "border": "#e0e0e0",
 }
 
 
@@ -87,8 +92,7 @@ def _md_to_html(md_text: str) -> str:
     return "\n".join(html_parts)
 
 
-def export_html(report_md: str, output_path: str, chart_paths: dict = None,
-                title: str = "深度研究报告") -> str:
+def export_html(report_md: str, output_path: str, chart_paths: dict = None, title: str = "深度研究报告") -> str:
     """导出 HTML 报告。返回输出路径。"""
     style = STYLE_CICC
     # 解析图表引用 → 内嵌 base64
@@ -107,7 +111,9 @@ def export_html(report_md: str, output_path: str, chart_paths: dict = None,
             for p in sorted(charts_dir.glob("*.png"))[:30]:
                 b64 = _img_to_base64(str(p))
                 if b64:
-                    chart_html += f"<figure><img src='{b64}' alt='{p.stem}'/><figcaption>{p.stem}</figcaption></figure>\n"
+                    chart_html += (
+                        f"<figure><img src='{b64}' alt='{p.stem}'/><figcaption>{p.stem}</figcaption></figure>\n"
+                    )
 
     body = _md_to_html(report_md)
 
@@ -119,19 +125,19 @@ def export_html(report_md: str, output_path: str, chart_paths: dict = None,
 <style>
 :root {{ color-scheme: light; }}
 body {{ font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
-       color: {style['text']}; background: {style['bg']}; margin: 0; padding: 24px; line-height: 1.7; }}
-h1 {{ color: {style['primary']}; border-bottom: 3px solid {style['accent']}; padding-bottom: 8px; }}
-h2 {{ color: {style['primary']}; border-left: 4px solid {style['accent']}; padding-left: 8px; margin-top: 32px; }}
-h3 {{ color: {style['primary']}; }}
+       color: {style["text"]}; background: {style["bg"]}; margin: 0; padding: 24px; line-height: 1.7; }}
+h1 {{ color: {style["primary"]}; border-bottom: 3px solid {style["accent"]}; padding-bottom: 8px; }}
+h2 {{ color: {style["primary"]}; border-left: 4px solid {style["accent"]}; padding-left: 8px; margin-top: 32px; }}
+h3 {{ color: {style["primary"]}; }}
 table {{ border-collapse: collapse; margin: 16px 0; width: 100%; }}
-th {{ background: {style['primary']}; color: #fff; padding: 8px; text-align: left; }}
-td {{ border: 1px solid {style['border']}; padding: 8px; }}
+th {{ background: {style["primary"]}; color: #fff; padding: 8px; text-align: left; }}
+td {{ border: 1px solid {style["border"]}; padding: 8px; }}
 tr:nth-child(even) {{ background: #f7f7f7; }}
 figure {{ margin: 16px 0; text-align: center; }}
-figure img {{ max-width: 100%; height: auto; border: 1px solid {style['border']}; border-radius: 4px; }}
-figcaption {{ color: {style['muted']}; font-size: 13px; margin-top: 4px; }}
-hr {{ border: none; border-top: 1px solid {style['border']}; margin: 24px 0; }}
-.chart-ref {{ color: {style['muted']}; font-size: 13px; }}
+figure img {{ max-width: 100%; height: auto; border: 1px solid {style["border"]}; border-radius: 4px; }}
+figcaption {{ color: {style["muted"]}; font-size: 13px; margin-top: 4px; }}
+hr {{ border: none; border-top: 1px solid {style["border"]}; margin: 24px 0; }}
+.chart-ref {{ color: {style["muted"]}; font-size: 13px; }}
 p {{ margin: 8px 0; }}
 </style>
 </head>
@@ -151,8 +157,8 @@ p {{ margin: 8px 0; }}
 
 if __name__ == "__main__":
     import sys
+
     sys.path.insert(0, str(_ROOT))
     md = open(str(_ROOT / "output" / "柯力传感_cicc.md"), encoding="utf-8").read()
-    out = export_html(md, str(_ROOT / "output" / "test_keli.html"),
-                      title="柯力传感深度报告")
+    out = export_html(md, str(_ROOT / "output" / "test_keli.html"), title="柯力传感深度报告")
     print("HTML 导出:", out, Path(out).stat().st_size, "bytes")

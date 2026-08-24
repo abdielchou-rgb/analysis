@@ -9,7 +9,7 @@ from core.models import KnowledgePackage
 
 def build_appendix(kp: KnowledgePackage) -> dict[str, str]:
     """生成标准化的附录内容"""
-    
+
     # 评级体系
     rating_system = """
 ### 评级体系说明

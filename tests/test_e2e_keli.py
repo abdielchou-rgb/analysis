@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """R26 中文名标的全链路回归测试（柯力传感）
 
 背景（2026-08-02 全量修复缺陷1/2）：
@@ -13,7 +12,6 @@
 本测试不跑完整 E2E（避免慢），聚焦 R26 修复的链路断点。
 """
 
-import os
 import sys
 from pathlib import Path
 
@@ -58,9 +56,7 @@ def test_local_search_chinese_name():
 def test_enrich_company_intro_from_history():
     from pipeline.data_enrichment import LocalBackfill
 
-    data = {"asset": "603662",
-            "chart_data": {"fig_revenue_trend": {"2024": 12.95},
-                           "fig_profitability": {"2024": 3.0}}}
+    data = {"asset": "603662", "chart_data": {"fig_revenue_trend": {"2024": 12.95}, "fig_profitability": {"2024": 3.0}}}
     out = LocalBackfill.run("603662", data)
     cd = out.get("chart_data", {})
     intro = cd.get("company_intro", "")
@@ -74,17 +70,22 @@ def test_sufficiency_semantic_gap():
     from pipeline.data_enrichment import DataSufficiencyChecker
 
     # 无 company_intro → semantic_gap
-    data_bad = {"asset": "603662",
-                "chart_data": {"fig_revenue_trend": {"2024": 12.95},
-                               "fig_profitability": {"2024": 3.0}}}
+    data_bad = {
+        "asset": "603662",
+        "chart_data": {"fig_revenue_trend": {"2024": 12.95}, "fig_profitability": {"2024": 3.0}},
+    }
     r_bad = DataSufficiencyChecker.check(data_bad)
     assert "company_intro" in r_bad["semantic_gap"], "缺 company_intro 应报语义缺口"
 
     # 有 company_intro → 无 gap
-    data_ok = {"asset": "603662",
-               "chart_data": {"fig_revenue_trend": {"2024": 12.95},
-                              "fig_profitability": {"2024": 3.0},
-                              "company_intro": "应变式传感器龙头"}}
+    data_ok = {
+        "asset": "603662",
+        "chart_data": {
+            "fig_revenue_trend": {"2024": 12.95},
+            "fig_profitability": {"2024": 3.0},
+            "company_intro": "应变式传感器龙头",
+        },
+    }
     r_ok = DataSufficiencyChecker.check(data_ok)
     assert "company_intro" not in r_ok["semantic_gap"], "有 company_intro 不应报语义缺口"
 

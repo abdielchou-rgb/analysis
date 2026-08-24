@@ -5,7 +5,8 @@
 修复：跨章节字符 n-gram 相似度检测（零依赖），相似度≥0.90 判为语义重复，
       输出"章节A/章节B 相似度0.91"。
 """
-import os
+
+import os  # noqa: F401  (dead-import debt)
 import sys
 from pathlib import Path
 
@@ -32,6 +33,7 @@ _CLEAN = (
 
 def _run_semantic(text):
     from pipeline.iron_gate import IronGate
+
     gate = IronGate.from_text(text, report_type="industry_deep", style="cicc")
     return gate._check_semantic_repeat()
 
@@ -51,12 +53,16 @@ def test_cross_section_duplicate_detected():
         "当前估值处于历史中位区间，具备一定安全边际。"
         "建议重点关注公司在物联网领域的布局进展以及产能释放节奏。\n\n"
     )
-    text = _CLEAN + dup + (
-        "## 六、估值分析\n"
-        "这一趋势若延续，盈利中枢存在系统性上移的可能，我们看好龙头公司的长期成长空间。"
-        "公司在产能扩张与产品升级双轮驱动下，收入利润有望保持较快增长。"
-        "从相对估值看，当前股价对应明年市盈率处于合理区间。"
-        "综合DCF与可比公司估值，我们给予增持评级。\n\n"
+    text = (
+        _CLEAN
+        + dup
+        + (
+            "## 六、估值分析\n"
+            "这一趋势若延续，盈利中枢存在系统性上移的可能，我们看好龙头公司的长期成长空间。"
+            "公司在产能扩张与产品升级双轮驱动下，收入利润有望保持较快增长。"
+            "从相对估值看，当前股价对应明年市盈率处于合理区间。"
+            "综合DCF与可比公司估值，我们给予增持评级。\n\n"
+        )
     )
     r = _run_semantic(text)
     assert not r.passed, f"跨章节重复应检测: {r.details}"
@@ -77,10 +83,8 @@ def test_similar_but_not_identical_passes():
 def test_template_repeat_still_works():
     """原有硬编码模板句检测不受影响。"""
     from pipeline.iron_gate import IronGate
-    text = _CLEAN + (
-        "这一趋势若持续，盈利中枢存在系统性上移的可能。"
-        "这一趋势若持续，盈利中枢存在系统性上移的可能。"
-    )
+
+    text = _CLEAN + ("这一趋势若持续，盈利中枢存在系统性上移的可能。这一趋势若持续，盈利中枢存在系统性上移的可能。")
     gate = IronGate.from_text(text, report_type="industry_deep", style="cicc")
     r = gate._check_template_repeat()
     assert not r.passed, f"模板句重复应检出: {r.details}"
@@ -88,6 +92,7 @@ def test_template_repeat_still_works():
 
 if __name__ == "__main__":
     import traceback
+
     passed = failed = 0
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

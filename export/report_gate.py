@@ -1,8 +1,12 @@
 # report_gate.py — 唯一输出入口 + 强制阻断
 # 所有报告生成必须经过此函数，否则不产生输出文件
-import logging, os, sys, json, re
-from pathlib import Path
 import datetime
+import json
+import logging
+import os
+import re
+import sys
+from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
@@ -10,14 +14,17 @@ if str(_ROOT) not in sys.path:
 
 logger = logging.getLogger("2hao.report_gate")
 
+
 class GateBlockedError(Exception):
     """报告被门禁阻断"""
+
     def __init__(self, gate, score, issues):
         self.gate = gate
         self.score = score
         self.issues = issues
         msg = "[%s BLOCKED] score=%.2f issues=%d" % (gate, score, len(issues))
         super().__init__(msg)
+
 
 def _verify_pipeline_fingerprint(output_path, asset) -> None:
     """FP7d 校验：报告必须携带管线指纹（证明经由 E2EOrchestratorV2 产出）。
@@ -41,22 +48,20 @@ def _verify_pipeline_fingerprint(output_path, asset) -> None:
         except Exception:
             fp = None
     if fp is None:
-        logger.warning(
-            "[FINGERPRINT] 未找到管线指纹 %s — 报告疑似绕过管线直接生成",
-            [str(c) for c in candidates])
+        logger.warning("[FINGERPRINT] 未找到管线指纹 %s — 报告疑似绕过管线直接生成", [str(c) for c in candidates])
         raise GateBlockedError(
-            "PipelineFingerprint", 0.0,
-            ["未找到管线指纹。报告必须经由 E2EOrchestratorV2 完整管线生成，"
-             "禁止绕过管线直接写报告。"])
+            "PipelineFingerprint",
+            0.0,
+            ["未找到管线指纹。报告必须经由 E2EOrchestratorV2 完整管线生成，禁止绕过管线直接写报告。"],
+        )
     # 校验指纹内容
     try:
         import json as _json
+
         data = _json.loads(fp.read_text(encoding="utf-8"))
         if not data.get("via_pipeline"):
-            raise GateBlockedError("PipelineFingerprint", 0.0,
-                                   ["管线指纹无效（via_pipeline=false）"])
-        logger.info("[FINGERPRINT] 管线指纹校验通过: %s (gate=%.2f)",
-                    fp.name, data.get("gate_score", 0))
+            raise GateBlockedError("PipelineFingerprint", 0.0, ["管线指纹无效（via_pipeline=false）"])
+        logger.info("[FINGERPRINT] 管线指纹校验通过: %s (gate=%.2f)", fp.name, data.get("gate_score", 0))
     except GateBlockedError:
         raise
     except Exception as e:
@@ -65,38 +70,45 @@ def _verify_pipeline_fingerprint(output_path, asset) -> None:
 
 class GatesConfig:
     """加载 gates_config.yaml 配置"""
+
     def __init__(self, path=None):
         if path is None:
             path = _ROOT / "export" / "gates_config.yaml"
         self.path = Path(path)
         self._config = self._load()
-    
+
     def _load(self):
         if not self.path.exists():
             logger.warning("gates_config.yaml not found, using defaults")
             return self._defaults()
         try:
             import yaml
-            with open(self.path, "r", encoding="utf-8") as f:
+
+            with open(self.path, encoding="utf-8") as f:
                 cfg = yaml.safe_load(f)
             return cfg
         except Exception as e:
             logger.warning("Failed to load config: %s, using defaults", e)
             return self._defaults()
-    
+
     def _defaults(self):
         return {
             "iron_gate": {"enabled": True, "min_score": 0.85, "hard_fail": [], "require_all_hard": True},
             "visual_gate": {"enabled": True, "min_score": 0.80, "hard_fail": [], "require_all_hard": True},
             "export": {"delete_on_fail": True, "raise_on_fail": True, "log_all_failures": True, "max_retries": 3},
         }
-    
+
     @property
-    def iron_gate(self): return self._config.get("iron_gate", {})
+    def iron_gate(self):
+        return self._config.get("iron_gate", {})
+
     @property
-    def visual_gate(self): return self._config.get("visual_gate", {})
+    def visual_gate(self):
+        return self._config.get("visual_gate", {})
+
     @property
-    def export(self): return self._config.get("export", {})
+    def export(self):
+        return self._config.get("export", {})
 
 
 def _log_failure(gate_name, score, issues, output_path):
@@ -126,8 +138,9 @@ def _delete_output(path):
             logger.warning("Could not delete %s: %s", path, e)
 
 
-def export_report(md_text, output_path, report_type="industry_deep", style="cicc",
-                  company_name="", title="", pipe_gate_result=None):
+def export_report(
+    md_text, output_path, report_type="industry_deep", style="cicc", company_name="", title="", pipe_gate_result=None
+):
     """唯一输出入口：生成DOCX → VisualGate → IronGate → 通过才返回
 
     Args:
@@ -160,37 +173,39 @@ def export_report(md_text, output_path, report_type="industry_deep", style="cicc
     # Step 0: ContentEnforcer pre-export pipeline check (advisory)
     try:
         from pipeline.content_enforcer import ContentEnforcer
+
         ce = ContentEnforcer()
         ce.check_all()
     except Exception:
         pass  # ContentEnforcer is advisory; IronGate is the primary gate
 
-    
     # Step 1: 导出 DOCX
     from export.exporter import ReportExporter
+
     exporter = ReportExporter(company_name=company_name, style_id=style, title=title)
     docx_path = exporter.to_docx(md_text, output_path)
     logger.info("DOCX exported: %s", docx_path)
-    
+
     # Step 1.5: 检查图表文件是否存在
     import re
-    chart_refs = re.findall(r'!\[.*?\]\((?!chart:)(.+?)\)', md_text)
-    missing_charts = [c for c in chart_refs if not Path(c).exists() and not c.startswith('http')]
+
+    chart_refs = re.findall(r"!\[.*?\]\((?!chart:)(.+?)\)", md_text)
+    missing_charts = [c for c in chart_refs if not Path(c).exists() and not c.startswith("http")]
     if missing_charts:
         logger.warning("Missing chart images: %d of %d", len(missing_charts), len(chart_refs))
         if config.export.get("delete_on_fail", True) and config.export.get("raise_on_fail", True):
             _delete_output(output_path)
             # P2-3: ChartCheck 阶段只删除 DOCX，MD 还未生成
-            raise GateBlockedError("ChartCheck", 0.0, 
-                ["Missing charts: " + ", ".join(missing_charts[:5])])
-    
+            raise GateBlockedError("ChartCheck", 0.0, ["Missing charts: " + ", ".join(missing_charts[:5])])
+
     # Step 2: VisualGate 阻断检查
     vg_cfg = config.visual_gate
     vg_result = {"score": 1.0, "issues": []}  # P2-warn: 默认值避免 NameError
     if vg_cfg.get("enabled", True):
         from export.visual_gate import check as vg_check
+
         vg_result = vg_check(docx_path, report_type)
-        
+
         vg_score = vg_result["score"]
         vg_passed = vg_score >= vg_cfg.get("min_score", 0.7)
         if not vg_passed:
@@ -203,7 +218,7 @@ def export_report(md_text, output_path, report_type="industry_deep", style="cicc
                 raise GateBlockedError("VisualGate", vg_score, vg_result.get("issues", []))
         else:
             logger.info("VisualGate: score=%.2f (>=%.2f, passed)", vg_score, vg_cfg.get("min_score", 0.7))
-    
+
     # Step 3: IronGate 阻断检查
     # P1-2 (audit 2026-08-01): 优先复用管线层已完成的 gate_result，
     # 避免 IronGate 在管线中被调用两次。仅当 pipe_gate_result 缺失时才兜底调用。
@@ -214,24 +229,29 @@ def export_report(md_text, output_path, report_type="industry_deep", style="cicc
             # 复用管线层已有结果，不再重复 IronGate
             # R78（2026-08-05）：兼容 dict（to_dict() 结果）与 GateReport 对象两种形态
             if isinstance(pipe_gate_result, dict):
-                from pipeline.checks.base import GateReport, GateCheckResult
+                from pipeline.checks.base import GateCheckResult, GateReport
+
                 _ig = GateReport()
                 _ig.overall_score = float(pipe_gate_result.get("overall_score", 0) or 0)
                 _ig.passed = bool(pipe_gate_result.get("passed", False))
                 _ig.failures = list(pipe_gate_result.get("failures", []))
-                _ig.checks = [GateCheckResult(name=c.get("name", ""),
-                                              passed=bool(c.get("passed", False)),
-                                              score=float(c.get("score", 0)),
-                                              severity=c.get("severity", "warning"))
-                              for c in pipe_gate_result.get("checks", [])]
+                _ig.checks = [
+                    GateCheckResult(
+                        name=c.get("name", ""),
+                        passed=bool(c.get("passed", False)),
+                        score=float(c.get("score", 0)),
+                        severity=c.get("severity", "warning"),
+                    )
+                    for c in pipe_gate_result.get("checks", [])
+                ]
                 ig_result = _ig
             else:
                 ig_result = pipe_gate_result
-            logger.info("IronGate: 复用管线层结果 (score=%.2f, passed=%s)",
-                        ig_result.overall_score, ig_result.passed)
+            logger.info("IronGate: 复用管线层结果 (score=%.2f, passed=%s)", ig_result.overall_score, ig_result.passed)
         else:
             # 兜底：管线层未传入 gate_result，独立运行 IronGate
             from pipeline.iron_gate import IronGate
+
             gate = IronGate.from_text(md_text, report_type, style)
             ig_result = gate.run_all()
             logger.info("IronGate: 独立运行（管线层未传入 gate_result）")
@@ -250,8 +270,7 @@ def export_report(md_text, output_path, report_type="industry_deep", style="cicc
         _hard_names = ig_cfg.get("hard_fail", [])
         _require_all = ig_cfg.get("require_all_hard", True)
         if _hard_names:
-            _hf_failed = [c.name for c in ig_result.checks
-                          if c.name in _hard_names and not c.passed]
+            _hf_failed = [c.name for c in ig_result.checks if c.name in _hard_names and not c.passed]
             if _require_all and _hf_failed:
                 _blocked = True
                 _block_reason.append(f"hard_fail 未过: {_hf_failed}")
@@ -271,28 +290,32 @@ def export_report(md_text, output_path, report_type="industry_deep", style="cicc
                 # 保留 MD 供人工审计追踪
 
             if config.export.get("raise_on_fail", True):
-                raise GateBlockedError("IronGate", ig_result.overall_score,
-                                       ig_result.failures + _block_reason)
+                raise GateBlockedError("IronGate", ig_result.overall_score, ig_result.failures + _block_reason)
 
     vg_score = vg_result["score"] if vg_result else 1.0
     ig_score = ig_result.overall_score if ig_result is not None else 1.0
+    # P3-audit 2026-08-24 真 bug 修复：_out 原在本块之后才定义（L324），
+    # NameError 被 except 吞掉 → R82 终产物 AI 标注复核从未真正运行（v9 防线失效）。
+    from pathlib import Path as _P
+
+    _out = _P(docx_path)
     # R82（2026-08-06）：终产物 AI 标注复核——导出后对最终 docx/md 扫描，
     # 防"扫描早于导出链路、标注在导出时注入"（v9 事故）。
     try:
-        from pathlib import Path as _PA
         for _suffix in (".docx", ".md"):
             _f = _out.with_suffix(_suffix) if _out.suffix != _suffix else _out
             if _f.exists():
                 _t = _f.read_text(encoding="utf-8", errors="ignore") if _suffix == ".md" else ""
                 if _suffix == ".docx":
                     import zipfile
+
                     _z = zipfile.ZipFile(_f)
                     _t = _z.read("word/document.xml").decode("utf-8", errors="ignore")
                     _z.close()
                 if "内容由AI生成" in _t or "AI辅助" in _t:
                     raise GateBlockedError(
-                        "AICleanCheck", 0.0,
-                        [f"终产物 {_suffix} 含 AI 标注——去AI化必须在导出后复核"])
+                        "AICleanCheck", 0.0, [f"终产物 {_suffix} 含 AI 标注——去AI化必须在导出后复核"]
+                    )
     except GateBlockedError:
         raise
     except Exception as _ae:
@@ -301,11 +324,11 @@ def export_report(md_text, output_path, report_type="industry_deep", style="cicc
     # R80 P0-0：产物验证——PDF 含图/大小、DOCX 空段率，不达标阻断交付
     # （防 LibreOffice 未装 → reportlab 降级出无图 PDF 仍"成功"）
     try:
-        from pathlib import Path as _P
-        _out = _P(docx_path)
         # DOCX 空段率检查
         if _out.exists() and _out.suffix == ".docx":
-            import zipfile, re as _re
+            import re as _re
+            import zipfile
+
             z = zipfile.ZipFile(_out)
             xml = z.read("word/document.xml").decode("utf-8", errors="ignore")
             z.close()
@@ -315,8 +338,8 @@ def export_report(md_text, output_path, report_type="industry_deep", style="cicc
                 empty_ratio = len(empty) / len(paras)
                 if empty_ratio > 0.05:
                     raise GateBlockedError(
-                        "ProductValidation", 0.0,
-                        [f"DOCX 空段率 {empty_ratio:.0%}（>{5}%）——排版未清洗，阻断交付"])
+                        "ProductValidation", 0.0, [f"DOCX 空段率 {empty_ratio:.0%}（>{5}%）——排版未清洗，阻断交付"]
+                    )
         # PDF 验证（若同目录存在 PDF）
         _pdf = _out.with_suffix(".pdf")
         if _pdf.exists() and _pdf.stat().st_size < 100_000:
@@ -324,14 +347,13 @@ def export_report(md_text, output_path, report_type="industry_deep", style="cicc
             logger.warning("[PRODUCT] PDF %dKB 可能无图（降级产物）", _pdf.stat().st_size // 1024)
             if config.export.get("raise_on_fail", True):
                 raise GateBlockedError(
-                    "ProductValidation", 0.0,
-                    [f"PDF {_pdf.stat().st_size//1024}KB < 100KB，可能为无图降级产物"])
+                    "ProductValidation", 0.0, [f"PDF {_pdf.stat().st_size // 1024}KB < 100KB，可能为无图降级产物"]
+                )
     except GateBlockedError:
         raise
     except Exception as _pe:
         logger.warning("[PRODUCT] 产物验证异常(放行): %s", str(_pe)[:80])
 
-    logger.info("Report passed all gates: %s (VG=%.2f, IG=%.2f)",
-                docx_path, vg_score, ig_score)
-    
+    logger.info("Report passed all gates: %s (VG=%.2f, IG=%.2f)", docx_path, vg_score, ig_score)
+
     return docx_path

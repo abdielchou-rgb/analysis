@@ -4,10 +4,9 @@
 实际调用转发至 E2EOrchestratorV2。
 """
 
-import sys
 import logging
+import sys
 from pathlib import Path
-from typing import Optional
 
 _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
@@ -25,7 +24,7 @@ class WriteReviseLoop:
         report_type: str = "industry_deep",
         style: str = "cicc",
         output_dir: str = "output",
-        time_anchor: Optional[dict] = None,
+        time_anchor: dict | None = None,
     ):
         self.asset = asset
         self.report_type = report_type
@@ -44,9 +43,10 @@ class WriteReviseLoop:
         from pipeline.e2e_orchestrator import E2EOrchestratorV2
 
         logger.info(
-            "WriteReviseLoop starting (delegating to E2EOrchestratorV2): "
-            "asset=%s type=%s style=%s",
-            self.asset, self.report_type, self.style,
+            "WriteReviseLoop starting (delegating to E2EOrchestratorV2): asset=%s type=%s style=%s",
+            self.asset,
+            self.report_type,
+            self.style,
         )
 
         try:
@@ -64,7 +64,7 @@ class WriteReviseLoop:
             return {"error": str(e)}
 
     @property
-    def result(self) -> Optional[dict]:
+    def result(self) -> dict | None:
         return self._result
 
 

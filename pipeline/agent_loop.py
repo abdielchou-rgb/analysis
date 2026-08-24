@@ -7,15 +7,14 @@
 - 排版质量检查
 """
 
-import sys
-import json
-import re
 import logging
+import re
+import sys
 from pathlib import Path
-from typing import Optional
+
+from core.calibration.dashboard import CalibrationDashboard
 from core.sacs import SACLoader
 from pipeline.learning_loop import LearningLoop
-from core.calibration.dashboard import CalibrationDashboard
 
 _ANALYST_ROOT = Path(__file__).resolve().parent.parent
 if str(_ANALYST_ROOT) not in sys.path:
@@ -44,6 +43,7 @@ class ScoreEngine:
     def _init_modules(self):
         try:
             from core.quality_scorer import QualityScorer
+
             self._scorer = QualityScorer()
         except Exception as e:
             logger.warning(f"QualityScorer unavailable: {e}")
@@ -51,6 +51,7 @@ class ScoreEngine:
         if self._use_deepseek:
             try:
                 from core.deepseek_client import score_text
+
                 self._deepseek = score_text
             except Exception as e:
                 logger.warning(f"DeepSeek scoring unavailable: {e}")
@@ -74,10 +75,14 @@ class ScoreEngine:
 
         # 加权综合
         weights = {
-            "aigc_fingerprint": 0.15, "human_sense": 0.10,
-            "quality": 0.20, "sac_coverage": 0.15,
-            "chart_density": 0.15, "data_traceability": 0.10,
-            "format_consistency": 0.05, "persuasion": 0.10,
+            "aigc_fingerprint": 0.15,
+            "human_sense": 0.10,
+            "quality": 0.20,
+            "sac_coverage": 0.15,
+            "chart_density": 0.15,
+            "data_traceability": 0.10,
+            "format_consistency": 0.05,
+            "persuasion": 0.10,
         }
         overall = sum(result["dimensions"][k] * w for k, w in weights.items()) / sum(weights.values())
         result["overall"] = round(overall, 4)
@@ -102,9 +107,10 @@ class ScoreEngine:
     def _score_aigc(self, text: str) -> float:
         try:
             from core.ai_fingerprints import AIScanner
+
             scanner = AIScanner()
             result = scanner.scan(text)
-            ratio = getattr(result, 'ai_fingerprint_ratio', 0.0)
+            ratio = getattr(result, "ai_fingerprint_ratio", 0.0)
             return 1.0 - ratio
         except Exception:
             return 0.5
@@ -112,6 +118,7 @@ class ScoreEngine:
     def _score_human(self, text: str) -> float:
         try:
             from core.human_signal_injector import HumanSenseDetector
+
             detector = HumanSenseDetector()
             return detector.detect(text)
         except Exception:
@@ -121,15 +128,20 @@ class ScoreEngine:
         if self._scorer:
             try:
                 result_obj = self._scorer.score(text)
-                return getattr(result_obj, 'overall', 0.0)
+                return getattr(result_obj, "overall", 0.0)
             except Exception:
                 pass
         score = 0.5
-        if re.search(r'我们认为|我们判断|我们建议', text): score += 0.1
-        if re.search(r'数据来源[：:]', text): score += 0.1
-        if re.search(r'风险因素|Bear Case|反方', text): score += 0.1
-        if len(text) > 3000: score += 0.1
-        if len(text) > 10000: score += 0.1
+        if re.search(r"我们认为|我们判断|我们建议", text):
+            score += 0.1
+        if re.search(r"数据来源[：:]", text):
+            score += 0.1
+        if re.search(r"风险因素|Bear Case|反方", text):
+            score += 0.1
+        if len(text) > 3000:
+            score += 0.1
+        if len(text) > 10000:
+            score += 0.1
         return min(max(score, 0.0), 1.0)
 
     def _score_sac(self, text: str, report_type: str) -> float:
@@ -142,13 +154,15 @@ class ScoreEngine:
             for dim, keywords in dim_keywords.items():
                 if any(kw in text for kw in keywords):
                     covered += 1
-            return covered / max(len(required_dims), 1)
+            # P3-audit 2026-08-24 真 bug 修复：required_dims 未定义 →
+            # NameError 被吞、SAC 评分恒回退 0.5（静默降级）。
+            return covered / max(len(dim_keywords), 1)
         except Exception:
             return 0.5
 
     def _score_charts(self, text: str, report_type: str) -> float:
-        charts = re.findall(r'!\[.*?\]\(.*?\)', text)
-        tables = [t for t in re.findall(r'\|.*\|', text) if '---' not in t and t.count('|') >= 3]
+        charts = re.findall(r"!\[.*?\]\(.*?\)", text)
+        tables = [t for t in re.findall(r"\|.*\|", text) if "---" not in t and t.count("|") >= 3]
         min_charts = {"industry_deep": 5, "listed_company": 5, "unlisted_company": 4, "earnings_notes": 2}
         min_tables = {"industry_deep": 3, "listed_company": 3, "unlisted_company": 2, "earnings_notes": 1}
         mc = min_charts.get(report_type, 3)
@@ -169,22 +183,22 @@ class ScoreEngine:
         if idx < 0:
             return False
         # 检查前面200字是否有分析文本
-        before = text[max(0, idx - 200):idx]
+        before = text[max(0, idx - 200) : idx]
         return len(before.strip()) > 50
 
     def _score_data(self, text: str) -> float:
-        sources = re.findall(r'数据来源[：:]\s*\S+', text)
-        confidence = re.findall(r'置信度|可信度|可靠度', text)
-        cross_val = re.findall(r'交叉验证|数据分歧|多源', text)
-        score = (min(len(sources) / 3, 1.0) * 0.5 +
-                 min(len(confidence) / 1, 1.0) * 0.2 +
-                 min(len(cross_val) / 1, 1.0) * 0.3)
+        sources = re.findall(r"数据来源[：:]\s*\S+", text)
+        confidence = re.findall(r"置信度|可信度|可靠度", text)
+        cross_val = re.findall(r"交叉验证|数据分歧|多源", text)
+        score = (
+            min(len(sources) / 3, 1.0) * 0.5 + min(len(confidence) / 1, 1.0) * 0.2 + min(len(cross_val) / 1, 1.0) * 0.3
+        )
         return min(score, 1.0)
 
     def _score_format(self, text: str) -> float:
         issues = 0
         # 加粗检查
-        bold_count = len(re.findall(r'\*\*', text))
+        bold_count = len(re.findall(r"\*\*", text))
         para_count = max(len([p for p in text.split("\n\n") if p.strip()]), 1)
         if bold_count > para_count * 3:
             issues += 1
@@ -194,7 +208,7 @@ class ScoreEngine:
                 issues += 1
                 break
         # 图片溢出检查
-        imgs = re.findall(r'!\[.*?\]\(.*?\)', text)
+        imgs = re.findall(r"!\[.*?\]\(.*?\)", text)
         for img in imgs:
             if len(img) > 300:
                 issues += 1
@@ -228,28 +242,29 @@ class ScoreEngine:
             passed = dim_score >= 0.7
             lines.append(f"  [{icons[passed]}] {dim_name}: {dim_score:.2f}")
 
-        lines.extend([
-            "",
-            "改进要求:",
-            "  1. 所有FAIL项必须修复",
-            "  2. 综合评分必须 >= 0.9",
-            f"  3. 图表必须足够 ({self._get_min_charts(next((k for k in ['industry_deep','listed_company','unlisted_company','earnings_notes'] if True), 'industry_deep'))})",
-            "  4. 每个数据点必须标注来源",
-            "  5. SAC维度覆盖率 >= 80%",
-            "  6. 排版无问题（字体一致、表格不溢出、图片不溢出）",
-            # R42：不要求免责声明——报告必须像人类分析师撰写，避免 AI 免责痕迹。
-            "",
-            "修复后重新评分，直到所有PASS且综合 >= 0.9",
-            "=" * 60,
-        ])
+        lines.extend(
+            [
+                "",
+                "改进要求:",
+                "  1. 所有FAIL项必须修复",
+                "  2. 综合评分必须 >= 0.9",
+                f"  3. 图表必须足够 ({self._get_min_charts(next((k for k in ['industry_deep', 'listed_company', 'unlisted_company', 'earnings_notes'] if True), 'industry_deep'))})",
+                "  4. 每个数据点必须标注来源",
+                "  5. SAC维度覆盖率 >= 80%",
+                "  6. 排版无问题（字体一致、表格不溢出、图片不溢出）",
+                # R42：不要求免责声明——报告必须像人类分析师撰写，避免 AI 免责痕迹。
+                "",
+                "修复后重新评分，直到所有PASS且综合 >= 0.9",
+                "=" * 60,
+            ]
+        )
         return "\n".join(lines)
-
 
     def before_report(self, asset: str, report_type: str) -> str:
         """Call learning loop before report writing. Returns historical context."""
         try:
             return self.learning_loop.before_report(asset, report_type)
-        except Exception as e:
+        except Exception:
             return ""
 
     def after_report(self, asset: str, report_type: str, score_result: dict) -> None:
@@ -258,7 +273,7 @@ class ScoreEngine:
             # Record to calibration dashboard
             if self.calibration:
                 try:
-                    if hasattr(self.calibration, 'record'):
+                    if hasattr(self.calibration, "record"):
                         self.calibration.record(
                             asset=asset,
                             report_type=report_type,
@@ -273,14 +288,18 @@ class ScoreEngine:
                     if score < 0.7:
                         failures.append(dim)
                 self.learning_loop.after_report(
-                    asset, report_type,
-                    {"passed": False, "score": score_result["overall"], "failures": failures}
+                    asset, report_type, {"passed": False, "score": score_result["overall"], "failures": failures}
                 )
         except Exception:
             pass
 
     def _get_min_charts(self, report_type: str) -> str:
-        mins = {"industry_deep": "5图3表", "listed_company": "5图3表", "unlisted_company": "4图2表", "earnings_notes": "2图1表"}
+        mins = {
+            "industry_deep": "5图3表",
+            "listed_company": "5图3表",
+            "unlisted_company": "4图2表",
+            "earnings_notes": "2图1表",
+        }
         return mins.get(report_type, "3图2表")
 
 
@@ -294,6 +313,7 @@ class ReportFixer:
     def _init_formatter(self):
         try:
             from export.format_professionalizer import FormatProfessionalizer
+
             self._formatter = FormatProfessionalizer()
         except Exception:
             pass

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 报告规划器（Report Planner）— R28 全量修复方向C：先规划后写
 
@@ -14,7 +13,9 @@
 
 本模块只做规划组织，不产生正文（FP2）。
 """
+
 from __future__ import annotations
+
 import logging
 from pathlib import Path
 
@@ -26,26 +27,55 @@ _ROOT = Path(__file__).resolve().parent.parent
 PLAN_BY_TYPE = {
     "listed_company": [
         {"q": "公司是干什么的？主业/商业模式/行业归属", "data": ["company_intro", "business_model"], "critical": True},
-        {"q": "公司卡在供应链什么位置？竞争格局如何？", "data": ["industry_chain", "competitive", "bottleneck"], "critical": True},
-        {"q": "财务质量如何？收入确认/毛利/现金流/商誉风险", "data": ["fig_revenue_trend", "fig_margin", "financials"], "critical": True},
+        {
+            "q": "公司卡在供应链什么位置？竞争格局如何？",
+            "data": ["industry_chain", "competitive", "bottleneck"],
+            "critical": True,
+        },
+        {
+            "q": "财务质量如何？收入确认/毛利/现金流/商誉风险",
+            "data": ["fig_revenue_trend", "fig_margin", "financials"],
+            "critical": True,
+        },
         {"q": "合理估值是多少？PE/DCF/可比三法一致吗？", "data": ["valuation", "dcf", "peer"], "critical": True},
-        {"q": "给出明确评级+目标价。目标价隐含空间与评级匹配吗？", "data": [], "critical": True, "self_consistent": "rating_space"},
+        {
+            "q": "给出明确评级+目标价。目标价隐含空间与评级匹配吗？",
+            "data": [],
+            "critical": True,
+            "self_consistent": "rating_space",
+        },
         {"q": "未来催化是什么？什么时间点验证/证伪判断？", "data": ["catalyst", "falsification"], "critical": True},
         {"q": "最大风险是什么？分层评估", "data": ["risk_layering"], "critical": False},
     ],
     "industry_deep": [
-        {"q": "行业空间多大？增速几何？生命周期阶段？", "data": ["market_size", "life_cycle", "penetration"], "critical": True},
-        {"q": "产业链结构？哪个环节是瓶颈/利润最厚？", "data": ["industry_chain", "profit_pool", "bottleneck"], "critical": True},
+        {
+            "q": "行业空间多大？增速几何？生命周期阶段？",
+            "data": ["market_size", "life_cycle", "penetration"],
+            "critical": True,
+        },
+        {
+            "q": "产业链结构？哪个环节是瓶颈/利润最厚？",
+            "data": ["industry_chain", "profit_pool", "bottleneck"],
+            "critical": True,
+        },
         {"q": "竞争格局？集中度？龙头壁垒？", "data": ["competitive", "global_competition"], "critical": True},
         {"q": "供需关系？政策催化？", "data": ["supply_demand", "policy"], "critical": True},
         {"q": "核心结论：最值得投资的环节/公司？", "data": [], "critical": True},
         {"q": "未来验证点：什么事件/时间验证行业判断？", "data": ["catalyst"], "critical": False},
     ],
     "unlisted_company": [
-        {"q": "公司是干什么的？产品/技术/团队", "data": ["company_intro", "founder_team", "product_tech"], "critical": True},
+        {
+            "q": "公司是干什么的？产品/技术/团队",
+            "data": ["company_intro", "founder_team", "product_tech"],
+            "critical": True,
+        },
         {"q": "商业化进展？营收/客户/里程碑？", "data": ["business_kpi", "market_traction"], "critical": True},
         {"q": "稀缺性/护城河？卡位多强？", "data": ["competitive_moat", "scarcity"], "critical": True},
-        {"q": "当前估值支撑多少营收/里程碑？（反向定价）", "data": ["valuation_estimate", "reverse_valuation"], "critical": True},
+        {
+            "q": "当前估值支撑多少营收/里程碑？（反向定价）",
+            "data": ["valuation_estimate", "reverse_valuation"],
+            "critical": True,
+        },
         {"q": "退出路径？IPO/并购/下一轮融资？", "data": ["exit_analysis", "milestone"], "critical": True},
         {"q": "最大风险？创始团队/资金链/竞品？", "data": ["founder_risk", "risk"], "critical": False},
     ],
@@ -54,13 +84,43 @@ PLAN_BY_TYPE = {
     # 全部标记 client=True → 进入 client_questions，被 Gate _check_client_questions_coverage 校验
     "decision_memo": [
         {"q": "执行摘要：一句话结论——进/不进/怎么进？", "data": [], "critical": True, "client": True},
-        {"q": "行业真相：委托方不知道的增量信息是什么？市场规模/竞争/卡脖子/政策节奏", "data": ["market_size", "competitive", "industry_chain", "policy"], "critical": True, "client": True},
-        {"q": "我方禀赋匹配度：现有能力能否承接？（技术栈/生产主体/渠道真伪）", "data": ["company_intro", "capability_gap", "production_subject"], "critical": True, "client": True},
-        {"q": "怎么进：生产主体三选（自制/外协/子公司承接）？转移定价合规？", "data": ["production_subject", "transfer_pricing"], "critical": True, "client": True},
-        {"q": "财务测算：收入三浪/投入/敏感性？", "data": ["financial_projection", "sensitivity"], "critical": True, "client": True},
-        {"q": "最坏损失上限：投入沉没后的最大损失多少？", "data": ["worst_case_loss"], "critical": True, "client": True},
+        {
+            "q": "行业真相：委托方不知道的增量信息是什么？市场规模/竞争/卡脖子/政策节奏",
+            "data": ["market_size", "competitive", "industry_chain", "policy"],
+            "critical": True,
+            "client": True,
+        },
+        {
+            "q": "我方禀赋匹配度：现有能力能否承接？（技术栈/生产主体/渠道真伪）",
+            "data": ["company_intro", "capability_gap", "production_subject"],
+            "critical": True,
+            "client": True,
+        },
+        {
+            "q": "怎么进：生产主体三选（自制/外协/子公司承接）？转移定价合规？",
+            "data": ["production_subject", "transfer_pricing"],
+            "critical": True,
+            "client": True,
+        },
+        {
+            "q": "财务测算：收入三浪/投入/敏感性？",
+            "data": ["financial_projection", "sensitivity"],
+            "critical": True,
+            "client": True,
+        },
+        {
+            "q": "最坏损失上限：投入沉没后的最大损失多少？",
+            "data": ["worst_case_loss"],
+            "critical": True,
+            "client": True,
+        },
         {"q": "执行路线图：分季度里程碑与验收标准？", "data": ["roadmap"], "critical": True, "client": True},
-        {"q": "延伸产业：能否进入相邻品类/上游卡位？", "data": ["adjacent_expansion", "bottleneck"], "critical": False, "client": True},
+        {
+            "q": "延伸产业：能否进入相邻品类/上游卡位？",
+            "data": ["adjacent_expansion", "bottleneck"],
+            "critical": False,
+            "client": True,
+        },
     ],
 }
 
@@ -126,8 +186,7 @@ READER_PROFILES = {
 }
 
 
-def build_report_plan(report_type: str = "listed_company",
-                      client_questions: list | None = None) -> dict:
+def build_report_plan(report_type: str = "listed_company", client_questions: list | None = None) -> dict:
     """生成写作规划。R75: 新增 reader_profile + action_questions。
     R83: 新增 client_questions 注入（委托方必答问题，decision_memo 核心）。"""
     questions = PLAN_BY_TYPE.get(report_type, PLAN_BY_TYPE["listed_company"])
@@ -144,14 +203,16 @@ def build_report_plan(report_type: str = "listed_company",
             cq = {"q": cq}
         if not isinstance(cq, dict) or not cq.get("q"):
             continue
-        merged.append({
-            "q": f"【委托方必答】{cq['q']}",
-            "data": cq.get("data", []),
-            "critical": True,
-            "client": True,
-            "must_contain": cq.get("must_contain", []),
-            "forbidden_swap": cq.get("forbidden_swap", []),
-        })
+        merged.append(
+            {
+                "q": f"【委托方必答】{cq['q']}",
+                "data": cq.get("data", []),
+                "critical": True,
+                "client": True,
+                "must_contain": cq.get("must_contain", []),
+                "forbidden_swap": cq.get("forbidden_swap", []),
+            }
+        )
         global_must_contain.extend(cq.get("must_contain", []))
         global_forbidden.extend(cq.get("forbidden_swap", []))
     # 去重
@@ -177,11 +238,13 @@ def serialize_plan(plan: dict, max_chars: int = 1500) -> str:
     """序列化写作规划，注入 prompt。R75: 新增读者画像 + 行动问题。"""
     if not plan:
         return ""
-    lines = ["=== 写作规划（本部分必须回答的问题 + 结论自洽约束）===",
-             "以下问题必须在本报告正文中明确回答（数据不足时标'数据缺口'，不得跳过）："]
+    lines = [
+        "=== 写作规划（本部分必须回答的问题 + 结论自洽约束）===",
+        "以下问题必须在本报告正文中明确回答（数据不足时标'数据缺口'，不得跳过）：",
+    ]
     for i, q in enumerate(plan.get("questions", [])):
         crit = "【必答】" if q.get("critical") else "【可选】"
-        lines.append(f"{i+1}. {crit} {q['q']}")
+        lines.append(f"{i + 1}. {crit} {q['q']}")
     lines.append("")
     lines.append("结论自洽约束（必须同时满足，否则报告不合格）：")
     for r in plan.get("self_consistent", []):
@@ -194,13 +257,13 @@ def serialize_plan(plan: dict, max_chars: int = 1500) -> str:
     if aq:
         lines.append("读者关心的关键行动问题（必须在报告中给出明确回答）：")
         for i, q in enumerate(aq):
-            lines.append(f"  {i+1}. {q}")
+            lines.append(f"  {i + 1}. {q}")
     # R83：委托方必答问题高亮（decision_memo 顶层约束）
     cq = plan.get("client_questions", [])
     if cq:
         lines.append("\n【委托方必答问题——本报告的核心，必须逐条给出明确结论，禁止回避】")
         for i, q in enumerate(cq):
-            lines.append(f"  [{i+1}] {q}")
+            lines.append(f"  [{i + 1}] {q}")
     # R84：委托方实体锚定——防止匿名委托方/换行业/换场景
     mc = plan.get("must_contain", [])
     if mc:

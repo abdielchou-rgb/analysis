@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """golden dataset 校验 — R78 Phase1.5。
 
 对 tests/golden/*.md 样本做确定性断言（无需 LLM）：
@@ -13,6 +12,7 @@
     python tests/golden/golden_check.py            # 校验全部样本
     python tests/golden/golden_check.py --one x.md # 校验单份
 """
+
 import re
 import sys
 from pathlib import Path
@@ -21,11 +21,9 @@ _ROOT = Path(__file__).resolve().parent
 GOLDEN_DIR = _ROOT
 
 # 判断词（JP）——专业报告观点表述
-JP_WORDS = ["我们判断", "我们看好", "我们认为", "预计", "判断", "核心观点",
-            "评级", "目标价", "风险提示", "我们认为"]
+JP_WORDS = ["我们判断", "我们看好", "我们认为", "预计", "判断", "核心观点", "评级", "目标价", "风险提示", "我们认为"]
 # 反方词——反方论证/风险
-CP_WORDS = ["风险", "证伪", "反方", "担忧", "不确定性", "制约", "挑战",
-            "如果", "假设", "不成立", "下行"]
+CP_WORDS = ["风险", "证伪", "反方", "担忧", "不确定性", "制约", "挑战", "如果", "假设", "不成立", "下行"]
 
 
 def _extract_body(text: str) -> str:
@@ -34,7 +32,7 @@ def _extract_body(text: str) -> str:
     if lines and lines[0].strip() == "---":
         for i, l in enumerate(lines[1:], 1):
             if l.strip() == "---":
-                return "\n".join(lines[i+1:])
+                return "\n".join(lines[i + 1 :])
     return text
 
 
@@ -78,10 +76,12 @@ def main():
         ok = all(r["results"].values())
         all_ok = all_ok and ok
         status = "PASS" if ok else "FAIL"
-        print(f"[{status}] {r['file']}: chars={r['metrics']['chars']} "
-              f"jp={r['metrics']['jp_count']} data={r['metrics']['data_points']} "
-              f"cp={r['metrics']['cp_count']} heading={r['metrics']['has_heading']} "
-              f"no_ai={r['metrics']['no_ai_disclaimer']}")
+        print(
+            f"[{status}] {r['file']}: chars={r['metrics']['chars']} "
+            f"jp={r['metrics']['jp_count']} data={r['metrics']['data_points']} "
+            f"cp={r['metrics']['cp_count']} heading={r['metrics']['has_heading']} "
+            f"no_ai={r['metrics']['no_ai_disclaimer']}"
+        )
         if not ok:
             for k, v in r["results"].items():
                 if not v:

@@ -2,7 +2,6 @@
 # 让Tavily/Playwright做更有针对性的搜索，而不是泛泛搜一次
 
 from __future__ import annotations
-from typing import Optional
 
 # SAC维度 → 搜索策略
 SAC_SEARCH_MAP = {
@@ -110,37 +109,42 @@ INDUSTRY_QUERIES = {
 }
 
 
-def plan_queries(asset: str, report_type: str = "listed_company",
-                 industry: str = "") -> list[dict]:
+def plan_queries(asset: str, report_type: str = "listed_company", industry: str = "") -> list[dict]:
     """根据报告类型和资产信息，生成搜索查询计划"""
     queries = []
 
     # 1. 通用资产搜索
     if asset:
-        queries.append({
-            "query": f"{asset} 最新消息 财务数据 分析",
-            "depth": "advanced",
-            "max_results": 8,
-            "reason": "通用资产信息",
-        })
-        queries.append({
-            "query": f"{asset} stock analysis forecast target price",
-            "depth": "advanced",
-            "max_results": 5,
-            "reason": "国际视角",
-        })
+        queries.append(
+            {
+                "query": f"{asset} 最新消息 财务数据 分析",
+                "depth": "advanced",
+                "max_results": 8,
+                "reason": "通用资产信息",
+            }
+        )
+        queries.append(
+            {
+                "query": f"{asset} stock analysis forecast target price",
+                "depth": "advanced",
+                "max_results": 5,
+                "reason": "国际视角",
+            }
+        )
 
     # 2. 行业专搜
     if industry:
         for key, ind_queries in INDUSTRY_QUERIES.items():
             if key in industry:
                 for q in ind_queries:
-                    queries.append({
-                        "query": f"{asset} {q}",
-                        "depth": "advanced",
-                        "max_results": 5,
-                        "reason": f"行业深度: {key}",
-                    })
+                    queries.append(
+                        {
+                            "query": f"{asset} {q}",
+                            "depth": "advanced",
+                            "max_results": 5,
+                            "reason": f"行业深度: {key}",
+                        }
+                    )
                 break
 
     # 3. SAC维度搜索 (取前3个最高优的维度)
@@ -149,12 +153,14 @@ def plan_queries(asset: str, report_type: str = "listed_company",
         config = SAC_SEARCH_MAP[dim]
         for q in config["queries"][:1]:
             full_q = f"{asset} {q}" if asset else q
-            queries.append({
-                "query": full_q,
-                "depth": config["depth"],
-                "max_results": config.get("max_results", 5),
-                "reason": f"SAC维度: {dim}",
-            })
+            queries.append(
+                {
+                    "query": full_q,
+                    "depth": config["depth"],
+                    "max_results": config.get("max_results", 5),
+                    "reason": f"SAC维度: {dim}",
+                }
+            )
 
     return queries
 

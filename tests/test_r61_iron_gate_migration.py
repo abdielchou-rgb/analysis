@@ -6,7 +6,7 @@
   - GateCheckResult/GateReport 从 checks.base 导入
   - run_all 完整运行
 """
-import os
+
 import sys
 from pathlib import Path
 
@@ -18,9 +18,9 @@ if str(_ROOT) not in sys.path:
 def test_iron_gate_mro():
     """IronGate 应继承 4 个 mixin。"""
     from pipeline.iron_gate import IronGate
+
     mro = [c.__name__ for c in IronGate.__mro__]
-    for m in ["ContentFormatChecksMixin", "DataQualityChecksMixin",
-              "AnalysisChecksMixin", "LlmChecksMixin"]:
+    for m in ["ContentFormatChecksMixin", "DataQualityChecksMixin", "AnalysisChecksMixin", "LlmChecksMixin"]:
         assert m in mro, f"MRO 缺 {m}"
 
 
@@ -33,17 +33,25 @@ def test_iron_gate_shrunk():
 def test_all_checks_callable():
     """67 项检查方法应全部可调用。"""
     from pipeline.iron_gate import IronGate
+
     gate = IronGate.from_text("测试文本", report_type="industry_deep", style="cicc")
     # 从各组抽代表性方法
     checks = [
         # content_format
-        "_check_content_volume", "_check_judgment_density", "_check_completeness_scan",
+        "_check_content_volume",
+        "_check_judgment_density",
+        "_check_completeness_scan",
         # data_quality
-        "_check_valuation_integrity", "_check_financial_fraud_signals",
-        "_check_data_conflicts", "_check_arithmetic_audit",
+        "_check_valuation_integrity",
+        "_check_financial_fraud_signals",
+        "_check_data_conflicts",
+        "_check_arithmetic_audit",
         # analysis
-        "_check_sac_coverage", "_check_so_what_chain", "_check_evidence_chain",
-        "_check_bold_call", "_check_industry_consolidation",
+        "_check_sac_coverage",
+        "_check_so_what_chain",
+        "_check_evidence_chain",
+        "_check_bold_call",
+        "_check_industry_consolidation",
         # llm
         "_check_llm_data_verification",
     ]
@@ -61,18 +69,23 @@ def test_all_checks_callable():
 
 def test_gate_check_result_from_base():
     """GateCheckResult 应从 checks.base 导入（dataclass）。"""
-    from pipeline.iron_gate import GateCheckResult
     import dataclasses
+
+    from pipeline.iron_gate import GateCheckResult
+
     assert dataclasses.is_dataclass(GateCheckResult), "应为 dataclass"
 
 
 def test_run_all_works():
     """run_all 应完整运行返回 GateReport。"""
     from pipeline.iron_gate import IronGate
+
     gate = IronGate.from_text(
         "本报告分析某行业。市场规模45亿元，增速12%。我们判断成长期，预计渗透率提升。"
         "我们看好龙头。风险提示：需求波动。" * 10,
-        report_type="industry_deep", style="cicc")
+        report_type="industry_deep",
+        style="cicc",
+    )
     report = gate.run_all()
     assert hasattr(report, "passed"), "应返回 GateReport"
     assert hasattr(report, "overall_score")
@@ -81,8 +94,13 @@ def test_run_all_works():
 def test_checks_dir_exists():
     """checks/ 目录应有 base + 4 mixin。"""
     checks_dir = _ROOT / "pipeline" / "checks"
-    for f in ["base.py", "content_format_mixin.py", "data_quality_mixin.py",
-              "analysis_mixin.py", "llm_checks_mixin.py"]:
+    for f in [
+        "base.py",
+        "content_format_mixin.py",
+        "data_quality_mixin.py",
+        "analysis_mixin.py",
+        "llm_checks_mixin.py",
+    ]:
         assert (checks_dir / f).exists(), f"{f} 缺失"
 
 
@@ -138,6 +156,7 @@ def test_run_all_covers_all_check_methods():
 
 if __name__ == "__main__":
     import traceback
+
     passed = failed = 0
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

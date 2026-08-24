@@ -10,14 +10,15 @@ Inspired by the muxuu "brief → expand" design pattern.
 from __future__ import annotations
 
 import html as _html
-from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Optional
+from dataclasses import dataclass, field  # noqa: F401  (dead-import debt)
+from pathlib import Path  # noqa: F401  (dead-import debt)
+from typing import Optional  # noqa: F401  (dead-import debt)
 
 
 @dataclass
 class BriefCard:
     """A single expandable brief card."""
+
     title: str = ""
     content: str = ""
     expand_to_section_id: str = ""
@@ -27,6 +28,7 @@ class BriefCard:
 @dataclass
 class ChartRef:
     """Chart reference for embedding in reports."""
+
     path: str = ""
     caption: str = ""
     alt_text: str = ""
@@ -65,7 +67,7 @@ class ExpandableReport:
                 <div class="card-body" id="sec_{i}">
                     <p>{_html.escape(card.content)}</p>
                     {chart_tag}
-                    {f'<div class="deep-content">{deep_content}</div>' if deep_content else ''}
+                    {f'<div class="deep-content">{deep_content}</div>' if deep_content else ""}
                     <div class="expand-hint">点击收起</div>
                 </div>
             </div>"""
@@ -117,5 +119,3 @@ function toggleSection(id) {{
 </body>
 </html>"""
         return html
-
-

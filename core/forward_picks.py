@@ -17,16 +17,13 @@ V51 适配:
 """
 
 from __future__ import annotations
+
 import csv
-import json
 import logging
-import os
 import uuid
-from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from core.cognitive_baseline import CognitiveBaseline
 
@@ -43,36 +40,38 @@ def _ensure_dir():
 # 数据模型
 # ═══════════════════════════════════════════════════════════════
 
+
 @dataclass
 class ForwardPick:
     """一次判断/预测的记录。对应 Mrjie7205 forward_picks.csv 的一行。"""
+
     pick_id: str = ""
     asset_code: str = ""
     asset_name: str = ""
-    report_type: str = ""            # industry_deep / listed_company / unlisted
+    report_type: str = ""  # industry_deep / listed_company / unlisted
     created_at: str = ""
 
     # 判断内容
-    direction: str = ""              # bull / bear / neutral
+    direction: str = ""  # bull / bear / neutral
     base_target: float = 0.0
     bull_target: float = 0.0
     bear_target: float = 0.0
-    current_price: float = 0.0       # 判断时的真实股价（元），需真实数据源，不强填
-    anchor_nav: float = 0.0          # R64：预测日 qlib 收益率指数净值（验证用锚点）
-    conviction: str = ""             # high / medium / low
+    current_price: float = 0.0  # 判断时的真实股价（元），需真实数据源，不强填
+    anchor_nav: float = 0.0  # R64：预测日 qlib 收益率指数净值（验证用锚点）
+    conviction: str = ""  # high / medium / low
 
     # 核心分歧
     core_thesis: str = ""
     key_variable: str = ""
-    falsification: str = ""          # 证伪条件
+    falsification: str = ""  # 证伪条件
 
     # 回测结果（score_tracker 写入）
-    verified_at: Optional[str] = None
-    actual_price: Optional[float] = None      # 验证时的股价
-    actual_return: Optional[float] = None     # 判断以来实际收益率
-    benchmark_return: Optional[float] = None   # 同期对标收益率
-    alpha: Optional[float] = None             # actual_return - benchmark_return
-    verification_status: str = "pending"      # pending / hit / miss / partial
+    verified_at: str | None = None
+    actual_price: float | None = None  # 验证时的股价
+    actual_return: float | None = None  # 判断以来实际收益率
+    benchmark_return: float | None = None  # 同期对标收益率
+    alpha: float | None = None  # actual_return - benchmark_return
+    verification_status: str = "pending"  # pending / hit / miss / partial
 
     # 失效条件（Mrjie7205 的 invalidation 列）
     invalidation: str = ""
@@ -82,6 +81,7 @@ class ForwardPick:
 # ═══════════════════════════════════════════════════════════════
 # 持久化
 # ═══════════════════════════════════════════════════════════════
+
 
 class ForwardPicksDB:
     """forward_picks.csv 读写器。
@@ -93,11 +93,29 @@ class ForwardPicksDB:
     """
 
     HEADERS = [
-        "pick_id", "asset_code", "asset_name", "report_type", "created_at",
-        "direction", "base_target", "bull_target", "bear_target", "current_price",
-        "anchor_nav", "conviction", "core_thesis", "key_variable", "falsification",
-        "verified_at", "actual_price", "actual_return", "benchmark_return", "alpha",
-        "verification_status", "invalidation", "notes",
+        "pick_id",
+        "asset_code",
+        "asset_name",
+        "report_type",
+        "created_at",
+        "direction",
+        "base_target",
+        "bull_target",
+        "bear_target",
+        "current_price",
+        "anchor_nav",
+        "conviction",
+        "core_thesis",
+        "key_variable",
+        "falsification",
+        "verified_at",
+        "actual_price",
+        "actual_return",
+        "benchmark_return",
+        "alpha",
+        "verification_status",
+        "invalidation",
+        "notes",
     ]
 
     def __init__(self):
@@ -142,8 +160,7 @@ class ForwardPicksDB:
         if not pick.anchor_nav or float(pick.anchor_nav) <= 0:
             issues.append("必须提供 anchor_nav 净值锚点（qlib close 收益率净值）")
         if issues:
-            logger.warning(f"[FORWARD-PICK-REJECT] {pick.pick_id} 质量不达标: "
-                           f"{'; '.join(issues)}")
+            logger.warning(f"[FORWARD-PICK-REJECT] {pick.pick_id} 质量不达标: {'; '.join(issues)}")
             return False
 
         exists = Path(self.path).exists()
@@ -152,31 +169,33 @@ class ForwardPicksDB:
                 w = csv.DictWriter(f, fieldnames=self.HEADERS)
                 if not exists:
                     w.writeheader()
-                w.writerow({
-                    "pick_id": pick.pick_id,
-                    "asset_code": pick.asset_code,
-                    "asset_name": pick.asset_name,
-                    "report_type": pick.report_type,
-                    "created_at": pick.created_at,
-                    "direction": pick.direction,
-                    "base_target": pick.base_target,
-                    "bull_target": pick.bull_target,
-                    "bear_target": pick.bear_target,
-                    "current_price": pick.current_price,
-                    "anchor_nav": pick.anchor_nav,
-                    "conviction": pick.conviction,
-                    "core_thesis": pick.core_thesis[:100] if pick.core_thesis else "",
-                    "key_variable": pick.key_variable[:100] if pick.key_variable else "",
-                    "falsification": pick.falsification[:200] if pick.falsification else "",
-                    "verified_at": pick.verified_at or "",
-                    "actual_price": pick.actual_price or "",
-                    "actual_return": pick.actual_return or "",
-                    "benchmark_return": pick.benchmark_return or "",
-                    "alpha": pick.alpha or "",
-                    "verification_status": pick.verification_status,
-                    "invalidation": pick.invalidation,
-                    "notes": pick.notes,
-                })
+                w.writerow(
+                    {
+                        "pick_id": pick.pick_id,
+                        "asset_code": pick.asset_code,
+                        "asset_name": pick.asset_name,
+                        "report_type": pick.report_type,
+                        "created_at": pick.created_at,
+                        "direction": pick.direction,
+                        "base_target": pick.base_target,
+                        "bull_target": pick.bull_target,
+                        "bear_target": pick.bear_target,
+                        "current_price": pick.current_price,
+                        "anchor_nav": pick.anchor_nav,
+                        "conviction": pick.conviction,
+                        "core_thesis": pick.core_thesis[:100] if pick.core_thesis else "",
+                        "key_variable": pick.key_variable[:100] if pick.key_variable else "",
+                        "falsification": pick.falsification[:200] if pick.falsification else "",
+                        "verified_at": pick.verified_at or "",
+                        "actual_price": pick.actual_price or "",
+                        "actual_return": pick.actual_return or "",
+                        "benchmark_return": pick.benchmark_return or "",
+                        "alpha": pick.alpha or "",
+                        "verification_status": pick.verification_status,
+                        "invalidation": pick.invalidation,
+                        "notes": pick.notes,
+                    }
+                )
             logger.info(f"Forward pick saved: {pick.pick_id} ({pick.asset_code})")
             return True
         except Exception as e:
@@ -192,8 +211,7 @@ class ForwardPicksDB:
         kept = []
         purged = 0
         for p in picks:
-            if (p.direction in ("", "neutral") or p.base_target <= 0
-                    or p.conviction not in ("high", "medium", "low")):
+            if p.direction in ("", "neutral") or p.base_target <= 0 or p.conviction not in ("high", "medium", "low"):
                 purged += 1
                 continue
             kept.append(p)
@@ -211,39 +229,40 @@ class ForwardPicksDB:
         with open(self.path, encoding="utf-8-sig") as f:
             reader = csv.DictReader(f)
             for row in reader:
-                picks.append(ForwardPick(
-                    pick_id=row.get("pick_id", ""),
-                    asset_code=row.get("asset_code", ""),
-                    asset_name=row.get("asset_name", ""),
-                    report_type=row.get("report_type", ""),
-                    created_at=row.get("created_at", ""),
-                    direction=row.get("direction", ""),
-                    base_target=float(row["base_target"]) if row.get("base_target") else 0.0,
-                    bull_target=float(row["bull_target"]) if row.get("bull_target") else 0.0,
-                    bear_target=float(row["bear_target"]) if row.get("bear_target") else 0.0,
-                    current_price=float(row["current_price"]) if row.get("current_price") else 0.0,
-                    anchor_nav=float(row["anchor_nav"]) if row.get("anchor_nav") else 0.0,
-                    conviction=row.get("conviction", ""),
-                    core_thesis=row.get("core_thesis", ""),
-                    key_variable=row.get("key_variable", ""),
-                    falsification=row.get("falsification", ""),
-                    verified_at=row.get("verified_at") or None,
-                    actual_price=float(row["actual_price"]) if row.get("actual_price") else None,
-                    actual_return=float(row["actual_return"]) if row.get("actual_return") else None,
-                    benchmark_return=float(row["benchmark_return"]) if row.get("benchmark_return") else None,
-                    alpha=float(row["alpha"]) if row.get("alpha") else None,
-                    verification_status=row.get("verification_status", "pending"),
-                    invalidation=row.get("invalidation", ""),
-                    notes=row.get("notes", ""),
-                ))
+                picks.append(
+                    ForwardPick(
+                        pick_id=row.get("pick_id", ""),
+                        asset_code=row.get("asset_code", ""),
+                        asset_name=row.get("asset_name", ""),
+                        report_type=row.get("report_type", ""),
+                        created_at=row.get("created_at", ""),
+                        direction=row.get("direction", ""),
+                        base_target=float(row["base_target"]) if row.get("base_target") else 0.0,
+                        bull_target=float(row["bull_target"]) if row.get("bull_target") else 0.0,
+                        bear_target=float(row["bear_target"]) if row.get("bear_target") else 0.0,
+                        current_price=float(row["current_price"]) if row.get("current_price") else 0.0,
+                        anchor_nav=float(row["anchor_nav"]) if row.get("anchor_nav") else 0.0,
+                        conviction=row.get("conviction", ""),
+                        core_thesis=row.get("core_thesis", ""),
+                        key_variable=row.get("key_variable", ""),
+                        falsification=row.get("falsification", ""),
+                        verified_at=row.get("verified_at") or None,
+                        actual_price=float(row["actual_price"]) if row.get("actual_price") else None,
+                        actual_return=float(row["actual_return"]) if row.get("actual_return") else None,
+                        benchmark_return=float(row["benchmark_return"]) if row.get("benchmark_return") else None,
+                        alpha=float(row["alpha"]) if row.get("alpha") else None,
+                        verification_status=row.get("verification_status", "pending"),
+                        invalidation=row.get("invalidation", ""),
+                        notes=row.get("notes", ""),
+                    )
+                )
         return picks
 
     def get_pending(self) -> list[ForwardPick]:
         """获取待验证的记录。"""
         return [p for p in self.load_all() if p.verification_status == "pending"]
 
-    def update_verification(self, pick_id: str,
-                            actual_price: float, benchmark_return: float) -> bool:
+    def update_verification(self, pick_id: str, actual_price: float, benchmark_return: float) -> bool:
         """更新一条记录的验证结果。
 
         R64（2026-08-04 审计修复）：废弃 current_price 当股价的口径（审计 P0-008：
@@ -290,24 +309,33 @@ class ForwardPicksDB:
             w = csv.DictWriter(f, fieldnames=self.HEADERS)
             w.writeheader()
             for p in picks:
-                w.writerow({
-                    "pick_id": p.pick_id, "asset_code": p.asset_code,
-                    "asset_name": p.asset_name, "report_type": p.report_type,
-                    "created_at": p.created_at, "direction": p.direction,
-                    "base_target": p.base_target, "bull_target": p.bull_target,
-                    "bear_target": p.bear_target, "current_price": p.current_price,
-                    "anchor_nav": p.anchor_nav,
-                    "conviction": p.conviction, "core_thesis": p.core_thesis[:100],
-                    "key_variable": p.key_variable[:100],
-                    "falsification": p.falsification[:200],
-                    "verified_at": p.verified_at or "",
-                    "actual_price": p.actual_price or "",
-                    "actual_return": p.actual_return or "",
-                    "benchmark_return": p.benchmark_return or "",
-                    "alpha": p.alpha or "",
-                    "verification_status": p.verification_status,
-                    "invalidation": p.invalidation, "notes": p.notes,
-                })
+                w.writerow(
+                    {
+                        "pick_id": p.pick_id,
+                        "asset_code": p.asset_code,
+                        "asset_name": p.asset_name,
+                        "report_type": p.report_type,
+                        "created_at": p.created_at,
+                        "direction": p.direction,
+                        "base_target": p.base_target,
+                        "bull_target": p.bull_target,
+                        "bear_target": p.bear_target,
+                        "current_price": p.current_price,
+                        "anchor_nav": p.anchor_nav,
+                        "conviction": p.conviction,
+                        "core_thesis": p.core_thesis[:100],
+                        "key_variable": p.key_variable[:100],
+                        "falsification": p.falsification[:200],
+                        "verified_at": p.verified_at or "",
+                        "actual_price": p.actual_price or "",
+                        "actual_return": p.actual_return or "",
+                        "benchmark_return": p.benchmark_return or "",
+                        "alpha": p.alpha or "",
+                        "verification_status": p.verification_status,
+                        "invalidation": p.invalidation,
+                        "notes": p.notes,
+                    }
+                )
 
     def _sync_to_baseline(self, pick_id: str):
         """将验证结果同步到 CognitiveBaseline。"""
@@ -332,9 +360,11 @@ class ForwardPicksDB:
 # Score Tracker（Alpha 计算 + 统计）
 # ═══════════════════════════════════════════════════════════════
 
+
 @dataclass
 class ScoreCard:
     """整体跟踪评分卡。"""
+
     total_picks: int = 0
     verified_count: int = 0
     hit_count: int = 0
@@ -384,7 +414,7 @@ class ScoreTracker:
         """生成可读的跟踪报告。"""
         card = self.compute_scorecard()
         lines = [
-            f"=== Forward Picks 评分卡 ===",
+            "=== Forward Picks 评分卡 ===",
             f"总判断: {card.total_picks}",
             f"已验证: {card.verified_count}",
             f"命中: {card.hit_count}  |  未命中: {card.miss_count}  |  部分: {card.partial_count}",

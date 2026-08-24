@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """agent_graph 输出契约回归测试
 
 背景（2026-08-01 审计）：
@@ -14,7 +13,6 @@
   5. 环检测仍然有效
 """
 
-import os
 import sys
 from pathlib import Path
 
@@ -22,7 +20,7 @@ _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-from pipeline.agent_graph import AgentGraph, NODE_FAILED, NODE_PASSED, NODE_SKIPPED
+from pipeline.agent_graph import NODE_FAILED, NODE_PASSED, NODE_SKIPPED, AgentGraph
 
 
 # ── 1. error 级契约违例 → 节点 FAILED ────────────────────────────
@@ -32,13 +30,10 @@ def test_error_contract_blocks_node():
         "data",
         lambda nid, ctx: {"something_else": 1},  # 不产出 collected_data
         deps=[],
-        output_contract={
-            "collected_data": {"type": dict, "required": True, "severity": "error"}
-        },
+        output_contract={"collected_data": {"type": dict, "required": True, "severity": "error"}},
     )
     r = g.run({})
-    assert r.nodes["data"].status == NODE_FAILED, \
-        f"error 级契约违例必须阻断节点, got {r.nodes['data'].status}"
+    assert r.nodes["data"].status == NODE_FAILED, f"error 级契约违例必须阻断节点, got {r.nodes['data'].status}"
     assert r.nodes["data"].validation_issues, "应记录契约违例"
     assert any("contract error" in i for i in r.nodes["data"].validation_issues)
     assert r.passed is False
@@ -51,13 +46,10 @@ def test_warning_contract_does_not_block():
         "data",
         lambda nid, ctx: {"collected_data": {}},  # 产出存在但空 dict
         deps=[],
-        output_contract={
-            "collected_data": {"type": dict, "required": True, "severity": "warning"}
-        },
+        output_contract={"collected_data": {"type": dict, "required": True, "severity": "warning"}},
     )
     r = g.run({})
-    assert r.nodes["data"].status == NODE_PASSED, \
-        f"warning 级契约不应阻断, got {r.nodes['data'].status}"
+    assert r.nodes["data"].status == NODE_PASSED, f"warning 级契约不应阻断, got {r.nodes['data'].status}"
     assert r.passed is True
 
 
@@ -72,9 +64,7 @@ def test_contract_and_validator_issues_merge():
         lambda nid, ctx: {"something_else": 1},
         deps=[],
         validators=[bad_validator],
-        output_contract={
-            "collected_data": {"type": dict, "required": True, "severity": "error"}
-        },
+        output_contract={"collected_data": {"type": dict, "required": True, "severity": "error"}},
     )
     r = g.run({})
     issues = r.nodes["data"].validation_issues

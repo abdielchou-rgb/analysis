@@ -7,10 +7,10 @@
 """
 
 from __future__ import annotations
+
 import logging
 import re
-from collections import Counter
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger("v56.validation.output")
 
@@ -29,18 +29,18 @@ class OutputValidator:
 
     # AIGC 人格头模式
     _AIGC_PERSONA_PATTERNS = [
-        r'我是资深(行业)?分析师',
-        r'以下是为您撰写的',
-        r'为您撰写了',
+        r"我是资深(行业)?分析师",
+        r"以下是为您撰写的",
+        r"为您撰写了",
     ]
 
     # 模板占位桩模式
     _TEMPLATE_PLACEHOLDER_PATTERNS = [
-        r'在此处阐述',
-        r'在此处填写',
-        r'在此输入',
-        r'\[报告标题\]',
-        r'\[报告副标题\]',
+        r"在此处阐述",
+        r"在此处填写",
+        r"在此输入",
+        r"\[报告标题\]",
+        r"\[报告副标题\]",
     ]
 
     def __init__(self):
@@ -50,6 +50,7 @@ class OutputValidator:
         """校验 DOCX 文件格式"""
         try:
             from docx import Document
+
             doc = Document(filepath)
         except Exception as e:
             return {"error": f"Cannot open DOCX: {e}", "passed": False}
@@ -162,6 +163,7 @@ class OutputValidator:
             # 使用 PyPDF2 或 pdfminer 检查
             try:
                 import PyPDF2
+
                 with open(filepath, "rb") as f:
                     reader = PyPDF2.PdfReader(f)
                     page_count = len(reader.pages)
@@ -172,6 +174,7 @@ class OutputValidator:
             except ImportError:
                 # 降级：检查文件大小
                 import os
+
                 size = os.path.getsize(filepath)
                 results["checks"]["file_size"] = {
                     "bytes": size,

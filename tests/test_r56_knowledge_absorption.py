@@ -2,7 +2,8 @@
 
 覆盖：知识库全量索引 + 4 个深度吸收产物 + section_writer 注入。
 """
-import os
+
+import os  # noqa: F401  (dead-import debt)
 import sys
 from pathlib import Path
 
@@ -14,6 +15,7 @@ if str(_ROOT) not in sys.path:
 def test_knowledge_base_index_exists():
     """全量索引应存在且含主要主题。"""
     import json
+
     p = _ROOT / "data" / "methodology_knowledge_base.json"
     assert p.exists(), "methodology_knowledge_base.json 缺失"
     d = json.loads(p.read_text(encoding="utf-8"))
@@ -38,6 +40,7 @@ def test_deep_absorptions_exist():
 def test_industry_deep_has_rules():
     """行业深度吸收应含可执行规则。"""
     import json
+
     d = json.loads((_ROOT / "data" / "methodology_industry_deep.json").read_text(encoding="utf-8"))
     assert "industry_structure" in d
     assert "competitive" in d
@@ -51,6 +54,7 @@ def test_industry_deep_has_rules():
 def test_valuation_deep_has_dcf_rules():
     """估值深度吸收应含 DCF 规则。"""
     import json
+
     d = json.loads((_ROOT / "data" / "methodology_valuation_deep.json").read_text(encoding="utf-8"))
     assert "dcf" in d
     dcf = d["dcf"]
@@ -61,6 +65,7 @@ def test_valuation_deep_has_dcf_rules():
 def test_section_writer_injects_deep_kb():
     """section_writer 应注入深度知识库（segment 2 含估值规则）。"""
     from pipeline.section_writer import SectionWriter
+
     sw = SectionWriter("industry_deep", "cicc")
     ref = sw._build_methodology_reference(2)
     assert "深度知识库" in ref, "应注入深度知识库"
@@ -70,6 +75,7 @@ def test_section_writer_injects_deep_kb():
 def test_section_writer_injects_industry_kb():
     """行业报告应注入行业框架（segment 0 含行业结构）。"""
     from pipeline.section_writer import SectionWriter
+
     sw = SectionWriter("industry_deep", "cicc")
     ref = sw._build_methodology_reference(0)
     assert "行业结构" in ref or "行业框架" in ref, "战略层应含行业结构规则"
@@ -77,6 +83,7 @@ def test_section_writer_injects_industry_kb():
 
 if __name__ == "__main__":
     import traceback
+
     passed = failed = 0
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

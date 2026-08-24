@@ -10,8 +10,12 @@ Usage:
     provider = LLMProvider()
     response = provider.chat(messages)
 """
-import os, json, time, logging, requests
-from typing import Optional
+
+import logging
+import os
+import time
+
+import requests
 
 logger = logging.getLogger("2hao.llm_provider")
 
@@ -91,8 +95,11 @@ class LLMProvider:
             headers["Authorization"] = "Bearer " + api_key
 
         payload = {
-            "model": model, "messages": messages,
-            "temperature": temperature, "max_tokens": max_tokens, "stream": stream,
+            "model": model,
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "stream": stream,
         }
 
         for attempt in range(3):
@@ -105,9 +112,9 @@ class LLMProvider:
                     "model": data.get("model", model),
                     "usage": data.get("usage", {}),
                 }
-            except Exception as e:
+            except Exception:
                 if attempt < 2:
-                    time.sleep(2 ** attempt)
+                    time.sleep(2**attempt)
                 else:
                     raise
 
@@ -117,7 +124,9 @@ class LLMProvider:
             {"role": "user", "content": "Context: " + context + "\n\nQuestion: " + question},
         ]
         try:
-            result = self.chat(messages, model=self.PROVIDERS[self._current_provider]["models"]["reasoner"], temperature=0.2)
+            result = self.chat(
+                messages, model=self.PROVIDERS[self._current_provider]["models"]["reasoner"], temperature=0.2
+            )
             return result["choices"][0]["message"]["content"]
-        except Exception as e:
+        except Exception:
             return ""

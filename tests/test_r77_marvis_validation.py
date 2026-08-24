@@ -6,9 +6,10 @@
 3. AgentEnricher.merge 保持扁平 chart_data（不破坏下游）
 4. style.py 端侧硬编码句已删除
 """
+
+import json
 import os
 import sys
-import json
 import tempfile
 from pathlib import Path
 
@@ -20,6 +21,7 @@ if str(_ROOT) not in sys.path:
 def test_report_date_checker_registered():
     """_check_report_date 应注册进 IronGate。"""
     from pipeline.iron_gate import IronGate
+
     assert hasattr(IronGate, "_check_report_date")
     src = (_ROOT / "pipeline" / "iron_gate.py").read_text(encoding="utf-8")
     assert "_check_report_date" in src
@@ -28,7 +30,9 @@ def test_report_date_checker_registered():
 def test_report_date_checks_correct_date():
     """正确日期的报告应通过日期检查。"""
     import datetime
+
     from pipeline.iron_gate import IronGate
+
     now = datetime.datetime.now()
     ig = IronGate.__new__(IronGate)
     ig.report_text = f"# 报告\n报告日期：{now.year}年{now.month}月\n公司营收15.58亿元。" * 3
@@ -39,9 +43,9 @@ def test_report_date_checks_correct_date():
 def test_placeholder_checker_no_false_positive():
     """占位符检查不应误伤中文省略号和正常文本。"""
     from pipeline.iron_gate import IronGate
+
     ig = IronGate.__new__(IronGate)
-    ig.report_text = ("# 久通物联报告\n公司2025年营收15.58亿元，毛利率44.8%……\n"
-                      "行业空间广阔，成长可期。" * 3)
+    ig.report_text = "# 久通物联报告\n公司2025年营收15.58亿元，毛利率44.8%……\n行业空间广阔，成长可期。" * 3
     r = ig._check_placeholder_xxx()
     assert r.passed, f"正常文本不应误报: {r.details}"
 
@@ -49,6 +53,7 @@ def test_placeholder_checker_no_false_positive():
 def test_placeholder_checker_catches_real():
     """真实占位符（XXX/TODO）应被拦截。"""
     from pipeline.iron_gate import IronGate
+
     ig = IronGate.__new__(IronGate)
     ig.report_text = "# 报告\n公司营收XXX亿元，毛利率待填写。\n" * 3
     r = ig._check_placeholder_xxx()
@@ -58,14 +63,24 @@ def test_placeholder_checker_catches_real():
 def test_enrich_merge_keeps_flat_chart_data():
     """AgentEnricher.merge 应保持 chart_data 扁平（不破坏下游）。"""
     from pipeline.data_enrichment import AgentEnricher
-    good = {"asset": "测试", "generated_by": "agent", "items": [
-        {"type": "fig_data", "key": "fig_revenue_trend",
-         "data": {"2023": 50, "2024": 60}, "source": "公司公告2026-03",
-         "confidence": 0.9, "unit": "亿元"},
-    ]}
-    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False,
-                                     encoding="utf-8") as f:
-        json.dump(good, f, ensure_ascii=False); gf = f.name
+
+    good = {
+        "asset": "测试",
+        "generated_by": "agent",
+        "items": [
+            {
+                "type": "fig_data",
+                "key": "fig_revenue_trend",
+                "data": {"2023": 50, "2024": 60},
+                "source": "公司公告2026-03",
+                "confidence": 0.9,
+                "unit": "亿元",
+            },
+        ],
+    }
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as f:
+        json.dump(good, f, ensure_ascii=False)
+        gf = f.name
     try:
         data = AgentEnricher.merge("测试", {"chart_data": {}}, gf)
         cd = data["chart_data"]
@@ -87,6 +102,7 @@ def test_style_no_endside_hardcode():
 def test_cross_section_consistency_registered():
     """跨节一致性检查应注册进 IronGate。"""
     from pipeline.iron_gate import IronGate
+
     assert hasattr(IronGate, "_check_cross_section_consistency")
     src = (_ROOT / "pipeline" / "iron_gate.py").read_text(encoding="utf-8")
     assert "_check_cross_section_consistency" in src
@@ -94,6 +110,7 @@ def test_cross_section_consistency_registered():
 
 if __name__ == "__main__":
     import traceback
+
     passed = failed = 0
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):
@@ -110,14 +127,20 @@ if __name__ == "__main__":
 
 def test_sub_element_coverage_exempts_trimmed_dims():
     """维度裁剪豁免：未涉及维度（连核心词都不出现）的子要素不计入缺口。"""
-    import tempfile, os as _os
+    import os as _os
+    import tempfile
+
     from pipeline.iron_gate import IronGate
+
     # 报告不含 elasticity_analysis 相关词 → 该维度应被豁免
-    text = ("# 传感器行业报告\n公司2025年营收15.58亿元，毛利率44.8%，归母净利3.41亿元。"
-            "我们看好成长期龙头，市占率提升，目标价28元。" * 3)
-    tmp = tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False, encoding='utf-8')
-    tmp.write(text); tmp.close()
-    gate = IronGate(tmp.name, 'industry_deep', 'cicc')
+    text = (
+        "# 传感器行业报告\n公司2025年营收15.58亿元，毛利率44.8%，归母净利3.41亿元。"
+        "我们看好成长期龙头，市占率提升，目标价28元。" * 3
+    )
+    tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False, encoding="utf-8")
+    tmp.write(text)
+    tmp.close()
+    gate = IronGate(tmp.name, "industry_deep", "cicc")
     r = gate._check_sub_element_coverage()
     _os.unlink(tmp.name)
     # 即使不算裁剪豁免，弹性分析关键词没出现也应被豁免，不再 FAIL
@@ -126,15 +149,19 @@ def test_sub_element_coverage_exempts_trimmed_dims():
 
 def test_sub_element_coverage_catches_shallow():
     """写了维度但缺子要素应被暴露（软覆盖拦截）。"""
-    import tempfile, os as _os
+    import os as _os
+    import tempfile
+
     from pipeline.iron_gate import IronGate
+
     # 报告写了生命周期但没任何子要素
-    text = ("# 行业报告\n本报告讨论生命周期阶段。公司2025年营收15.58亿元。" * 5)
-    tmp = tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False, encoding='utf-8')
-    tmp.write(text); tmp.close()
-    gate = IronGate(tmp.name, 'industry_deep', 'cicc')
+    text = "# 行业报告\n本报告讨论生命周期阶段。公司2025年营收15.58亿元。" * 5
+    tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False, encoding="utf-8")
+    tmp.write(text)
+    tmp.close()
+    gate = IronGate(tmp.name, "industry_deep", "cicc")
     r = gate._check_sub_element_coverage()
     _os.unlink(tmp.name)
     # 生命周期维度有子要素但报告只有"生命周期"一词 → 大概率未覆盖子要素
     # 但豁免逻辑可能跳过（probe 命中"生命周期"则检查）——验证不抛异常即可
-    assert r is not None and hasattr(r, 'passed')
+    assert r is not None and hasattr(r, "passed")

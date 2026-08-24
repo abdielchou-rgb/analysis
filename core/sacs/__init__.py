@@ -15,8 +15,9 @@
 """
 
 from __future__ import annotations
-import os
+
 import json
+import os
 import re
 from pathlib import Path
 from typing import Any, Optional
@@ -69,6 +70,7 @@ class SACLoader:
             # Try yaml first, then json fallback
             try:
                 import yaml
+
                 with open(yaml_file, encoding="utf-8") as f:
                     raw = f.read()
                 self._data = yaml.safe_load(raw) or {}
@@ -130,7 +132,7 @@ class SACLoader:
     def get_dimension_ids(self) -> list[str]:
         return [d["id"] for d in self.get_dimensions() if isinstance(d, dict)]
 
-    def get_dimension(self, dim_id: str) -> Optional[dict]:
+    def get_dimension(self, dim_id: str) -> dict | None:
         for d in self.get_dimensions():
             if isinstance(d, dict) and d.get("id") == dim_id:
                 return d
@@ -150,7 +152,9 @@ class SACLoader:
         return self._data.get("pre_workflow", [])
 
     def get_evidence_requirements(self) -> dict:
-        return self._data.get("evidence_requirements", {"min_sources": 3, "primary_source_min": 1, "counter_evidence_required": False})
+        return self._data.get(
+            "evidence_requirements", {"min_sources": 3, "primary_source_min": 1, "counter_evidence_required": False}
+        )
 
     def get_forbidden_patterns(self) -> list[str]:
         return self._data.get("forbidden_patterns", [])
@@ -198,20 +202,133 @@ class SACLoader:
             # 2026-08-01 修复：SAC YAML 的 required_dimensions 含以下维度，
             # 但 base_keywords 未映射中文关键词，导致 fallback 成英文 id，
             # 中文报告永远匹配不上 → 必需维度被误判缺失。
-            "capital_flow": ["资金面", "北向", "公募持仓", "两融", "融资融券", "股东增减持", "主力资金", "资金流向", "大单净流入", "融资", "并购", "IPO", "PIPE", "产业资本"],
-            "global_peer_comparison": ["全球估值", "全球可比", "国际同业", "全球同行", "海外可比", "全球估值区间", "国际估值", "全球对标"],
-            "overseas_revenue": ["海外收入", "境外收入", "海外营收", "境外业务", "海外业务", "出口占比", "海外收入占比", "海外区域", "汇率变动"],
-            "geopolitical_exposure": ["地缘", "出口管制", "实体清单", "关税", "供应链脱钩", "中美科技", "制裁", "去风险化", "跨境风险"],
-            "global_market_sizing": ["全球市场", "分区域", "北美市场", "欧洲市场", "亚太市场", "全球规模", "全球占比", "海外市场"],
-            "global_competition": ["全球竞争", "国际对手", "海外竞争者", "全球格局", "中国vs", "国际同行", "海外对标", "全球排名"],
-            "geopolitical_risk": ["地缘政治", "中美博弈", "科技脱钩", "贸易壁垒", "芯片制裁", "出口限制", "供应链安全", "地缘风险"],
+            "capital_flow": [
+                "资金面",
+                "北向",
+                "公募持仓",
+                "两融",
+                "融资融券",
+                "股东增减持",
+                "主力资金",
+                "资金流向",
+                "大单净流入",
+                "融资",
+                "并购",
+                "IPO",
+                "PIPE",
+                "产业资本",
+            ],
+            "global_peer_comparison": [
+                "全球估值",
+                "全球可比",
+                "国际同业",
+                "全球同行",
+                "海外可比",
+                "全球估值区间",
+                "国际估值",
+                "全球对标",
+            ],
+            "overseas_revenue": [
+                "海外收入",
+                "境外收入",
+                "海外营收",
+                "境外业务",
+                "海外业务",
+                "出口占比",
+                "海外收入占比",
+                "海外区域",
+                "汇率变动",
+            ],
+            "geopolitical_exposure": [
+                "地缘",
+                "出口管制",
+                "实体清单",
+                "关税",
+                "供应链脱钩",
+                "中美科技",
+                "制裁",
+                "去风险化",
+                "跨境风险",
+            ],
+            "global_market_sizing": [
+                "全球市场",
+                "分区域",
+                "北美市场",
+                "欧洲市场",
+                "亚太市场",
+                "全球规模",
+                "全球占比",
+                "海外市场",
+            ],
+            "global_competition": [
+                "全球竞争",
+                "国际对手",
+                "海外竞争者",
+                "全球格局",
+                "中国vs",
+                "国际同行",
+                "海外对标",
+                "全球排名",
+            ],
+            "geopolitical_risk": [
+                "地缘政治",
+                "中美博弈",
+                "科技脱钩",
+                "贸易壁垒",
+                "芯片制裁",
+                "出口限制",
+                "供应链安全",
+                "地缘风险",
+            ],
             # R55（2026-08-03）：新增选股传导 + 非上市威胁维度
-            "investable_standouts": ["选股", "受益标的", "推荐标的", "重点标的", "首选", "标的排序", "买谁", "投资评级", "目标价"],
-            "unlisted_players": ["非上市", "未上市", "非上市玩家", "未上市玩家", "威胁度", "潜在进入者", "新进入者威胁", "非上市公司"],
+            "investable_standouts": [
+                "选股",
+                "受益标的",
+                "推荐标的",
+                "重点标的",
+                "首选",
+                "标的排序",
+                "买谁",
+                "投资评级",
+                "目标价",
+            ],
+            "unlisted_players": [
+                "非上市",
+                "未上市",
+                "非上市玩家",
+                "未上市玩家",
+                "威胁度",
+                "潜在进入者",
+                "新进入者威胁",
+                "非上市公司",
+            ],
             # R57（2026-08-03）：MBB假设驱动 + 并购整合 + ESG实质性
             "core_hypothesis": ["核心假设", "假设", "可证伪", "先行指标", "失效触发", "如果我们是对的", "如果.*错"],
-            "industry_consolidation": ["并购", "整合", "整合者", "被整合者", "行业集中", "EV/EBITDA", "并购估值", "ROIC", "WACC", "行业终局", "寡头"],
-            "esg_materiality": ["ESG", "碳", "碳排放", "治理风险", "实质性", "SASB", "TCFD", "双碳", "合规", "关联交易"],
+            "industry_consolidation": [
+                "并购",
+                "整合",
+                "整合者",
+                "被整合者",
+                "行业集中",
+                "EV/EBITDA",
+                "并购估值",
+                "ROIC",
+                "WACC",
+                "行业终局",
+                "寡头",
+            ],
+            "esg_materiality": [
+                "ESG",
+                "碳",
+                "碳排放",
+                "治理风险",
+                "实质性",
+                "SASB",
+                "TCFD",
+                "双碳",
+                "合规",
+                "关联交易",
+            ],
         }
         result = {}
         for dim in self.get_dimensions():
@@ -223,7 +340,7 @@ class SACLoader:
             keywords = list(base_keywords.get(dim_id, [dim_id]))
             q = dim.get("question", "")
             if q:
-                extra = re.findall(r'[\u4e00-\u9fff]{2,8}', q[:30])
+                extra = re.findall(r"[\u4e00-\u9fff]{2,8}", q[:30])
                 keywords.extend(extra[:3])
             result[dim_id] = list(set(keywords))
         return result

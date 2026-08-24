@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 1号分析师 V30 — 图表生成器 (Chart Generator)
 
@@ -26,10 +25,11 @@ from __future__ import annotations
 
 import logging
 import re
+import sys
 from pathlib import Path
-from typing import Optional
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -38,14 +38,17 @@ logger = logging.getLogger("v30.chart")
 
 
 # Chinese font setup
-import matplotlib.font_manager as _fm
 import os as _os
-_yahei_path = _os.path.join('C:\\Windows\\Fonts', 'msyh.ttc')
+
+import matplotlib.font_manager as _fm
+
+_yahei_path = _os.path.join("C:\\Windows\\Fonts", "msyh.ttc")
 if _os.path.exists(_yahei_path):
     _fm.fontManager.addfont(_yahei_path)
     import matplotlib.pyplot as _plt
-    _plt.rcParams['font.sans-serif'] = ['Microsoft YaHei', 'SimHei']
-    _plt.rcParams['axes.unicode_minus'] = False
+
+    _plt.rcParams["font.sans-serif"] = ["Microsoft YaHei", "SimHei"]
+    _plt.rcParams["axes.unicode_minus"] = False
 
 COLOR_DARK_BLUE = "#003366"
 COLOR_BLUE = "#4A90D9"
@@ -56,15 +59,17 @@ COLOR_LIGHT_GRAY = "#BDBDBD"
 COLOR_BG = "#F5F7FA"
 COLOR_PALETTE = ["#003366", "#4A90D9", "#6BA3E0", "#2E7D32", "#66BB6A", "#FF8F00"]
 
-plt.rcParams.update({
-    "font.family": "sans-serif",
-    "font.sans-serif": ["Noto Sans CJK JP", "DejaVu Sans"],
-    "axes.unicode_minus": False,
-    "figure.dpi": 150,
-    "savefig.dpi": 300,
-    "savefig.bbox": "tight",
-    "savefig.pad_inches": 0.15,
-})
+plt.rcParams.update(
+    {
+        "font.family": "sans-serif",
+        "font.sans-serif": ["Noto Sans CJK JP", "DejaVu Sans"],
+        "axes.unicode_minus": False,
+        "figure.dpi": 150,
+        "savefig.dpi": 300,
+        "savefig.bbox": "tight",
+        "savefig.pad_inches": 0.15,
+    }
+)
 
 
 class ChartGenerator:
@@ -108,7 +113,7 @@ class ChartGenerator:
         title: str = "",
         xlabel: str = "",
         ylabel: str = "",
-        group_labels: Optional[list[str]] = None,
+        group_labels: list[str] | None = None,
         stock_code: str = "unknown",
     ) -> str:
         fig, ax = plt.subplots(figsize=(10, 6), facecolor=COLOR_BG)
@@ -120,19 +125,31 @@ class ChartGenerator:
         x = np.arange(n_items)
 
         if group_labels is None:
-            group_labels = [f"系列{i+1}" for i in range(n_groups)]
+            group_labels = [f"系列{i + 1}" for i in range(n_groups)]
 
         for i, group_data in enumerate(data):
             offset = (i - (n_groups - 1) / 2) * bar_width
             color = COLOR_PALETTE[i % len(COLOR_PALETTE)]
-            bars = ax.bar(x + offset, group_data, bar_width * 0.9,
-                          label=group_labels[i], color=color,
-                          edgecolor="white", linewidth=0.5)
+            bars = ax.bar(
+                x + offset,
+                group_data,
+                bar_width * 0.9,
+                label=group_labels[i],
+                color=color,
+                edgecolor="white",
+                linewidth=0.5,
+            )
             for bar, val in zip(bars, group_data):
                 if val is not None and not (isinstance(val, float) and np.isnan(val)):
-                    ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height(),
-                            f"{val:.1f}" if abs(val) < 1000 else f"{val:.0f}",
-                            ha="center", va="bottom", fontsize=8, color=COLOR_GRAY)
+                    ax.text(
+                        bar.get_x() + bar.get_width() / 2,
+                        bar.get_height(),
+                        f"{val:.1f}" if abs(val) < 1000 else f"{val:.0f}",
+                        ha="center",
+                        va="bottom",
+                        fontsize=8,
+                        color=COLOR_GRAY,
+                    )
 
         ax.set_xticks(x)
         ax.set_xticklabels(labels, fontsize=10)
@@ -158,15 +175,30 @@ class ChartGenerator:
         for i, series in enumerate(data_series):
             color = COLOR_PALETTE[i % len(COLOR_PALETTE)]
             marker = markers[i % len(markers)]
-            ax.plot(series["x"], series["y"], label=series["label"],
-                    color=color, linewidth=2, marker=marker, markersize=6,
-                    markerfacecolor=color, markeredgecolor="white", markeredgewidth=0.5)
+            ax.plot(
+                series["x"],
+                series["y"],
+                label=series["label"],
+                color=color,
+                linewidth=2,
+                marker=marker,
+                markersize=6,
+                markerfacecolor=color,
+                markeredgecolor="white",
+                markeredgewidth=0.5,
+            )
             if series["y"]:
                 last_y, last_x = series["y"][-1], series["x"][-1]
                 if last_y is not None:
-                    ax.annotate(f"{last_y:.1f}", xy=(last_x, last_y),
-                                xytext=(8, 0), textcoords="offset points",
-                                fontsize=9, color=color, fontweight="bold")
+                    ax.annotate(
+                        f"{last_y:.1f}",
+                        xy=(last_x, last_y),
+                        xytext=(8, 0),
+                        textcoords="offset points",
+                        fontsize=9,
+                        color=color,
+                        fontweight="bold",
+                    )
 
         ax.legend(fontsize=10, loc="best", frameon=True, facecolor="white")
         return self._save(stock_code, self._next_id("line"))
@@ -186,8 +218,16 @@ class ChartGenerator:
 
         bar_color = bars.get("color", COLOR_DARK_BLUE)
         x = np.arange(len(bars["labels"]))
-        ax1.bar(x, bars["values"], width=0.5, color=bar_color, alpha=0.85,
-                edgecolor="white", linewidth=0.5, label=bars.get("label", ""))
+        ax1.bar(
+            x,
+            bars["values"],
+            width=0.5,
+            color=bar_color,
+            alpha=0.85,
+            edgecolor="white",
+            linewidth=0.5,
+            label=bars.get("label", ""),
+        )
         ax1.set_xlabel(bars.get("xlabel", ""), fontsize=11, color=COLOR_GRAY)
         ax1.set_ylabel(bars.get("ylabel", "营收(亿元)"), fontsize=11, color=bar_color)
         ax1.tick_params(axis="y", labelcolor=bar_color)
@@ -197,18 +237,34 @@ class ChartGenerator:
 
         line_color = line.get("color", COLOR_GREEN)
         ax2 = ax1.twinx()
-        ax2.plot(x, line["values"], color=line_color, linewidth=2.5,
-                 marker="o", markersize=7, markerfacecolor=line_color,
-                 markeredgecolor="white", markeredgewidth=0.5,
-                 label=line.get("label", ""), zorder=5)
+        ax2.plot(
+            x,
+            line["values"],
+            color=line_color,
+            linewidth=2.5,
+            marker="o",
+            markersize=7,
+            markerfacecolor=line_color,
+            markeredgecolor="white",
+            markeredgewidth=0.5,
+            label=line.get("label", ""),
+            zorder=5,
+        )
         ax2.set_ylabel(line.get("ylabel", "ROE(%)"), fontsize=11, color=line_color)
         ax2.tick_params(axis="y", labelcolor=line_color)
 
         for xi, val in zip(x, line["values"]):
             if val is not None:
-                ax2.annotate(f"{val:.1f}", xy=(xi, val), xytext=(0, 10),
-                             textcoords="offset points", ha="center",
-                             fontsize=9, color=line_color, fontweight="bold")
+                ax2.annotate(
+                    f"{val:.1f}",
+                    xy=(xi, val),
+                    xytext=(0, 10),
+                    textcoords="offset points",
+                    ha="center",
+                    fontsize=9,
+                    color=line_color,
+                    fontweight="bold",
+                )
 
         ax1.set_title(title, fontsize=14, fontweight="bold", color=COLOR_DARK_BLUE, pad=15)
         ax1.spines["top"].set_visible(False)
@@ -216,8 +272,7 @@ class ChartGenerator:
 
         h1, l1 = ax1.get_legend_handles_labels()
         h2, l2 = ax2.get_legend_handles_labels()
-        ax1.legend(h1 + h2, l1 + l2, fontsize=10, loc="upper left",
-                   frameon=True, facecolor="white")
+        ax1.legend(h1 + h2, l1 + l2, fontsize=10, loc="upper left", frameon=True, facecolor="white")
 
         fig.tight_layout()
         return self._save(stock_code, self._next_id("combo"))
@@ -260,20 +315,17 @@ class ChartGenerator:
                 colors.append(COLOR_RED)
 
         bar_vals = [abs(v) if 0 < i < n - 1 else v for i, v in enumerate(values)]
-        ax.bar(range(n), bar_vals, bottom=bottoms, color=colors,
-               edgecolor="white", linewidth=0.8, width=0.6)
+        ax.bar(range(n), bar_vals, bottom=bottoms, color=colors, edgecolor="white", linewidth=0.8, width=0.6)
 
         for i in range(n - 1):
             curr_top = bottoms[i] + (values[i] if i == 0 or i == n - 1 else abs(values[i]))
-            ax.plot([i + 0.3, i + 0.7], [curr_top, curr_top],
-                    color=COLOR_LIGHT_GRAY, linewidth=1, linestyle="--")
+            ax.plot([i + 0.3, i + 0.7], [curr_top, curr_top], color=COLOR_LIGHT_GRAY, linewidth=1, linestyle="--")
 
         for i, (cat, val) in enumerate(zip(categories, values)):
             label = f"{val:.1f}" if i == 0 or i == n - 1 else f"{val:+.1f}"
             y_pos = (val if i == 0 or i == n - 1 else abs(val)) + (bottoms[i] if i > 0 else 0) + 0.5
             clr = COLOR_DARK_BLUE if i == 0 or i == n - 1 else (COLOR_GREEN if val >= 0 else COLOR_RED)
-            ax.text(i, y_pos, label, ha="center", va="bottom",
-                    fontsize=10, fontweight="bold", color=clr)
+            ax.text(i, y_pos, label, ha="center", va="bottom", fontsize=10, fontweight="bold", color=clr)
 
         ax.set_xticks(range(n))
         ax.set_xticklabels(categories, fontsize=9, rotation=15, ha="right")
@@ -298,14 +350,12 @@ class ChartGenerator:
         angles = np.linspace(0, 2 * np.pi, n_dim, endpoint=False).tolist()
         angles += angles[:1]
 
-        fig, ax = plt.subplots(figsize=(8, 8), subplot_kw={"projection": "polar"},
-                               facecolor=COLOR_BG)
+        fig, ax = plt.subplots(figsize=(8, 8), subplot_kw={"projection": "polar"}, facecolor=COLOR_BG)
 
         for i, values in enumerate(values_matrix):
             values_closed = values + values[:1]
             color = COLOR_PALETTE[i % len(COLOR_PALETTE)]
-            ax.plot(angles, values_closed, "o-", linewidth=2,
-                    label=labels[i], color=color, markersize=6)
+            ax.plot(angles, values_closed, "o-", linewidth=2, label=labels[i], color=color, markersize=6)
             ax.fill(angles, values_closed, alpha=0.08, color=color)
 
         ax.set_xticks(angles[:-1])
@@ -313,10 +363,8 @@ class ChartGenerator:
         ax.set_ylim(0, 100)
         ax.set_yticks([20, 40, 60, 80, 100])
         ax.set_yticklabels(["20", "40", "60", "80", "100"], fontsize=8, color=COLOR_GRAY)
-        ax.set_title(title, fontsize=14, fontweight="bold", color=COLOR_DARK_BLUE,
-                     pad=25, va="bottom")
-        ax.legend(loc="upper right", bbox_to_anchor=(1.25, 1.1),
-                  fontsize=10, frameon=True, facecolor="white")
+        ax.set_title(title, fontsize=14, fontweight="bold", color=COLOR_DARK_BLUE, pad=25, va="bottom")
+        ax.legend(loc="upper right", bbox_to_anchor=(1.25, 1.1), fontsize=10, frameon=True, facecolor="white")
         ax.set_facecolor("white")
         ax.grid(alpha=0.3, color=COLOR_LIGHT_GRAY)
         fig.tight_layout()
@@ -350,8 +398,16 @@ class ChartGenerator:
             for j in range(n_cols):
                 val = matrix_np[i, j]
                 text_color = "white" if abs(val) > vmax * 0.6 else COLOR_DARK_BLUE
-                ax.text(j, i, value_format.format(val), ha="center", va="center",
-                        fontsize=11, fontweight="bold", color=text_color)
+                ax.text(
+                    j,
+                    i,
+                    value_format.format(val),
+                    ha="center",
+                    va="center",
+                    fontsize=11,
+                    fontweight="bold",
+                    color=text_color,
+                )
 
         ax.set_xticks(range(n_cols))
         ax.set_yticks(range(n_rows))
@@ -369,49 +425,51 @@ class ChartGenerator:
 
         fig.tight_layout()
         return self._save(stock_code, self._next_id("heatmap"))
+
     # ═══════════════════════════════════
     # 7. 投行级注解: 在任意图上加标注框
     # ═══════════════════════════════════
 
-    def add_annotation_box(self, ax, text: str, xy, fontsize: int = 10,
-                           color: str = None, box_alpha: float = 0.15):
+    def add_annotation_box(self, ax, text: str, xy, fontsize: int = 10, color: str = None, box_alpha: float = 0.15):
         """在指定位置添加投行风格的注解框。"""
         if color is None:
             color = COLOR_DARK_BLUE
         ax.annotate(
-            text, xy=xy, xytext=(12, 0),
+            text,
+            xy=xy,
+            xytext=(12, 0),
             textcoords="offset points",
-            fontsize=fontsize, color=color, fontweight="bold",
-            bbox=dict(boxstyle="round,pad=0.3",
-                      facecolor=color, alpha=box_alpha,
-                      edgecolor=color, linewidth=0.5),
-            arrowprops=dict(arrowstyle="->", color=color, lw=1.0)
+            fontsize=fontsize,
+            color=color,
+            fontweight="bold",
+            bbox=dict(boxstyle="round,pad=0.3", facecolor=color, alpha=box_alpha, edgecolor=color, linewidth=0.5),
+            arrowprops=dict(arrowstyle="->", color=color, lw=1.0),
         )
 
-    def add_horizontal_benchmark(self, ax, y: float, label: str,
-                                  color: str = None, linestyle: str = "--"):
+    def add_horizontal_benchmark(self, ax, y: float, label: str, color: str = None, linestyle: str = "--"):
         """添加水平基准线（投行常用，如行业均值、目标价等）。"""
         if color is None:
             color = COLOR_RED
         ax.axhline(y=y, color=color, linestyle=linestyle, linewidth=1.5, alpha=0.8)
-        ax.text(ax.get_xlim()[1], y, " " + label,
-                va="center", fontsize=9, color=color, fontweight="bold")
+        ax.text(ax.get_xlim()[1], y, " " + label, va="center", fontsize=9, color=color, fontweight="bold")
 
-    def add_valuation_range(self, ax, x, low: float, high: float, label: str,
-                             color: str = None):
+    def add_valuation_range(self, ax, x, low: float, high: float, label: str, color: str = None):
         """添加估值区间标注（如 PE 区间 15x-25x）。"""
         if color is None:
             color = COLOR_BLUE
-        ax.annotate(
-            "",
-            xy=(x, low), xytext=(x, high),
-            arrowprops=dict(arrowstyle="<->", color=color, lw=2.0)
-        )
+        ax.annotate("", xy=(x, low), xytext=(x, high), arrowprops=dict(arrowstyle="<->", color=color, lw=2.0))
         mid = (low + high) / 2
-        ax.text(x, mid, " " + label,
-                ha="center", va="center", fontsize=9,
-                color=color, fontweight="bold",
-                bbox=dict(boxstyle="round", facecolor="white", alpha=0.8))
+        ax.text(
+            x,
+            mid,
+            " " + label,
+            ha="center",
+            va="center",
+            fontsize=9,
+            color=color,
+            fontweight="bold",
+            bbox=dict(boxstyle="round", facecolor="white", alpha=0.8),
+        )
 
     # ═══════════════════════════════════
     # 8. 分组柱状图（投行级多公司对比）
@@ -439,9 +497,15 @@ class ChartGenerator:
             offset = (i - (n_series - 1) / 2) * bar_width
             color = COLOR_PALETTE[i % len(COLOR_PALETTE)]
             vals = [v if v is not None else 0 for v in s["values"]]
-            bars = ax.bar(x + offset, vals, bar_width * 0.9,
-                          label=s.get("label", ""), color=color,
-                          edgecolor="white", linewidth=0.5)
+            bars = ax.bar(
+                x + offset,
+                vals,
+                bar_width * 0.9,
+                label=s.get("label", ""),
+                color=color,
+                edgecolor="white",
+                linewidth=0.5,
+            )
 
         ax.set_xticks(x)
         ax.set_xticklabels(categories, fontsize=10, rotation=15, ha="right")
@@ -450,10 +514,9 @@ class ChartGenerator:
         return self._save(stock_code, self._next_id("group_bar"))
 
 
-
-
-def generate_financial_charts(computed, stock_code: str = "unknown",
-                               output_dir: str = "outputs/charts") -> dict[str, str]:
+def generate_financial_charts(
+    computed, stock_code: str = "unknown", output_dir: str = "outputs/charts"
+) -> dict[str, str]:
     cg = ChartGenerator(output_dir)
     charts = {}
 
@@ -476,10 +539,13 @@ def generate_financial_charts(computed, stock_code: str = "unknown",
     # 1. 营收柱状图
     if any(v is not None for v in rev_values):
         charts["revenue_trend"] = cg.bar_chart(
-            data=[rev_clean], labels=years,
+            data=[rev_clean],
+            labels=years,
             title=f"{computed.company} 营收趋势",
-            xlabel="年份", ylabel="营收(亿元)",
-            group_labels=["营收"], stock_code=stock_code,
+            xlabel="年份",
+            ylabel="营收(亿元)",
+            group_labels=["营收"],
+            stock_code=stock_code,
         )
 
     # 2. 利润率趋势
@@ -487,36 +553,45 @@ def generate_financial_charts(computed, stock_code: str = "unknown",
     margin_raw = [margins.get(y) for y in years]
     net_margin_raw = [net_margins.get(y) for y in years]
     if any(v is not None for v in margin_raw):
-        margin_series.append({"label": "毛利率", "x": years,
-                              "y": [v if v is not None else 0 for v in margin_raw]})
+        margin_series.append({"label": "毛利率", "x": years, "y": [v if v is not None else 0 for v in margin_raw]})
     if any(v is not None for v in net_margin_raw):
-        margin_series.append({"label": "净利率", "x": years,
-                              "y": [v if v is not None else 0 for v in net_margin_raw]})
+        margin_series.append({"label": "净利率", "x": years, "y": [v if v is not None else 0 for v in net_margin_raw]})
     if margin_series:
         charts["margin_trend"] = cg.line_chart(
             data_series=margin_series,
             title=f"{computed.company} 利润率趋势(%)",
-            xlabel="年份", ylabel="%", stock_code=stock_code,
+            xlabel="年份",
+            ylabel="%",
+            stock_code=stock_code,
         )
 
     # 3. ROE 趋势
     roe_raw = [roes.get(y) for y in years]
     if any(v is not None for v in roe_raw):
         charts["roe_trend"] = cg.line_chart(
-            data_series=[{"label": "ROE", "x": years,
-                          "y": [v if v is not None else 0 for v in roe_raw]}],
+            data_series=[{"label": "ROE", "x": years, "y": [v if v is not None else 0 for v in roe_raw]}],
             title=f"{computed.company} ROE 趋势(%)",
-            xlabel="年份", ylabel="%", stock_code=stock_code,
+            xlabel="年份",
+            ylabel="%",
+            stock_code=stock_code,
         )
 
     # 4. 营收 + ROE 组合图
     if any(v is not None for v in rev_values) and any(v is not None for v in roe_raw):
         charts["revenue_roe_combo"] = cg.combo_chart(
-            bars={"labels": years, "values": rev_clean, "label": "营收(亿元)",
-                  "xlabel": "年份", "ylabel": "营收(亿元)"},
-            line={"labels": years,
-                  "values": [v if v is not None else 0 for v in roe_raw],
-                  "label": "ROE(%)", "ylabel": "ROE(%)"},
+            bars={
+                "labels": years,
+                "values": rev_clean,
+                "label": "营收(亿元)",
+                "xlabel": "年份",
+                "ylabel": "营收(亿元)",
+            },
+            line={
+                "labels": years,
+                "values": [v if v is not None else 0 for v in roe_raw],
+                "label": "ROE(%)",
+                "ylabel": "ROE(%)",
+            },
             title=f"{computed.company} 营收与ROE组合分析",
             stock_code=stock_code,
         )
@@ -526,16 +601,16 @@ def generate_financial_charts(computed, stock_code: str = "unknown",
     rg_raw = [rev_growth.get(y) for y in years]
     pg_raw = [profit_growth.get(y) for y in years]
     if any(v is not None for v in rg_raw):
-        growth_series.append({"label": "营收增速", "x": years,
-                              "y": [v if v is not None else 0 for v in rg_raw]})
+        growth_series.append({"label": "营收增速", "x": years, "y": [v if v is not None else 0 for v in rg_raw]})
     if any(v is not None for v in pg_raw):
-        growth_series.append({"label": "净利增速", "x": years,
-                              "y": [v if v is not None else 0 for v in pg_raw]})
+        growth_series.append({"label": "净利增速", "x": years, "y": [v if v is not None else 0 for v in pg_raw]})
     if growth_series:
         charts["growth_trend"] = cg.line_chart(
             data_series=growth_series,
             title=f"{computed.company} 增长趋势(%)",
-            xlabel="年份", ylabel="同比增速(%)", stock_code=stock_code,
+            xlabel="年份",
+            ylabel="同比增速(%)",
+            stock_code=stock_code,
         )
 
     # 6. 竞争对标雷达图（当有 comparable_result 数据时）
@@ -598,7 +673,8 @@ def generate_financial_charts(computed, stock_code: str = "unknown",
             vals.append(0)  # placeholder for total
             if len(vals) >= 4:
                 charts["revenue_waterfall"] = cg.waterfall(
-                    categories=cats, values=vals,
+                    categories=cats,
+                    values=vals,
                     title=f"{computed.company} 收入桥瀑布图",
                     stock_code=stock_code,
                 )
@@ -615,4 +691,4 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("请指定股票代码")
         sys.exit(0)
-    print("此模块通常由 orchestrator.run 调用生成实际图表演示") 
+    print("此模块通常由 orchestrator.run 调用生成实际图表演示")

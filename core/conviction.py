@@ -7,24 +7,25 @@
 """
 
 from __future__ import annotations
-from dataclasses import dataclass, field
-import logging
-from typing import Optional
 
-from core.models import ArgumentScaffold, KnowledgePackage, DataPoint
-from core.assumption_benchmark import calibrate_probabilities, detect_growth_assumption_gap
+import logging
+from dataclasses import dataclass, field
+
+from core.assumption_benchmark import calibrate_probabilities
+from core.models import ArgumentScaffold, KnowledgePackage
 
 logger = logging.getLogger("v51.conviction")
 
 _HAS_SCENARIO = False
 try:
     from core.compute.valuation.scenario import (
+        ScenarioResult,  # noqa: F401  (dead-import debt)
         compute_scenario,
         make_base_scenario,
-        make_bull_scenario,
         make_bear_scenario,
-        ScenarioResult,
+        make_bull_scenario,
     )
+
     _HAS_SCENARIO = True
 except ImportError as e:
     logger.warning("V30 scenario not available: %s", e)
@@ -33,6 +34,7 @@ except ImportError as e:
 @dataclass
 class ConvictionMatrix:
     """置信度矩阵 — 整合三情景 + 论证强度。"""
+
     asset: str = ""
     stock_code: str = ""
     base_price: float = 0.0
@@ -48,7 +50,7 @@ class ConvictionMatrix:
 
     # 置信度评分 (0-100)
     evidence_score: float = 0.0  # 证据充分度
-    consensus_gap: float = 0.0   # 与共识的偏离度
+    consensus_gap: float = 0.0  # 与共识的偏离度
     overall_conviction: float = 0.0
 
     warnings: list[str] = field(default_factory=list)
@@ -57,7 +59,7 @@ class ConvictionMatrix:
 def compute_conviction(
     scaffold: ArgumentScaffold,
     kp: KnowledgePackage,
-    base_price: Optional[float] = None,
+    base_price: float | None = None,
 ) -> ConvictionMatrix:
     """从论证骨架 + 知识包计算 Conviction Matrix。"""
     cm = ConvictionMatrix(
@@ -138,15 +140,13 @@ def compute_conviction(
     # 置信度评分
     cm.evidence_score = min(100, evi_count * 10)
     cm.consensus_gap = min(100, gap_count * 15)
-    cm.overall_conviction = round(
-        cm.evidence_score * 0.6 + (100 - cm.consensus_gap) * 0.4, 1
-    )
+    cm.overall_conviction = round(cm.evidence_score * 0.6 + (100 - cm.consensus_gap) * 0.4, 1)
     cm.warnings.extend(result.warnings)
 
     return cm
 
 
-def _extract_revenue(kp: KnowledgePackage) -> Optional[float]:
+def _extract_revenue(kp: KnowledgePackage) -> float | None:
     """从知识包提取基准营收。"""
     if not kp.data_points:
         return None
@@ -160,8 +160,8 @@ def format_conviction(cm: ConvictionMatrix) -> str:
     """格式化为报告可插入的文本块。"""
     lines = []
     lines.append("\n## 置信度矩阵\n")
-    lines.append(f"| 指标 | 数值 |")
-    lines.append(f"|------|------|")
+    lines.append("| 指标 | 数值 |")
+    lines.append("|------|------|")
     lines.append(f"| 概率加权目标价 | {cm.weighted_target:.2f} 元 |")
     if cm.base_price > 0:
         lines.append(f"| 当前价格 | {cm.base_price:.2f} 元 |")

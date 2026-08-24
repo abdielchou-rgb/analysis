@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """无网络 E2E 最小链路测试
 
 背景（2026-08-01 审计）：
@@ -31,9 +30,8 @@ for line in (_ROOT / ".env").read_text(encoding="utf-8").splitlines():
 
 # 跳过慢 preflight：替换 RuntimeGate.check_all
 import pipeline.runtime_gate as _rg
-_rg.RuntimeGate.check_all = lambda self: {
-    "summary": {"runtime_score": 1.0, "status": "PASS"}
-}
+
+_rg.RuntimeGate.check_all = lambda self: {"summary": {"runtime_score": 1.0, "status": "PASS"}}
 
 
 # ── 固定 LLM 输出（mock call_deepseek）─────────────────────────
@@ -66,23 +64,21 @@ def _mock_call_deepseek(messages, **kw):
 def test_core_chain_no_network():
     # monkeypatch LLM
     import core.deepseek_client as _dsc
+
     _orig = _dsc.call_deepseek
     _dsc.call_deepseek = _mock_call_deepseek
     try:
-        from pipeline.e2e_orchestrator import E2EOrchestratorV2, E2ENodes
         from pipeline.agent_graph import AgentGraph
+        from pipeline.e2e_orchestrator import E2ENodes
 
         g = AgentGraph("no_net_e2e")
         # 核心链路：data → enrich → compute → write → assemble → validate
         g.add_node("data", E2ENodes.data, deps=[], desc="data")
         g.add_node("enrich", E2ENodes.enrich_data, deps=["data"], desc="enrich")
         g.add_node("compute", E2ENodes.compute, deps=["enrich"], desc="compute")
-        g.add_node("write_sections", E2ENodes.write_sections,
-                   deps=["enrich", "compute"], desc="write")
-        g.add_node("style", E2ENodes.style_compile,
-                   deps=["write_sections"], desc="style")
-        g.add_node("assemble", E2ENodes.assemble,
-                   deps=["style"], desc="assemble")
+        g.add_node("write_sections", E2ENodes.write_sections, deps=["enrich", "compute"], desc="write")
+        g.add_node("style", E2ENodes.style_compile, deps=["write_sections"], desc="style")
+        g.add_node("assemble", E2ENodes.assemble, deps=["style"], desc="assemble")
 
         ctx = {
             "asset": "思必驰",
@@ -121,11 +117,12 @@ def test_core_chain_no_network():
 # ── 测试 2：enrich-file 注入后数据充足性提升 ────────────────────
 def test_enrich_file_injection():
     import core.deepseek_client as _dsc
+
     _orig = _dsc.call_deepseek
     _dsc.call_deepseek = _mock_call_deepseek
     try:
-        from pipeline.e2e_orchestrator import E2EOrchestratorV2, E2ENodes
         from pipeline.agent_graph import AgentGraph
+        from pipeline.e2e_orchestrator import E2ENodes
 
         g = AgentGraph("enrich_inject")
         g.add_node("data", E2ENodes.data, deps=[], desc="data")
@@ -151,6 +148,7 @@ def test_enrich_file_injection():
 # ── 测试 3：E2EOrchestratorV2 可构造 ────────────────────────────
 def test_orchestrator_construct():
     from pipeline.e2e_orchestrator import E2EOrchestratorV2
+
     o = E2EOrchestratorV2("思必驰", "unlisted_company", "cicc")
     assert o.asset == "思必驰"
     assert o.report_type == "unlisted_company"
@@ -160,6 +158,7 @@ def test_orchestrator_construct():
 # ── 测试 4：缓存注入逻辑 ────────────────────────────────────────
 def test_cache_injection():
     from pipeline.e2e_orchestrator import E2EOrchestratorV2
+
     o = E2EOrchestratorV2("思必驰", "unlisted_company", "cicc")
     ctx1 = o._build_context()
     assert ctx1.get("_data_cached") is None, "首轮不应有缓存标记"

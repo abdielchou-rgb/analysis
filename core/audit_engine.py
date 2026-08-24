@@ -2,9 +2,11 @@
 audit_engine.py - Standardized audit engine
 Unified detection rules so all auditors share the same standards.
 """
-import os, re, json, logging
-from pathlib import Path
-from typing import Optional, List, Dict
+
+import json
+import logging
+import os
+import re
 
 logger = logging.getLogger("2hao.audit_engine")
 
@@ -35,7 +37,9 @@ AUDIT_CHECKS = {
         "message": "Use Path(__file__).resolve().parent.parent instead of str(_ROOT)",
     },
     "fake_data_fallback": {
-        "pattern": re.compile(r"(np\.random|random\.uniform|\[10\]\*len|random\.randint|random\.sample|random\.random|numpy\.random|numpy\.random\.rand)"),
+        "pattern": re.compile(
+            r"(np\.random|random\.uniform|\[10\]\*len|random\.randint|random\.sample|random\.random|numpy\.random|numpy\.random\.rand)"
+        ),
         "severity": "P1",
         "description": "Fake/random data fallback pattern",
         "message": "Never use random data as real data - degrade gracefully",
@@ -46,7 +50,6 @@ AUDIT_CHECKS = {
         "description": "Placeholder chart/image",
         "message": "Never use placeholder charts - all charts must have real data",
     },
- 
     "hardcoded_threshold": {
         "pattern": re.compile(r"change\s*[><]\s*0\.0[0-9]\s*#"),
         "severity": "P1",
@@ -56,15 +59,15 @@ AUDIT_CHECKS = {
 }
 
 
-def scan_file(filepath: str) -> List[Dict]:
+def scan_file(filepath: str) -> list[dict]:
     """Run all audit checks on a single file"""
     findings = []
     if not filepath.endswith(".py") or "__pycache__" in filepath:
         return findings
     try:
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             lines = f.readlines()
-    except (UnicodeDecodeError, IOError):
+    except (OSError, UnicodeDecodeError):
         return []
     for i, line in enumerate(lines, 1):
         stripped = line.strip()
@@ -74,19 +77,21 @@ def scan_file(filepath: str) -> List[Dict]:
             continue
         for check_name, check_def in AUDIT_CHECKS.items():
             if check_def["pattern"].search(stripped):
-                findings.append({
-                    "check": check_name,
-                    "file": filepath,
-                    "line": i,
-                    "severity": check_def["severity"],
-                    "description": check_def["description"],
-                    "message": check_def["message"],
-                    "code": stripped[:100],
-                })
+                findings.append(
+                    {
+                        "check": check_name,
+                        "file": filepath,
+                        "line": i,
+                        "severity": check_def["severity"],
+                        "description": check_def["description"],
+                        "message": check_def["message"],
+                        "code": stripped[:100],
+                    }
+                )
     return findings
 
 
-def scan_project(project_root: str) -> Dict:
+def scan_project(project_root: str) -> dict:
     """Scan entire project and return audit report"""
     all_findings = []
     file_count = 0
@@ -120,11 +125,11 @@ def scan_project(project_root: str) -> Dict:
     }
 
 
-def format_report(report: Dict) -> str:
+def format_report(report: dict) -> str:
     """Format audit report as readable text"""
     lines = []
     lines.append("=" * 60)
-    lines.append(f"Audit Engine Report")
+    lines.append("Audit Engine Report")
     lines.append(f"Project: {report['project_root']}")
     lines.append(f"Files scanned: {report['files_scanned']}")
     lines.append(f"Total findings: {report['total_findings']}")
@@ -139,7 +144,7 @@ def format_report(report: Dict) -> str:
             continue
         lines.append(f"\n[{sev}] {len(items)} issues:")
         for f in items:
-            short_path = f["file"][len(report["project_root"]):]
+            short_path = f["file"][len(report["project_root"]) :]
             lines.append(f"  {short_path}:{f['line']}")
             lines.append(f"    {f['description']}: {f['message']}")
 
@@ -147,7 +152,7 @@ def format_report(report: Dict) -> str:
     return "\n".join(lines)
 
 
-def run_audit_and_save(project_root: str, output_path: Optional[str] = None) -> Dict:
+def run_audit_and_save(project_root: str, output_path: str | None = None) -> dict:
     """Run audit and optionally save results"""
     report = scan_project(project_root)
     if output_path:
@@ -162,6 +167,7 @@ def run_audit_and_save(project_root: str, output_path: Optional[str] = None) -> 
 
 if __name__ == "__main__":
     import sys
+
     root = sys.argv[1] if len(sys.argv) > 1 else r"D:\2hao-analyst"
     report = run_audit_and_save(root, os.path.join(root, "output", "_audit_report.json"))
     print(format_report(report))

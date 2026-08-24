@@ -2,9 +2,13 @@
 runtime_gate.py - Runtime health check for the entire pipeline.
 Ensures the system can actually run before measuring output quality.
 """
-import os, sys, logging, time, importlib
+
+import importlib
+import logging
+import os
+import sys
+import time
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
 
 logger = logging.getLogger("2hao.runtime_gate")
 
@@ -38,10 +42,10 @@ class RuntimeGate:
         "pipeline.chart_assembler",
     ]
 
-    def __init__(self, project_root: Optional[str] = None):
+    def __init__(self, project_root: str | None = None):
         self.project_root = project_root or str(_ROOT)
 
-    def check_imports(self) -> Dict:
+    def check_imports(self) -> dict:
         """Check all critical modules can be imported"""
         results = {}
         all_ok = True
@@ -59,7 +63,7 @@ class RuntimeGate:
             "modules": results,
         }
 
-    def check_syntax(self) -> Dict:
+    def check_syntax(self) -> dict:
         """Check all Python files have valid syntax (fast, no disk writes).
 
         Perf fix (2026-08-01): 原实现用 py_compile.compile 遍历全项目并把 .pyc
@@ -68,14 +72,28 @@ class RuntimeGate:
         纯数据/归档目录，将耗时降至 ~1.5s。检查语义不变：仍报告语法错误。
         """
         import ast
+
         errors = []
         ok_count = 0
         # 纯源码目录遍历；数据/缓存/归档目录不包含待检查的 Python 源码
         skip_dirs = {
-            "__pycache__", ".git", "node_modules", "output", "outputs",
-            "V30_compute", "V30_tools", "V30",
-            "qlib_bin", "基线", "archive", "data", "logs", "export",
-            ".github", ".pytest_cache", ".mypy_cache",
+            "__pycache__",
+            ".git",
+            "node_modules",
+            "output",
+            "outputs",
+            "V30_compute",
+            "V30_tools",
+            "V30",
+            "qlib_bin",
+            "基线",
+            "archive",
+            "data",
+            "logs",
+            "export",
+            ".github",
+            ".pytest_cache",
+            ".mypy_cache",
         }
         for root, dirs, files in os.walk(self.project_root):
             dirs[:] = [d for d in dirs if d not in skip_dirs]
@@ -84,7 +102,7 @@ class RuntimeGate:
                     continue
                 fp = os.path.join(root, f)
                 try:
-                    with open(fp, "r", encoding="utf-8", errors="ignore") as fh:
+                    with open(fp, encoding="utf-8", errors="ignore") as fh:
                         ast.parse(fh.read(), filename=fp)
                     ok_count += 1
                 except SyntaxError as e:
@@ -98,7 +116,7 @@ class RuntimeGate:
             "errors": errors,
         }
 
-    def check_pipeline_flow(self) -> Dict:
+    def check_pipeline_flow(self) -> dict:
         """Verify E2E orchestrator can be constructed (but don't run it)"""
         steps = []
         all_ok = True
@@ -106,6 +124,7 @@ class RuntimeGate:
         # Step 1: SAC loading
         try:
             from core.sacs import SACLoader
+
             for rt in ["industry_deep", "listed_company", "unlisted_company"]:
                 sac = SACLoader(rt)
                 steps.append({"step": f"SAC_{rt}", "ok": True})
@@ -115,8 +134,10 @@ class RuntimeGate:
 
         # Step 2: IronGate construction
         try:
-            from pipeline.iron_gate import IronGate
             import tempfile
+
+            from pipeline.iron_gate import IronGate
+
             tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False, encoding="utf-8")
             tmp.write("# Test\nContent")
             tmp_path = tmp.name
@@ -136,6 +157,7 @@ class RuntimeGate:
         # Step 3: DataPipeline construction
         try:
             from pipeline.data_pipeline import DataPipeline
+
             dp = DataPipeline()
             steps.append({"step": "DataPipeline", "ok": True})
         except Exception as e:
@@ -145,6 +167,7 @@ class RuntimeGate:
         # Step 4: E2EOrchestrator construction
         try:
             from pipeline.e2e_orchestrator import E2EOrchestratorV2
+
             o = E2EOrchestratorV2("test", "industry_deep", "cicc")
             steps.append({"step": "E2EOrchestrator", "ok": True})
         except Exception as e:
@@ -154,6 +177,7 @@ class RuntimeGate:
         # Step 5: Chart pipeline construction
         try:
             from pipeline.chart_pipeline import ChartPipeline
+
             cp = ChartPipeline("industry_deep", "cicc")
             steps.append({"step": "ChartPipeline", "ok": True})
         except Exception as e:
@@ -165,19 +189,24 @@ class RuntimeGate:
             "steps": steps,
         }
 
-
-    def check_self_audit(self) -> Dict:
+    def check_self_audit(self) -> dict:
         """Run self-audit checks to catch regressions early."""
         try:
-            import subprocess, json
-            result = subprocess.run([sys.executable, str(_ROOT / "_self_audit.py"), "--json"],
-                                  capture_output=True, text=True, timeout=30, encoding="utf-8", errors="replace")
+            import subprocess
+
+            result = subprocess.run(
+                [sys.executable, str(_ROOT / "_self_audit.py"), "--json"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                encoding="utf-8",
+                errors="replace",
+            )
             if result.returncode == 0:
                 logger.info("[SELF_AUDIT] All checks passed")
                 return {"ok": True, "output": result.stdout[:500]}
             else:
-                logger.warning("[SELF_AUDIT] %d checks failed:\n%s",
-                             result.returncode, result.stdout[:300])
+                logger.warning("[SELF_AUDIT] %d checks failed:\n%s", result.returncode, result.stdout[:300])
                 return {"ok": False, "output": result.stdout[:500], "stderr": result.stderr[:200]}
         except FileNotFoundError:
             logger.warning("[SELF_AUDIT] _self_audit.py not found, skipping")
@@ -189,7 +218,7 @@ class RuntimeGate:
             logger.warning("[SELF_AUDIT] failed: %s", e)
             return {"ok": True, "skipped": True}
 
-    def check_all(self) -> Dict:
+    def check_all(self) -> dict:
         """Run all checks and return combined result"""
         results = {}
 
@@ -227,14 +256,14 @@ class RuntimeGate:
             "imports_ok": import_ok,
             "syntax_ok": syntax_ok,
             "pipeline_ok": flow_ok,
-            "import_time_ms": int((t1-t0)*1000),
-            "syntax_time_ms": int((t2-t1)*1000),
-            "pipeline_time_ms": int((t3-t2)*1000),
-            "total_time_ms": int((t3-t0)*1000),
+            "import_time_ms": int((t1 - t0) * 1000),
+            "syntax_time_ms": int((t2 - t1) * 1000),
+            "pipeline_time_ms": int((t3 - t2) * 1000),
+            "total_time_ms": int((t3 - t0) * 1000),
         }
         return results
 
-    def format_report(self, results: Dict) -> str:
+    def format_report(self, results: dict) -> str:
         lines = []
         lines.append("=" * 60)
         lines.append("Runtime Gate Report")
@@ -259,7 +288,7 @@ class RuntimeGate:
                 lines.append(f"  {os.path.relpath(e['file'], self.project_root)}: {e['error']}")
 
         if not results["pipeline"]["all_ok"]:
-            lines.append(f"\nPipeline flow failures:")
+            lines.append("\nPipeline flow failures:")
             for step in results["pipeline"]["steps"]:
                 if not step["ok"]:
                     lines.append(f"  {step['step']}: {step.get('error', 'unknown')}")
@@ -276,7 +305,7 @@ class RuntimeGate:
         return "\n".join(lines)
 
 
-def check_and_report(output_path: Optional[str] = None) -> Dict:
+def check_and_report(output_path: str | None = None) -> dict:
     """Run all runtime checks and optionally save report"""
     gate = RuntimeGate()
     results = gate.check_all()
@@ -284,6 +313,7 @@ def check_and_report(output_path: Optional[str] = None) -> Dict:
 
     if output_path:
         import json
+
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         with open(output_path, "w", encoding="utf-8") as f:
             json.dump(results, f, ensure_ascii=False, indent=2)

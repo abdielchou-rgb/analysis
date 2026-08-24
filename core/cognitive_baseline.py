@@ -18,14 +18,14 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from core.models import (
-    ArgumentScaffold, ArgumentSection, KnowledgePackage,
-    WritingBrief, DataPoint,
+    ArgumentScaffold,
+    DataPoint,
+    KnowledgePackage,
+    WritingBrief,
 )
 
 logger = logging.getLogger("v51.cognitive_baseline")
@@ -60,6 +60,7 @@ DEFAULT_BASELINE = {
 
 # ── Baseline CRUD ────────────────────────────────────────────
 
+
 class CognitiveBaseline:
     """Persistent cognitive state for each covered asset."""
 
@@ -83,8 +84,10 @@ class CognitiveBaseline:
         path = _baseline_path(code)
         with open(path, "w", encoding="utf-8") as f:
             json.dump(baseline, f, ensure_ascii=False, indent=2)
-        logger.info(f"Baseline saved for {code} ({len(baseline.get('key_variables', {}))} vars, "
-                    f"{len(baseline.get('active_hypotheses', []))} hypotheses)")
+        logger.info(
+            f"Baseline saved for {code} ({len(baseline.get('key_variables', {}))} vars, "
+            f"{len(baseline.get('active_hypotheses', []))} hypotheses)"
+        )
 
     @staticmethod
     def exists(code: str) -> bool:
@@ -100,8 +103,7 @@ class CognitiveBaseline:
     # ── Initialization from report ──
 
     @staticmethod
-    def initialize_from_report(scaffold: ArgumentScaffold,
-                                 kp: KnowledgePackage) -> dict:
+    def initialize_from_report(scaffold: ArgumentScaffold, kp: KnowledgePackage) -> dict:
         """Create/update baseline from a generated report's scaffold + KP.
 
         Called automatically after write().
@@ -124,7 +126,8 @@ class CognitiveBaseline:
                 kv = cd.get("key_variable", "") or brief.key_variable or ""
                 if kv:
                     baseline["key_variables"][kv] = {
-                        "value": "", "direction": "stable",
+                        "value": "",
+                        "direction": "stable",
                         "last_updated": datetime.now().isoformat(),
                         "source": "report_generation",
                     }
@@ -160,12 +163,14 @@ class CognitiveBaseline:
             baseline["active_hypotheses"] = baseline["active_hypotheses"][-10:]
 
         # Record this report
-        baseline["report_history"].append({
-            "brief_id": scaffold.brief_id or brief.brief_id,
-            "report_type": brief.report_type.value if brief.report_type else "unknown",
-            "style": brief.style_profile,
-            "created_at": datetime.now().isoformat(),
-        })
+        baseline["report_history"].append(
+            {
+                "brief_id": scaffold.brief_id or brief.brief_id,
+                "report_type": brief.report_type.value if brief.report_type else "unknown",
+                "style": brief.style_profile,
+                "created_at": datetime.now().isoformat(),
+            }
+        )
         baseline["report_history"] = baseline["report_history"][-20:]
 
         CognitiveBaseline.save(code, baseline)
@@ -197,12 +202,14 @@ class CognitiveBaseline:
                             direction = "changed"
                     except (TypeError, ValueError):
                         direction = "changed"
-                    changes["changed_vars"].append({
-                        "name": dp.name,
-                        "old": old_val,
-                        "new": dp.value,
-                        "direction": direction,
-                    })
+                    changes["changed_vars"].append(
+                        {
+                            "name": dp.name,
+                            "old": old_val,
+                            "new": dp.value,
+                            "direction": direction,
+                        }
+                    )
                     existing["direction"] = direction
                 else:
                     changes["no_change"].append(dp.name)
@@ -213,7 +220,8 @@ class CognitiveBaseline:
             else:
                 changes["new_vars"].append(dp.name)
                 baseline["key_variables"][dp.name] = {
-                    "value": dp.value, "unit": dp.unit or "",
+                    "value": dp.value,
+                    "unit": dp.unit or "",
                     "source": dp.source or "unknown",
                     "last_updated": datetime.now().isoformat(),
                     "direction": "new",
@@ -241,7 +249,8 @@ class CognitiveBaseline:
             ],
             "prediction_count": len(baseline.get("prediction_history", [])),
             "last_report": baseline.get("report_history", [{}])[-1].get("created_at", "")
-            if baseline.get("report_history") else "",
+            if baseline.get("report_history")
+            else "",
             "data_freshness": baseline.get("data_freshness", {}),
         }
 
@@ -249,9 +258,7 @@ class CognitiveBaseline:
     def list_all() -> list[str]:
         """List all codes with baselines."""
         _ensure_dir()
-        return sorted([
-            f.stem for f in BASELINE_DIR.glob("*.json")
-        ])
+        return sorted([f.stem for f in BASELINE_DIR.glob("*.json")])
 
     @staticmethod
     def count() -> int:
@@ -261,6 +268,7 @@ class CognitiveBaseline:
     def get_assets_needing_update(hours: int = 24) -> list[str]:
         """Return codes where data_freshness is older than threshold."""
         from datetime import timedelta
+
         threshold = datetime.now() - timedelta(hours=hours)
         stale = []
         for code in CognitiveBaseline.list_all():

@@ -5,7 +5,8 @@
       检出气体报告 37 项此类问题。
 修复：format_sheriff._fix_table_trailing_prose 把粘连内容拆成独立段落。
 """
-import os
+
+import os  # noqa: F401  (dead-import debt)
 import sys
 from pathlib import Path
 
@@ -16,6 +17,7 @@ if str(_ROOT) not in sys.path:
 
 def _fix(text):
     from pipeline.format_sheriff import FormatSheriff
+
     fs = FormatSheriff()
     fixed = fs._fix_table_trailing_prose(text)
     return fixed, fs
@@ -39,10 +41,7 @@ def test_prose_after_table_row_split():
 
 def test_source_note_after_table_row_split():
     """表格行尾粘连来源标注（|（数据来源）应拆分成独立段落。"""
-    text = (
-        "| 1 | 霍尼韦尔 | 22% |\n"
-        "| 2 | Sensirion | 10% |（数据来源：公司公告及行业公开资料）\n"
-    )
+    text = "| 1 | 霍尼韦尔 | 22% |\n| 2 | Sensirion | 10% |（数据来源：公司公告及行业公开资料）\n"
     fixed, fs = _fix(text)
     assert len(fs.fixes_applied) >= 1
     lines = fixed.split("\n")
@@ -52,12 +51,7 @@ def test_source_note_after_table_row_split():
 
 def test_normal_table_unchanged():
     """正常表格（以|开头且以|结尾）不应被修改。"""
-    text = (
-        "| 公司 | 市占率 |\n"
-        "|------|--------|\n"
-        "| 霍尼韦尔 | 22% |\n"
-        "| Sensirion | 10% |\n"
-    )
+    text = "| 公司 | 市占率 |\n|------|--------|\n| 霍尼韦尔 | 22% |\n| Sensirion | 10% |\n"
     fixed, fs = _fix(text)
     assert fixed == text, f"正常表格不应被改: {fs.fixes_applied}"
     assert len(fs.fixes_applied) == 0
@@ -76,6 +70,7 @@ def test_patrol_includes_fixer():
 
 if __name__ == "__main__":
     import traceback
+
     passed = failed = 0
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

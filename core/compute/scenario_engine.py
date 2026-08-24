@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """scenario_engine.py — 情景触发引擎（2026-08-08 框架优化 P0）
 
 顶级打法：高盛/大摩情景规划用"触发指标"驱动情景概率，而非拍脑袋（油位 30/50/20 是拍的）。
@@ -18,7 +17,9 @@
   engine.update_signals({"罐箱渗透率": 0.10})
   engine.get_probabilities()  # 信号驱动后概率
 """
+
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 
@@ -28,19 +29,21 @@ logger = logging.getLogger("2hao.scenario")
 @dataclass
 class TriggerSignal:
     """触发信号：某指标达到阈值 → 调整某情景概率。"""
-    name: str                 # 信号名（如 罐箱渗透率）
-    threshold: str            # 阈值描述（如 >15%）
-    adjust: float             # 命中时对所在情景的概率调整（+0.1 等）
-    condition: str = ""       # 条件描述（可选）
+
+    name: str  # 信号名（如 罐箱渗透率）
+    threshold: str  # 阈值描述（如 >15%）
+    adjust: float  # 命中时对所在情景的概率调整（+0.1 等）
+    condition: str = ""  # 条件描述（可选）
 
 
 @dataclass
 class Scenario:
     """情景定义。"""
+
     name: str
-    base_prob: float          # 基准概率
+    base_prob: float  # 基准概率
     signals: list = field(default_factory=list)  # 该情景的触发信号
-    weight: float = 0.0       # 信号调整后权重
+    weight: float = 0.0  # 信号调整后权重
 
 
 class ScenarioEngine:
@@ -106,16 +109,30 @@ class ScenarioEngine:
 
 def oil_scenario_example() -> ScenarioEngine:
     """油位传感器场景示例。"""
-    return ScenarioEngine([
-        Scenario("乐观", 0.30, [
-            TriggerSignal("罐箱渗透率", ">15%", +0.15),
-            TriggerSignal("海外订单", ">500万", +0.10),
-        ]),
-        Scenario("基准", 0.50, [
-            TriggerSignal("罐箱渗透率", "5-10%", +0.05),
-        ]),
-        Scenario("悲观", 0.20, [
-            TriggerSignal("政策执行率", "<5%", +0.15),
-            TriggerSignal("认证延迟", ">18月", +0.10),
-        ]),
-    ])
+    return ScenarioEngine(
+        [
+            Scenario(
+                "乐观",
+                0.30,
+                [
+                    TriggerSignal("罐箱渗透率", ">15%", +0.15),
+                    TriggerSignal("海外订单", ">500万", +0.10),
+                ],
+            ),
+            Scenario(
+                "基准",
+                0.50,
+                [
+                    TriggerSignal("罐箱渗透率", "5-10%", +0.05),
+                ],
+            ),
+            Scenario(
+                "悲观",
+                0.20,
+                [
+                    TriggerSignal("政策执行率", "<5%", +0.15),
+                    TriggerSignal("认证延迟", ">18月", +0.10),
+                ],
+            ),
+        ]
+    )

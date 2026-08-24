@@ -14,7 +14,6 @@ STEPS:
   7. export — 报告导出
 """
 
-import os
 import logging
 from pathlib import Path
 
@@ -61,11 +60,7 @@ class StepManager:
         self._validate_step(step)
         filepath = self.marker_dir / f"{step}.done"
         if not filepath.exists():
-            raise RuntimeError(
-                f"[StepManager] 步骤 '{step}' 尚未完成"
-                f"（标记文件缺失: {filepath}）"
-                f"请先完成前置步骤"
-            )
+            raise RuntimeError(f"[StepManager] 步骤 '{step}' 尚未完成（标记文件缺失: {filepath}）请先完成前置步骤")
 
     def require_sequential(self, step: str) -> None:
         """要求所有前置步骤均已完成，否则抛出RuntimeError"""
@@ -100,10 +95,7 @@ class StepManager:
 
     def _validate_step(self, step: str) -> None:
         if step not in self.STEPS:
-            raise ValueError(
-                f"[StepManager] 非法步骤 '{step}'"
-                f"（允许: {', '.join(self.STEPS)}）"
-            )
+            raise ValueError(f"[StepManager] 非法步骤 '{step}'（允许: {', '.join(self.STEPS)}）")
 
     def _ensure_marker_dir(self) -> None:
         self.marker_dir.mkdir(parents=True, exist_ok=True)
@@ -111,6 +103,7 @@ class StepManager:
 
 if __name__ == "__main__":
     import tempfile
+
     with tempfile.TemporaryDirectory() as tmpdir:
         sm = StepManager(output_dir=tmpdir)
         sm.reset()

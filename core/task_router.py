@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """task_router.py — 任务路由器（FP8 路径光谱化落地，2026-08-07）
 
 按任务性质选执行路径（光谱选择，替代"双轨制"二分）：
@@ -13,8 +12,9 @@
   path = route_task(report_type="decision_memo", requirement="评估投入产出", batch=False)
   # path: {"path": "workbench+gate", "human_gate": True, "sourcing": "data_layer"}
 """
+
 from __future__ import annotations
-import os
+
 import logging
 
 logger = logging.getLogger("2hao.task_router")
@@ -28,9 +28,14 @@ class TaskRouter:
     # 批量优先类型：管线更合适
     PIPELINE_PREFERRED = {"listed_company", "industry_deep"}
 
-    def route(self, report_type: str = "listed_company",
-              requirement: str = "", batch: bool = False,
-              client: str = "", risk_level: str = "") -> dict:
+    def route(
+        self,
+        report_type: str = "listed_company",
+        requirement: str = "",
+        batch: bool = False,
+        client: str = "",
+        risk_level: str = "",
+    ) -> dict:
         """路由决策。"""
         report_type = report_type or "listed_company"
         has_intent = bool(requirement or client)
@@ -84,7 +89,12 @@ class TaskRouter:
             }
 
 
-def route_task(report_type: str = "listed_company", requirement: str = "",
-               batch: bool = False, client: str = "", risk_level: str = "") -> dict:
+def route_task(
+    report_type: str = "listed_company",
+    requirement: str = "",
+    batch: bool = False,
+    client: str = "",
+    risk_level: str = "",
+) -> dict:
     """便捷入口。"""
     return TaskRouter().route(report_type, requirement, batch, client, risk_level)

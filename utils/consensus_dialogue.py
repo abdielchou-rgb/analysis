@@ -5,9 +5,7 @@ V53 Consensus Dialogue — 与市场共识的对话
 Consensus 数据从 consensus_connector 获取, 与 Conviction Matrix 交叉验证。
 """
 
-from core.models import KnowledgePackage, DataPoint
-from core.assumption_benchmark import AssumptionBenchmark
-from typing import Optional
+from core.models import KnowledgePackage
 
 CONSENSUS_DIALOGUE_PROMPT = """
 ## "与市场共识的对话" 章节要求
@@ -38,25 +36,30 @@ CONSENSUS_DIALOGUE_PROMPT = """
 def build_consensus_dialogue(kp: KnowledgePackage) -> str:
     """构建与市场共识对话的prompt块"""
     _NL = chr(10)
-    
+
     # Extract any consensus data from data_points
-    consensus_points = [dp for dp in kp.data_points 
-                       if dp.name.startswith("consensus") or dp.name.startswith("analyst")]
-    
+    consensus_points = [dp for dp in kp.data_points if dp.name.startswith("consensus") or dp.name.startswith("analyst")]
+
     if not consensus_points:
         # If no consensus data available, still include the section structure
-        return CONSENSUS_DIALOGUE_PROMPT + """
+        return (
+            CONSENSUS_DIALOGUE_PROMPT
+            + """
 注意: 当前未获取到一致预期数据。请在报告中明确标注"因数据限制, 本报告未包含完整的市场共识对比分析"。
 """
-    
+        )
+
     # Build data table from available consensus points
     table_lines = ["\n| 指标 | 数据 | 来源 |", "|------|------|------|"]
     for dp in consensus_points:
         table_lines.append(f"| {dp.name} | {dp.value} {dp.unit} | {dp.source} |")
-    
-    return CONSENSUS_DIALOGUE_PROMPT + f"""
+
+    return (
+        CONSENSUS_DIALOGUE_PROMPT
+        + f"""
 ### 可用的一致预期数据
 
 以下一致预期数据可用于对比分析:
 {_NL.join(table_lines)}
 """
+    )

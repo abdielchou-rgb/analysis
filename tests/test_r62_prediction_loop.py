@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """R62 预测验证闭环修复回归测试（2026-08-04 预测闭环审计）
 
 覆盖三个修复：
@@ -8,7 +7,7 @@
    （不能把 close 当绝对股价与 current_price 相减）
 3. validate_forward_picks_csv 的 as_of 取价：用预测日所在月净值，不 fallback 首月
 """
-import os
+
 import re
 import sys
 from pathlib import Path
@@ -20,7 +19,7 @@ if str(_ROOT) not in sys.path:
 
 def _norm_code(code: str) -> str:
     """复刻 data_backends._query_local_qlib_price 内的归一化逻辑（白盒测试）。"""
-    c = re.sub(r'\.(SH|SZ|SS|BJ|HK|US)$', '', code.strip().upper())
+    c = re.sub(r"\.(SH|SZ|SS|BJ|HK|US)$", "", code.strip().upper())
     if not c.startswith(("SH", "SZ", "BJ")):
         c = c.zfill(6)
         c = ("sh" if c.startswith(("6", "9")) else "sz") + c
@@ -44,6 +43,7 @@ def test_qlib_code_normalization_strips_suffix():
 def test_qlib_price_query_works_with_suffixed_codes():
     """真实 qlib 数据：带 .SZ/.SH 后缀的代码能取到价格序列（此前恒 None）。"""
     from core.data_backends import _query_local_qlib_price
+
     q = _query_local_qlib_price("300750.SZ")
     assert q is not None, "300750.SZ 应能从本地 qlib 取价（此前代码归一化 bug 返回 None）"
     assert q["source"] == "qlib_local"
@@ -55,8 +55,8 @@ def test_qlib_price_query_works_with_suffixed_codes():
 
 def test_validator_returns_are_index_ratio_based():
     """验证器收益应基于净值比值，且 as_of 用预测日所在月，不 fallback 首月。"""
-    from core.forward_picks import ForwardPicksDB
     from core.data_backends import _query_local_qlib_price
+    from core.forward_picks import ForwardPicksDB
 
     db = ForwardPicksDB()
     q = _query_local_qlib_price("300750.SZ")
@@ -83,6 +83,7 @@ def test_import_script_has_dedup_and_current_price():
 
 if __name__ == "__main__":
     import traceback
+
     passed = failed = 0
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):
@@ -100,6 +101,7 @@ if __name__ == "__main__":
 
 # ── R64（2026-08-04 审计修复）语义层回归 ──────────────────────
 
+
 def test_current_price_not_polluted_by_adjclose():
     """P0-008：current_price 不得存复权价量级（应=0 或真实股价量级）。
 
@@ -108,16 +110,16 @@ def test_current_price_not_polluted_by_adjclose():
     验证锚点改用 anchor_nav（qlib close 净值量级）。
     """
     from core.forward_picks import ForwardPicksDB
+
     db = ForwardPicksDB()
     picks = db.load_all()
     for p in picks:
         # current_price 不得是复权价量级（>500 且明显非真实股价）
         assert p.current_price == 0.0, (
-            f"{p.asset_name} current_price={p.current_price} 应为 0（真实股价未接入），"
-            f"不得为复权价（审计 P0-008）")
+            f"{p.asset_name} current_price={p.current_price} 应为 0（真实股价未接入），不得为复权价（审计 P0-008）"
+        )
         # anchor_nav 必须是净值量级（qlib close：宁德~20、格力~142，绝不该上千）
-        assert 0 < p.anchor_nav < 500, (
-            f"{p.asset_name} anchor_nav={p.anchor_nav} 应为 qlib close 净值（<500）")
+        assert 0 < p.anchor_nav < 500, f"{p.asset_name} anchor_nav={p.anchor_nav} 应为 qlib close 净值（<500）"
 
 
 def test_bull_target_not_fabricated():
@@ -126,13 +128,15 @@ def test_bull_target_not_fabricated():
     R64 修复：单目标价预测 bull/bear_target=0（未提供），不再伪造独立档。
     """
     from core.forward_picks import ForwardPicksDB
+
     db = ForwardPicksDB()
     picks = db.load_all()
     for p in picks:
         # bull_target 要么 0（诚实未提供），要么与 base 有实质差异
         if p.bull_target:
             assert abs(p.bull_target - p.base_target) / max(p.base_target, 1e-9) > 0.05, (
-                f"{p.asset_name} bull_target==base_target 复制值（审计 P1-008）")
+                f"{p.asset_name} bull_target==base_target 复制值（审计 P1-008）"
+            )
 
 
 def test_validate_uses_nav_ratio_not_current_price():
@@ -142,12 +146,14 @@ def test_validate_uses_nav_ratio_not_current_price():
     """
     import ast
     import inspect
+
     from core import prediction_validator as pv
     from core.forward_picks import ForwardPicksDB
 
     def _code_refs(func) -> list:
         """提取函数体里 self.X / 变量引用的 current_price / anchor_nav。"""
         import textwrap
+
         src = textwrap.dedent(inspect.getsource(func))
         tree = ast.parse(src)
         refs = []
@@ -163,10 +169,10 @@ def test_validate_uses_nav_ratio_not_current_price():
     v_refs = _code_refs(pv.validate_forward_picks_csv)
     assert "anchor_nav" in v_refs, f"validator 应使用 anchor_nav 锚点，实际引用 {v_refs}"
     assert "current_price" not in v_refs, (
-        f"validator 不得用 current_price 算收益（审计 P0-008/P1-009），实际引用 {v_refs}")
+        f"validator 不得用 current_price 算收益（审计 P0-008/P1-009），实际引用 {v_refs}"
+    )
 
     # update_verification：必须用 anchor_nav，不得用 current_price
     u_refs = _code_refs(ForwardPicksDB.update_verification)
     assert "anchor_nav" in u_refs, f"update_verification 应改用 anchor_nav，实际引用 {u_refs}"
-    assert "current_price" not in u_refs, (
-        f"update_verification 不得用 current_price 算收益，实际引用 {u_refs}")
+    assert "current_price" not in u_refs, f"update_verification 不得用 current_price 算收益，实际引用 {u_refs}"

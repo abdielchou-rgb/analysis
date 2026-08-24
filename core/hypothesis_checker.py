@@ -2,10 +2,12 @@
 hypothesis_checker.py - T0.5 hypothesis validation layer.
 Before entering the full pipeline, test if an investment thesis is worth pursuing.
 """
-import json, logging, re
-from pathlib import Path
+
+import json
+import logging
+import re
 from dataclasses import dataclass, field
-from typing import List, Optional
+from pathlib import Path
 
 logger = logging.getLogger("2hao.hypothesis")
 
@@ -15,12 +17,13 @@ _ROOT = Path(__file__).resolve().parent.parent
 @dataclass
 class HypothesisResult:
     """Result of hypothesis checking"""
+
     asset: str = ""
     hypothesis: str = ""
     passes_gate: bool = False
     score: float = 0.0
-    reasons: List[str] = field(default_factory=list)
-    risks: List[str] = field(default_factory=list)
+    reasons: list[str] = field(default_factory=list)
+    risks: list[str] = field(default_factory=list)
     suggested_direction: str = "neutral"
     confidence: float = 0.0
 
@@ -35,23 +38,25 @@ class HypothesisChecker:
         if self._client is None:
             try:
                 from core.deepseek_client import DeepSeekClient
+
                 self._client = DeepSeekClient()
             except Exception:
                 return None
         return self._client
 
-    def check(self, asset: str, hypothesis: str = "",
-              context: str = "", threshold: float = 0.6,
-              block_on_fail: bool = False) -> HypothesisResult:
+    def check(
+        self, asset: str, hypothesis: str = "", context: str = "", threshold: float = 0.6, block_on_fail: bool = False
+    ) -> HypothesisResult:
         """Check a hypothesis. block_on_fail=True will add blocking risks if score < threshold"""
         result = self._check_internal(asset, hypothesis, context, threshold)
         if block_on_fail and not result.passes_gate:
-            result.risks.append("BLOCKING: Hypothesis failed gate - score={:.1f} < threshold={:.1f}".format(result.score, threshold))
+            result.risks.append(
+                f"BLOCKING: Hypothesis failed gate - score={result.score:.1f} < threshold={threshold:.1f}"
+            )
             result.risks.append("建议: 重新审视假说或收集更多数据后再试")
         return result
 
-    def _check_internal(self, asset: str, hypothesis: str,
-                        context: str, threshold: float) -> HypothesisResult:
+    def _check_internal(self, asset: str, hypothesis: str, context: str, threshold: float) -> HypothesisResult:
         """Check a hypothesis using DeepSeek + data validation"""
         client = self._get_client()
         if not client:
@@ -73,7 +78,7 @@ class HypothesisChecker:
 输出JSON:
 {{
     "score": 0-10,
-    "passes_gate": true/false (score >= {threshold*10}为通过),
+    "passes_gate": true/false (score >= {threshold * 10}为通过),
     "reasons": ["理由1", "理由2"],
     "risks": ["风险1", "风险2"],
     "suggested_direction": "bullish/bearish/neutral",
@@ -101,8 +106,7 @@ class HypothesisChecker:
 
         return self._check_rule_based(asset, hypothesis, context)
 
-    def _check_rule_based(self, asset: str, hypothesis: str,
-                          context: str) -> HypothesisResult:
+    def _check_rule_based(self, asset: str, hypothesis: str, context: str) -> HypothesisResult:
         """Rule-based fallback"""
         score = 0.3  # Default low score
         reasons = []

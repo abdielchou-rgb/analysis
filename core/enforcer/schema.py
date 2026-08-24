@@ -1,8 +1,8 @@
 """Enforced report schema — structured output constraints."""
 
 from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 @dataclass
@@ -12,14 +12,14 @@ class EnforcedSection:
     body: str = ""
     evidence_refs: list[str] = field(default_factory=list)
     has_counter_case: bool = False
-    so_what: Optional[str] = None
+    so_what: str | None = None
     data_gaps: list[str] = field(default_factory=list)
 
 
 @dataclass
 class EnforcedReport:
     title: str = ""
-    core_disagreement: str = ""   # Required: explicit disagreement statement
+    core_disagreement: str = ""  # Required: explicit disagreement statement
     sections: list[EnforcedSection] = field(default_factory=list)
     required_artifacts: list[str] = field(default_factory=list)
 
@@ -44,6 +44,7 @@ class EnforcementResult:
 
 class EnforcementError(Exception):
     """Raised when Enforcer blocks output in block mode."""
+
     def __init__(self, message: str, result=None):
         self.result = result
         super().__init__(message)

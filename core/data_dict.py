@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 共享数据字典（Shared Data Dictionary）— R7 收敛机制核心
 
@@ -16,8 +15,10 @@
 """
 
 from __future__ import annotations
-import re, json
+
+import json
 import logging
+import re
 from pathlib import Path
 
 logger = logging.getLogger("2hao.data_dict")
@@ -26,15 +27,33 @@ _ROOT = Path(__file__).resolve().parent.parent
 
 # 数据字典允许引用的 fig_* 键（与 data_enrichment.ALLOWED_FIG_KEYS 对齐）
 ALLOWED_KEYS = {
-    "fig_revenue_trend", "fig_profitability", "fig_margin", "fig_roe",
-    "fig_market_size_global", "fig_market_size_china", "fig_peer_comparison",
-    "fig_competitive_landscape", "fig_players", "fig_supply_chain",
-    "fig_market_positioning", "fig_growth_drivers", "fig_business_segments",
-    "fig_tech_segments", "fig_valuation", "fig_capital_flow",
-    "fig_funding_history", "fig_industry_board", "fig_business_model",
-    "fig_revenue_change", "fig_profit_change", "fig_gross_margin",
-    "fig_roe_trend", "fig_applications", "fig_guidance_track",
-    "fig_segment_performance", "fig_margin_trend",
+    "fig_revenue_trend",
+    "fig_profitability",
+    "fig_margin",
+    "fig_roe",
+    "fig_market_size_global",
+    "fig_market_size_china",
+    "fig_peer_comparison",
+    "fig_competitive_landscape",
+    "fig_players",
+    "fig_supply_chain",
+    "fig_market_positioning",
+    "fig_growth_drivers",
+    "fig_business_segments",
+    "fig_tech_segments",
+    "fig_valuation",
+    "fig_capital_flow",
+    "fig_funding_history",
+    "fig_industry_board",
+    "fig_business_model",
+    "fig_revenue_change",
+    "fig_profit_change",
+    "fig_gross_margin",
+    "fig_roe_trend",
+    "fig_applications",
+    "fig_guidance_track",
+    "fig_segment_performance",
+    "fig_margin_trend",
 }
 
 
@@ -53,9 +72,15 @@ def build_data_dict(collected_data: dict | None) -> dict:
         return d
 
     # 年份序列类：{year: value}
-    year_keys = ["fig_revenue_trend", "fig_profitability", "fig_margin",
-                 "fig_market_size_global", "fig_market_size_china",
-                 "fig_roe_trend", "fig_margin_trend"]
+    year_keys = [
+        "fig_revenue_trend",
+        "fig_profitability",
+        "fig_margin",
+        "fig_market_size_global",
+        "fig_market_size_china",
+        "fig_roe_trend",
+        "fig_margin_trend",
+    ]
     for k in year_keys:
         raw = cd.get(k)
         if isinstance(raw, dict):
@@ -69,8 +94,7 @@ def build_data_dict(collected_data: dict | None) -> dict:
                             d[f"{k.replace('fig_', '')}_{y}_{sub}"] = float(sv)
 
     # 标签序列类：{label: value}
-    label_keys = ["fig_applications", "fig_tech_segments", "fig_players",
-                  "fig_supply_chain", "fig_growth_drivers"]
+    label_keys = ["fig_applications", "fig_tech_segments", "fig_players", "fig_supply_chain", "fig_growth_drivers"]
     for k in label_keys:
         raw = cd.get(k)
         if isinstance(raw, dict):
@@ -91,6 +115,7 @@ def build_data_dict(collected_data: dict | None) -> dict:
     # 只读不写，数据点带 source（见 core/data_basement.py）
     try:
         from core.data_basement import build_basement_data_dict
+
         asset = collected_data.get("asset", "") if isinstance(collected_data, dict) else ""
         basement = build_basement_data_dict(asset)
         for k, v in basement.items():
@@ -107,8 +132,10 @@ def serialize_data_dict(d: dict, max_items: int = 60) -> str:
     if not d:
         return ""
     items = sorted(d.items(), key=lambda kv: kv[0])[:max_items]
-    lines = ["=== 共享数据字典（正文数值必须引用，禁止自编） ===",
-             "格式: {ref:key} = 数值。引用示例：中国市场规模2024年为 {ref:market_size_china_2024} 亿元。"]
+    lines = [
+        "=== 共享数据字典（正文数值必须引用，禁止自编） ===",
+        "格式: {ref:key} = 数值。引用示例：中国市场规模2024年为 {ref:market_size_china_2024} 亿元。",
+    ]
     # R82（2026-08-06）：市场类键强制带单位——全球市场口径为"亿美元"、
     # 中国市场口径为"亿元"，防止 LLM 把全球 46/50/54.5/65 亿美元写成"亿元"
     # （第5轮 market_size_consistency 冲突根因）。
@@ -147,9 +174,7 @@ def validate_numeric_refs(report_text: str, data_dict: dict, max_unverified: int
     # 提取带 (A) 或 (B) 标注的数值（确定性数据点）
     # 锚定：数字前不能是数字/小数点，避免匹配到被截断的子串。
     # 例："4061.2亿元(A)" 只应匹配整体 4061.2，不应再拆出 "061.2(A)"。
-    pat = re.compile(
-        r'(?<![\d.])(\d{2,}(?:[.,]\d{1,3})?)\s*(?:亿元|亿美元|万台|亿只|%|倍)?\s*\(([ABab])\)'
-    )
+    pat = re.compile(r"(?<![\d.])(\d{2,}(?:[.,]\d{1,3})?)\s*(?:亿元|亿美元|万台|亿只|%|倍)?\s*\(([ABab])\)")
     found = pat.findall(report_text)
     unverified = []
     for val_str, tag in found:
@@ -160,8 +185,7 @@ def validate_numeric_refs(report_text: str, data_dict: dict, max_unverified: int
         # 数据字典同值匹配（容差 1%）
         # R88（2026-08-06）：过滤非数值项（brand_entity_map/ulp_* 等字符串键），
         # 否则 float - str 抛 TypeError，data_dict_refs 检查整项异常判 0 分。
-        numeric_values = [dv for dv in data_dict.values()
-                          if isinstance(dv, (int, float)) and not isinstance(dv, bool)]
+        numeric_values = [dv for dv in data_dict.values() if isinstance(dv, (int, float)) and not isinstance(dv, bool)]
         if any(abs(val - dv) / max(abs(dv), 1e-9) < 0.01 for dv in numeric_values):
             continue
         unverified.append((val, val_str, tag))

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 统一资产解析层（Asset Resolver）— R26 全量修复缺陷1
 
@@ -16,7 +15,9 @@
 
 所有模块从 `asset.name` / `asset.code` 取标识，禁止自行解析。
 """
+
 from __future__ import annotations
+
 import json
 import re
 from dataclasses import dataclass, field
@@ -31,14 +32,15 @@ _NAME_MAP_CACHE: dict | None = None
 @dataclass
 class Asset:
     """规范化资产对象。"""
+
     raw: str = ""
-    name: str = ""            # 中文名（规范化）
-    code: str = ""            # 6 位代码（A股）/ 5 位（港股）
-    market: str = ""          # CN / HK / US / UNLISTED / UNKNOWN
-    full_ticker: str = ""     # 带前缀（如 SH603662 / 00700.HK）
+    name: str = ""  # 中文名（规范化）
+    code: str = ""  # 6 位代码（A股）/ 5 位（港股）
+    market: str = ""  # CN / HK / US / UNLISTED / UNKNOWN
+    full_ticker: str = ""  # 带前缀（如 SH603662 / 00700.HK）
     has_code: bool = False
     has_name: bool = False
-    normalized: str = ""      # 统一形态（优先 code，否则 name）
+    normalized: str = ""  # 统一形态（优先 code，否则 name）
     aliases: list = field(default_factory=list)
 
     def __bool__(self):
@@ -79,8 +81,18 @@ def _detect_market(code: str, name: str = "") -> str:
         if len(code) in (4,) or (len(code) <= 5 and not code.startswith("0")):
             return "US"
         return "UNKNOWN"
-    if name and name in ("腾讯控股", "美团", "小米集团", "阿里巴巴", "京东集团",
-                         "网易", "快手", "理想汽车", "小鹏汽车", "比亚迪股份"):
+    if name and name in (
+        "腾讯控股",
+        "美团",
+        "小米集团",
+        "阿里巴巴",
+        "京东集团",
+        "网易",
+        "快手",
+        "理想汽车",
+        "小鹏汽车",
+        "比亚迪股份",
+    ):
         return "HK"
     return "UNKNOWN"
 
@@ -189,8 +201,19 @@ def get_name_or_code(asset_input: str) -> str:
 
 
 if __name__ == "__main__":
-    for test in ["柯力传感", "603662", "603662.SH", "柯力传感(603662.SH)",
-                 "芯联集成", "688469", "腾讯控股", "00700.HK", "韦尔股份"]:
+    for test in [
+        "柯力传感",
+        "603662",
+        "603662.SH",
+        "柯力传感(603662.SH)",
+        "芯联集成",
+        "688469",
+        "腾讯控股",
+        "00700.HK",
+        "韦尔股份",
+    ]:
         a = resolve_asset(test)
-        print(f"{test!r:>22} → name={a.name!r} code={a.code!r} market={a.market} "
-              f"norm={a.normalized!r} has_name={a.has_name} has_code={a.has_code}")
+        print(
+            f"{test!r:>22} → name={a.name!r} code={a.code!r} market={a.market} "
+            f"norm={a.normalized!r} has_name={a.has_name} has_code={a.has_code}"
+        )

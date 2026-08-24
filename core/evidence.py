@@ -1,6 +1,7 @@
 """V50+ EvidenceLevel — L0 added for computed/deterministic values"""
 
 from __future__ import annotations
+
 from enum import Enum
 
 
@@ -21,6 +22,7 @@ class EvidenceLevel(str, Enum):
       L1 是财报原文。Liar's Dividend 的核心是区分这两者。
     - 报告正文中对 L0 数字的表述应是"数据引擎计算得出"而非"据年报"
     """
+
     COMPUTED = "L0_computed"
     FILING = "L1_filing"
     MEDIA = "L2_media"

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """vc_thesis.py — 投资论题（2026-08-08 非上市 PE/VC 差额补足）
 
 顶级 VC 第一问：为什么这家公司能赢？
@@ -12,7 +11,9 @@
     ("市场规模", "我们相信全球X市场到2030年达Y亿", "若增速低于Z则证伪"),
   ])
 """
+
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 
@@ -22,8 +23,8 @@ logger = logging.getLogger("2hao.vc_thesis")
 @dataclass
 class Thesis:
     name: str
-    belief: str       # 我们相信X
-    falsify: str      # 什么数据会推翻
+    belief: str  # 我们相信X
+    falsify: str  # 什么数据会推翻
     strength: float = 0.5  # 0-1 论题强度（信心）
 
 

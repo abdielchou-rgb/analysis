@@ -4,10 +4,11 @@ Marvis 交付 6 项数据（macro_highfreq/pledge_ratio/leading_indicators/
 us_highfreq + consensus 历史序列 + financials DA/RD），本测试锁定 2hao 侧
 data_basement 的消费接线。
 """
-import os
+
 import sys
-import pytest
 from pathlib import Path
+
+import pytest
 
 _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
@@ -17,6 +18,7 @@ if str(_ROOT) not in sys.path:
 def test_macro_highfreq_loaded():
     """宏观高频 loader 应返回最新值。"""
     from core.data_basement import load_macro_highfreq
+
     hf = load_macro_highfreq()
     if hf is None:
         return  # 沙箱缺数据文件时跳过（数据在用户机）
@@ -26,6 +28,7 @@ def test_macro_highfreq_loaded():
 def test_leading_indicators_loaded():
     """领先指标 loader 应返回 M1-M2剪刀差等。"""
     from core.data_basement import load_leading_indicators
+
     li = load_leading_indicators()
     if li is None:
         return
@@ -35,6 +38,7 @@ def test_leading_indicators_loaded():
 def test_us_highfreq_loaded():
     """美国高频 loader 应返回 CFNAI/WEI。"""
     from core.data_basement import load_us_highfreq
+
     uhf = load_us_highfreq()
     if uhf is None:
         return
@@ -44,6 +48,7 @@ def test_us_highfreq_loaded():
 def test_pledge_ratio_by_code():
     """质押率 loader 应按 code 匹配。"""
     from core.data_basement import load_pledge_ratio
+
     pr = load_pledge_ratio("000002")
     if pr is None:
         return
@@ -56,8 +61,9 @@ def test_consensus_revision_slope():
     P3-audit 2026-08-24：load_consensus 已实现回退链——最新快照缺字段时
     取历史最近非空快照，仍无则用最近两期 eps_2026e/rating_buy 现算。
     """
-    import pytest
+
     from core.data_basement import load_consensus
+
     cs = load_consensus("002594")
     if cs is None:
         pytest.skip("consensus 数据不可用")
@@ -68,6 +74,7 @@ def test_consensus_revision_slope():
 def test_basement_merges_r53_data():
     """build_basement_data_dict 应合并 R53 新数据（hf_/lead_/us_hf_/pledge）。"""
     from core.data_basement import build_basement_data_dict
+
     d = build_basement_data_dict("气体传感器")
     r53_keys = [k for k in d if k.startswith(("hf_", "lead_", "us_hf_"))]
     # 数据文件在用户机才有；沙箱无文件则跳过
@@ -78,6 +85,7 @@ def test_basement_merges_r53_data():
 
 if __name__ == "__main__":
     import traceback
+
     passed = failed = 0
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

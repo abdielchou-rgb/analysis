@@ -2,9 +2,11 @@
 bold_call_extractor.py - LLM-assisted bold call extraction from report text.
 Replaces regex-based extraction - significantly higher coverage.
 """
-import json, logging, re
+
+import json
+import logging
+import re
 from pathlib import Path
-from typing import List, Dict, Optional
 
 logger = logging.getLogger("2hao.bold_call")
 
@@ -21,14 +23,14 @@ class BoldCallExtractor:
         if self._client is None:
             try:
                 from core.deepseek_client import DeepSeekClient
+
                 self._client = DeepSeekClient()
             except Exception as e:
                 logger.warning("DeepSeek client unavailable: %s", e)
                 return None
         return self._client
 
-    def extract(self, report_text: str, asset: str = "",
-                report_type: str = "industry_deep") -> List[Dict]:
+    def extract(self, report_text: str, asset: str = "", report_type: str = "industry_deep") -> list[dict]:
         """Extract bold calls from report text using LLM"""
         client = self._get_client()
         if not client:
@@ -76,7 +78,7 @@ Bold Call定义：
 
         return self._extract_regex_fallback(report_text)
 
-    def _parse_line_by_line(self, text: str) -> List[Dict]:
+    def _parse_line_by_line(self, text: str) -> list[dict]:
         """Fallback: parse LLM response line by line"""
         calls = []
         for line in text.split("\n"):
@@ -85,17 +87,19 @@ Bold Call定义：
                 continue
             for direction in ["bullish", "bearish", "neutral"]:
                 if direction in line.lower():
-                    calls.append({
-                        "direction": direction,
-                        "bold_call": line[:100],
-                        "confidence": 0.5,
-                        "time_horizon": "unknown",
-                        "evidence": "",
-                    })
+                    calls.append(
+                        {
+                            "direction": direction,
+                            "bold_call": line[:100],
+                            "confidence": 0.5,
+                            "time_horizon": "unknown",
+                            "evidence": "",
+                        }
+                    )
                     break
         return calls
 
-    def _extract_regex_fallback(self, report_text: str) -> List[Dict]:
+    def _extract_regex_fallback(self, report_text: str) -> list[dict]:
         """Legacy regex-based extraction (fallback)"""
         calls = []
         patterns = [
@@ -110,18 +114,20 @@ Bold Call定义：
             matches = re.findall(pattern, report_text)
             for m in matches[:3]:
                 text = m if isinstance(m, str) else m[0]
-                calls.append({
-                    "direction": direction,
-                    "bold_call": text[:100],
-                    "confidence": 0.4,
-                    "time_horizon": "unknown",
-                    "evidence": "",
-                })
+                calls.append(
+                    {
+                        "direction": direction,
+                        "bold_call": text[:100],
+                        "confidence": 0.4,
+                        "time_horizon": "unknown",
+                        "evidence": "",
+                    }
+                )
         return calls
 
-    def extract_and_register(self, report_text: str, asset: str,
-                              report_type: str, industry: str = "",
-                              tm=None) -> List[Dict]:
+    def extract_and_register(
+        self, report_text: str, asset: str, report_type: str, industry: str = "", tm=None
+    ) -> list[dict]:
         """Extract bold calls and register with TrackRecordManager"""
         calls = self.extract(report_text, asset, report_type)
 
@@ -129,7 +135,8 @@ Bold Call定义：
             for c in calls:
                 try:
                     tm.register_prediction(
-                        asset=asset, report_type=report_type,
+                        asset=asset,
+                        report_type=report_type,
                         industry=industry or asset,
                         direction=c["direction"],
                         bold_call=c["bold_call"][:200],

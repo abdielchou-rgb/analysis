@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 统一财务数据提取层（Financial Data Access Layer）— R39 数据契约
 
@@ -16,9 +15,10 @@
 `{"2025": {"revenue": X, "net_profit": Y, "gross_margin": Z}}`，
 不再自行解析字段。
 """
+
 from __future__ import annotations
+
 import logging
-from typing import Optional
 
 logger = logging.getLogger("2hao.financial_extract")
 
@@ -52,7 +52,7 @@ def _parse_flat_keys(cd: dict) -> dict:
             continue
         for prefix, indicator in _FLAT_KEY_PATTERNS:
             if k.startswith(prefix):
-                year_str = k[len(prefix):]
+                year_str = k[len(prefix) :]
                 if year_str.isdigit() and 2000 <= int(year_str) <= 2030:
                     val = _safe_float(v)
                     if val != 0 or indicator != "revenue":  # 保留 0 净利但跳过空营收
@@ -170,31 +170,33 @@ def get_net_profit_caliber(data: dict) -> dict:
     """
     cd = data.get("chart_data", {}) if isinstance(data, dict) else {}
     if not isinstance(cd, dict):
-        return {"net_profit_2025": None, "caliber": "未知",
-                "warning": "无数据"}
+        return {"net_profit_2025": None, "caliber": "未知", "warning": "无数据"}
     hist = extract_financial_history(data)
     if not hist:
-        return {"net_profit_2025": None, "caliber": "未知",
-                "warning": "无历史数据"}
+        return {"net_profit_2025": None, "caliber": "未知", "warning": "无历史数据"}
     # 最新实际年份的净利
     years = sorted(hist.keys(), key=lambda k: int(k) if k.isdigit() else 0)
     valid = [y for y in years if hist[y].get("net_profit")]
     if not valid:
-        return {"net_profit_2025": None, "caliber": "未知",
-                "warning": "无净利数据"}
+        return {"net_profit_2025": None, "caliber": "未知", "warning": "无净利数据"}
     last = valid[-1]
     np_val = hist[last]["net_profit"]
     # 检查是否有归母字段（优先）
-    return {"net_profit_2025": np_val, "caliber": "未知（建议核对归母）",
-            "warning": _NET_PROFIT_CALIBER_HINT}
+    return {"net_profit_2025": np_val, "caliber": "未知（建议核对归母）", "warning": _NET_PROFIT_CALIBER_HINT}
 
 
 if __name__ == "__main__":
     # 自测：柯力扁平键形态
     sample = {
-        "revenue_trend_2023": 10.72, "revenue_trend_2024": 12.95, "revenue_trend_2025": 15.58,
-        "profitability_2023": 3.12, "profitability_2024": 2.61, "profitability_2025": 3.41,
-        "margin_2023": 43.05, "margin_2024": 43.12, "margin_2025": 44.83,
+        "revenue_trend_2023": 10.72,
+        "revenue_trend_2024": 12.95,
+        "revenue_trend_2025": 15.58,
+        "profitability_2023": 3.12,
+        "profitability_2024": 2.61,
+        "profitability_2025": 3.41,
+        "margin_2023": 43.05,
+        "margin_2024": 43.12,
+        "margin_2025": 44.83,
         "fig_valuation": {"price": 46.73, "market_cap": 131.23},
     }
     hist = extract_financial_history(sample)

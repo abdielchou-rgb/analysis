@@ -16,11 +16,11 @@
   - 关联交易收入占比高
   - 收入确认政策变更
 """
+
 from __future__ import annotations
-import json, re, logging
+
+import logging
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger("2hao.audit_toolkit")
 
@@ -51,10 +51,11 @@ class RevenueRecognition:
         for flag, sev, detail, standard in self.RED_FLAGS:
             keywords = flag.split(">")[0].strip() if ">" in flag else flag
             # 简单关键词匹配，后续可升级为 NLP
-            if any(kw.lower() in text_lower for kw in ["收入增速", "应收", "q4", "四季度",
-                                                         "关联交易", "收入确认", "毛利率异常"]):
-                flags.append(RevenueRiskFlag(flag=flag, severity=sev, detail=detail,
-                                             ifrs_standard=standard))
+            if any(
+                kw.lower() in text_lower
+                for kw in ["收入增速", "应收", "q4", "四季度", "关联交易", "收入确认", "毛利率异常"]
+            ):
+                flags.append(RevenueRiskFlag(flag=flag, severity=sev, detail=detail, ifrs_standard=standard))
         return flags[:5]
 
     def to_report(self, flags: list[RevenueRiskFlag]) -> str:
@@ -98,10 +99,11 @@ class AuditWorkpaper:
 
 class AnomalyDetector:
     """财务异常检测。"""
+
     def check_ratio_consistency(self, ratios: dict) -> list[str]:
         issues = []
         # 毛利率波动检查
-        margins = [ratios.get(f"margin_{y}") for y in ["2022","2023","2024"] if ratios.get(f"margin_{y}")]
+        margins = [ratios.get(f"margin_{y}") for y in ["2022", "2023", "2024"] if ratios.get(f"margin_{y}")]
         if len(margins) >= 3:
             volatility = max(margins) - min(margins)
             if volatility > 0.10:

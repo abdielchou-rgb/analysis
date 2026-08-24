@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 预期差引擎（Earnings Surprise）— R30 模块7：对标券商研究所
 
@@ -13,8 +12,9 @@
 
 本模块读数据不写正文（FP2）。
 """
+
 from __future__ import annotations
-import json
+
 import logging
 import sqlite3
 from pathlib import Path
@@ -33,9 +33,7 @@ def load_consensus(code: str) -> dict | None:
     try:
         conn = sqlite3.connect(str(CONSENSUS_DB))
         conn.row_factory = sqlite3.Row
-        row = conn.execute(
-            "SELECT * FROM consensus WHERE code=? ORDER BY as_of DESC LIMIT 1",
-            (code,)).fetchone()
+        row = conn.execute("SELECT * FROM consensus WHERE code=? ORDER BY as_of DESC LIMIT 1", (code,)).fetchone()
         conn.close()
         return dict(row) if row else None
     except Exception as e:
@@ -50,8 +48,8 @@ def load_earnings_forecast(code: str) -> list[dict]:
     try:
         conn = sqlite3.connect(str(EARNINGS_DB))
         rows = conn.execute(
-            "SELECT * FROM earnings_forecast WHERE code=? ORDER BY announce_date DESC LIMIT 5",
-            (code,)).fetchall()
+            "SELECT * FROM earnings_forecast WHERE code=? ORDER BY announce_date DESC LIMIT 5", (code,)
+        ).fetchall()
         conn.close()
         if rows:
             cols = [d[0] for d in conn.execute("PRAGMA table_info(earnings_forecast)").fetchall()]
@@ -76,8 +74,7 @@ def compute_surprise(code: str) -> dict:
     if not consensus and not forecasts:
         return {"status": "no_data", "code": code}
 
-    result = {"status": "ok", "code": code,
-              "consensus": consensus, "forecasts": forecasts}
+    result = {"status": "ok", "code": code, "consensus": consensus, "forecasts": forecasts}
     # 一致预期隐含增速
     if consensus:
         eps = consensus.get("eps_2026e") or consensus.get("eps_2027e")
@@ -103,9 +100,9 @@ def compute_surprise(code: str) -> dict:
                 else:
                     surprise = "符合预期"
         result["surprise"] = surprise
-        result["surprise_signal"] = {
-            "超预期": "bullish", "符合预期": "neutral", "低于预期": "bearish"
-        }.get(surprise, "neutral")
+        result["surprise_signal"] = {"超预期": "bullish", "符合预期": "neutral", "低于预期": "bearish"}.get(
+            surprise, "neutral"
+        )
 
     return result
 
@@ -116,8 +113,10 @@ def serialize_surprise(s: dict) -> str:
         return ""
     lines = ["=== 预期差信号（一致预期 vs 实际/预测） ==="]
     if s.get("consensus_eps"):
-        lines.append(f"一致预期 EPS: {s['consensus_eps']}（{s.get('n_analysts', '?')}家分析师, "
-                     f"目标价{s.get('consensus_target', '?')}）")
+        lines.append(
+            f"一致预期 EPS: {s['consensus_eps']}（{s.get('n_analysts', '?')}家分析师, "
+            f"目标价{s.get('consensus_target', '?')}）"
+        )
     if s.get("rating_buy"):
         lines.append(f"一致预期买入评级: {s['rating_buy']}")
     if s.get("surprise"):

@@ -12,9 +12,10 @@
   lbo = LBOModel(entry_ebitda=100, entry_multiple=10, debt_pct=0.6)
   result = lbo.calculate()
 """
+
 from __future__ import annotations
+
 from dataclasses import dataclass
-import math
 
 
 @dataclass
@@ -31,10 +32,17 @@ class LBOResult:
 class LBOModel:
     """杠杆收购模型 — 标准投行 LBO 分析。"""
 
-    def __init__(self, entry_ebitda: float, entry_multiple: float,
-                 debt_pct: float = 0.6, exit_multiple: float = None,
-                 ebitda_growth: float = 0.05, years: int = 5,
-                 interest_rate: float = 0.05, debt_repay: float = 0.3):
+    def __init__(
+        self,
+        entry_ebitda: float,
+        entry_multiple: float,
+        debt_pct: float = 0.6,
+        exit_multiple: float = None,
+        ebitda_growth: float = 0.05,
+        years: int = 5,
+        interest_rate: float = 0.05,
+        debt_repay: float = 0.3,
+    ):
         self.entry_ebitda = entry_ebitda
         self.entry_multiple = entry_multiple
         self.entry_ev = entry_ebitda * entry_multiple
@@ -68,10 +76,12 @@ class LBOModel:
 
     def to_report(self) -> str:
         r = self.calculate()
-        return (f"LBO 分析 ({self.years}年):\\n"
-                f"  Entry EV: {r.entry_ev:.0f} | Exit EV: {r.exit_ev:.0f}\\n"
-                f"  Entry Equity: {r.entry_equity:.0f} | Exit Equity: {r.exit_equity:.0f}\\n"
-                f"  IRR: {r.irr_pct}% | MOIC: {r.moic}x | ROI: {r.cash_roi_pct}%")
+        return (
+            f"LBO 分析 ({self.years}年):\\n"
+            f"  Entry EV: {r.entry_ev:.0f} | Exit EV: {r.exit_ev:.0f}\\n"
+            f"  Entry Equity: {r.entry_equity:.0f} | Exit Equity: {r.exit_equity:.0f}\\n"
+            f"  IRR: {r.irr_pct}% | MOIC: {r.moic}x | ROI: {r.cash_roi_pct}%"
+        )
 
 
 if __name__ == "__main__":

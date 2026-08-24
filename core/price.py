@@ -13,15 +13,16 @@ V51 适配:
 """
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
-from typing import Optional
 
 logger = logging.getLogger("v51.price")
 
 _HAS_AKSHARE = False
 try:
     import akshare as ak
+
     _HAS_AKSHARE = True
 except ImportError:
     pass
@@ -30,15 +31,16 @@ except ImportError:
 @dataclass
 class PriceResult:
     """价格查询结果。"""
+
     ticker: str = ""
     name: str = ""
     last_price: float = 0.0
     currency: str = "CNY"
     change_pct: float = 0.0
-    low_6mo: Optional[float] = None
-    high_6mo: Optional[float] = None
-    pe_ttm: Optional[float] = None
-    market_cap: Optional[float] = None
+    low_6mo: float | None = None
+    high_6mo: float | None = None
+    pe_ttm: float | None = None
+    market_cap: float | None = None
     source: str = ""
     success: bool = False
     error: str = ""
@@ -96,6 +98,7 @@ def fetch_a_share_price(stock_code: str) -> PriceResult:
     # Fallback: 从 Conviction Matrix 缓存读取（如果 akshare 不可用）
     try:
         from core.cognitive_baseline import CognitiveBaseline
+
         baseline = CognitiveBaseline.load(code)
         kv = baseline.get("key_variables", {})
         for var_name, var_data in kv.items():
@@ -114,7 +117,7 @@ def fetch_a_share_price(stock_code: str) -> PriceResult:
     return result
 
 
-def price_for_conviction_matrix(stock_code: str, fallback_price: Optional[float] = None) -> tuple[float, str]:
+def price_for_conviction_matrix(stock_code: str, fallback_price: float | None = None) -> tuple[float, str]:
     """Conviction Matrix 专用价格获取。
 
     优先 akshare 实时价 → fallback 传入价 → 优雅失败
@@ -134,7 +137,7 @@ def price_for_conviction_matrix(stock_code: str, fallback_price: Optional[float]
 
 
 # 便捷函数
-def get_price(stock_code: str) -> Optional[float]:
+def get_price(stock_code: str) -> float | None:
     """获取一只股票的最新价。"""
     result = fetch_a_share_price(stock_code)
     return result.last_price if result.success else None

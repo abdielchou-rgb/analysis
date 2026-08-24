@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 决策推理引擎（Decision Engine）— R83 内容层分析能力（核心改造靶心）
 
@@ -19,7 +18,9 @@
     result = DecisionEngine().analyze(asset="油位传感器", data=collected_data)
     # 结果注入 data_context["decision_engine"]，section_writer 消费
 """
+
 from __future__ import annotations
+
 import json
 import logging
 import re
@@ -61,71 +62,87 @@ def diagnose_dilemma(data: dict) -> dict:
     if "营收增速快于利润增速" in str(keli):
         rev_g = _extract_num(company, r"营收\s*([\d.]+)亿")
         net_g = _extract_num(company, r"归母.*?([\d.]+)亿")
-        struggles.append({
-            "维度": "增长质量",
-            "现象": "营收增速快于利润增速，内生增长质量待验证",
-            "证据": f"营收{rev_g}亿 vs 归母{net_g}亿（增速差）",
-            "量化": 0.6,  # 严重度 0-1
-            "方向": "估值溢价依赖物联网+机器人叙事，若叙事证伪有戴维斯双杀风险",
-        })
+        struggles.append(
+            {
+                "维度": "增长质量",
+                "现象": "营收增速快于利润增速，内生增长质量待验证",
+                "证据": f"营收{rev_g}亿 vs 归母{net_g}亿（增速差）",
+                "量化": 0.6,  # 严重度 0-1
+                "方向": "估值溢价依赖物联网+机器人叙事，若叙事证伪有戴维斯双杀风险",
+            }
+        )
     if "估值溢价依赖" in str(keli):
-        struggles.append({
-            "维度": "估值依赖",
-            "现象": "估值溢价依赖物联网+机器人叙事",
-            "证据": "PE 溢价 vs 纯称重同业",
-            "量化": 0.5,
-            "方向": "需要新增长故事承接估值——油位/物位是候选",
-        })
+        struggles.append(
+            {
+                "维度": "估值依赖",
+                "现象": "估值溢价依赖物联网+机器人叙事",
+                "证据": "PE 溢价 vs 纯称重同业",
+                "量化": 0.5,
+                "方向": "需要新增长故事承接估值——油位/物位是候选",
+            }
+        )
     if "商誉并购风险" in str(keli):
-        struggles.append({
-            "维度": "商誉风险",
-            "现象": "并购驱动增长带来商誉减值风险",
-            "证据": "华虹增持+久通投资等并表",
-            "量化": 0.4,
-            "方向": "整合协同若不及预期，商誉减值拖累利润",
-        })
+        struggles.append(
+            {
+                "维度": "商誉风险",
+                "现象": "并购驱动增长带来商誉减值风险",
+                "证据": "华虹增持+久通投资等并表",
+                "量化": 0.4,
+                "方向": "整合协同若不及预期，商誉减值拖累利润",
+            }
+        )
     if not struggles:
-        struggles.append({"维度": "数据不足", "现象": "困境信息缺失", "证据": "", "量化": 0.0,
-                          "方向": "需补充委托方困境描述"})
+        struggles.append(
+            {"维度": "数据不足", "现象": "困境信息缺失", "证据": "", "量化": 0.0, "方向": "需补充委托方困境描述"}
+        )
 
     # 优势（从 keli_strategy + company_intro 提取）
     strengths = []
     net_margin = _extract_num(company, r"净利率\s*([\d.]+)%")
     if net_margin:
-        strengths.append({
-            "维度": "盈利质量",
-            "现象": f"净利率{net_margin}%远超行业中游8-12%",
-            "证据": f"净利率{net_margin}% vs 行业8-12%",
-            "量化": 0.9,
-            "方向": "高毛利证明制造+品牌溢价，可复制到物位领域",
-        })
+        strengths.append(
+            {
+                "维度": "盈利质量",
+                "现象": f"净利率{net_margin}%远超行业中游8-12%",
+                "证据": f"净利率{net_margin}% vs 行业8-12%",
+                "量化": 0.9,
+                "方向": "高毛利证明制造+品牌溢价，可复制到物位领域",
+            }
+        )
     if "产能利用率85%" in str(keli) or "15%闲置" in str(keli):
-        strengths.append({
-            "维度": "产能冗余",
-            "现象": "产能利用率85%，15%闲置可承接新业务",
-            "证据": "无需大额资本开支即可承接油位订单",
-            "量化": 0.8,
-            "方向": "闲置产能承接=低成本进入，边际成本低",
-        })
+        strengths.append(
+            {
+                "维度": "产能冗余",
+                "现象": "产能利用率85%，15%闲置可承接新业务",
+                "证据": "无需大额资本开支即可承接油位订单",
+                "量化": 0.8,
+                "方向": "闲置产能承接=低成本进入，边际成本低",
+            }
+        )
     if "水质68.7%" in str(keli) or "68.7%" in str(keli):
-        strengths.append({
-            "维度": "平台化验证",
-            "现象": "水质传感毛利率68.7%，验证传感器森林多物理量复制",
-            "证据": "水质68.7% → 物位同路径可复制",
-            "量化": 0.85,
-            "方向": "多物理量平台化的成功样本，油位是下一个品类树",
-        })
+        strengths.append(
+            {
+                "维度": "平台化验证",
+                "现象": "水质传感毛利率68.7%，验证传感器森林多物理量复制",
+                "证据": "水质68.7% → 物位同路径可复制",
+                "量化": 0.85,
+                "方向": "多物理量平台化的成功样本，油位是下一个品类树",
+            }
+        )
     if "海外毛利率56.58%" in str(keli) or "56.58%" in str(keli):
-        strengths.append({
-            "维度": "海外变现",
-            "现象": "海外毛利率56.58%高于国内",
-            "证据": "海外收入3.07亿/占比19.7%",
-            "量化": 0.75,
-            "方向": "久通80+国家渠道可激活海外高毛利变现",
-        })
+        strengths.append(
+            {
+                "维度": "海外变现",
+                "现象": "海外毛利率56.58%高于国内",
+                "证据": "海外收入3.07亿/占比19.7%",
+                "量化": 0.75,
+                "方向": "久通80+国家渠道可激活海外高毛利变现",
+            }
+        )
     if not strengths:
-        strengths.append({"维度": "数据不足", "现象": "优势信息缺失", "证据": "", "量化": 0.0,
-                          "方向": "需补充委托方优势描述"})
+        strengths.append(
+            {"维度": "数据不足", "现象": "优势信息缺失", "证据": "", "量化": 0.0, "方向": "需补充委托方优势描述"}
+        )
 
     return {
         "status": "ok",
@@ -158,9 +175,15 @@ def assess_positioning(data: dict) -> dict:
     rev_trend = cd.get("fig_revenue_trend", {})
     global_2024 = rev_trend.get("2024", 0) if isinstance(rev_trend, dict) else 0
     if not global_2024:
-        return {"status": "no_data", "reason": "缺少市场规模数据(fig_revenue_trend)",
-                "score": None, "max": 5.0, "verdict": "待评估（数据不足）",
-                "dimensions": {}, "计算过程": ""}
+        return {
+            "status": "no_data",
+            "reason": "缺少市场规模数据(fig_revenue_trend)",
+            "score": None,
+            "max": 5.0,
+            "verdict": "待评估（数据不足）",
+            "dimensions": {},
+            "计算过程": "",
+        }
     market_score = min(1.0, global_2024 / 50.0)  # 全球46亿美元 → ~0.92
     market_note = f"全球{global_2024}亿美元(2024)，三角验证口径，'传感器森林'可及战场"
 
@@ -187,8 +210,9 @@ def assess_positioning(data: dict) -> dict:
     if "80+国家" in str(jiutong):
         channel_note = "久通80+国家渠道真实，但需订单承诺≥5000只/年验证"
 
-    total = (market_score * 0.25 + strategic_score * 0.25 + barrier_score * 0.2
-             + window_score * 0.15 + channel_score * 0.15)
+    total = (
+        market_score * 0.25 + strategic_score * 0.25 + barrier_score * 0.2 + window_score * 0.15 + channel_score * 0.15
+    )
     # 5 分制：各维 0-1 加权求和 × 5
     total_5 = round(total * 5.0, 2)
     verdict = "值得战略卡位" if total_5 >= 3.5 else "条件性卡位" if total_5 >= 2.5 else "不建议卡位"
@@ -239,8 +263,16 @@ def analyze_rampup(data: dict) -> dict:
         ("第二浪(2027)", 2000, 4000, "政策替换+国产替代"),
         ("第三浪(2028)", 5000, 10000, "国产替代+出海"),
     ]:
-        waves.append({"阶段": label, "收入(万)": f"{lo}-{hi}", "驱动": driver,
-                      "验证点": "久通订单兑现" if "第一浪" in label else ("政策执行率" if "第二浪" in label else "海外渠道激活")})
+        waves.append(
+            {
+                "阶段": label,
+                "收入(万)": f"{lo}-{hi}",
+                "驱动": driver,
+                "验证点": "久通订单兑现"
+                if "第一浪" in label
+                else ("政策执行率" if "第二浪" in label else "海外渠道激活"),
+            }
+        )
 
     # 能否快速放量判断
     quick_verdict = "能，但受订单兑现约束"
@@ -254,7 +286,12 @@ def analyze_rampup(data: dict) -> dict:
         "verdict": quick_verdict,
         "waves": waves,
         "key_variables": [
-            {"变量": "久通订单量", "现状": f"{jt_vol}只/年" if jt_vol else "待确认", "目标": "≥5000只/年", "影响": "放量能否启动"},
+            {
+                "变量": "久通订单量",
+                "现状": f"{jt_vol}只/年" if jt_vol else "待确认",
+                "目标": "≥5000只/年",
+                "影响": "放量能否启动",
+            },
             {"变量": "政策执行率", "现状": "约62%", "目标": "85%+", "影响": "第二浪节奏"},
             {"变量": "华虹认证", "现状": "基础已有", "目标": "防爆认证补齐", "影响": "量产能力"},
         ],
@@ -359,7 +396,9 @@ def calculate_investment(data: dict) -> dict:
         },
         "worst_loss": {
             "最坏情景": "久通订单落空+认证失败+磁致伸缩丝涨价",
-            "最大损失": f"约{worst_loss}万元(运营投入沉没，占柯力净利约{worst_ratio*100:.1f}%)" if worst_ratio else "约1700万",
+            "最大损失": f"约{worst_loss}万元(运营投入沉没，占柯力净利约{worst_ratio * 100:.1f}%)"
+            if worst_ratio
+            else "约1700万",
             "对标": f"约{worst_ratio:.2f}倍归母净利(净利{net_profit}亿)" if worst_ratio else "约半年至一年净利",
             "非对称性": "损失有限(≤1700万) 但期权价值高(物位大类+海外渠道)——典型非对称下注",
         },
@@ -404,8 +443,12 @@ class DecisionEngine:
             "verdict": pos.get("verdict", "待评估"),
             "卡位评分": f"{pos.get('score', 0)}/5.0" if pos.get("score") is not None else "数据不足",
             "放量": ramp.get("verdict", "待评估"),
-            "投入": inv.get("investment", {}).get("运营投入上限(三年)", "待评估") if isinstance(inv.get("investment"), dict) else "待评估",
-            "最坏损失": inv.get("worst_loss", {}).get("最大损失", "待评估") if isinstance(inv.get("worst_loss"), dict) else "待评估",
+            "投入": inv.get("investment", {}).get("运营投入上限(三年)", "待评估")
+            if isinstance(inv.get("investment"), dict)
+            else "待评估",
+            "最坏损失": inv.get("worst_loss", {}).get("最大损失", "待评估")
+            if isinstance(inv.get("worst_loss"), dict)
+            else "待评估",
             "执行前提": "久通订单承诺≥5000只/年，否则整合不启动",
         }
         return result
@@ -417,7 +460,9 @@ def run_decision_engine(data: dict) -> dict:
 
 
 if __name__ == "__main__":
-    import sys, json
+    import json
+    import sys
+
     path = sys.argv[1] if len(sys.argv) > 1 else "data/keli_oil_enrich_v086.json"
     # 构造 data: 读 enrich 文件 → chart_data
     payload = json.loads(Path(path).read_text(encoding="utf-8"))

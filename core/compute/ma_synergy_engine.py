@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """ma_synergy_engine.py — 并购协同三源量化（2026-08-08 框架 P2）
 
 顶级打法：McKinsey 并购协同拆三源——revenue synergy / cost synergy / tax synergy，逐项量化。
@@ -10,7 +9,9 @@
   from core.compute.ma_synergy_engine import calculate_synergy, build_prompt
   result = calculate_synergy({...})
 """
+
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 
@@ -23,8 +24,8 @@ class SynergyResult:
     cost_synergy: float = 0.0
     tax_synergy: float = 0.0
     total_synergy: float = 0.0
-    integration_risk: float = 0.0      # 0-1 整合风险
-    npv_synergy: float = 0.0           # 协同 NPV（5年折现）
+    integration_risk: float = 0.0  # 0-1 整合风险
+    npv_synergy: float = 0.0  # 协同 NPV（5年折现）
     details: dict = field(default_factory=dict)
     reasons: list = field(default_factory=list)
 
@@ -81,7 +82,7 @@ def calculate_synergy(params: dict) -> SynergyResult:
     r.npv_synergy = round(npv, 2)
 
     r.reasons = [
-        f"收入协同（交叉销售{params.get('cross_sell_pct',0.03):.0%}×利润率{margin:.0%}）: {r.revenue_synergy:,.0f}/年",
+        f"收入协同（交叉销售{params.get('cross_sell_pct', 0.03):.0%}×利润率{margin:.0%}）: {r.revenue_synergy:,.0f}/年",
         f"成本协同（节省{cost_pct:.0%}）: {r.cost_synergy:,.0f}/年",
         f"税协同: {r.tax_synergy:,.0f}/年",
         f"整合风险: {r.integration_risk:.0%}",
@@ -91,10 +92,12 @@ def calculate_synergy(params: dict) -> SynergyResult:
 
 
 def build_prompt(r: SynergyResult) -> str:
-    lines = ["=== 并购协同三源量化（McKinsey）===",
-             f"收入协同: {r.revenue_synergy:,.0f}/年 | 成本协同: {r.cost_synergy:,.0f}/年 | "
-             f"税协同: {r.tax_synergy:,.0f}/年 | 合计: {r.total_synergy:,.0f}/年",
-             f"协同NPV: {r.npv_synergy:,.0f} | 整合风险: {r.integration_risk:.0%}"]
+    lines = [
+        "=== 并购协同三源量化（McKinsey）===",
+        f"收入协同: {r.revenue_synergy:,.0f}/年 | 成本协同: {r.cost_synergy:,.0f}/年 | "
+        f"税协同: {r.tax_synergy:,.0f}/年 | 合计: {r.total_synergy:,.0f}/年",
+        f"协同NPV: {r.npv_synergy:,.0f} | 整合风险: {r.integration_risk:.0%}",
+    ]
     for x in r.reasons:
         lines.append(f"- {x}")
     lines.append("=== 协同结束 ===")

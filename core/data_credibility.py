@@ -4,12 +4,8 @@
 FP2要求: 数据零错误。多源冲突时必须标注置信度和分歧。
 """
 
-import json
 import logging
-import re
-from pathlib import Path
-from typing import Optional
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 logger = logging.getLogger("2hao.data_credibility")
 
@@ -17,18 +13,20 @@ logger = logging.getLogger("2hao.data_credibility")
 @dataclass
 class DataPoint:
     """单个数据点"""
+
     name: str
     value: float
     unit: str = ""
     source: str = ""
     timestamp: str = ""
     confidence: float = 0.5  # 0-1
-    fiscal_year: Optional[int] = None
+    fiscal_year: int | None = None
 
 
 @dataclass
 class SourceConflict:
     """数据源冲突"""
+
     data_name: str
     sources: dict  # source_name -> value
     difference_pct: float
@@ -94,13 +92,15 @@ class DataCredibilityEngine:
             # 综合置信度
             confidence = dp.confidence * 0.4 + reputation * 0.4 + (0.2 if range_check["passed"] else 0.0)
 
-            validated.append({
-                **dp.__dict__,
-                "validated_confidence": round(confidence, 2),
-                "range_check": range_check["passed"],
-                "range_issues": range_check.get("issues", []),
-                "source_reputation": reputation,
-            })
+            validated.append(
+                {
+                    **dp.__dict__,
+                    "validated_confidence": round(confidence, 2),
+                    "range_check": range_check["passed"],
+                    "range_issues": range_check.get("issues", []),
+                    "source_reputation": reputation,
+                }
+            )
         return validated
 
     def cross_validate(self, data_points: list) -> dict:
@@ -129,35 +129,41 @@ class DataCredibilityEngine:
                 if conflict["difference_pct"] < 10:
                     # 差异<10%，取平均
                     resolved_value = sum(p.value for p in points) / len(points)
-                    results["resolved"].append({
-                        "name": name,
-                        "value": resolved_value,
-                        "resolution": "average",
-                        "confidence": 0.7,
-                        "sources": [p.source for p in points],
-                    })
+                    results["resolved"].append(
+                        {
+                            "name": name,
+                            "value": resolved_value,
+                            "resolution": "average",
+                            "confidence": 0.7,
+                            "sources": [p.source for p in points],
+                        }
+                    )
                 elif conflict["difference_pct"] < 30:
                     # 差异10-30%，取信誉最高的
                     best = max(points, key=lambda p: self.SOURCE_REPUTATION.get(p.source, 0.30))
-                    results["resolved"].append({
-                        "name": name,
-                        "value": best.value,
-                        "resolution": "use_highest_reputation",
-                        "confidence": 0.5,
-                        "sources": [best.source],
-                        "discrepancy_note": f"数据分歧{conflict['difference_pct']:.0f}%，采用{best.source}数据",
-                    })
+                    results["resolved"].append(
+                        {
+                            "name": name,
+                            "value": best.value,
+                            "resolution": "use_highest_reputation",
+                            "confidence": 0.5,
+                            "sources": [best.source],
+                            "discrepancy_note": f"数据分歧{conflict['difference_pct']:.0f}%，采用{best.source}数据",
+                        }
+                    )
                 else:
                     # 差异>30%，标记为高冲突
                     best = max(points, key=lambda p: self.SOURCE_REPUTATION.get(p.source, 0.30))
-                    results["resolved"].append({
-                        "name": name,
-                        "value": best.value,
-                        "resolution": "flagged",
-                        "confidence": 0.3,
-                        "sources": [best.source],
-                        "discrepancy_note": f"⚠️ 严重数据分歧({conflict['difference_pct']:.0f}%)！建议人工核实",
-                    })
+                    results["resolved"].append(
+                        {
+                            "name": name,
+                            "value": best.value,
+                            "resolution": "flagged",
+                            "confidence": 0.3,
+                            "sources": [best.source],
+                            "discrepancy_note": f"⚠️ 严重数据分歧({conflict['difference_pct']:.0f}%)！建议人工核实",
+                        }
+                    )
             else:
                 results["resolved"].append(self._single_source(points[0]))
 
@@ -226,7 +232,7 @@ class DataCredibilityEngine:
 def main():
     """测试"""
     engine = DataCredibilityEngine()
-    
+
     # 示例
     points = [
         DataPoint("revenue_2025", 1500, "亿", "公司公告", confidence=0.9),
@@ -243,11 +249,11 @@ def main():
 
     # 交叉验证
     cv = engine.cross_validate(points)
-    print(f"\n=== 交叉验证 ===")
+    print("\n=== 交叉验证 ===")
     print(f"  总数据点: {cv['total_points']}")
     print(f"  已解析: {len(cv['resolved'])}")
     print(f"  冲突: {len(cv['conflicts'])}")
-    for c in cv['conflicts']:
+    for c in cv["conflicts"]:
         print(f"  ⚠️ {c['data_name']}: {c['difference_pct']:.0f}% 差异")
 
     print(f"\n{engine.generate_report_section(cv)}")

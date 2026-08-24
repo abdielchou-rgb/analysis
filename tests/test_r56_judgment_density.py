@@ -4,7 +4,8 @@
   min_judgment_density = 1.2 判断/千字（金牌 p10）
   min_data_density = 5.0 数据/千字（金牌 p10）
 """
-import os
+
+import os  # noqa: F401  (dead-import debt)
 import sys
 from pathlib import Path
 
@@ -15,6 +16,7 @@ if str(_ROOT) not in sys.path:
 
 def _run(text, report_type="industry_deep"):
     from pipeline.iron_gate import IronGate
+
     gate = IronGate.from_text(text, report_type=report_type, style="cicc")
     return gate._check_judgment_density()
 
@@ -33,6 +35,7 @@ _GOOD = (
 def test_judgment_density_registered():
     """检查应注册为类方法。"""
     from pipeline.iron_gate import IronGate
+
     assert hasattr(IronGate, "_check_judgment_density")
 
 
@@ -75,6 +78,7 @@ def test_short_text_skipped():
 
 if __name__ == "__main__":
     import traceback
+
     passed = failed = 0
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

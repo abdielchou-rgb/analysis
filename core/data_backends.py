@@ -2,10 +2,13 @@
 # 尝试顺序: akshare → yfinance → 计算估计 → 行业均值
 
 from __future__ import annotations
-import logging, time, json, re, sqlite3, os
-from pathlib import Path
-from typing import Optional, Callable
+
+import json
+import logging
+import re
+import time
 from datetime import datetime, timedelta
+from pathlib import Path
 
 logger = logging.getLogger("2hao.data_backends")
 
@@ -14,7 +17,8 @@ logger = logging.getLogger("2hao.data_backends")
 _BACKENDS = {}
 
 try:
-    import akshare as ak
+    import akshare as ak  # noqa: F401  (dead-import debt)
+
     _BACKENDS["akshare"] = True
     logger.info("Backend: akshare available")
 except ImportError:
@@ -22,7 +26,8 @@ except ImportError:
     logger.info("Backend: akshare unavailable")
 
 try:
-    import yfinance as yf
+    import yfinance as yf  # noqa: F401  (dead-import debt)
+
     _BACKENDS["yfinance"] = True
     logger.info("Backend: yfinance available")
 except ImportError:
@@ -30,8 +35,9 @@ except ImportError:
     logger.info("Backend: yfinance unavailable")
 
 try:
-    import numpy as np
-    import pandas as pd
+    import numpy as np  # noqa: F401  (dead-import debt)
+    import pandas as pd  # noqa: F401  (availability probe)
+
     _BACKENDS["pandas"] = True
 except ImportError:
     _BACKENDS["pandas"] = False
@@ -49,6 +55,7 @@ def _init_cache():
     """初始化缓存数据库"""
     try:
         from core.sqlite_pool import get_connection
+
         conn = get_connection(str(CACHE_DB))
         conn.execute("""
             CREATE TABLE IF NOT EXISTS data_cache (
@@ -65,13 +72,13 @@ def _init_cache():
         return False
 
 
-def cache_get(key: str) -> Optional[dict]:
+def cache_get(key: str) -> dict | None:
     """读取缓存"""
     try:
         from core.sqlite_pool import get_connection
+
         conn = get_connection(str(CACHE_DB), read_only=True)
-        cur = conn.execute(
-            "SELECT value, created_at, ttl_hours FROM data_cache WHERE key = ?", (key,))
+        cur = conn.execute("SELECT value, created_at, ttl_hours FROM data_cache WHERE key = ?", (key,))
         row = cur.fetchone()
         if row:
             value, created, ttl = row
@@ -89,16 +96,18 @@ def cache_set(key: str, value: dict, ttl: float = CACHE_TTL_HOURS):
     """写入缓存（单写者模式，WAL + 写锁）"""
     try:
         from core.sqlite_pool import write_execute
+
         write_execute(
             str(CACHE_DB),
             "INSERT OR REPLACE INTO data_cache (key, value, created_at, ttl_hours) VALUES (?, ?, ?, ?)",
-            (key, json.dumps(value, default=str, ensure_ascii=False),
-             datetime.now().isoformat(), ttl))
+            (key, json.dumps(value, default=str, ensure_ascii=False), datetime.now().isoformat(), ttl),
+        )
     except Exception as e:
         logger.debug("Cache write: %s", e)
 
 
 # ── 断路器 ──────────────────────────────────────────
+
 
 class CircuitBreaker:
     """每数据源的断路器 — 连续失败N次后跳过"""
@@ -128,8 +137,7 @@ class CircuitBreaker:
         self._failures[source] = 0  # 成功后重置
 
     def status(self) -> dict:
-        return {s: f"broken({self.cooldown}s)" if f >= self.threshold else "ok"
-                for s, f in self._failures.items()}
+        return {s: f"broken({self.cooldown}s)" if f >= self.threshold else "ok" for s, f in self._failures.items()}
 
 
 _CIRCUIT = CircuitBreaker()
@@ -137,10 +145,12 @@ _CIRCUIT = CircuitBreaker()
 
 # ── 多后端查询引擎 ────────────────────────────────
 
-def _query_local_qlib_price(code: str) -> Optional[dict]:
+
+def _query_local_qlib_price(code: str) -> dict | None:
     """优先查本地 Qlib bin（离线，秒级）。返回 {source, prices, dates} 或 None"""
     try:
         import numpy as np
+
         qlib_dir = Path(__file__).resolve().parent.parent / "data" / "qlib_bin"
         cal_path = qlib_dir / "calendars" / "day.txt"
         if not cal_path.exists():
@@ -150,7 +160,7 @@ def _query_local_qlib_price(code: str) -> Optional[dict]:
         # "300750.SZ".zfill(6)="300750.SZ" → 拼接成 "sz300750.SZ"，与 qlib 特征目录
         # "sz300750" 不匹配，_query_local_qlib_price 恒返回 None → 预测验证/目标价
         # 台账无法取价。先剥离后缀再补零前缀。
-        c = re.sub(r'\.(SH|SZ|SS|BJ|HK|US)$', '', code.strip().upper())
+        c = re.sub(r"\.(SH|SZ|SS|BJ|HK|US)$", "", code.strip().upper())
         if not c.startswith(("SH", "SZ", "BJ")):
             c = c.zfill(6)
             c = ("sh" if c.startswith(("6", "9")) else "sz") + c
@@ -190,13 +200,14 @@ def _query_local_qlib_price(code: str) -> Optional[dict]:
         return None
 
 
-def _query_local_financials(code: str) -> Optional[dict]:
+def _query_local_financials(code: str) -> dict | None:
     """查本地财务层 SQLite（Baostock 预拉取）。返回 {source, data} 或 None"""
     try:
         db = Path(__file__).resolve().parent.parent / "data" / "financials.db"
         if not db.exists():
             return None
         from core.sqlite_pool import get_connection
+
         conn = get_connection(str(db), read_only=True)
         cur = conn.execute(
             "SELECT quarter, table_name, field, value FROM financials WHERE code=? ORDER BY quarter DESC LIMIT 60",
@@ -224,6 +235,7 @@ def query_financial(code: str, max_retries: int = 2) -> dict:
     if _CIRCUIT.allow("baostock_fin"):
         try:
             import baostock as bs
+
             lg = bs.login()
             if lg.error_code == "0":
                 bs_code = ("sh." if code[:6].startswith(("6", "9")) else "sz.") + code[:6]
@@ -246,14 +258,15 @@ def query_financial(code: str, max_retries: int = 2) -> dict:
         for attempt in range(max_retries):
             try:
                 import akshare as ak
+
                 fin = ak.stock_financial_abstract_ths(symbol=code[:6], indicator="按年度")
                 if fin is not None and len(fin) > 0:
                     result["source"] = "akshare"
-                    result["data"] = fin.to_dict(orient="records") if hasattr(fin, 'to_dict') else str(fin)[:2000]
+                    result["data"] = fin.to_dict(orient="records") if hasattr(fin, "to_dict") else str(fin)[:2000]
                     _CIRCUIT.success("akshare_fin")
                     return result
             except Exception as e:
-                logger.warning("akshare fin fail (attempt %d/2): %s", attempt+1, e[:60] if len(str(e)) > 60 else e)
+                logger.warning("akshare fin fail (attempt %d/2): %s", attempt + 1, e[:60] if len(str(e)) > 60 else e)
                 time.sleep(1 * (attempt + 1))
         _CIRCUIT.fail("akshare_fin")
 
@@ -261,6 +274,7 @@ def query_financial(code: str, max_retries: int = 2) -> dict:
     if _BACKENDS.get("yfinance") and _CIRCUIT.allow("yfinance_fin"):
         try:
             import yfinance as yf
+
             ticker = _to_yfinance_ticker(code)
             if ticker:
                 stock = yf.Ticker(ticker)
@@ -301,6 +315,7 @@ def query_price_history(code: str) -> dict:
     if _BACKENDS.get("akshare") and _CIRCUIT.allow("akshare_price"):
         try:
             import akshare as ak
+
             hist = ak.stock_zh_a_hist(symbol=code[:6], period="monthly", adjust="qfq", start_date="20200101")
             if hist is not None and len(hist) > 10:
                 result["source"] = "akshare"
@@ -316,6 +331,7 @@ def query_price_history(code: str) -> dict:
     if _BACKENDS.get("yfinance") and _CIRCUIT.allow("yfinance_price"):
         try:
             import yfinance as yf
+
             ticker = _to_yfinance_ticker(code)
             if ticker:
                 hist = yf.download(ticker, period="5y", interval="1mo", progress=False)
@@ -340,6 +356,7 @@ def query_macro() -> dict:
 
     try:
         import akshare as ak
+
         # PMI
         try:
             pmi = ak.index_pmi_man_cx()
@@ -373,7 +390,7 @@ def query_macro() -> dict:
     return result
 
 
-def _to_yfinance_ticker(code: str) -> Optional[str]:
+def _to_yfinance_ticker(code: str) -> str | None:
     """将A股代码转为yfinance格式"""
     code = code.strip()[:6]
     if code.isdigit():
@@ -384,7 +401,7 @@ def _to_yfinance_ticker(code: str) -> Optional[str]:
     return None
 
 
-def get_industry_avg(industry: str, metric: str) -> Optional[float]:
+def get_industry_avg(industry: str, metric: str) -> float | None:
     """行业均值数据库（内置）"""
     benchmarks = {
         "白酒": {"pe": 30, "roe": 20, "margin": 35, "growth": 15},

@@ -5,7 +5,8 @@
 修复：新增 completeness_scan 确定性扫描（未闭合代码块/表格半cell/年份截断/
       已知碎片/句末连字符/段落截半）。
 """
-import os
+
+import os  # noqa: F401  (dead-import debt)
 import sys
 from pathlib import Path
 
@@ -29,6 +30,7 @@ _CLEAN = (
 
 def _run_scan(text):
     from pipeline.iron_gate import IronGate
+
     gate = IronGate.from_text(text, report_type="industry_deep", style="cicc")
     return gate._check_completeness_scan()
 
@@ -71,12 +73,15 @@ def test_trailing_hyphen_detected():
 
 def test_table_half_cell_detected():
     """表格半 cell（行管道符不一致）应拦截。"""
-    text = _CLEAN + """
+    text = (
+        _CLEAN
+        + """
 | 年份 | 市场规模 |
 |------|---------|
 | 2024 | 45亿 |
 | 2025 | 52亿 | 53亿
 """
+    )
     r = _run_scan(text)
     # 若表格结构明显异常应拦截
     assert not r.passed, f"表格半cell应拦截: {r.details}"
@@ -84,6 +89,7 @@ def test_table_half_cell_detected():
 
 if __name__ == "__main__":
     import traceback
+
     passed = failed = 0
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

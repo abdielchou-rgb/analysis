@@ -1,19 +1,24 @@
-# -*- coding: utf-8 -*-
 # Critic Panel - Multi-role review cluster
 # Codex generated - 2026-07-30
 
 from __future__ import annotations
-import json, logging, re, time, os
+
+import json
+import logging
+import os
+import re
+import time
 from dataclasses import dataclass, field
 from pathlib import Path as PPath
-from collections import Counter
 
 _ROOT = PPath(__file__).resolve().parent.parent.parent
 import sys
+
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 from core.deepseek_client import call_llm
+
 logger = logging.getLogger("2hao.critic_panel")
 
 
@@ -48,9 +53,14 @@ class CriticVerdict:
     duration_ms: float = 0.0
 
     def to_dict(self) -> dict:
-        return dict(role_id=self.role_id, role_name=self.role_name,
-                    overall_score=self.overall_score, passed=self.passed,
-                    strengths=self.strengths[:3], weaknesses=self.weaknesses[:3])
+        return dict(
+            role_id=self.role_id,
+            role_name=self.role_name,
+            overall_score=self.overall_score,
+            passed=self.passed,
+            strengths=self.strengths[:3],
+            weaknesses=self.weaknesses[:3],
+        )
 
 
 @dataclass
@@ -74,14 +84,16 @@ class ConsensusReport:
         return chr(10).join(out)
 
     def to_dict(self) -> dict:
-        return dict(final_score=round(self.final_score, 2), passed=self.passed,
-                    verdicts=[v.to_dict() for v in self.verdicts],
-                    top_suggestions=self.top_suggestions[:8])
+        return dict(
+            final_score=round(self.final_score, 2),
+            passed=self.passed,
+            verdicts=[v.to_dict() for v in self.verdicts],
+            top_suggestions=self.top_suggestions[:8],
+        )
 
 
 def _extract_json(text):
     """Extract JSON from LLM response."""
-    import re, json
     m = re.search(r"```(?:json)?\n?(.*?)```", text, re.DOTALL)
     if m:
         text = m.group(1)
@@ -96,32 +108,32 @@ def _extract_json(text):
 
 # ---- Role Definitions ----
 
-IB_PROMPT = '''You are a senior investment banking research director
+IB_PROMPT = """You are a senior investment banking research director
 with 20 years at Goldman Sachs or Morgan Stanley.
 Evaluate the report on: data provenance, valuation framework,
 bold call quality, peer benchmarking, risk management.
 Be strict. Score each dimension 0.0-1.0.
 Return JSON: {overall_score, passed, dimensions: [{dimension, score, passed, comment, severity}], strengths, weaknesses, suggestions}
-'''
+"""
 
-PE_PROMPT = '''You are a managing partner at a top PE firm
+PE_PROMPT = """You are a managing partner at a top PE firm
 (Sequoia, Hillhouse, KKR) with 15 years experience.
 Evaluate: business model, moat, scalability, capital efficiency, management.
-Return JSON.'''
+Return JSON."""
 
-MBB_PROMPT = '''You are a McKinsey/BCG/Bain strategy consultant
+MBB_PROMPT = """You are a McKinsey/BCG/Bain strategy consultant
 with 12 years experience. Evaluate: methodology, framework integrity,
 logical flow, argument depth, counter-argument quality.
-Return JSON.'''
+Return JSON."""
 
-BIG4_PROMPT = '''You are a Big 4 audit partner with 18 years experience.
+BIG4_PROMPT = """You are a Big 4 audit partner with 18 years experience.
 Evaluate: compliance, audit trail, data fidelity, accounting quality, disclosure.
-Return JSON.'''
+Return JSON."""
 
-CS_PROMPT = '''You are a chief strategist at a top Chinese brokerage
+CS_PROMPT = """You are a chief strategist at a top Chinese brokerage
 (CICC, CITIC) with 15 years experience.
 Evaluate: regulation, market context, policy transmission, client fit.
-Return JSON.'''
+Return JSON."""
 
 
 class CriticAgent:
@@ -134,9 +146,9 @@ class CriticAgent:
         t0 = time.time()
         if context is None:
             context = {}
-        prompt = self.role.system_prompt or prompts.get(self.role.role_id, '')
+        prompt = self.role.system_prompt or prompts.get(self.role.role_id, "")
         user_msg = f"""Evaluate this report as {self.role.role_name}.
-Focus on: {', '.join(self.role.focus)}
+Focus on: {", ".join(self.role.focus)}
 
 Report (first 6000 chars):
 {report_text[:6000]}
@@ -154,11 +166,13 @@ Return strict JSON with overall_score, passed, dimensions, strengths, weaknesses
             # P3-1（2026-08-07）异源圆桌：CRITIC_HETEROSOURCE=1 时走 OpenRouter——
             # 与 DeepSeek 不同源，防同源偏差（Marvis 方案：终局圆桌至少 1 席付费异源模型）。
             import os as _os
+
             _provider = "deepseek"
             if _os.environ.get("CRITIC_HETEROSOURCE", "0") == "1":
                 # 异源终局：全部走 OpenRouter（deepseek 异源路由 + qwen flash）
                 try:
                     from core.deepseek_client import _registry
+
                     if "openrouter" in _registry._providers:
                         _provider = "openrouter"
                 except Exception:
@@ -181,13 +195,15 @@ Return strict JSON with overall_score, passed, dimensions, strengths, weaknesses
                 for d in parsed.get("dimensions", []):
                     if not isinstance(d, dict):
                         continue
-                    dims.append(CriticScore(
-                        dimension=d.get("dimension", "?"),
-                        score=float(d.get("score", 0.5)),
-                        passed=d.get("passed", False),
-                        comment=d.get("comment", ""),
-                        severity=d.get("severity", "info"),
-                    ))
+                    dims.append(
+                        CriticScore(
+                            dimension=d.get("dimension", "?"),
+                            score=float(d.get("score", 0.5)),
+                            passed=d.get("passed", False),
+                            comment=d.get("comment", ""),
+                            severity=d.get("severity", "info"),
+                        )
+                    )
                 return CriticVerdict(
                     role_id=self.role.role_id,
                     role_name=self.role.role_name,
@@ -197,23 +213,25 @@ Return strict JSON with overall_score, passed, dimensions, strengths, weaknesses
                     strengths=parsed.get("strengths", []),
                     weaknesses=parsed.get("weaknesses", []),
                     suggestions=parsed.get("suggestions", []),
-                    duration_ms=(time.time()-t0)*1000,
+                    duration_ms=(time.time() - t0) * 1000,
                 )
         except Exception as e:
             logger.warning(f"Critic {self.role.role_id} failed: {e}")
             return CriticVerdict(
                 role_id=self.role.role_id,
                 role_name=self.role.role_name,
-                overall_score=0.5, passed=False,
+                overall_score=0.5,
+                passed=False,
                 suggestions=[f"Critic failed: {str(e)[:100]}"],
-                duration_ms=(time.time()-t0)*1000,
+                duration_ms=(time.time() - t0) * 1000,
             )
         return CriticVerdict(
             role_id=self.role.role_id,
             role_name=self.role.role_name,
-            overall_score=0.5, passed=False,
+            overall_score=0.5,
+            passed=False,
             suggestions=["Critic produced no output"],
-            duration_ms=(time.time()-t0)*1000,
+            duration_ms=(time.time() - t0) * 1000,
         )
 
 
@@ -222,8 +240,10 @@ class ConsensusOrchestrator:
 
     def __init__(self):
         self.prompts = {
-            "IB": IB_PROMPT, "PE": PE_PROMPT,
-            "MBB": MBB_PROMPT, "BIG4": BIG4_PROMPT,
+            "IB": IB_PROMPT,
+            "PE": PE_PROMPT,
+            "MBB": MBB_PROMPT,
+            "BIG4": BIG4_PROMPT,
             "CS": CS_PROMPT,
         }
 
@@ -235,33 +255,27 @@ class ConsensusOrchestrator:
             # 砍掉审计(BIG4)/券商(CS)冗余。需要 5 席时设 CRITIC_FULL=1。
             if os.environ.get("CRITIC_FULL", "0") == "1":
                 roles = [
-                    CriticRole("IB", "Investment Bank Partner",
-                        ["data", "valuation", "bold call"], "", 1.0),
-                    CriticRole("PE", "Private Equity Partner",
-                        ["moat", "scale", "mgmt"], "", 1.0),
-                    CriticRole("MBB", "Strategy Consultant",
-                        ["methodology", "logic"], "", 1.0),
-                    CriticRole("BIG4", "Audit Partner",
-                        ["compliance", "data fidelity"], "", 1.0),
-                    CriticRole("CS", "Chinese Brokerage Chief",
-                        ["regulation", "market context"], "", 1.0),
+                    CriticRole("IB", "Investment Bank Partner", ["data", "valuation", "bold call"], "", 1.0),
+                    CriticRole("PE", "Private Equity Partner", ["moat", "scale", "mgmt"], "", 1.0),
+                    CriticRole("MBB", "Strategy Consultant", ["methodology", "logic"], "", 1.0),
+                    CriticRole("BIG4", "Audit Partner", ["compliance", "data fidelity"], "", 1.0),
+                    CriticRole("CS", "Chinese Brokerage Chief", ["regulation", "market context"], "", 1.0),
                 ]
             else:
                 roles = [
-                    CriticRole("IB", "Investment Bank Partner",
-                        ["data", "valuation", "bold call"], "", 1.0),
-                    CriticRole("PE", "Private Equity Partner",
-                        ["moat", "scale", "mgmt"], "", 1.0),
-                    CriticRole("MBB", "Strategy Consultant",
-                        ["methodology", "logic"], "", 1.0),
+                    CriticRole("IB", "Investment Bank Partner", ["data", "valuation", "bold call"], "", 1.0),
+                    CriticRole("PE", "Private Equity Partner", ["moat", "scale", "mgmt"], "", 1.0),
+                    CriticRole("MBB", "Strategy Consultant", ["methodology", "logic"], "", 1.0),
                 ]
         verdicts = []
         # 2026-08-01 优化：并行跑评委（相互独立），50-66秒 → 10-15秒
         try:
             from concurrent.futures import ThreadPoolExecutor, as_completed
+
             with ThreadPoolExecutor(max_workers=len(roles)) as pool:
-                futures = {pool.submit(CriticAgent(role).evaluate, report_text, self.prompts, context): role
-                           for role in roles}
+                futures = {
+                    pool.submit(CriticAgent(role).evaluate, report_text, self.prompts, context): role for role in roles
+                }
                 verdicts_by_role = {}
                 for fut in as_completed(futures):
                     role = futures[fut]
@@ -270,11 +284,19 @@ class ConsensusOrchestrator:
                     except Exception as e:
                         logger.warning("Critic %s failed: %s", role.role_id, str(e)[:80])
                 # 保持 roles 顺序
-                verdicts = [verdicts_by_role.get(id(r),
-                             CriticVerdict(role_id=r.role_id, role_name=r.role_name,
-                                           overall_score=0.5, passed=False,
-                                           suggestions=["Critic failed"]))
-                            for r in roles]
+                verdicts = [
+                    verdicts_by_role.get(
+                        id(r),
+                        CriticVerdict(
+                            role_id=r.role_id,
+                            role_name=r.role_name,
+                            overall_score=0.5,
+                            passed=False,
+                            suggestions=["Critic failed"],
+                        ),
+                    )
+                    for r in roles
+                ]
         except Exception:
             # 回退串行（线程池不可用时）
             for role in roles:
@@ -286,26 +308,26 @@ class ConsensusOrchestrator:
         # 最终分用信誉加权（信誉高的角色权重高，激励倒挂修正）。
         try:
             from core.reviewer_reputation import ReviewerReputation
+
             _rr = ReviewerReputation()
             _report_id = str(getattr(self, "_report_id", "") or (context or {}).get("asset", "report"))
             for v, r in zip(verdicts, roles):
                 _claims = [getattr(v, "strengths", []) or []] + [getattr(v, "weaknesses", []) or []]
                 try:
-                    _rr.record_review(r.role_id, _report_id, v.overall_score,
-                                      [str(x)[:80] for x in _claims][:4])
+                    _rr.record_review(r.role_id, _report_id, v.overall_score, [str(x)[:80] for x in _claims][:4])
                 except Exception:
                     pass
             # 信誉加权最终分
-            weighted = sum(v.overall_score * r.weight * _rr.get_weight(r.role_id)
-                           for v, r in zip(verdicts, roles)) / sum(
-                r.weight * _rr.get_weight(r.role_id) for r in roles)
+            weighted = sum(
+                v.overall_score * r.weight * _rr.get_weight(r.role_id) for v, r in zip(verdicts, roles)
+            ) / sum(r.weight * _rr.get_weight(r.role_id) for r in roles)
         except Exception:
             weighted = sum(v.overall_score * r.weight for v, r in zip(verdicts, roles)) / total_w
         return ConsensusReport(
             final_score=round(weighted, 2),
             passed=weighted >= 0.6,
             verdicts=verdicts,
-            duration_ms=(time.time()-t0)*1000,
+            duration_ms=(time.time() - t0) * 1000,
         )
 
 
@@ -330,6 +352,7 @@ def critic_panel_node(node_id, context):
 if __name__ == "__main__":
     print("Critic Panel module loaded.")
     import argparse
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--report", type=str, help="Report path")
     parser.add_argument("--json", action="store_true")
@@ -342,6 +365,7 @@ if __name__ == "__main__":
             r = oc.evaluate(text)
             if args.json:
                 import json as j
+
                 print(j.dumps(r.to_dict(), ensure_ascii=False, indent=2))
             else:
                 print(r.summary())

@@ -1,18 +1,16 @@
-# -*- coding: utf-8 -*-
 """IronGate 共享基础模块 — 类型/日志/辅助函数。
 
 R61（2026-08-03）：为拆分 iron_gate.py 提供公共依赖。
 iron_gate.py 和 pipeline/checks/*_mixin.py 都从本模块导入共享类型，
 避免循环导入（iron_gate 继承 mixin，mixin 需要 GateCheckResult）。
 """
+
 from __future__ import annotations
-import json
+
 import logging
 import re
-import os
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Optional, List, Dict
 
 logger = logging.getLogger("2hao.iron_gate")
 
@@ -22,6 +20,7 @@ _ROOT = Path(__file__).resolve().parent.parent.parent
 @dataclass
 class GateCheckResult:
     """单个检查的结果。"""
+
     name: str
     passed: bool
     score: float
@@ -32,6 +31,7 @@ class GateCheckResult:
 @dataclass
 class GateReport:
     """Gate 校验报告。"""
+
     passed: bool = False
     overall_score: float = 0.0
     checks: list = field(default_factory=list)
@@ -41,20 +41,35 @@ class GateReport:
     @property
     def hard_fail_errors(self):
         """Return checks matching hard_fail names that did not pass"""
-        hard_names = ["personal_narrative", "section_continuity", "table_quality_md",
-                      "placeholder_charts", "forbidden_patterns", "bold_call", "so_what_chain",
-                      "cross_section_consistency"]
+        hard_names = [
+            "personal_narrative",
+            "section_continuity",
+            "table_quality_md",
+            "placeholder_charts",
+            "forbidden_patterns",
+            "bold_call",
+            "so_what_chain",
+            "cross_section_consistency",
+        ]
         return [c for c in self.checks if c.name in hard_names and not c.passed]
 
     def to_dict(self):
-        return {"passed": self.passed, "overall_score": self.overall_score,
-                "checks": [asdict(c) for c in self.checks],
-                "failures": self.failures, "suggestions": self.suggestions}
+        return {
+            "passed": self.passed,
+            "overall_score": self.overall_score,
+            "checks": [asdict(c) for c in self.checks],
+            "failures": self.failures,
+            "suggestions": self.suggestions,
+        }
 
     def to_text(self):
-        lines = ["=" * 60, "Iron Gate 校验报告", "=" * 60,
-                 "状态: %s" % ("PASS" if self.passed else "FAIL"),
-                 "综合评分: %.2f/1.00" % self.overall_score]
+        lines = [
+            "=" * 60,
+            "Iron Gate 校验报告",
+            "=" * 60,
+            "状态: %s" % ("PASS" if self.passed else "FAIL"),
+            "综合评分: %.2f/1.00" % self.overall_score,
+        ]
         for c in self.checks:
             icon = "+" if c.passed else "-"
             lines.append("  [%s] %s: %.2f - %s" % (icon, c.name, c.score, c.details[:80]))
@@ -77,21 +92,21 @@ def detect_value_conflicts(report_text: str, data_dict: dict) -> list:
         for k, v in data_dict.items():
             if isinstance(k, str) and v is not None:
                 # 形如 margin_2024 / net_profit_2024 / roe_2024
-                m = re.match(r'^(?:margin|net_profit|roe)_(\d{4})$', k)
+                m = re.match(r"^(?:margin|net_profit|roe)_(\d{4})$", k)
                 if m:
                     try:
-                        known.setdefault(m.group(1), {})[k.split('_')[0]] = float(v)
+                        known.setdefault(m.group(1), {})[k.split("_")[0]] = float(v)
                     except (TypeError, ValueError):
                         pass
         if not known:
             return conflicts
         # 报告正文找"YYYY年XX Y%"模式，与 data_dict 对比
-        generic = r'(?:毛利率|净利率|ROE)'
+        generic = r"(?:毛利率|净利率|ROE)"
         for year, vals in known.items():
             expected_unit = "%"
             pat = re.compile(
-                rf'(?:{year}年?(?:[^\n。]{{0,12}})?(?:{generic})|(?:{generic})[^\n。]{{0,12}}?{year}年?)'
-                rf'[^\n。]{{0,20}}?(?<![\d.])(\d+(?:\.\d{{1,3}})?)\s*({expected_unit})'
+                rf"(?:{year}年?(?:[^\n。]{{0,12}})?(?:{generic})|(?:{generic})[^\n。]{{0,12}}?{year}年?)"
+                rf"[^\n。]{{0,20}}?(?<![\d.])(\d+(?:\.\d{{1,3}})?)\s*({expected_unit})"
             )
             for m in pat.finditer(report_text):
                 try:
@@ -103,8 +118,7 @@ def detect_value_conflicts(report_text: str, data_dict: dict) -> list:
                     if abs(body_val - known_val) / max(abs(known_val), 1e-9) < 0.10:
                         break
                 else:
-                    conflicts.append(
-                        f"{year}年 正文写{body_val:.0f}{unit} vs 数据层{list(vals.values())[0]:.0f}")
+                    conflicts.append(f"{year}年 正文写{body_val:.0f}{unit} vs 数据层{list(vals.values())[0]:.0f}")
                     break  # 每年报一处
     except Exception:
         pass

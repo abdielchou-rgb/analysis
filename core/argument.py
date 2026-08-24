@@ -16,14 +16,17 @@ This replaces the empty-shell ArgumentVerifier from V50+ original.
 from __future__ import annotations
 
 import logging
-from typing import Optional
+from dataclasses import dataclass
 
 from core.models import (
-    WritingBrief, KnowledgePackage, DataPoint,
-    ArgumentScaffold, ArgumentSection, SectionType,
+    ArgumentScaffold,
+    ArgumentSection,
+    DataPoint,
+    KnowledgePackage,
     SACEntry,
+    SectionType,
+    WritingBrief,
 )
-from dataclasses import dataclass, field
 
 logger = logging.getLogger("v50.t2a")
 
@@ -31,6 +34,7 @@ logger = logging.getLogger("v50.t2a")
 @dataclass
 class DimensionPriority:
     """SAC 维度优先级——用于聚焦深度。"""
+
     id: str = ""
     depth: str = "standard"  # "deep" | "standard" | "brief"
     weight: float = 1.0
@@ -76,18 +80,20 @@ class ArgumentEngine:
                             evidence_min = max(evidence_min, 4)
                         break
 
-                sections.append(ArgumentSection(
-                    section_id=dim_id,
-                    title=self._dim_title(dim_id, question),
-                    section_type=SectionType.COUNTER if dim_id in ("falsify",) else SectionType.JUDGMENT,
-                    thesis=thesis,
-                    counter_thesis=counter_thesis,
-                    evidence_ids=matched_ids,
-                    counter_evidence_ids=counter_ids,
-                    required_citations=evidence_min,
-                    data_gaps=gaps,
-                    has_alternative_view=counter_required,
-                ))
+                sections.append(
+                    ArgumentSection(
+                        section_id=dim_id,
+                        title=self._dim_title(dim_id, question),
+                        section_type=SectionType.COUNTER if dim_id in ("falsify",) else SectionType.JUDGMENT,
+                        thesis=thesis,
+                        counter_thesis=counter_thesis,
+                        evidence_ids=matched_ids,
+                        counter_evidence_ids=counter_ids,
+                        required_citations=evidence_min,
+                        data_gaps=gaps,
+                        has_alternative_view=counter_required,
+                    )
+                )
 
         core_disagreement = {
             "market": brief.market_consensus or "市场一致预期需补充",
@@ -102,7 +108,7 @@ class ArgumentEngine:
             sections=sections,
         )
 
-    def _prioritize_dimensions(self, sac: Optional[SACEntry], brief: WritingBrief) -> list[DimensionPriority]:
+    def _prioritize_dimensions(self, sac: SACEntry | None, brief: WritingBrief) -> list[DimensionPriority]:
         """识别 1-2 个关键维度分配深度资源。
 
         策略：
@@ -153,8 +159,7 @@ class ArgumentEngine:
         required = dim.get("required_elements", [])
         matched = []
         keywords = []
-        for kw in ["营收", "利润", "毛利率", "ROE", "PE", "增速", "增长",
-                    "市占率", "负债", "现金流", "估值"]:
+        for kw in ["营收", "利润", "毛利率", "ROE", "PE", "增速", "增长", "市占率", "负债", "现金流", "估值"]:
             if kw in question:
                 keywords.append(kw)
         for name, dp in pool.items():
@@ -167,19 +172,23 @@ class ArgumentEngine:
                     score += 2
             if score > 0:
                 matched.append(name)
-        return matched[:max(dim.get("evidence_min", 1) * 2, 4)]
+        return matched[: max(dim.get("evidence_min", 1) * 2, 4)]
 
     def _find_counter_evidence(self, dim: dict, pool: dict[str, DataPoint]) -> list[str]:
         names = list(pool.keys())
-        return names[-min(len(names) // 3, 2):] if len(names) > 3 else []
+        return names[-min(len(names) // 3, 2) :] if len(names) > 3 else []
 
-    def _generate_thesis(self, brief: WritingBrief, dim: dict, matched_ids: list[str], pool: dict[str, DataPoint]) -> str:
+    def _generate_thesis(
+        self, brief: WritingBrief, dim: dict, matched_ids: list[str], pool: dict[str, DataPoint]
+    ) -> str:
         question = dim.get("question", "")
         dim_id = dim.get("id", "")
         if dim_id == "core_disagreement":
-            return (f"市场认为「{brief.market_consensus or '待确认'}」；"
-                    f"我们判断「{brief.our_view or brief.core_thesis_point or '待确认'}」"
-                    f"——核心分歧在「{brief.key_variable or '待识别'}」")
+            return (
+                f"市场认为「{brief.market_consensus or '待确认'}」；"
+                f"我们判断「{brief.our_view or brief.core_thesis_point or '待确认'}」"
+                f"——核心分歧在「{brief.key_variable or '待识别'}」"
+            )
         if brief.core_thesis_point:
             return f"{question} 核心判断：「{brief.core_thesis_point}」"
         return f"分析维度「{question}」：结合已有数据进行分析判断。"
@@ -187,17 +196,29 @@ class ArgumentEngine:
     @staticmethod
     def _dim_title(dim_id: str, question: str) -> str:
         titles = {
-            "core_disagreement": "核心分歧", "business_model": "商业模式",
-            "financial_analysis": "财务分析", "competitive_position": "竞争格局",
-            "growth_drivers": "增长驱动", "governance_esg": "治理与ESG",
-            "valuation_assessment": "估值分析", "falsification": "证伪条件",
-            "catalyst": "催化剂", "sharp_judgment": "核心锐判",
-            "bold_call": "核心判断", "polarity": "核心分歧与极性",
-            "policy": "政策传导", "market": "市场空间", "s_d": "供需分析",
-            "profit": "产业链与利润池", "compete": "竞争格局",
-            "tech": "技术路线", "capital": "资本市场映射",
-            "headline": "核心数字", "key_surprise": "超预期分析",
-            "segment_analysis": "分部业绩", "balance_cashflow": "现金流质量",
+            "core_disagreement": "核心分歧",
+            "business_model": "商业模式",
+            "financial_analysis": "财务分析",
+            "competitive_position": "竞争格局",
+            "growth_drivers": "增长驱动",
+            "governance_esg": "治理与ESG",
+            "valuation_assessment": "估值分析",
+            "falsification": "证伪条件",
+            "catalyst": "催化剂",
+            "sharp_judgment": "核心锐判",
+            "bold_call": "核心判断",
+            "polarity": "核心分歧与极性",
+            "policy": "政策传导",
+            "market": "市场空间",
+            "s_d": "供需分析",
+            "profit": "产业链与利润池",
+            "compete": "竞争格局",
+            "tech": "技术路线",
+            "capital": "资本市场映射",
+            "headline": "核心数字",
+            "key_surprise": "超预期分析",
+            "segment_analysis": "分部业绩",
+            "balance_cashflow": "现金流质量",
             "outlook_implication": "展望与影响",
         }
         return titles.get(dim_id, question[:30])

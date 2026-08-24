@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 三表勾稽模型（Three-Statement Model）— R19 投行级盈利预测闭环
 
@@ -13,9 +12,10 @@
   3. 经营现金流 + 资本开支（投资） + 融资 → 期末现金
   4. 期末现金 → 下期资产负债表货币资金 → 下期期初现金
 """
+
 from __future__ import annotations
+
 import logging
-from typing import Optional
 
 logger = logging.getLogger("2hao.three_statement")
 
@@ -27,7 +27,7 @@ def _safe_float(v, default=0.0):
         return default
 
 
-def build_three_statement(data: dict) -> Optional[dict]:
+def build_three_statement(data: dict) -> dict | None:
     """构建三表勾稽模型。
 
     输入历史：营收/净利/毛利率（利润表）；总资产/总负债/权益（资产负债表）；FCF/OCF（现金流）
@@ -46,6 +46,7 @@ def build_three_statement(data: dict) -> Optional[dict]:
     # 此前读 fig_margin 不兼容 margin_2025 扁平键 → 毛利率读空。
     try:
         from core.financial_extract import extract_financial_history
+
         historical_raw = extract_financial_history(data)
     except Exception as _e:
         logger.debug("[THREE-STMT] extract layer failed: %s", _e)
@@ -81,10 +82,16 @@ def build_three_statement(data: dict) -> Optional[dict]:
     last_margin = _safe_float(historical_raw.get(str(last_year), {}).get("gross_margin", 0))
 
     # 历史增速
-    rev_vals = [_safe_float(historical_raw.get(str(y), {}).get("revenue", 0)) for y in years
-                if _safe_float(historical_raw.get(str(y), {}).get("revenue", 0)) > 0]
-    prof_vals = [_safe_float(historical_raw.get(str(y), {}).get("net_profit", 0)) for y in years
-                 if _safe_float(historical_raw.get(str(y), {}).get("net_profit", 0)) != 0]
+    rev_vals = [
+        _safe_float(historical_raw.get(str(y), {}).get("revenue", 0))
+        for y in years
+        if _safe_float(historical_raw.get(str(y), {}).get("revenue", 0)) > 0
+    ]
+    prof_vals = [
+        _safe_float(historical_raw.get(str(y), {}).get("net_profit", 0))
+        for y in years
+        if _safe_float(historical_raw.get(str(y), {}).get("net_profit", 0)) != 0
+    ]
 
     def _growth(vals):
         if len(vals) < 2 or vals[0] == 0:
@@ -145,16 +152,23 @@ def build_three_statement(data: dict) -> Optional[dict]:
         cash = cash + cash_flow
 
         tables["income"][yr] = {
-            "revenue": round(rev, 2), "ebitda": round(ebitda, 2),
-            "net_profit": round(net_profit, 2), "margin": round(net_profit / rev * 100, 2) if rev else 0,
+            "revenue": round(rev, 2),
+            "ebitda": round(ebitda, 2),
+            "net_profit": round(net_profit, 2),
+            "margin": round(net_profit / rev * 100, 2) if rev else 0,
         }
         tables["balance"][yr] = {
-            "equity": round(equity, 2), "debt": round(debt, 2), "cash": round(cash, 2),
+            "equity": round(equity, 2),
+            "debt": round(debt, 2),
+            "cash": round(cash, 2),
             "total_assets": round(equity + debt + cash, 2),
         }
         tables["cashflow"][yr] = {
-            "ocf": round(ocf, 2), "icf": round(icf, 2), "capex": round(capex, 2),
-            "fcf": round(fcf, 2), "ending_cash": round(cash, 2),
+            "ocf": round(ocf, 2),
+            "icf": round(icf, 2),
+            "capex": round(capex, 2),
+            "fcf": round(fcf, 2),
+            "ending_cash": round(cash, 2),
         }
 
         # 增速收敛
@@ -173,8 +187,11 @@ def build_three_statement(data: dict) -> Optional[dict]:
         "base_year": last_year,
         "tables": tables,
         "assumptions": {
-            "payout_ratio": payout_ratio, "depreciation_rate": dep_rate,
-            "capex_rate": capex_rate, "nwc_rate": nwc_rate, "tax_rate": tax_rate,
+            "payout_ratio": payout_ratio,
+            "depreciation_rate": dep_rate,
+            "capex_rate": capex_rate,
+            "nwc_rate": nwc_rate,
+            "tax_rate": tax_rate,
         },
         "balance_ok": len(balance_issues) == 0,
         "balance_issues": balance_issues,
@@ -195,7 +212,9 @@ def format_three_statement(ts: dict) -> str:
         bs = tables["balance"][yr]
         cf = tables["cashflow"][yr]
         lines.append(f"\n{yr}:")
-        lines.append(f"  利润表: 营收{inc['revenue']} 净利{inc['net_profit']} EBITDA{inc['ebitda']} 净利率{inc['margin']}%")
+        lines.append(
+            f"  利润表: 营收{inc['revenue']} 净利{inc['net_profit']} EBITDA{inc['ebitda']} 净利率{inc['margin']}%"
+        )
         lines.append(f"  资产负债表: 权益{bs['equity']} 负债{bs['debt']} 现金{bs['cash']}")
         lines.append(f"  现金流: 经营{cf['ocf']} 投资{cf['icf']} FCF{cf['fcf']} 期末现金{cf['ending_cash']}")
     return "\n".join(lines)

@@ -5,7 +5,8 @@
 修复：RATIO_PATTERN 加"市占率|市场占有率"；同义词簇归一化
       （市占率/市场份额/市场占有率/份额 → 市占率）。
 """
-import os
+
+import os  # noqa: F401  (dead-import debt)
 import sys
 from pathlib import Path
 
@@ -17,10 +18,8 @@ if str(_ROOT) not in sys.path:
 def test_ratioshizhanlv_detected():
     """市占率表述应被占比簇提取（此前漏检）。"""
     from pipeline.consistency_engine import ConsistencyEngine
-    text = (
-        "公司市占率约为45%，位居行业前列。"
-        "公司市占率约30%，出现明显下滑。"
-    )
+
+    text = "公司市占率约为45%，位居行业前列。公司市占率约30%，出现明显下滑。"
     r = ConsistencyEngine().check(text)
     # 两个市占率 45% vs 30% 应归入同一簇并检出矛盾（偏差33%>30%）
     assert not r["passed"], f"市占率矛盾应检出: {r['conflicts']}"
@@ -31,10 +30,8 @@ def test_ratioshizhanlv_detected():
 def test_synonym_normalization_conflict():
     """同义词归一化：市场份额 vs 市占率 应归入同一簇并检出矛盾。"""
     from pipeline.consistency_engine import ConsistencyEngine
-    text = (
-        "公司市场份额约为45%，位居行业前列。"
-        "公司市占率约30%，出现明显下滑。"
-    )
+
+    text = "公司市场份额约为45%，位居行业前列。公司市占率约30%，出现明显下滑。"
     r = ConsistencyEngine().check(text)
     assert not r["passed"], f"同义词矛盾应检出: {r['conflicts']}"
     # 簇名应归一化到同一 canonical 词
@@ -44,10 +41,8 @@ def test_synonym_normalization_conflict():
 def test_consistent_ratio_passes():
     """相同占比值（无矛盾）应通过。"""
     from pipeline.consistency_engine import ConsistencyEngine
-    text = (
-        "公司市场份额约为45%，位居行业前列。"
-        "公司市占率约为45%，保持稳定。"
-    )
+
+    text = "公司市场份额约为45%，位居行业前列。公司市占率约为45%，保持稳定。"
     r = ConsistencyEngine().check(text)
     assert r["passed"], f"一致占比不应检出冲突: {r['conflicts']}"
 
@@ -55,16 +50,15 @@ def test_consistent_ratio_passes():
 def test_penetration_still_detected():
     """原有渗透率检测不受影响。"""
     from pipeline.consistency_engine import ConsistencyEngine
-    text = (
-        "行业渗透率约为25%。"
-        "行业渗透率约40%。"
-    )
+
+    text = "行业渗透率约为25%。行业渗透率约40%。"
     r = ConsistencyEngine().check(text)
     assert not r["passed"], f"渗透率矛盾应检出: {r['conflicts']}"
 
 
 if __name__ == "__main__":
     import traceback
+
     passed = failed = 0
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

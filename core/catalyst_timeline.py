@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 催化剂日历（Catalyst Timeline）— R23 王牌方法：把投资逻辑变成可验证的时间轴
 
@@ -17,10 +16,11 @@
 
 所有日期标记为 (E)/(A) 来源标注，无来源的事件标注为假设。
 """
+
 from __future__ import annotations
-import json
+
 import logging
-from datetime import datetime, date, timedelta
+from datetime import date, datetime
 from pathlib import Path
 
 logger = logging.getLogger("2hao.catalyst")
@@ -46,7 +46,7 @@ def next_earnings_window(now: date | None = None) -> str:
         return f"{now.year}年8月底（{now.year}中报）"
     if m <= 10:
         return f"{now.year}年10月底（{now.year}三季报）"
-    return f"{now.year+1}年4月底（{now.year}年报）"
+    return f"{now.year + 1}年4月底（{now.year}年报）"
 
 
 def build_catalyst_timeline(data: dict, report_type: str = "listed_company") -> dict:
@@ -66,8 +66,7 @@ def build_catalyst_timeline(data: dict, report_type: str = "listed_company") -> 
 
     def _add(year, q, etype, desc, source):
         key = (year, q)
-        events_by_q.setdefault(key, []).append(
-            {"type": etype, "desc": desc, "source": source})
+        events_by_q.setdefault(key, []).append({"type": etype, "desc": desc, "source": source})
 
     # ── 1. 常规财报催化（所有类型）──
     y, m = now.year, now.month
@@ -81,21 +80,28 @@ def build_catalyst_timeline(data: dict, report_type: str = "listed_company") -> 
             if _q > 4:
                 _q = 1
                 _y += 1
-        _add(_y, _q, "财报", f"季度财报/业绩披露窗口", "A/日历")
+        _add(_y, _q, "财报", "季度财报/业绩披露窗口", "A/日历")
 
     # ── 2. 公司事件（个股）──
     try:
         from core.data_basement import load_company_events
+
         code = ""
         if asset:
             import re
+
             _m = re.search(r"(\d{6})", asset)
             code = _m.group(1) if _m else ""
         if code:
             ev = load_company_events(code) or {}
             if ev.get("dividend_count"):
-                _add(y, _q_of(m) + 1 if _q_of(m) < 4 else 1,
-                     "分红", f"分红除权日（近{ev['dividend_count']}次分红历史）", "A/公司公告")
+                _add(
+                    y,
+                    _q_of(m) + 1 if _q_of(m) < 4 else 1,
+                    "分红",
+                    f"分红除权日（近{ev['dividend_count']}次分红历史）",
+                    "A/公司公告",
+                )
             if ev.get("share_change_count"):
                 _add(y, _q_of(m), "股本", "限售解禁/股本变动窗口", "A/公司公告")
     except Exception as _e:
@@ -104,6 +110,7 @@ def build_catalyst_timeline(data: dict, report_type: str = "listed_company") -> 
     # ── 3. 政策催化（行业匹配）──
     try:
         from core.data_basement import load_policy
+
         pol = load_policy(asset_name) if asset_name else None
         if pol:
             for p in pol[:6]:
@@ -112,15 +119,20 @@ def build_catalyst_timeline(data: dict, report_type: str = "listed_company") -> 
                     pd = datetime.strptime(dstr, "%Y-%m-%d").date()
                 except Exception:
                     continue
-                _add(pd.year, _q_of(pd.month), "政策",
-                     f"政策节点：{str(p.get('title',''))[:40]}（方向{'利好' if p.get('direction',0)>0 else '中性/待评估'}）",
-                     "A/政策库")
+                _add(
+                    pd.year,
+                    _q_of(pd.month),
+                    "政策",
+                    f"政策节点：{str(p.get('title', ''))[:40]}（方向{'利好' if p.get('direction', 0) > 0 else '中性/待评估'}）",
+                    "A/政策库",
+                )
     except Exception as _e:
         logger.debug("[CATALYST] policy failed: %s", _e)
 
     # ── 4. 行业技术节点（行业生命周期）──
     try:
-        from core.data_basement import load_penetration, load_industry_chain
+        from core.data_basement import load_penetration
+
         pen = load_penetration(asset_name) if asset_name else None
         lc = pen.get("life_cycle", "") if pen else ""
         # 生命周期 → 下一关键节点
@@ -137,6 +149,7 @@ def build_catalyst_timeline(data: dict, report_type: str = "listed_company") -> 
     if report_type == "unlisted_company":
         try:
             from core.bottleneck_engine import load_prospectus_data
+
             ps = load_prospectus_data(asset_name) or {}
             if ps.get("file"):
                 _add(y, _q_of(m) + 1, "退出", "IPO 申报/注册推进（已见招股书）", "A/招股书")
@@ -147,16 +160,17 @@ def build_catalyst_timeline(data: dict, report_type: str = "listed_company") -> 
 
     # ── 排序输出 ──
     if not events_by_q:
-        return {"status": "no_data", "timeline": [],
-                "next_catalyst": "", "note": "无可用催化数据。"}
+        return {"status": "no_data", "timeline": [], "next_catalyst": "", "note": "无可用催化数据。"}
 
     timeline = []
     for key in sorted(events_by_q.keys()):
         year, q = key
-        timeline.append({
-            "quarter": _quarter_label(q, year),
-            "events": events_by_q[key],
-        })
+        timeline.append(
+            {
+                "quarter": _quarter_label(q, year),
+                "events": events_by_q[key],
+            }
+        )
 
     # 下一催化剂：最早的未来事件
     first_future = None
@@ -185,23 +199,25 @@ def serialize_catalyst(ct: dict, max_chars: int = 1200) -> str:
     """序列化为 prompt 注入文本。"""
     if not ct or ct.get("status") != "ok":
         return ""
-    lines = ["=== 催化剂日历（把判断变成可验证的时间轴） ===",
-             f"下一催化剂: **{ct.get('next_catalyst')}** — {ct.get('next_catalyst_desc','')[:50]}",
-             f"财报窗口: {ct.get('next_earnings')}"]
+    lines = [
+        "=== 催化剂日历（把判断变成可验证的时间轴） ===",
+        f"下一催化剂: **{ct.get('next_catalyst')}** — {ct.get('next_catalyst_desc', '')[:50]}",
+        f"财报窗口: {ct.get('next_earnings')}",
+    ]
     for tl in ct.get("timeline", [])[:6]:
         evs = tl["events"]
         lines.append(f"\n{tl['quarter']}:")
         for e in evs[:3]:
             src = e.get("source", "")
-            lines.append(f"- [{src}] {e.get('desc','')[:55]}")
+            lines.append(f"- [{src}] {e.get('desc', '')[:55]}")
     return "\n".join(lines)[:max_chars]
 
 
 if __name__ == "__main__":
     import sys
+
     sys.path.insert(0, ".")
-    sample = {"asset": "柯力传感(603662.SH)",
-              "chart_data": {}}
+    sample = {"asset": "柯力传感(603662.SH)", "chart_data": {}}
     for rt in ["listed_company", "industry_deep", "unlisted_company"]:
         ct = build_catalyst_timeline(sample, rt)
         print(f"\n=== {rt} ===")

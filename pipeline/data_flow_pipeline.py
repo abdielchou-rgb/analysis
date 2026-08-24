@@ -1,5 +1,7 @@
 """数据流管线 — 一致预测/实时宏观/另类数据的一体化接线。"""
+
 from __future__ import annotations
+
 import json
 import logging
 from dataclasses import dataclass
@@ -36,8 +38,13 @@ class DataFlowPipeline:
             try:
                 data = json.loads(fp.read_text(encoding="utf-8"))
                 if stock_code in data:
-                    return DataPoint(f"{stock_code}_pe_fwd", float(data[stock_code].get("pe_forward", 0)),
-                                     "倍", "latest", "consensus_prices.json")
+                    return DataPoint(
+                        f"{stock_code}_pe_fwd",
+                        float(data[stock_code].get("pe_forward", 0)),
+                        "倍",
+                        "latest",
+                        "consensus_prices.json",
+                    )
             except Exception:
                 pass
         return DataPoint("consensus", 0, "", "", "fallback(无数据)")
@@ -50,8 +57,9 @@ class DataFlowPipeline:
                     data = json.loads(fp.read_text())
                     if indicator in data:
                         v = data[indicator]
-                        return DataPoint(indicator, float(v["value"]), v.get("unit", ""),
-                                         v.get("date", ""), "macro_highfreq.json")
+                        return DataPoint(
+                            indicator, float(v["value"]), v.get("unit", ""), v.get("date", ""), "macro_highfreq.json"
+                        )
                 except Exception:
                     pass
         return DataPoint(indicator, 0, "", "", "fallback")

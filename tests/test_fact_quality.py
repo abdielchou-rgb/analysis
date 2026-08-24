@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """R28 事实质量全量修复测试（数据口径 + Gate一致性 + 写作规划）
 
 固化四刀修复的关键行为：
@@ -53,8 +52,9 @@ def test_caliber_annotation():
 
 # ── 测试 3：Gate 评级-空间一致性 ────────────────────────────────
 def test_gate_rating_target_consistency():
-    from pipeline.iron_gate import IronGate
     import tempfile
+
+    from pipeline.iron_gate import IronGate
 
     # 柯力场景：增持但仅+2.7%空间
     report = (
@@ -77,8 +77,9 @@ def test_gate_rating_target_consistency():
 
 # ── 测试 4：Gate 数据冲突检查 ──────────────────────────────────
 def test_gate_data_conflicts_check():
-    from pipeline.iron_gate import IronGate
     import tempfile
+
+    from pipeline.iron_gate import IronGate
 
     report = "# 测试\n毛利率34.5%，毛利率5.0%，营收15.58亿元。" * 5
     tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False, encoding="utf-8")
@@ -95,8 +96,9 @@ def test_gate_data_conflicts_check():
 
 # ── R32 回归：Gate 目标价自相矛盾检测（柯力案 51.60 vs 48）──────
 def test_gate_multiple_target_prices_conflict():
-    from pipeline.iron_gate import IronGate
     import tempfile
+
+    from pipeline.iron_gate import IronGate
 
     report = (
         "**投资评级：增持** ｜ **12个月目标价：51.60元** ｜ **当前价：46.73元**\n"
@@ -119,8 +121,9 @@ def test_gate_multiple_target_prices_conflict():
 
 def test_gate_single_target_price_passes():
     """R32：单一目标价 + 区间表述不应误报。"""
-    from pipeline.iron_gate import IronGate
     import tempfile
+
+    from pipeline.iron_gate import IronGate
 
     report = (
         "**投资评级：增持** ｜ **12个月目标价：48.00元** ｜ **当前价：43.00元**\n"
@@ -141,8 +144,9 @@ def test_gate_single_target_price_passes():
 # ── R34 回归：so_what_chain 表格段豁免 ─────────────────────────
 def test_so_what_table_sections_exempt():
     """R34：纯表格段（跟踪指标表/风险表）不应拉低 so_what min_score。"""
-    from pipeline.iron_gate import IronGate
     import tempfile
+
+    from pipeline.iron_gate import IronGate
 
     report = """# 测试报告
 ## 一、行业分析
@@ -181,8 +185,9 @@ def test_so_what_table_sections_exempt():
 # ── R35 回归：算术校验层（占比/估值中值/目标价空间/EPS桥）──
 def test_arithmetic_audit_catches_wrong_ratio():
     """R35：北向占比算错（0.24% vs 实际1.13%）应被算术校验拦截。"""
-    from pipeline.iron_gate import IronGate
     import tempfile
+
+    from pipeline.iron_gate import IronGate
 
     report = (
         "**投资评级：增持** ｜ **12个月目标价：53.50元** ｜ **当前价：46.73元** ｜ **目标价空间：+14.5%**\n"
@@ -207,8 +212,9 @@ def test_arithmetic_audit_catches_wrong_ratio():
 
 def test_arithmetic_audit_passes_correct_ratio():
     """R35：正确的占比不应误报。"""
-    from pipeline.iron_gate import IronGate
     import tempfile
+
+    from pipeline.iron_gate import IronGate
 
     report = (
         "**投资评级：增持** ｜ **12个月目标价：53.50元** ｜ **当前价：46.73元** ｜ **目标价空间：+14.5%**\n"
@@ -232,8 +238,9 @@ def test_arithmetic_audit_passes_correct_ratio():
 # ── R35 回归：模板句高重复检测 ─────────────────────────────
 def test_template_repeat_catches_pollution():
     """R35：模板句重复 2 次 + 概念错位应被检测。"""
-    from pipeline.iron_gate import IronGate
     import tempfile
+
+    from pipeline.iron_gate import IronGate
 
     base = (
         "## 分析\n"
@@ -258,8 +265,9 @@ def test_template_repeat_catches_pollution():
 
 def test_template_repeat_passes_clean():
     """R35：正常报告不应误报模板污染。"""
-    from pipeline.iron_gate import IronGate
     import tempfile
+
+    from pipeline.iron_gate import IronGate
 
     report = (
         "## 分析\n"
@@ -285,9 +293,11 @@ _TEST_DD_PATH = Path("output/_test_keli_data_dict.json")
 
 def test_financial_value_consistency_catches_conflict():
     """R38：报告毛利率与 data_dict 真实值冲突应被拦截（柯力案 34.5% vs 46.35%）。"""
-    from pipeline.iron_gate import IronGate
-    import tempfile, json
+    import json
+    import tempfile
     from pathlib import Path
+
+    from pipeline.iron_gate import IronGate
 
     # 写入临时 data_dict（独立 asset 名，不污染真实柯力数据）
     dd = {"margin_2025": 44.83, "margin_2026": 46.35}
@@ -316,9 +326,11 @@ def test_financial_value_consistency_catches_conflict():
 
 def test_financial_value_consistency_passes_good():
     """R38：与 data_dict 一致的财务值不应误报。"""
-    from pipeline.iron_gate import IronGate
-    import tempfile, json
+    import json
+    import tempfile
     from pathlib import Path
+
+    from pipeline.iron_gate import IronGate
 
     dd = {"margin_2025": 44.83, "margin_2026": 46.35}
     Path(_TEST_DD_PATH).write_text(json.dumps(dd, ensure_ascii=False), encoding="utf-8")
@@ -368,12 +380,14 @@ def test_scrub_aigc_artifacts():
 # ── R40 回归：渲染层目检（docx 空段/分页/图表分布）──
 def test_layout_quality_catches_docx_issues():
     """R40：渲染层目检应捕获 docx 空段落率过高/连续空段/图表未随文。"""
-    from pipeline.iron_gate import IronGate
-    import tempfile, zipfile, shutil
+    import tempfile
     from pathlib import Path
 
     # 构造一个含空段 + 图表集中的 docx
     import docx
+
+    from pipeline.iron_gate import IronGate
+
     doc = docx.Document()
     # 15 个空段
     for _ in range(15):
@@ -406,8 +420,9 @@ def test_layout_quality_catches_docx_issues():
 # ── R46 回归：不变量断言层（物理不可能拦截）────────────────
 def test_invariant_audit_catches_holding_value():
     """R46：持股数×股价≠持股市值（r11 案 318.29万股×46.73=1.49亿 vs 2.27亿）应拦截。"""
-    from pipeline.iron_gate import IronGate
     import tempfile
+
+    from pipeline.iron_gate import IronGate
 
     report = (
         "总市值131.23亿元，收盘价46.73元。北向资金持有柯力传感318.29万股，持股市值2.27亿元。\n"
@@ -428,8 +443,9 @@ def test_invariant_audit_catches_holding_value():
 
 def test_invariant_audit_passes_good():
     """R46：自洽数据不应误报。"""
-    from pipeline.iron_gate import IronGate
     import tempfile
+
+    from pipeline.iron_gate import IronGate
 
     report = (
         "总市值131.23亿元。北向资金持有柯力传感318.29万股，持股市值1.49亿元。\n"
@@ -449,8 +465,9 @@ def test_invariant_audit_passes_good():
 
 def test_invariant_audit_catches_dcf_circular():
     """R46：DCF 循环论证（r11 案 模型39亿 vs 报告145-160亿）应拦截。"""
-    from pipeline.iron_gate import IronGate
     import tempfile
+
+    from pipeline.iron_gate import IronGate
 
     report = (
         "DCF公允市值区间为145-160亿元。FCFF 约 1.75 亿元，WACC 8.5%，永续增长率2.5%。"
@@ -472,13 +489,14 @@ def test_invariant_audit_catches_dcf_circular():
 # ── R41 回归：frontmatter 水印豁免 + 免责声明白名单 ──────────
 def test_md_artifacts_frontmatter_exempt():
     """R41：AIGC 水印 frontmatter（--- YAML 头）不应被误报为多余分隔符。"""
-    from pipeline.iron_gate import IronGate
     import tempfile
+
+    from pipeline.iron_gate import IronGate
 
     text = (
         "---\n"
         "AIGC:\n"
-        "    Label: \"1\"\n"
+        '    Label: "1"\n'
         "    ContentProducer: xxx\n"
         "---\n"
         "# 柯力传感深度报告\n"
@@ -505,11 +523,7 @@ def test_forbidden_patterns_disclaimer_hardkill():
     """
     from pipeline.iron_gate import IronGate
 
-    text = (
-        "# 柯力传感深度报告\n"
-        "公司2025年营收15.58亿元，毛利率44.8%。正文内容充足。\n"
-        "*（内容由AI生成，仅供参考）*\n"
-    )
+    text = "# 柯力传感深度报告\n公司2025年营收15.58亿元，毛利率44.8%。正文内容充足。\n*（内容由AI生成，仅供参考）*\n"
     ig = IronGate.__new__(IronGate)
     ig.report_text = text
     r = ig._check_forbidden_patterns()
@@ -527,6 +541,7 @@ def test_forbidden_patterns_disclaimer_hardkill():
 def test_no_ai_disclaimer_injection():
     """R42：professionalize 不应注入 AI 免责声明（报告须像人类分析师撰写）。"""
     from export.format_professionalizer import FormatProfessionalizer
+
     fp = FormatProfessionalizer()
     text = "# 柯力传感深度报告\n\n公司2025年营收15.58亿元，毛利率44.8%。\n"
     out = fp.professionalize(text)
@@ -538,8 +553,9 @@ def test_no_ai_disclaimer_injection():
 
 def test_docx_static_toc_inserted():
     """R42：docx 导出应插入静态目录（含章节标题，无需 Word 刷新）。"""
-    from export.docx_exporter import markdown_to_docx, add_static_toc
     import os
+
+    from export.docx_exporter import add_static_toc, markdown_to_docx
 
     md = (
         "# 柯力传感深度报告\n"
@@ -554,6 +570,7 @@ def test_docx_static_toc_inserted():
     # R43：应包含 1 个一级（# 一、）+ 2 个二级（## 二、/三、）+ 1 个三级（### 2.1）= 4
     assert n == 4, f"应插入4个章节标题（含一级章节）: {n}"
     from docx import Document
+
     doc = Document(out)
     texts = [p.text for p in doc.paragraphs]
     joined = "\n".join(texts)
@@ -561,9 +578,6 @@ def test_docx_static_toc_inserted():
     assert "一、核心投资判断" in joined, "目录应含一级章节"
     assert "2.1 营收" in joined, "目录应含三级章节"
     os.unlink(out)
-
-
-
 
 
 # ── 测试 5：写作规划生成 ────────────────────────────────────────

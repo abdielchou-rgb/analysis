@@ -3,7 +3,10 @@
 Pre-writing: generates structured chart manifest, forces LLM to reference all charts
 Post-writing: validates chart embedding, counts references per chart
 """
-import re, sys, json
+
+import json
+import re
+import sys
 from pathlib import Path
 
 _ANALYST_ROOT = Path(__file__).resolve().parent.parent
@@ -133,6 +136,7 @@ class ChartEnforcer:
 
 def main():
     import argparse
+
     parser = argparse.ArgumentParser()
     parser.add_argument("action", choices=["manifest", "validate", "both"])
     parser.add_argument("--industry", default="", help="Industry name")

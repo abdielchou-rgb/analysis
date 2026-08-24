@@ -3,7 +3,8 @@
 FP-4：valuation_deep 规则接入 comparable/scenario（不只 DCF）。
 FP-5：Gate min_chars 按回测金牌 p10 校准。
 """
-import os
+
+import os  # noqa: F401  (dead-import debt)
 import sys
 from pathlib import Path
 
@@ -16,6 +17,7 @@ if str(_ROOT) not in sys.path:
 def test_comparable_guard_few_peers():
     """可比公司 <3 家应提示可比性不足。"""
     from core.compute.valuation_guardrails import validate_comparable_guards
+
     issues = validate_comparable_guards(target_pe=22, implied_price=25, peer_count=2, company_eps=1.2)
     assert any("可比公司仅" in i for i in issues), f"可比<3应提示: {issues}"
 
@@ -23,12 +25,14 @@ def test_comparable_guard_few_peers():
 def test_comparable_guard_ok():
     """可比公司 ≥3 家应通过。"""
     from core.compute.valuation_guardrails import validate_comparable_guards
+
     assert validate_comparable_guards(target_pe=22, implied_price=25, peer_count=5, company_eps=1.2) == []
 
 
 def test_scenario_guard_monotonicity():
     """情景 bull<base<bear 倒挂应拦截。"""
     from core.compute.valuation_guardrails import validate_scenario_guards
+
     issues = validate_scenario_guards(bull=30, base=28, bear=35, risk_reward=1.5)
     assert any("情景排序" in i for i in issues), f"倒挂应拦截: {issues}"
 
@@ -36,6 +40,7 @@ def test_scenario_guard_monotonicity():
 def test_scenario_guard_extreme():
     """乐观/悲观价差 >3 倍应提示。"""
     from core.compute.valuation_guardrails import validate_scenario_guards
+
     issues = validate_scenario_guards(bull=80, base=30, bear=20, risk_reward=1.5)
     assert any("价差过大" in i for i in issues), f"极差应提示: {issues}"
 
@@ -52,6 +57,7 @@ def test_compute_engine_wires_all():
 def test_min_chars_calibrated():
     """min_chars 应按回测金牌 p10 校准（10420）。"""
     from pipeline.iron_gate import IronGate
+
     gate = IronGate.from_text("x" * 500, report_type="industry_deep", style="cicc")
     assert gate.min_chars == 10420, f"industry min_chars应=10420: {gate.min_chars}"
 
@@ -59,12 +65,14 @@ def test_min_chars_calibrated():
 def test_judgment_density_uses_backtest():
     """judgment_density 阈值应由 backtest_deep 推导。"""
     import json
+
     d = json.loads((_ROOT / "data" / "methodology_backtest_deep.json").read_text(encoding="utf-8"))
     gr = d.get("gate_reference", {})
     assert gr.get("min_judgment_density") == 1.2, "backtest p10 判断密度应=1.2"
     assert gr.get("min_data_density") == 5.0, "backtest p10 数据密度应=5.0"
     # IronGate 默认阈值应对齐
     from pipeline.iron_gate import IronGate
+
     gate = IronGate.from_text("x" * 500, report_type="industry_deep", style="cicc")
     # R63（2026-08-04）：R61 迁移后阈值常量移至 checks/content_format_mixin.py，
     # 原断言查 iron_gate.py 源码已失配。改为查 mixin 实现文件。
@@ -75,6 +83,7 @@ def test_judgment_density_uses_backtest():
 
 if __name__ == "__main__":
     import traceback
+
     passed = failed = 0
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

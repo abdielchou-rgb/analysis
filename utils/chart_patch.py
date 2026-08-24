@@ -5,14 +5,16 @@ This patch ensures backward compatibility and applies quality defaults.
 """
 
 import logging
+
 logger = logging.getLogger("v53.chart_patch")
 
-from utils.chart_config import ensure_init, get_palette, apply_institution_style
+from utils.chart_config import ensure_init, get_palette
 
 
 def patch_chart_engine():
     """Ensure ChartEngine uses chart_config institutional palettes."""
     from core.chart_engine import ChartEngine
+
     ensure_init()
 
     original_set_style = ChartEngine.set_style
@@ -31,9 +33,9 @@ def patch_chart_engine():
 
     original_init = ChartEngine.__init__
 
-    def patched_init(self, output_dir="outputs/charts", style_id="cicc",
-                     quality="final", data_source=""):
+    def patched_init(self, output_dir="outputs/charts", style_id="cicc", quality="final", data_source=""):
         from pathlib import Path
+
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.style_id = style_id
@@ -42,9 +44,17 @@ def patch_chart_engine():
         self.data_source = data_source
         self._figure_counter = 0
         palette = get_palette(style_id)
-        self.style = palette if palette else {"primary": "#003366", "accent": "#C41E3A",
-                                               "bg": "#FFFFFF", "text": "#1A1A1A",
-                                               "palette": ["#003366","#C41E3A","#E8C84C","#4CB8E8","#666666"]}
+        self.style = (
+            palette
+            if palette
+            else {
+                "primary": "#003366",
+                "accent": "#C41E3A",
+                "bg": "#FFFFFF",
+                "text": "#1A1A1A",
+                "palette": ["#003366", "#C41E3A", "#E8C84C", "#4CB8E8", "#666666"],
+            }
+        )
         logger.info(f"ChartEngine initialized with {style_id} (patched)")
 
     ChartEngine.__init__ = patched_init

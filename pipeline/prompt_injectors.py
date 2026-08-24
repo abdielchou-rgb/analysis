@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """prompt_injectors.py — 写作 prompt 注入器注册表。
 
 P3-audit 2026-08-24 Strangler-Fig 重构：section_writer._write_dimension_parallel
@@ -18,6 +17,7 @@ ctx 契约：
 新增注入器：写一个 `_inj_xxx(ctx)` 函数并登记进 INJECTORS 即可，
 不再需要往巨石方法里找位置贴补丁。
 """
+
 from __future__ import annotations
 
 import json
@@ -27,6 +27,7 @@ logger = logging.getLogger("2hao.injectors")
 
 
 # 与 section_writer 同源的小工具（纯函数，避免循环 import）
+
 
 def _sf_extract(cd: dict, *keys):
     for k in keys:
@@ -55,6 +56,7 @@ def _inj_fc_str(ctx):
     """R16：盈利预测模型。"""
     try:
         from core.compute.predict_model import build_forecast, build_forecast_summary
+
         _fc = build_forecast(ctx["data_context"])
         if _fc:
             return build_forecast_summary(_fc)
@@ -66,7 +68,8 @@ def _inj_fc_str(ctx):
 def _inj_ac_str(ctx):
     """R16：反共识信号。"""
     try:
-        from core.compute.anti_consensus import detect_anti_consensus, build_anti_consensus_prompt
+        from core.compute.anti_consensus import build_anti_consensus_prompt, detect_anti_consensus
+
         _ac = detect_anti_consensus(ctx["asset"], ctx["data_context"])
         if _ac and _ac.get("signals"):
             return build_anti_consensus_prompt(_ac)
@@ -76,15 +79,20 @@ def _inj_ac_str(ctx):
 
 
 _METHODOLOGY_TOPIC_MAP = {
-    "industry_deep": ["industry_lifecycle", "business_model",
-                      "profit_pool", "competitive_forces",
-                      "elasticity_analysis", "signal_chain",
-                      "policy_transmission", "global_competition",
-                      "technology_roadmap", "capital_market"],
-    "listed_company": ["business_model", "industry_lifecycle",
-                       "profit_pool", "competitive_forces"],
-    "unlisted_company": ["business_model", "reference_class",
-                         "unit_economics", "exit_pathways"],
+    "industry_deep": [
+        "industry_lifecycle",
+        "business_model",
+        "profit_pool",
+        "competitive_forces",
+        "elasticity_analysis",
+        "signal_chain",
+        "policy_transmission",
+        "global_competition",
+        "technology_roadmap",
+        "capital_market",
+    ],
+    "listed_company": ["business_model", "industry_lifecycle", "profit_pool", "competitive_forces"],
+    "unlisted_company": ["business_model", "reference_class", "unit_economics", "exit_pathways"],
 }
 
 
@@ -92,8 +100,8 @@ def _inj_mr_str(ctx):
     """R17/R71：方法论规则（按报告类型映射主题）。"""
     try:
         from core.methodology_rules import serialize_rules_for_prompt
-        return serialize_rules_for_prompt(
-            _METHODOLOGY_TOPIC_MAP.get(ctx["report_type"], ["business_model"]))
+
+        return serialize_rules_for_prompt(_METHODOLOGY_TOPIC_MAP.get(ctx["report_type"], ["business_model"]))
     except Exception as _e:
         logger.warning("[RULES] 方法论规则注入失败: %s", str(_e)[:80])
     return ""
@@ -103,6 +111,7 @@ def _inj_ts_str(ctx):
     """R19：三表勾稽模型。"""
     try:
         from core.compute.three_statement import build_three_statement, format_three_statement
+
         _ts = build_three_statement(ctx["data_context"])
         if _ts:
             return format_three_statement(_ts)
@@ -115,6 +124,7 @@ def _inj_hf_str(ctx):
     """R19：哈佛分析框架。"""
     try:
         from core.harvard_analysis import build_harvard_analysis, serialize_harvard_for_prompt
+
         _hf = build_harvard_analysis(ctx["data_context"])
         if _hf:
             return serialize_harvard_for_prompt(_hf)
@@ -126,13 +136,15 @@ def _inj_hf_str(ctx):
 def _inj_rdcf_str(ctx):
     """R23：反向DCF/市场隐含预期。"""
     try:
-        from core.compute.patterns import estimate_implied_growth_full, build_reverse_dcf_prompt
+        from core.compute.patterns import build_reverse_dcf_prompt, estimate_implied_growth_full
+
         _cd = (ctx["data_context"] or {}).get("chart_data", {}) or {}
         _mcap = _sf_extract(_cd, "market_cap", "mcap")
         _fcf = _sf_extract(_cd, "fcf", "free_cash_flow")
         if _mcap and _fcf:
             _rd = estimate_implied_growth_full(
-                market_cap=float(_mcap), current_fcf=float(_fcf),
+                market_cap=float(_mcap),
+                current_fcf=float(_fcf),
                 fcf_growth_rates=_growth_rates(_cd),
             )
             if _rd and getattr(_rd, "data", None):
@@ -147,6 +159,7 @@ def _inj_cat_str(ctx):
     out = ""
     try:
         from core.catalyst_timeline import build_catalyst_timeline, serialize_catalyst
+
         _ct = build_catalyst_timeline(ctx["data_context"], ctx["report_type"])
         if _ct and _ct.get("status") == "ok":
             out = serialize_catalyst(_ct)
@@ -157,7 +170,8 @@ def _inj_cat_str(ctx):
         out += (
             "\n[催化剂日历结构要求] 必须覆盖未来4个季度（2026Q3/Q4/2027Q1/Q2），"
             "每季度至少1条可验证事件（如中报/年报/政策节点/行业大会等）。"
-            "若某季度无可查事件，标注'暂无确定催化剂'而非跳过该季度。")
+            "若某季度无可查事件，标注'暂无确定催化剂'而非跳过该季度。"
+        )
     return out
 
 
@@ -165,6 +179,7 @@ def _inj_bb_str(ctx):
     """R23：多空逻辑表（Bull/Bear Matrix）。"""
     try:
         from core.bull_bear_matrix import build_bull_bear_matrix, serialize_bull_bear
+
         _bb = build_bull_bear_matrix(ctx["data_context"], ctx["report_type"])
         if _bb and _bb.get("status") == "ok":
             return serialize_bull_bear(_bb)
@@ -179,6 +194,7 @@ def _inj_ur_str(ctx):
         return ""
     try:
         from core.unlisted_reverse_valuation import build_unlisted_reverse_valuation, serialize_unlisted_reverse
+
         _ur = build_unlisted_reverse_valuation(ctx["data_context"])
         if _ur and _ur.get("status") == "ok":
             return serialize_unlisted_reverse(_ur)
@@ -191,6 +207,7 @@ def _inj_bn_str(ctx):
     """R20/R21：供应链瓶颈分析（Serenity 卡点法）+ 利润池/TOC/BOM 逆向。"""
     try:
         from core.bottleneck_engine import build_bottleneck_analysis, serialize_bottleneck
+
         _bn = build_bottleneck_analysis(ctx["data_context"], ctx["report_type"])
         if _bn:
             return serialize_bottleneck(_bn)
@@ -247,7 +264,8 @@ def _inj_ut_str(ctx):
                 _lines = [f"非上市威胁评估（行业：{_industry}，覆盖率 {_cov:.0%}）："]
                 for _mp in _missing[:8]:
                     _lines.append(
-                        f"  - {_mp.get('name', '?')}：{_mp.get('role', '')}，威胁度 {_mp.get('threat_level', 'unknown')}")
+                        f"  - {_mp.get('name', '?')}：{_mp.get('role', '')}，威胁度 {_mp.get('threat_level', 'unknown')}"
+                    )
                 return "\n".join(_lines)
     except Exception as _e:
         logger.warning("[UNLISTED-THREAT] 非上市威胁度注入失败: %s", str(_e)[:80])
@@ -267,19 +285,23 @@ def _inj_di_str(ctx):
         _pe = _cd2.get("pe") or _cd2.get("fig_valuation", {}).get("pe_ttm")
         _ind_pe = _cd2.get("industry_pe") or _cd2.get("peer_valuation", {}).get("median_pe")
         if _pe and _ind_pe and _eps_trend:
-            _dir_eps = _eps_trend if isinstance(_eps_trend, str) else (
-                "上行" if isinstance(_eps_trend, (int, float)) and float(_eps_trend) > 0 else "下行")
-            _dir_pe = "扩张" if float(_pe) < float(_ind_pe) else (
-                "收缩" if float(_pe) > float(_ind_pe) else "持平")
+            _dir_eps = (
+                _eps_trend
+                if isinstance(_eps_trend, str)
+                else ("上行" if isinstance(_eps_trend, (int, float)) and float(_eps_trend) > 0 else "下行")
+            )
+            _dir_pe = "扩张" if float(_pe) < float(_ind_pe) else ("收缩" if float(_pe) > float(_ind_pe) else "持平")
             _zone = (
                 "双击区（EPS↑PE↑——最佳做多窗口，业绩与估值共振向上）"
                 if "上行" in str(_dir_eps) and "扩张" in _dir_pe
                 else "双杀区（EPS↓PE↓——最差窗口，业绩下滑叠加估值收缩）"
                 if "下行" in str(_dir_eps) and "收缩" in _dir_pe
-                else "过渡区（EPS与PE方向分歧，需判断谁是主导力）")
+                else "过渡区（EPS与PE方向分歧，需判断谁是主导力）"
+            )
             return (
                 f"行业戴维斯双击/双杀分析：EPS方向={_dir_eps}，PE方向={_dir_pe}（行业PE={_ind_pe}），"
-                f"行业定位={_zone}。判断谁主导：若EPS主导→聚焦盈利周期；若PE主导→聚焦流动性/风险偏好")
+                f"行业定位={_zone}。判断谁主导：若EPS主导→聚焦盈利周期；若PE主导→聚焦流动性/风险偏好"
+            )
     except Exception as _e:
         logger.warning("[DAVIS] 行业戴维斯双击注入失败: %s", str(_e)[:80])
     return ""
@@ -343,6 +365,7 @@ def _inj_tri_str(ctx):
     """R80 Phase3：市场规模三角验证注入。"""
     try:
         from core.triangulation import triangulate
+
         _tri_est = []
         _dc = ctx["data_context"] or {}
         _cd_tri = _dc.get("chart_data", {}) if isinstance(_dc, dict) else {}
@@ -353,11 +376,16 @@ def _inj_tri_str(ctx):
                 _latest = _rev[_yrs[-1]]
                 _prev = _rev[_yrs[-2]]
                 if isinstance(_latest, (int, float)) and isinstance(_prev, (int, float)) and _prev > 0:
-                    _tri_est.append({"method": "行业基准", "value": float(_latest),
-                                     "basis": f"{_yrs[-1]}年规模（行业报告口径）"})
-                    _tri_est.append({"method": "同比外推",
-                                     "value": float(_latest) * (1 + (_latest - _prev) / _prev),
-                                     "basis": f"按{_yrs[-2]}→{_yrs[-1]}增速外推"})
+                    _tri_est.append(
+                        {"method": "行业基准", "value": float(_latest), "basis": f"{_yrs[-1]}年规模（行业报告口径）"}
+                    )
+                    _tri_est.append(
+                        {
+                            "method": "同比外推",
+                            "value": float(_latest) * (1 + (_latest - _prev) / _prev),
+                            "basis": f"按{_yrs[-2]}→{_yrs[-1]}增速外推",
+                        }
+                    )
         if len(_tri_est) >= 2:
             _tr = triangulate(_tri_est)
             return "\n## 市场规模三角验证\n" + _tr.to_text() + "\n"
@@ -370,10 +398,10 @@ def _inj_geo_str(ctx):
     """R78：中美竞争/地缘政治分析注入。"""
     try:
         from core.geopolitical_engine import GeopoliticalEngine
+
         _geo_eng = GeopoliticalEngine()
         _geo_hint = ""
-        for _kw in ("半导体", "芯片", "传感器", "光伏", "锂电", "医药", "机器人",
-                    "汽车", "通信", "AI", "材料", "军工"):
+        for _kw in ("半导体", "芯片", "传感器", "光伏", "锂电", "医药", "机器人", "汽车", "通信", "AI", "材料", "军工"):
             if _kw in str(ctx["asset"]):
                 _geo_hint = _kw
                 break
@@ -463,6 +491,7 @@ def _inj_vc_str(ctx):
     """R32：估值锚交叉验证（compute_results 多形态兼容提取）。"""
     try:
         from core.valuation_crosscheck import crosscheck, serialize_crosscheck
+
         _dc = ctx["data_context"] or {}
         _cd = _dc.get("chart_data", {}) or {}
         _cr = _dc.get("compute_results", {}) or {}
@@ -502,6 +531,7 @@ def _inj_audit_str(ctx):
     """三表勾稽审计核查。"""
     try:
         from core.three_statement_audit import audit, audit_to_prompt
+
         _code = ctx["asset_code"]
         if _code:
             _audit = audit(_code, ctx["asset"])
@@ -516,6 +546,7 @@ def _inj_surp_str(ctx):
     """预期差信号。"""
     try:
         from core.earnings_surprise import compute_surprise, serialize_surprise
+
         _code2 = ctx["asset_code"]
         if _code2:
             _s = compute_surprise(_code2)
@@ -530,6 +561,7 @@ def _inj_pm_str(ctx):
     """对标矩阵（行业从 biz_model.industry_tags / data_dict 提取，禁止硬编码）。"""
     try:
         from core.peer_matrix import build_peer_matrix, serialize_matrix
+
         _code3 = ctx["asset_code"]
         if _code3:
             _ind = ""
@@ -557,6 +589,7 @@ def _inj_tt_str(ctx):
     """R30：目标价追踪（分析师历史准确率档案）。"""
     try:
         from core.target_tracker import compute_tracker, format_tracker
+
         _tt = compute_tracker()
         if _tt:
             return format_tracker(_tt)
@@ -569,6 +602,7 @@ def _inj_bm_str(ctx):
     """R30：基准对标（个股 vs 指数/行业基准）。"""
     try:
         from core.benchmark_compare import compare_vs_benchmark, serialize_benchmark
+
         _bm = compare_vs_benchmark()
         if _bm:
             return serialize_benchmark(_bm)
@@ -584,9 +618,13 @@ def _inj_tm_str(ctx):
         _tm = _cr_tm.get("tool_modules", {}).get("modules", {}) if isinstance(_cr_tm, dict) else {}
         if isinstance(_tm, dict):
             _tm_parts = []
-            for t_key, t_label in [("elasticity", "弹性分析"), ("signal_chain", "信号链"),
-                                    ("life_cycle", "生命周期"), ("moat", "护城河"),
-                                    ("multi_model", "多模型")]:
+            for t_key, t_label in [
+                ("elasticity", "弹性分析"),
+                ("signal_chain", "信号链"),
+                ("life_cycle", "生命周期"),
+                ("moat", "护城河"),
+                ("multi_model", "多模型"),
+            ]:
                 td = _tm.get(t_key, {})
                 if isinstance(td, dict) and td.get("status") != "skip":
                     _data = {k: v for k, v in td.items() if k != "status"}
@@ -638,15 +676,20 @@ INJECTORS = [
 ]
 
 
-def build_injections(asset: str, report_type: str, data_context: dict,
-                     asset_code: str = "", data_dict: dict = None) -> dict:
+def build_injections(
+    asset: str, report_type: str, data_context: dict, asset_code: str = "", data_dict: dict = None
+) -> dict:
     """运行全部注入器，返回 {变量名: 内容}。
 
     单个注入器异常已在内部降级为空串；本层再兜一层保证永不中断写作。
     """
-    ctx = {"asset": asset, "report_type": report_type,
-           "data_context": data_context or {},
-           "asset_code": asset_code or "", "data_dict": data_dict or {}}
+    ctx = {
+        "asset": asset,
+        "report_type": report_type,
+        "data_context": data_context or {},
+        "asset_code": asset_code or "",
+        "data_dict": data_dict or {},
+    }
     out = {}
     for name, fn in INJECTORS:
         try:

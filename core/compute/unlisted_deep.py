@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """unlisted_deep.py — 非上市深化估值（P2-2，2026-08-07）
 
 补非上市标的（如久通物联）的深度：现有 unlisted_reverse 只做营收×PS 反向定价，
@@ -24,10 +23,11 @@
       ],
   })
 """
+
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
-from typing import Optional
 
 logger = logging.getLogger("2hao.unlisted_deep")
 
@@ -35,17 +35,17 @@ logger = logging.getLogger("2hao.unlisted_deep")
 @dataclass
 class UnlistedDeepResult:
     # 可比融资
-    ps_range: tuple = (0.0, 0.0)          # 可比 PS 区间
+    ps_range: tuple = (0.0, 0.0)  # 可比 PS 区间
     implied_value_range: tuple = (0.0, 0.0)  # 隐含估值区间（营收×PS）
-    median_value: float = 0.0             # 中值估值
+    median_value: float = 0.0  # 中值估值
     # 股权治理
-    governance_risk: float = 0.0          # 0-1 治理风险
+    governance_risk: float = 0.0  # 0-1 治理风险
     governance_note: str = ""
     # 退出路径
     exit_paths: list = field(default_factory=list)  # [{path, prob, horizon}]
     # 里程碑估值
     milestones: list = field(default_factory=list)
-    final_value_24m: float = 0.0          # 24个月里程碑估值
+    final_value_24m: float = 0.0  # 24个月里程碑估值
     verdict: str = ""
     reasons: list = field(default_factory=list)
     assumptions: dict = field(default_factory=dict)
@@ -102,19 +102,20 @@ def calculate_unlisted_deep(params: dict) -> UnlistedDeepResult:
         for m in milestones:
             rev_m = float(m.get("revenue", 0))
             val = rev_m * med_ps
-            r.milestones.append({"name": m.get("name"), "revenue": rev_m,
-                                 "value": val, "months": m.get("months")})
+            r.milestones.append({"name": m.get("name"), "revenue": rev_m, "value": val, "months": m.get("months")})
         if r.milestones:
             r.final_value_24m = r.milestones[-1]["value"]
 
     # 结论
     reasons = []
     if r.median_value > 0:
-        reasons.append(f"可比融资中值估值 {r.median_value/1e4:.0f}万（PS {sorted(ps_list)[len(ps_list)//2]:.0f}x）")
+        reasons.append(f"可比融资中值估值 {r.median_value / 1e4:.0f}万（PS {sorted(ps_list)[len(ps_list) // 2]:.0f}x）")
     reasons.append(f"治理风险 {r.governance_risk:.0%}: {r.governance_note}")
     reasons.append(f"退出以并购为主(50%)，IPO概率 {r.exit_paths[1]['prob']:.0%}")
     if r.final_value_24m > 0:
-        reasons.append(f"24个月里程碑估值 {r.final_value_24m/1e4:.0f}万（隐含增速 {((r.milestones[-1]['revenue']/revenue)-1) if revenue else 0:.0%}）")
+        reasons.append(
+            f"24个月里程碑估值 {r.final_value_24m / 1e4:.0f}万（隐含增速 {((r.milestones[-1]['revenue'] / revenue) - 1) if revenue else 0:.0%}）"
+        )
     r.reasons = reasons
 
     if r.governance_risk > 0.5:
@@ -129,12 +130,12 @@ def calculate_unlisted_deep(params: dict) -> UnlistedDeepResult:
 def format_summary(r: UnlistedDeepResult) -> str:
     lines = [
         "=== 非上市深化估值 ===",
-        f"可比融资估值区间: {r.implied_value_range[0]/1e4:.0f}~{r.implied_value_range[1]/1e4:.0f}万（中值 {r.median_value/1e4:.0f}万）",
+        f"可比融资估值区间: {r.implied_value_range[0] / 1e4:.0f}~{r.implied_value_range[1] / 1e4:.0f}万（中值 {r.median_value / 1e4:.0f}万）",
         f"治理风险: {r.governance_risk:.0%}（{r.governance_note}）",
         "退出路径: " + ", ".join(f"{p['path']}({p['prob']:.0%},{p['horizon']})" for p in r.exit_paths),
     ]
     if r.milestones:
-        lines.append("里程碑估值: " + ", ".join(f"{m['name']}={m['value']/1e4:.0f}万" for m in r.milestones))
+        lines.append("里程碑估值: " + ", ".join(f"{m['name']}={m['value'] / 1e4:.0f}万" for m in r.milestones))
     lines.append(f"结论: {r.verdict}")
     for x in r.reasons:
         lines.append(f"  - {x}")

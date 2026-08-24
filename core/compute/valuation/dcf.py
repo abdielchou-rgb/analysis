@@ -21,7 +21,6 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Optional
 
 from core.models import ComputedResults, StructuredData
 
@@ -31,13 +30,14 @@ logger = logging.getLogger("v30.valuation.dcf")
 @dataclass
 class DCFResult:
     """DCF 估值结果。"""
+
     company: str
     stock_code: str
-    present_value_of_fcf: float       # 预测期 FCF 现值总和（亿元）
-    terminal_value: float              # 终值（亿元）
-    enterprise_value: float            # 企业价值 = PV(FCF) + PV(终值)（亿元）
-    equity_value: float                # 股权价值 = EV - 净债务 + 超额现金（亿元）
-    target_price: float                # 目标价 = 股权价值 / 总股本（元/股）
+    present_value_of_fcf: float  # 预测期 FCF 现值总和（亿元）
+    terminal_value: float  # 终值（亿元）
+    enterprise_value: float  # 企业价值 = PV(FCF) + PV(终值)（亿元）
+    equity_value: float  # 股权价值 = EV - 净债务 + 超额现金（亿元）
+    target_price: float  # 目标价 = 股权价值 / 总股本（元/股）
     assumptions: dict = field(default_factory=dict)
     sensitivity_matrix: dict = field(default_factory=dict)
     confidence: str = "medium"
@@ -46,12 +46,12 @@ class DCFResult:
 
 
 def compute_dcf(
-    l1_data: Optional[StructuredData] = None,
-    results: Optional[ComputedResults] = None,
+    l1_data: StructuredData | None = None,
+    results: ComputedResults | None = None,
     # ── 核心假设参数 ──
     projection_years: int = 5,
     terminal_growth_rate: float = 0.03,
-    wacc: Optional[float] = None,
+    wacc: float | None = None,
     # CAPM 参数
     risk_free_rate: float = 0.028,
     beta: float = 1.0,
@@ -63,12 +63,12 @@ def compute_dcf(
     terminal_method: str = "ggm",
     exit_ebitda_multiple: float = 10.0,
     # 营收增长率预测
-    revenue_growth_rates: Optional[list[float]] = None,
-    target_operating_margin: Optional[float] = None,
+    revenue_growth_rates: list[float] | None = None,
+    target_operating_margin: float | None = None,
     target_da_pct_revenue: float = 0.03,
     target_capex_pct_revenue: float = 0.04,
     target_wc_pct_revenue: float = 0.02,
-) -> Optional[DCFResult]:
+) -> DCFResult | None:
     """
     执行 DCF 估值计算。
 
@@ -144,8 +144,7 @@ def compute_dcf(
         rd_after_tax = cost_of_debt * (1 - tax_rate)
         equity_ratio = 1.0 - debt_ratio
         wacc = equity_ratio * re + debt_ratio * rd_after_tax
-        logger.info(f"[DCF] WACC 计算: Re={re:.2%}, Rd(at)={rd_after_tax:.2%}, "
-                     f"WACC={wacc:.2%}")
+        logger.info(f"[DCF] WACC 计算: Re={re:.2%}, Rd(at)={rd_after_tax:.2%}, WACC={wacc:.2%}")
 
     # ── 3. 构建 FCF 预测 ──
     if revenue_growth_rates is None:
@@ -185,20 +184,22 @@ def compute_dcf(
         discount_factor = round(1 / ((1 + wacc) ** year_num), 6)
         pv_fcf = round(fcf * discount_factor, 4)
 
-        fcf_projections.append({
-            "year": year_num,
-            "revenue": revenue,
-            "growth": round(growth * 100, 2),
-            "ebit_margin": round(target_operating_margin * 100, 2),
-            "ebit": ebit,
-            "nopat": nopat,
-            "da": da,
-            "capex": capex,
-            "wc_change": wc_change,
-            "fcf": fcf,
-            "discount_factor": discount_factor,
-            "pv_fcf": pv_fcf,
-        })
+        fcf_projections.append(
+            {
+                "year": year_num,
+                "revenue": revenue,
+                "growth": round(growth * 100, 2),
+                "ebit_margin": round(target_operating_margin * 100, 2),
+                "ebit": ebit,
+                "nopat": nopat,
+                "da": da,
+                "capex": capex,
+                "wc_change": wc_change,
+                "fcf": fcf,
+                "discount_factor": discount_factor,
+                "pv_fcf": pv_fcf,
+            }
+        )
         current_revenue = revenue
 
     present_value_of_fcf = round(sum(p["pv_fcf"] for p in fcf_projections), 4)
@@ -206,21 +207,18 @@ def compute_dcf(
     # ── 4. 终值计算 ──
     terminal_fcf = fcf_projections[-1]["fcf"]
     terminal_ebitda = round(
-        fcf_projections[-1]["revenue"]
-        * (latest_ebitda_margin or 15.0) / 100,
+        fcf_projections[-1]["revenue"] * (latest_ebitda_margin or 15.0) / 100,
         4,
     )
 
     if terminal_method == "ggm":
         if wacc <= terminal_growth_rate:
-            logger.warning(f"[DCF] WACC <= 终值增长率，切换为退出倍数法")
+            logger.warning("[DCF] WACC <= 终值增长率，切换为退出倍数法")
             terminal_method = "exit_multiple"
             terminal_value = round(terminal_ebitda * exit_ebitda_multiple, 4)
             warnings.append("WACC <= 终值增长率，强制切换为退出倍数法")
         else:
-            terminal_value = round(
-                terminal_fcf * (1 + terminal_growth_rate) / (wacc - terminal_growth_rate), 4
-            )
+            terminal_value = round(terminal_fcf * (1 + terminal_growth_rate) / (wacc - terminal_growth_rate), 4)
     else:
         terminal_value = round(terminal_ebitda * exit_ebitda_multiple, 4)
 
@@ -300,7 +298,7 @@ def compute_dcf(
 # ═══════════════════════════════════════════════════════════
 
 
-def _estimate_historical_growth(l1_data: Optional[StructuredData]) -> Optional[float]:
+def _estimate_historical_growth(l1_data: StructuredData | None) -> float | None:
     """基于历史营收数据估算 CAGR。"""
     if l1_data is None:
         return None
@@ -341,10 +339,7 @@ def _build_sensitivity_matrix(
     matrix = {}
     for w in wacc_range:
         row = {}
-        pv_fcf_sum = sum(
-            base_fcf_values[t] / ((1 + w) ** (t + 1))
-            for t in range(len(base_fcf_values))
-        )
+        pv_fcf_sum = sum(base_fcf_values[t] / ((1 + w) ** (t + 1)) for t in range(len(base_fcf_values)))
         for g in growth_range:
             if terminal_method == "ggm" and w > g:
                 tv = terminal_fcf * (1 + g) / (w - g)
@@ -363,9 +358,7 @@ def _build_sensitivity_matrix(
     return matrix
 
 
-def _assess_confidence(
-    terminal_value: float, enterprise_value: float, warnings: list[str]
-) -> str:
+def _assess_confidence(terminal_value: float, enterprise_value: float, warnings: list[str]) -> str:
     """评估 DCF 置信度。"""
     if enterprise_value <= 0:
         return "low"

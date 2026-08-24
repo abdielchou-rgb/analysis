@@ -10,7 +10,6 @@ Kahneman & Tversky 的核心洞见：人类在做预测时会忽略基准率，
 """
 
 import logging
-from typing import Optional
 from dataclasses import dataclass, field
 
 logger = logging.getLogger("2hao.reference_class")
@@ -21,10 +20,10 @@ logger = logging.getLogger("2hao.reference_class")
 STAGE_BASERATES = {
     "种子轮": {"survival_5yr": 0.10, "exit_positive": 0.03, "unicorn": 0.001},
     "天使轮": {"survival_5yr": 0.15, "exit_positive": 0.05, "unicorn": 0.002},
-    "A轮":   {"survival_5yr": 0.25, "exit_positive": 0.10, "unicorn": 0.005},
-    "B轮":   {"survival_5yr": 0.35, "exit_positive": 0.18, "unicorn": 0.015},
-    "C轮":   {"survival_5yr": 0.50, "exit_positive": 0.28, "unicorn": 0.03},
-    "D轮+":  {"survival_5yr": 0.65, "exit_positive": 0.40, "unicorn": 0.06},
+    "A轮": {"survival_5yr": 0.25, "exit_positive": 0.10, "unicorn": 0.005},
+    "B轮": {"survival_5yr": 0.35, "exit_positive": 0.18, "unicorn": 0.015},
+    "C轮": {"survival_5yr": 0.50, "exit_positive": 0.28, "unicorn": 0.03},
+    "D轮+": {"survival_5yr": 0.65, "exit_positive": 0.40, "unicorn": 0.06},
     "Pre-IPO": {"survival_5yr": 0.80, "exit_positive": 0.60, "unicorn": 0.10},
 }
 
@@ -57,6 +56,7 @@ FOUNDER_ADJUSTMENTS = {
 @dataclass
 class ReferenceClassResult:
     """基准率预测结果"""
+
     stage: str = ""
     industry: str = ""
     base_survival_rate: float = 0.0
@@ -68,19 +68,15 @@ class ReferenceClassResult:
     confidence: str = "medium"  # high / medium / low
 
 
-def get_baserate(
-    stage: str = "",
-    industry: str = "",
-    founder_profile: Optional[str] = None
-) -> ReferenceClassResult:
+def get_baserate(stage: str = "", industry: str = "", founder_profile: str | None = None) -> ReferenceClassResult:
     """获取基准率预测"""
     result = ReferenceClassResult(stage=stage, industry=industry)
-    
+
     # 按阶段
     stage_data = STAGE_BASERATES.get(stage, {})
     result.base_survival_rate = stage_data.get("survival_5yr", 0.15)
     result.exit_proba = stage_data.get("exit_positive", 0.05)
-    
+
     # 按行业调整
     industry_data = INDUSTRY_BASERATES.get(industry, {})
     if industry_data:
@@ -89,20 +85,20 @@ def get_baserate(
         result.base_survival_rate = (result.base_survival_rate * industry_survival) ** 0.5
         result.median_exit_value = industry_data.get("median_exit_value", 50000000)
         result.exit_proba = max(result.exit_proba, industry_data.get("exit_to_ipo_ratio", 0.02))
-    
+
     # 创始人调整
     if founder_profile and founder_profile in FOUNDER_ADJUSTMENTS:
         result.founder_adjustment = FOUNDER_ADJUSTMENTS[founder_profile]
         result.adjusted_survival_rate = min(1.0, result.base_survival_rate * result.founder_adjustment)
     else:
         result.adjusted_survival_rate = result.base_survival_rate
-    
+
     result.confidence = "low" if not stage else "medium"
     if stage and industry:
         result.confidence = "medium"
     if stage and industry and founder_profile:
         result.confidence = "high"
-    
+
     return result
 
 
@@ -111,12 +107,14 @@ def baserate_to_prompt(result: ReferenceClassResult) -> str:
     lines = ["[基准率预测参考]"]
     lines.append(f"  阶段: {result.stage or '未知'}")
     lines.append(f"  行业: {result.industry or '未知'}")
-    lines.append(f"  类似公司5年存活率: {result.base_survival_rate*100:.0f}%")
+    lines.append(f"  类似公司5年存活率: {result.base_survival_rate * 100:.0f}%")
     if result.founder_adjustment != 1.0:
-        lines.append(f"  创始人调整系数: {result.founder_adjustment:.1f}x → 调整后存活率: {result.adjusted_survival_rate*100:.0f}%")
-    lines.append(f"  正回报退出概率: {result.exit_proba*100:.0f}%")
+        lines.append(
+            f"  创始人调整系数: {result.founder_adjustment:.1f}x → 调整后存活率: {result.adjusted_survival_rate * 100:.0f}%"
+        )
+    lines.append(f"  正回报退出概率: {result.exit_proba * 100:.0f}%")
     if result.median_exit_value:
-        lines.append(f"  同类公司退出估值中位数: {result.median_exit_value/1e8:.1f}亿")
+        lines.append(f"  同类公司退出估值中位数: {result.median_exit_value / 1e8:.1f}亿")
     lines.append(f"  置信度: {result.confidence}")
     lines.append("[/基准率参考]")
     return "\n".join(lines)

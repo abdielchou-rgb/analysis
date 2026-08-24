@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """R67 (2026-08-04) 回归测试 — 柯力事故剩余 3 项 P2 修复
 
 覆盖：
@@ -6,6 +5,7 @@
 2. COMPLIANCE 说服力架构失败项纳入修订目标
 3. agent_provider 质量护栏（响应质量校验）
 """
+
 import sys
 from pathlib import Path
 
@@ -25,15 +25,17 @@ def test_self_audit_bom_tolerant():
     被测对象消亡 → 条件跳过而非永久 FAIL。
     """
     import pytest
+
     target = _ROOT / "_self_audit.py"
     if not target.exists():
         pytest.skip("_self_audit.py 已移除，BOM 容错断言随之退役")
     src = _src("_self_audit.py")
     assert "lstrip" in src and "\\ufeff" in src, "self_audit 应剥离 BOM"
     # 实际跑 self_audit 应 PASS
-    import subprocess, sys as _sys
-    r = subprocess.run([_sys.executable, str(target)],
-                       capture_output=True, text=True, timeout=30)
+    import subprocess
+    import sys as _sys
+
+    r = subprocess.run([_sys.executable, str(target)], capture_output=True, text=True, timeout=30)
     assert "Result: PASS" in r.stdout, f"self_audit 应 PASS: {r.stdout[-200:]}"
 
 
@@ -47,9 +49,12 @@ def test_compliance_includes_persuasion():
 def test_agent_quality_guard():
     """agent_provider 质量护栏应拦截坏响应。"""
     from core.agent_provider import _check_agent_response_quality
-    good = ("柯力传感是称重传感器龙头，2022年营收10.6亿元，市占率行业第一，"
-            "六维力传感器进入人形机器人供应链，未来看好人形机器人放量带来的成长空间，"
-            "同时工业物联网业务打开第二增长曲线。") * 4
+
+    good = (
+        "柯力传感是称重传感器龙头，2022年营收10.6亿元，市占率行业第一，"
+        "六维力传感器进入人形机器人供应链，未来看好人形机器人放量带来的成长空间，"
+        "同时工业物联网业务打开第二增长曲线。"
+    ) * 4
     assert _check_agent_response_quality(good) is None, "正常响应应通过"
     assert _check_agent_response_quality("") is not None, "空响应应拒"
     assert _check_agent_response_quality("太短") is not None, "过短应拒"
@@ -69,6 +74,7 @@ def test_em_host_bom_removed():
 
 if __name__ == "__main__":
     import traceback
+
     passed = failed = 0
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 分析方案规划器（Analyst Planner）— FP8 元认知选择层
 
@@ -19,7 +18,9 @@
     plan = AnalystPlanner().plan(asset="气体传感器", report_type="industry_deep",
                                   data_sufficiency={"sufficient": True}, industry_hint="传感器")
 """
+
 from __future__ import annotations
+
 import json
 import logging
 from pathlib import Path
@@ -51,8 +52,7 @@ class AnalystPlanner:
         self.focus_rules = self.registry.get("dimension_focus_rules", [])
 
     # ── 框架选择 ─────────────────────────────────────────────
-    def select_frameworks(self, report_type: str, data_sufficiency: dict | None,
-                          industry_hint: str = "") -> list[dict]:
+    def select_frameworks(self, report_type: str, data_sufficiency: dict | None, industry_hint: str = "") -> list[dict]:
         """根据报告类型/数据充足度/行业线索选择适用的子框架组合。"""
         data_sufficiency = data_sufficiency or {}
         sufficient = bool(data_sufficiency.get("sufficient", True))
@@ -73,8 +73,7 @@ class AnalystPlanner:
         # R81（2026-08-06）：数据不足不再一刀切排除框架——仅当框架的数据依赖类别
         # 与当前缺失清单（semantic_gaps/missing_partial）明确冲突时才跳过。
         _missing_txt = " ".join(str(x) for x in (semantic_gaps or []) + (partial or []))
-        _DEP_KEYWORDS = ("产业链", "并购", "敏感性", "宏观", "价格", "信号",
-                         "目标价", "预测", "调研", "估值", "高频")
+        _DEP_KEYWORDS = ("产业链", "并购", "敏感性", "宏观", "价格", "信号", "目标价", "预测", "调研", "估值", "高频")
         for fw in self.frameworks:
             cond = fw.get("适用条件", {})
             # 报告类型匹配
@@ -87,23 +86,33 @@ class AnalystPlanner:
             # 数据要求：rich 时全选；poor 时也保留框架（R81 框架应用强制），
             # 仅当 data_requirement 依赖的数据类别与缺失清单冲突时跳过。
             _req = str(cond.get("data_requirement", ""))
-            if data_poor and "data_requirement" in cond and any(
-                    kw in _req and kw in _missing_txt for kw in _DEP_KEYWORDS):
+            if (
+                data_poor
+                and "data_requirement" in cond
+                and any(kw in _req and kw in _missing_txt for kw in _DEP_KEYWORDS)
+            ):
                 continue
             score = fw.get("效果", {}).get("平均Gate分", 0.5)
-            selected.append({
-                "id": fw["id"], "名称": fw.get("名称", fw["id"]),
-                "score": score,
-                "reason": f"匹配 {report_type} + 数据充足度={ '充足' if data_rich else '受限'}",
-            })
+            selected.append(
+                {
+                    "id": fw["id"],
+                    "名称": fw.get("名称", fw["id"]),
+                    "score": score,
+                    "reason": f"匹配 {report_type} + 数据充足度={'充足' if data_rich else '受限'}",
+                }
+            )
         # 按效果评分排序
         selected.sort(key=lambda x: x["score"], reverse=True)
         return selected[:4]  # 最多组合 4 个
 
     # ── 维度聚焦 ─────────────────────────────────────────────
-    def focus_dimensions(self, report_type: str, data_sufficiency: dict | None,
-                         all_dimensions: list[str] | None = None,
-                         industry_hint: str = "") -> dict:
+    def focus_dimensions(
+        self,
+        report_type: str,
+        data_sufficiency: dict | None,
+        all_dimensions: list[str] | None = None,
+        industry_hint: str = "",
+    ) -> dict:
         """根据数据充足度决定维度聚焦：哪些重点、哪些精简。
 
         R78（2026-08-05 Phase4.4）：数据充足时注入行业×维度权重——
@@ -138,8 +147,10 @@ class AnalystPlanner:
             # 只在 industry_deep 下生效；其他类型保持 SAC 原始顺序。
             weights = self._load_industry_weights(industry_hint) if report_type == "industry_deep" else {}
             if weights:
+
                 def _w(dim_id):
                     return weights.get(dim_id, 5)  # 默认中权
+
                 focus = sorted(all_dims, key=_w, reverse=True)
                 rationale = "数据充足：全维度覆盖，按行业权重排序（FP3+FP8-4）"
             else:
@@ -157,6 +168,7 @@ class AnalystPlanner:
         """
         try:
             import json
+
             p = Path(__file__).resolve().parent.parent / "data" / "industry_dimension_weights.json"
             data = json.loads(p.read_text(encoding="utf-8"))
             for key in (industry_hint,):
@@ -181,19 +193,25 @@ class AnalystPlanner:
         return plan
 
     # ── 主入口 ───────────────────────────────────────────────
-    def plan(self, asset: str, report_type: str = "listed_company",
-             data_sufficiency: dict | None = None,
-             industry_hint: str = "") -> dict:
+    def plan(
+        self,
+        asset: str,
+        report_type: str = "listed_company",
+        data_sufficiency: dict | None = None,
+        industry_hint: str = "",
+    ) -> dict:
         """生成完整分析方案。"""
         frameworks = self.select_frameworks(report_type, data_sufficiency, industry_hint)
         # R78（2026-08-05 Phase4.4）：all_dimensions 从 SAC 读完整维度（非 core_dims 4 个）
         try:
             from core.sacs import SACLoader
+
             _all_dims = SACLoader(report_type).get_dimension_ids()
         except Exception:
             _all_dims = None
-        focus = self.focus_dimensions(report_type, data_sufficiency,
-                                      all_dimensions=_all_dims, industry_hint=industry_hint)
+        focus = self.focus_dimensions(
+            report_type, data_sufficiency, all_dimensions=_all_dims, industry_hint=industry_hint
+        )
         degradation = self.plan_degradation(data_sufficiency)
 
         method_rationale = (
@@ -219,15 +237,16 @@ class AnalystPlanner:
         }
 
 
-def build_analysis_plan(asset: str, report_type: str = "listed_company",
-                        data_sufficiency: dict | None = None,
-                        industry_hint: str = "") -> dict:
+def build_analysis_plan(
+    asset: str, report_type: str = "listed_company", data_sufficiency: dict | None = None, industry_hint: str = ""
+) -> dict:
     """便捷入口。"""
     return AnalystPlanner().plan(asset, report_type, data_sufficiency, industry_hint)
 
 
 if __name__ == "__main__":
     import sys
+
     test_asset = sys.argv[1] if len(sys.argv) > 1 else "气体传感器"
     test_type = sys.argv[2] if len(sys.argv) > 2 else "industry_deep"
     plan = build_analysis_plan(test_asset, test_type)

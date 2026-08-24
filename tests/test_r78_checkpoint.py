@@ -1,11 +1,13 @@
 """R78 (2026-08-05) — 写改循环 checkpoint 回归测试。"""
-import os, sys
+
+import sys
 from pathlib import Path
+
 _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-from pipeline.write_checkpoint import save_checkpoint, load_checkpoint, clear_checkpoint
+from pipeline.write_checkpoint import clear_checkpoint, load_checkpoint, save_checkpoint
 
 
 def test_checkpoint_roundtrip():
@@ -33,11 +35,16 @@ def test_e2e_has_checkpoint_code():
 
 if __name__ == "__main__":
     import traceback
+
     passed = failed = 0
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):
             try:
-                fn(); print(f"  OK {name}"); passed += 1
+                fn()
+                print(f"  OK {name}")
+                passed += 1
             except Exception as e:
-                print(f"  FAIL {name}: {e}"); traceback.print_exc(); failed += 1
+                print(f"  FAIL {name}: {e}")
+                traceback.print_exc()
+                failed += 1
     print(f"\n{passed} passed, {failed} failed")

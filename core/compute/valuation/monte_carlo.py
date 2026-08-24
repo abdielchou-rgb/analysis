@@ -14,9 +14,9 @@ Monte Carlo 概率估值引擎 — 从单点数到概率分布
 """
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
-from typing import Optional
 
 import numpy as np
 
@@ -36,11 +36,18 @@ class MCResult:
 
 
 class MonteCarloValuation:
-    def __init__(self, wacc_mean: float, wacc_std: float,
-                 fcf_mean: float, fcf_std: float,
-                 growth_mean: float = 0.03, growth_std: float = 0.01,
-                 terminal_growth: float = 0.03,
-                 net_debt: float = 0, seed: int = 42):
+    def __init__(
+        self,
+        wacc_mean: float,
+        wacc_std: float,
+        fcf_mean: float,
+        fcf_std: float,
+        growth_mean: float = 0.03,
+        growth_std: float = 0.01,
+        terminal_growth: float = 0.03,
+        net_debt: float = 0,
+        seed: int = 42,
+    ):
         self.wacc_mean = wacc_mean
         self.wacc_std = wacc_std
         self.fcf_mean = fcf_mean
@@ -71,8 +78,13 @@ class MonteCarloValuation:
         evs = np.array([e for e in evs if e != float("inf")])
         if len(evs) == 0:
             return MCResult(
-                n_simulations=n, mean_ev=0, median_ev=0,
-                p10_ev=0, p90_ev=0, var_95=0, downside_prob=1.0,
+                n_simulations=n,
+                mean_ev=0,
+                median_ev=0,
+                p10_ev=0,
+                p90_ev=0,
+                var_95=0,
+                downside_prob=1.0,
             )
 
         return MCResult(
@@ -88,7 +100,9 @@ class MonteCarloValuation:
 
     def to_report(self) -> str:
         r = self.simulate()
-        return (f"Monte Carlo 估值分布（{r.n_simulations}次模拟）:\n"
-                f"  均值: {r.mean_ev:.0f} | 中位: {r.median_ev:.0f}\n"
-                f"  P10: {r.p10_ev:.0f} | P90: {r.p90_ev:.0f}\n"
-                f"  95% VaR: {r.var_95:.0f}（95%概率估值不低于此值）")
+        return (
+            f"Monte Carlo 估值分布（{r.n_simulations}次模拟）:\n"
+            f"  均值: {r.mean_ev:.0f} | 中位: {r.median_ev:.0f}\n"
+            f"  P10: {r.p10_ev:.0f} | P90: {r.p90_ev:.0f}\n"
+            f"  95% VaR: {r.var_95:.0f}（95%概率估值不低于此值）"
+        )

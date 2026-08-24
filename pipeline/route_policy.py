@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """route_policy.py — 双模式节点级混编路由（2026-08-07）
 
 替代 run_reports.py 的 MODE_LLM 整篇映射。双模式 = 路由策略差异，不是 provider 全换：
@@ -15,42 +14,57 @@
   from pipeline.route_policy import resolve_provider, route_info
   p = resolve_provider("merge", mode="train")  # -> "deepseek"
 """
+
 from __future__ import annotations
-import os
+
 import logging
+import os
 
 logger = logging.getLogger("2hao.route_policy")
 
 # 模式 → 节点 → provider 路由策略
 ROUTE_POLICY = {
     "perf": {
-        "write": "deepseek",          # 论点单元写作：DeepSeek L2
-        "skeleton": "deepseek",       # 骨架/大纲：DeepSeek L1
-        "merge": "deepseek",          # 合并组装：DeepSeek L2（质量红线）
-        "revise": "deepseek",         # 修订（Gate 反馈）：DeepSeek
-        "extract": "openrouter",      # 轻量提取/分类：OpenRouter flash
-        "prefetch": "agent_provider", # 后台预取：Marvis 免费
-        "roundtable": "openrouter",   # 终局圆桌：OpenRouter 异源
+        "write": "deepseek",  # 论点单元写作：DeepSeek L2
+        "skeleton": "deepseek",  # 骨架/大纲：DeepSeek L1
+        "merge": "deepseek",  # 合并组装：DeepSeek L2（质量红线）
+        "revise": "deepseek",  # 修订（Gate 反馈）：DeepSeek
+        "extract": "openrouter",  # 轻量提取/分类：OpenRouter flash
+        "prefetch": "agent_provider",  # 后台预取：Marvis 免费
+        "roundtable": "openrouter",  # 终局圆桌：OpenRouter 异源
     },
     "train": {
-        "write": "agent_provider",    # 论点单元写作：Marvis（免费训练）
-        "skeleton": "agent_provider", # 骨架：Marvis
-        "merge": "deepseek",          # 合并组装：DeepSeek（质量红线，永不 Marvis）
-        "revise": "agent_provider",   # 修订：Marvis（训练用）
+        "write": "agent_provider",  # 论点单元写作：Marvis（免费训练）
+        "skeleton": "agent_provider",  # 骨架：Marvis
+        "merge": "deepseek",  # 合并组装：DeepSeek（质量红线，永不 Marvis）
+        "revise": "agent_provider",  # 修订：Marvis（训练用）
         "extract": "agent_provider",  # 提取：Marvis
-        "prefetch": "",               # 训练模式不需要预取（自己就是免费）
-        "roundtable": "deepseek",     # 圆桌：DeepSeek（异于训练源 Marvis）
+        "prefetch": "",  # 训练模式不需要预取（自己就是免费）
+        "roundtable": "deepseek",  # 圆桌：DeepSeek（异于训练源 Marvis）
     },
 }
 
 # 节点别名归一化
 _NODE_ALIASES = {
-    "write": "write", "section": "write", "group": "write", "draft": "write",
-    "merge": "merge", "assemble": "merge", "editor": "merge",
-    "revise": "revise", "edit": "revise", "fix": "revise",
-    "extract": "extract", "classify": "extract", "summarize": "extract",
-    "skeleton": "skeleton", "outline": "skeleton", "plan": "skeleton",
-    "roundtable": "roundtable", "critic": "roundtable", "review": "roundtable",
+    "write": "write",
+    "section": "write",
+    "group": "write",
+    "draft": "write",
+    "merge": "merge",
+    "assemble": "merge",
+    "editor": "merge",
+    "revise": "revise",
+    "edit": "revise",
+    "fix": "revise",
+    "extract": "extract",
+    "classify": "extract",
+    "summarize": "extract",
+    "skeleton": "skeleton",
+    "outline": "skeleton",
+    "plan": "skeleton",
+    "roundtable": "roundtable",
+    "critic": "roundtable",
+    "review": "roundtable",
     "prefetch": "prefetch",
 }
 

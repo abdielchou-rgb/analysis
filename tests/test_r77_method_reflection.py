@@ -4,9 +4,9 @@
 2. 后续实测滑动平均
 3. e2e 出口已接线 record_reflection（报告完成自动记录）
 """
-import os
-import sys
+
 import json
+import sys
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
@@ -30,12 +30,17 @@ def test_estimate_marked_in_registry():
 def test_first_real_record_overrides_estimate():
     """首次实测记录应覆盖估算，不混入滑动平均。"""
     from core.method_reflection import record_reflection
+
     reg = _ROOT / "data" / "framework_registry.json"
     backup = reg.read_text(encoding="utf-8")
     try:
-        record_reflection(asset="__r77test__", report_type="industry_deep",
-                          frameworks=["signal_chain"], gate_score=0.77,
-                          data_sufficiency={"sufficient": True})
+        record_reflection(
+            asset="__r77test__",
+            report_type="industry_deep",
+            frameworks=["signal_chain"],
+            gate_score=0.77,
+            data_sufficiency={"sufficient": True},
+        )
         d = _load_registry()
         for fw in d["frameworks"]:
             if fw["id"] == "signal_chain":
@@ -50,16 +55,25 @@ def test_first_real_record_overrides_estimate():
 def test_second_record_sliding_average():
     """后续实测应滑动平均。"""
     from core.method_reflection import record_reflection
+
     reg = _ROOT / "data" / "framework_registry.json"
     backup = reg.read_text(encoding="utf-8")
     try:
         # 先设实测基线
-        record_reflection(asset="__r77a__", report_type="industry_deep",
-                          frameworks=["signal_chain"], gate_score=0.80,
-                          data_sufficiency={"sufficient": True})
-        record_reflection(asset="__r77b__", report_type="industry_deep",
-                          frameworks=["signal_chain"], gate_score=0.90,
-                          data_sufficiency={"sufficient": True})
+        record_reflection(
+            asset="__r77a__",
+            report_type="industry_deep",
+            frameworks=["signal_chain"],
+            gate_score=0.80,
+            data_sufficiency={"sufficient": True},
+        )
+        record_reflection(
+            asset="__r77b__",
+            report_type="industry_deep",
+            frameworks=["signal_chain"],
+            gate_score=0.90,
+            data_sufficiency={"sufficient": True},
+        )
         d = _load_registry()
         for fw in d["frameworks"]:
             if fw["id"] == "signal_chain":
@@ -79,6 +93,7 @@ def test_e2e_record_results_wired():
 
 if __name__ == "__main__":
     import traceback
+
     passed = failed = 0
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

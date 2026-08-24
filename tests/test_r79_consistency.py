@@ -1,7 +1,8 @@
 """R79 P0-2/P0-3 — Bold Call 一致性 + 市场规模口径回归测试。"""
-import os, sys
+
+import sys
 from pathlib import Path
-import pytest
+
 _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
@@ -10,6 +11,7 @@ if str(_ROOT) not in sys.path:
 def test_bold_call_inconsistent_blocked():
     """Bold Call 多处时间窗口不一致应拦截。"""
     from pipeline.iron_gate import IronGate
+
     ig = IronGate.__new__(IronGate)
     ig.report_text = (
         "Bold Call：2026Q4-2027Q2 存量替换释放。"
@@ -24,8 +26,9 @@ def test_bold_call_inconsistent_blocked():
 def test_bold_call_single_passes():
     """单一 Bold Call 应通过。"""
     from pipeline.iron_gate import IronGate
+
     ig = IronGate.__new__(IronGate)
-    ig.report_text = ("Bold Call：2026Q3-2027Q4 国产份额35%→42%，增速8-10%。" * 5)
+    ig.report_text = "Bold Call：2026Q3-2027Q4 国产份额35%→42%，增速8-10%。" * 5
     r = ig._check_bold_call_consistency()
     assert r.passed, f"单一 Bold Call 应通过: {r.details}"
 
@@ -33,6 +36,7 @@ def test_bold_call_single_passes():
 def test_market_size_conflict_blocked():
     """市场规模双口径冲突应拦截。"""
     from pipeline.iron_gate import IronGate
+
     ig = IronGate.__new__(IronGate)
     ig.report_text = (
         "全球市场规模2024年32.5亿美元，2025年34.8亿美元。"
@@ -52,19 +56,25 @@ def test_market_size_single_passes():
     现 _load_market_anchors 要求标的匹配，无 asset 时仅做文内多值比对。
     """
     from pipeline.iron_gate import IronGate
+
     ig = IronGate.__new__(IronGate)
-    ig.report_text = ("全球市场规模2025年50亿美元，中国市场规模2025年172亿元。" * 6)
+    ig.report_text = "全球市场规模2025年50亿美元，中国市场规模2025年172亿元。" * 6
     r = ig._check_market_size_consistency()
     assert r.passed, f"单一口径应通过: {r.details}"
 
 
 if __name__ == "__main__":
     import traceback
+
     passed = failed = 0
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):
             try:
-                fn(); print(f"  OK {name}"); passed += 1
+                fn()
+                print(f"  OK {name}")
+                passed += 1
             except Exception as e:
-                print(f"  FAIL {name}: {e}"); traceback.print_exc(); failed += 1
+                print(f"  FAIL {name}: {e}")
+                traceback.print_exc()
+                failed += 1
     print(f"\n{passed} passed, {failed} failed")

@@ -1,9 +1,10 @@
 "Framework Injection module — 将外部方法论YAML注入SAC分析框架"
 
 from __future__ import annotations
-import logging, json
+
+import logging
 from pathlib import Path
-from typing import Optional
+
 import yaml
 
 logger = logging.getLogger("2hao.framework_injector")
@@ -17,22 +18,21 @@ def load_registry() -> dict:
     if not REGISTRY_FILE.exists():
         logger.warning("Framework registry not found: %s", REGISTRY_FILE)
         return {"frameworks": {}}
-    with open(REGISTRY_FILE, "r", encoding="utf-8") as f:
+    with open(REGISTRY_FILE, encoding="utf-8") as f:
         return yaml.safe_load(f) or {"frameworks": {}}
 
 
-def load_framework(framework_id: str) -> Optional[dict]:
+def load_framework(framework_id: str) -> dict | None:
     """加载单个框架YAML"""
     path = FRAMEWORKS_DIR / f"{framework_id}.yaml"
     if not path.exists():
         logger.warning("Framework file not found: %s", path)
         return None
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 
-def get_frameworks_for_report(report_type: str = "listed_company",
-                               industry_hint: str = "") -> list[dict]:
+def get_frameworks_for_report(report_type: str = "listed_company", industry_hint: str = "") -> list[dict]:
     """获取与报告类型匹配的框架。
 
     R81（2026-08-06）：增加行业关键词动态匹配——此前按 report_type 一刀切，
@@ -58,30 +58,34 @@ def get_frameworks_for_report(report_type: str = "listed_company",
     return result
 
 
-def inject_framework_prompt(report_type: str = "listed_company",
-                             biz_type: str = "",
-                             stage_summary: str = "",
-                             industry_hint: str = "") -> str:
+def inject_framework_prompt(
+    report_type: str = "listed_company", biz_type: str = "", stage_summary: str = "", industry_hint: str = ""
+) -> str:
     """生成框架注入文本，追加到写作prompt中"""
     frameworks = get_frameworks_for_report(report_type, industry_hint)
     if not frameworks:
         return ""
-    
+
     parts = ["[外部分析方法论注入——必须用具体分析步骤应用于本报告标的]"]
     # R81（2026-08-06）：关键框架优先排序——bottleneck/ma_valuation/scenario 等
     # 对行业分析最关键的框架即使 priority 不高也排前，且注入数量从 4 扩到 6。
     # 只含 core/frameworks YAML 真实存在的框架（bottleneck/ma_valuation 走 analyst_planner 另一套）
-    _KEY_FRAMEWORKS = {"moat_analysis", "competition_demystified", "value_driver",
-                       "strategy_engine", "cycle_thinking", "expectations_investing",
-                       "signal_noise", "accounting_for_value"}
+    _KEY_FRAMEWORKS = {
+        "moat_analysis",
+        "competition_demystified",
+        "value_driver",
+        "strategy_engine",
+        "cycle_thinking",
+        "expectations_investing",
+        "signal_noise",
+        "accounting_for_value",
+    }
     _sorted = sorted(frameworks[:8], key=lambda f: (f.get("id") in _KEY_FRAMEWORKS, f.get("_priority", 9)))
     for fw in _sorted[:6]:  # Top 6（关键框架优先）
         name = fw.get("name", "?")
         core = fw.get("core_thesis", "")[:150]
         chain = fw.get("logic_chain", [])
-        chain_summary = " → ".join(
-            [s.get("step", "")[:20] for s in chain[:5]]
-        )
+        chain_summary = " → ".join([s.get("step", "")[:20] for s in chain[:5]])
         mapping = fw.get("_sac_mapping", [])
         parts.append(f"  [{name}] {core}")
         parts.append(f"     分析链: {chain_summary}")
@@ -112,12 +116,13 @@ def inject_framework_prompt(report_type: str = "listed_company",
         parts.append("")
         parts.append(stage_summary)
     parts.append("[/外部方法论注入]")
-    parts.append("要求：上述每个框架必须对本报告标的给出具体应用结论——如'用护城河框架分析柯力：转换成本中等、成本优势强'，禁止只提框架名不分析。")
+    parts.append(
+        "要求：上述每个框架必须对本报告标的给出具体应用结论——如'用护城河框架分析柯力：转换成本中等、成本优势强'，禁止只提框架名不分析。"
+    )
     return "\n".join(parts)
 
 
-def framework_aware_prompt(report_type: str = "listed_company",
-                           biz_type: str = "") -> str:
+def framework_aware_prompt(report_type: str = "listed_company", biz_type: str = "") -> str:
     """整合框架注入和宏/商业背景的完整prompt前导"""
     parts = []
     # 框架注入
@@ -133,12 +138,14 @@ def list_available_frameworks() -> list[dict]:
     result = []
     for fid, fconfig in registry.get("frameworks", {}).items():
         fdata = load_framework(fid)
-        result.append({
-            "id": fid,
-            "name": fconfig.get("name", fid),
-            "author": fconfig.get("author", "?"),
-            "priority": fconfig.get("priority", 9),
-            "sac_mapping": fconfig.get("sac_dimension_mapping", []),
-            "dimensions": list(fdata.get("analytical_dimensions", {}).keys()) if fdata else [],
-        })
+        result.append(
+            {
+                "id": fid,
+                "name": fconfig.get("name", fid),
+                "author": fconfig.get("author", "?"),
+                "priority": fconfig.get("priority", 9),
+                "sac_mapping": fconfig.get("sac_dimension_mapping", []),
+                "dimensions": list(fdata.get("analytical_dimensions", {}).keys()) if fdata else [],
+            }
+        )
     return result

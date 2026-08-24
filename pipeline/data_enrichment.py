@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 2号分析师 数据增强桥接层 — Agent 兜底数据的统一入口
 
@@ -18,7 +17,11 @@
 """
 
 from __future__ import annotations
-import sys, os, re, json, logging
+
+import json
+import logging
+import re
+import sys
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
@@ -29,8 +32,8 @@ logger = logging.getLogger("2hao.data_enrichment")
 
 # 判定数据充足性的关键图数据键
 CRITICAL_FIG_KEYS = [
-    "fig_revenue_trend",      # 营收趋势
-    "fig_profitability",      # 净利趋势
+    "fig_revenue_trend",  # 营收趋势
+    "fig_profitability",  # 净利趋势
 ]
 # R85（2026-08-07 P0-2）：decision_memo 关键图键——SAC chart_config 图集
 # （core/sacs/sac_decision_memo.yaml chart_config 共 6 图：
@@ -38,12 +41,12 @@ CRITICAL_FIG_KEYS = [
 # 该类型面向委托方决策，不依赖上市公司财务序列，图集与 listed_company
 # （fig_revenue_trend/fig_profitability）完全不同，故单独维护专属常量。
 DECISION_MEMO_CRITICAL_FIG_KEYS = [
-    "fig_market_size_global",        # 全球市场规模
-    "fig_market_size_china",         # 中国市场规模
-    "fig_industry_chain",            # 产业链价值分布
-    "fig_competitive_landscape",     # 竞争格局
-    "fig_production_path",           # 生产主体三选决策图（内部测算）
-    "fig_roadmap",                   # 执行路线图（内部规划）
+    "fig_market_size_global",  # 全球市场规模
+    "fig_market_size_china",  # 中国市场规模
+    "fig_industry_chain",  # 产业链价值分布
+    "fig_competitive_landscape",  # 竞争格局
+    "fig_production_path",  # 生产主体三选决策图（内部测算）
+    "fig_roadmap",  # 执行路线图（内部规划）
 ]
 # decision_memo 宽容阈值：图集内缺失 ≤2 张仍判 sufficient（min 4/6）。
 # 理由：fig_production_path / fig_roadmap 属内部规划/测算类图，无外部真实
@@ -51,35 +54,67 @@ DECISION_MEMO_CRITICAL_FIG_KEYS = [
 # 竞争图也不足）时才判定数据不充分。
 DECISION_MEMO_MIN_FIG_KEYS = 4
 IMPORTANT_FIG_KEYS = [
-    "fig_margin",             # 毛利率
-    "fig_roe",                # ROE
-    "fig_qlib_price",         # 行情
+    "fig_margin",  # 毛利率
+    "fig_roe",  # ROE
+    "fig_qlib_price",  # 行情
 ]
 
 # 允许 agent 补充的 fig 键白名单（其余拒绝，防止污染图表管线）
-ALLOWED_FIG_KEYS = set([
-    "fig_revenue_trend", "fig_profitability", "fig_margin", "fig_roe",
-    "fig_qlib_price", "fig_market_size_global", "fig_market_size_china",
-    "fig_peer_comparison", "fig_competitive_landscape", "fig_players",
-    "fig_supply_chain", "fig_market_positioning", "fig_growth_drivers",
-    "fig_business_segments", "fig_tech_segments", "fig_valuation",
-    "fig_capital_flow", "fig_funding_history", "fig_industry_board",
-    "fig_business_model", "fig_revenue_change", "fig_profit_change",
-    "fig_gross_margin", "fig_roe_trend", "fig_applications",
-    "fig_guidance_track", "fig_segment_performance",
-    # 2026-08-01 补充：SAC chart_config 新增的图（industry_deep/unlisted）
-    "fig_industry_chain", "fig_market_size", "fig_market_share",
-    "fig_financial_trends", "fig_supply_demand", "fig_profit_pool",
-    "fig_tech_trend", "fig_policy_impact", "fig_life_cycle",
-    "fig_segment_analysis", "fig_cash_flow", "fig_profit_margin",
-    # R74（2026-08-05 用户重大升级）：全球同行/创新企业/发展路径 图数据键
-    "fig_global_peers", "fig_global_solutions", "fig_innovation_players",
-    "fig_development_paths",
-    # R81（2026-08-06）：全球领导者格局 / 海外营收 图数据键（r81 执行文档 enrich 规范）
-    "fig_global_leaders", "fig_overseas_revenue",
-    # R84/P1（2026-08-07）：decision_memo 模板图（生产路径 / 路线图）同步 schema
-    "fig_production_path", "fig_roadmap",
-])
+ALLOWED_FIG_KEYS = set(
+    [
+        "fig_revenue_trend",
+        "fig_profitability",
+        "fig_margin",
+        "fig_roe",
+        "fig_qlib_price",
+        "fig_market_size_global",
+        "fig_market_size_china",
+        "fig_peer_comparison",
+        "fig_competitive_landscape",
+        "fig_players",
+        "fig_supply_chain",
+        "fig_market_positioning",
+        "fig_growth_drivers",
+        "fig_business_segments",
+        "fig_tech_segments",
+        "fig_valuation",
+        "fig_capital_flow",
+        "fig_funding_history",
+        "fig_industry_board",
+        "fig_business_model",
+        "fig_revenue_change",
+        "fig_profit_change",
+        "fig_gross_margin",
+        "fig_roe_trend",
+        "fig_applications",
+        "fig_guidance_track",
+        "fig_segment_performance",
+        # 2026-08-01 补充：SAC chart_config 新增的图（industry_deep/unlisted）
+        "fig_industry_chain",
+        "fig_market_size",
+        "fig_market_share",
+        "fig_financial_trends",
+        "fig_supply_demand",
+        "fig_profit_pool",
+        "fig_tech_trend",
+        "fig_policy_impact",
+        "fig_life_cycle",
+        "fig_segment_analysis",
+        "fig_cash_flow",
+        "fig_profit_margin",
+        # R74（2026-08-05 用户重大升级）：全球同行/创新企业/发展路径 图数据键
+        "fig_global_peers",
+        "fig_global_solutions",
+        "fig_innovation_players",
+        "fig_development_paths",
+        # R81（2026-08-06）：全球领导者格局 / 海外营收 图数据键（r81 执行文档 enrich 规范）
+        "fig_global_leaders",
+        "fig_overseas_revenue",
+        # R84/P1（2026-08-07）：decision_memo 模板图（生产路径 / 路线图）同步 schema
+        "fig_production_path",
+        "fig_roadmap",
+    ]
+)
 
 # R68: Universe Building 相关键（universe_build 节点输出，允许 agent 补充）
 UNIVERSE_FIG_KEYS = ["universe_summary", "coverage_gap", "missing_player_names"]
@@ -99,8 +134,7 @@ class DataSufficiencyChecker:
     """
 
     @staticmethod
-    def check(data: dict, universe_summary: dict = None,
-              report_type: str = "listed_company") -> dict:
+    def check(data: dict, universe_summary: dict = None, report_type: str = "listed_company") -> dict:
         """返回 {'sufficient': bool, 'missing': [dim], 'partial_missing': [dim],
                 'score': float, 'detail': str}
 
@@ -117,9 +151,13 @@ class DataSufficiencyChecker:
         missing_fig = []  # R85：关键图键缺失（独立追踪，供 decision_memo 宽容判定）
         partial = []
         if not isinstance(data, dict):
-            return {"sufficient": False, "missing": ["all"],
-                    "partial_missing": [], "score": 0.0,
-                    "detail": "collected_data is empty"}
+            return {
+                "sufficient": False,
+                "missing": ["all"],
+                "partial_missing": [],
+                "score": 0.0,
+                "detail": "collected_data is empty",
+            }
 
         chart_data = data.get("chart_data", {})
         if not isinstance(chart_data, dict):
@@ -151,16 +189,17 @@ class DataSufficiencyChecker:
                 elif isinstance(val, (int, float)) and val == 0:
                     missing_fig.append(f"{key}(数值为0)")
                 elif isinstance(val, dict):
-                    _vals = [v for v in val.values()
-                             if not isinstance(v, dict) and v not in (None, "", 0)]
+                    _vals = [v for v in val.values() if not isinstance(v, dict) and v not in (None, "", 0)]
                     if not _vals:
                         missing_fig.append(f"{key}(空结构)")
                 continue
             # 数值真实性检查：须为 dict 且含≥2个有效年份值（非 0/None/占位）
             if isinstance(val, dict):
-                years = [v for y, v in val.items()
-                         if str(y).isdigit() and 2000 <= int(y) <= 2030
-                         and v is not None and v != 0]
+                years = [
+                    v
+                    for y, v in val.items()
+                    if str(y).isdigit() and 2000 <= int(y) <= 2030 and v is not None and v != 0
+                ]
                 if len(years) < 2:
                     missing_fig.append(f"{key}(覆盖<2年)")
             elif isinstance(val, (int, float)) and val == 0:
@@ -171,13 +210,10 @@ class DataSufficiencyChecker:
         missing = list(missing_fig)
 
         # 辅助：行情 / 盈利辅助 / 文本 / 结构化财务
-        present_important = sum(1 for k in IMPORTANT_FIG_KEYS
-                                if chart_data.get(k))
+        present_important = sum(1 for k in IMPORTANT_FIG_KEYS if chart_data.get(k))
         if present_important < 1:
             partial.append("行情/盈利辅助数据")
-        has_text = bool(chart_data.get("company_intro")
-                        or data.get("tavily")
-                        or data.get("agent_news"))
+        has_text = bool(chart_data.get("company_intro") or data.get("tavily") or data.get("agent_news"))
         if not has_text:
             partial.append("公司简介/新闻文本")
         if not data.get("akshare_financials") and not data.get("financials"):
@@ -192,6 +228,7 @@ class DataSufficiencyChecker:
         # 行业归属（从 industry_driver 或 baselines 推断）
         try:
             from core.data_basement import build_basement_data_dict
+
             _bd = build_basement_data_dict(str(data.get("asset", "")))
             if not _bd.get("industry_driver_count") and not chart_data.get("industry_tags"):
                 semantic_gap.append("industry_hint")
@@ -209,7 +246,9 @@ class DataSufficiencyChecker:
         if partial:
             detail_parts.append(f"partial={partial}")
         if report_type == "decision_memo" and 0 < len(missing_fig) <= max_tolerated_missing:
-            detail_parts.append(f"decision_memo图集宽容: 缺失{len(missing_fig)}张(≤{max_tolerated_missing}), sufficient")
+            detail_parts.append(
+                f"decision_memo图集宽容: 缺失{len(missing_fig)}张(≤{max_tolerated_missing}), sufficient"
+            )
 
         # R68: Universe Building 覆盖率门禁——非上市玩家覆盖不足视为数据不充分
         coverage_gap = None
@@ -270,6 +309,7 @@ class LocalBackfill:
         # ── 后端1: DataCollectorV5 本地搜索（financials.db + qlib 行情）──
         try:
             from pipeline.data_collector import DataCollectorV5
+
             dc = DataCollectorV5()
             local = dc._local_search(asset)
             if isinstance(local, dict):
@@ -284,6 +324,7 @@ class LocalBackfill:
         if not chart_data.get("fig_revenue_trend") or not chart_data.get("fig_profitability"):
             try:
                 from core import data_backends
+
                 code_match = re.search(r"(\d{6})", asset)
                 if code_match:
                     code = code_match.group(1)
@@ -298,16 +339,12 @@ class LocalBackfill:
                                 if year.isdigit():
                                     yearly.setdefault(year, {})[field] = value
                             if not chart_data.get("fig_revenue_trend"):
-                                rev = {yr: f["MBRevenue"] / 1e8
-                                       for yr, f in yearly.items()
-                                       if f.get("MBRevenue")}
+                                rev = {yr: f["MBRevenue"] / 1e8 for yr, f in yearly.items() if f.get("MBRevenue")}
                                 if rev:
                                     chart_data["fig_revenue_trend"] = rev
                                     added.append("fig_revenue_trend")
                             if not chart_data.get("fig_profitability"):
-                                prof = {yr: f["netProfit"] / 1e8
-                                        for yr, f in yearly.items()
-                                        if f.get("netProfit")}
+                                prof = {yr: f["netProfit"] / 1e8 for yr, f in yearly.items() if f.get("netProfit")}
                                 if prof:
                                     chart_data["fig_profitability"] = prof
                                     added.append("fig_profitability")
@@ -324,6 +361,7 @@ class LocalBackfill:
         if not chart_data.get("fig_revenue_trend") or not chart_data.get("fig_profitability"):
             try:
                 from core.data_universal import collect_universal
+
                 ud = collect_universal(asset)
                 if isinstance(ud, dict) and ud.get("status") == "ok":
                     if not chart_data.get("fig_revenue_trend") and ud.get("financials", {}).get("revenue"):
@@ -346,6 +384,7 @@ class LocalBackfill:
                 aliases = [asset]
                 try:
                     from core.asset_resolver import resolve_asset
+
                     _ra = resolve_asset(asset)
                     aliases = [x for x in _ra.aliases if x and len(x) >= 2]
                     aliases.append(_ra.name or "")
@@ -358,8 +397,9 @@ class LocalBackfill:
                         stem = f.stem
                         if any(al and al in stem for al in aliases if al):
                             txt = f.read_text(encoding="utf-8", errors="ignore")
-                            intro = re.search(r"(公司简介|公司概述|业务概览|公司[是为是]|主营业务)[：:\s]*(.{50,300})",
-                                              txt, re.S)
+                            intro = re.search(
+                                r"(公司简介|公司概述|业务概览|公司[是为是]|主营业务)[：:\s]*(.{50,300})", txt, re.S
+                            )
                             if intro:
                                 chart_data["company_intro"] = intro.group(2).strip()[:280]
                                 added.append("company_intro")
@@ -373,13 +413,19 @@ class LocalBackfill:
         # 数据源：①历史 enrich_*.json 的 fig_data ②unlisted_players.json 玩家清单
         #         ③data_basement.build_basement_data_dict 行业基线。
         if report_type == "decision_memo":
-            _dm_keys = ("fig_market_size_global", "fig_market_size_china",
-                        "fig_industry_chain", "fig_competitive_landscape", "fig_players")
+            _dm_keys = (
+                "fig_market_size_global",
+                "fig_market_size_china",
+                "fig_industry_chain",
+                "fig_competitive_landscape",
+                "fig_players",
+            )
             # 5a. 历史 enrich 文件提取图集真实数据（含 asset 别名匹配）
             try:
                 aliases = [asset]
                 try:
                     from core.asset_resolver import resolve_asset
+
                     _ra = resolve_asset(asset)
                     aliases = [x for x in _ra.aliases if x and len(x) >= 2]
                     aliases.append(_ra.name or "")
@@ -396,7 +442,7 @@ class LocalBackfill:
                         _ea = str(_eo.get("asset", ""))
                         if not any(al and al in _ea for al in aliases if al):
                             continue
-                        for _item in (_eo.get("items", []) if isinstance(_eo, dict) else []):
+                        for _item in _eo.get("items", []) if isinstance(_eo, dict) else []:
                             if not isinstance(_item, dict) or _item.get("type") != "fig_data":
                                 continue
                             _k = _item.get("key", "")
@@ -404,8 +450,7 @@ class LocalBackfill:
                             if _k in _dm_keys and _d and _k not in chart_data:
                                 chart_data[_k] = _d
                                 added.append(_k)
-                                logger.info("[LOCAL-BACKFILL] decision_memo 图集兜底: %s ← %s",
-                                            _k, _ef.name)
+                                logger.info("[LOCAL-BACKFILL] decision_memo 图集兜底: %s ← %s", _k, _ef.name)
                         if any(k in chart_data for k in _dm_keys):
                             break  # 已命中首个匹配 enrich 文件
             except Exception as e:
@@ -413,20 +458,21 @@ class LocalBackfill:
             # 5b. 玩家清单注入（universe coverage 兜底：玩家名全文可见 → coverage 提升）
             try:
                 from pipeline.universe_build import UniverseBuilder
+
                 _ub = UniverseBuilder()
                 _ind = _ub._infer_industry_key(asset, data)
                 if _ind:
                     _ind_data = _ub.unlisted_players.get(_ind, {})
                     _players = _ind_data.get("players", []) if isinstance(_ind_data, dict) else []
                     if _players:
-                        _pnames = [p.get("name", "") for p in _players
-                                   if isinstance(p, dict) and p.get("name")]
+                        _pnames = [p.get("name", "") for p in _players if isinstance(p, dict) and p.get("name")]
                         if not chart_data.get("industry_players"):
                             chart_data["industry_players"] = _players
                             added.append("industry_players")
                         if not chart_data.get("industry_players_text"):
-                            chart_data["industry_players_text"] = "；".join(
-                                _pnames) + "（决策备忘录竞争格局玩家清单，来源：unlisted_players.json）"
+                            chart_data["industry_players_text"] = (
+                                "；".join(_pnames) + "（决策备忘录竞争格局玩家清单，来源：unlisted_players.json）"
+                            )
                             added.append("industry_players_text")
                         if not chart_data.get("fig_competitive_landscape") and len(_pnames) >= 3:
                             # 粗粒度竞争格局：按玩家清单生成份额占位图数据（标注为本地兜底）
@@ -436,13 +482,13 @@ class LocalBackfill:
                                 "note": "玩家清单兜底，份额待核",
                             }
                             added.append("fig_competitive_landscape")
-                        logger.info("[LOCAL-BACKFILL] decision_memo 玩家清单注入: %s (%d家)",
-                                    _ind, len(_pnames))
+                        logger.info("[LOCAL-BACKFILL] decision_memo 玩家清单注入: %s (%d家)", _ind, len(_pnames))
             except Exception as e:
                 logger.debug("[LOCAL] decision_memo 玩家清单: %s", e)
             # 5c. data_basement 行业基线兜底（供 market_size/industry_chain 写作引用）
             try:
                 from core.data_basement import build_basement_data_dict
+
                 _bd = build_basement_data_dict(asset)
                 if isinstance(_bd, dict) and _bd:
                     if not chart_data.get("industry_baselines"):
@@ -451,8 +497,7 @@ class LocalBackfill:
                     # 5c-2. 市场规模兜底：从行业基线提取可用的市场规模/增速
                     if not chart_data.get("fig_market_size_china"):
                         _ms = {}
-                        for _mk in ("market_size_china", "china_market_size",
-                                    "market_size", "行业市场规模"):
+                        for _mk in ("market_size_china", "china_market_size", "market_size", "行业市场规模"):
                             if isinstance(_bd.get(_mk), (int, float, str)):
                                 _ms["china"] = _bd.get(_mk)
                                 break
@@ -480,7 +525,7 @@ class LocalBackfill:
         if added:
             chart_data["_local_backfill"] = {
                 "source": "local_backfill:financials.db+qlib+data_backends+EastMoney+历史报告"
-                          + ("+decision_memo离线" if report_type == "decision_memo" else ""),
+                + ("+decision_memo离线" if report_type == "decision_memo" else ""),
                 "keys": added,
             }
             data["chart_data"] = chart_data
@@ -529,14 +574,34 @@ class AgentEnricher:
     # 维度 → 权重分（0-1）
     _CONF_DIMS = {
         "source_type": {  # 数据来源类型
-            "官方/一手": 1.0, "公司公告": 1.0, "年报": 1.0, "招股书": 1.0,
-            "专业数据": 0.9, "Wind": 0.9, "Bloomberg": 0.9, "akshare": 0.85, "baostock": 0.85,
-            "研报": 0.8, "行业白皮书": 0.8, "Gartner": 0.85, "IDC": 0.85,
-            "媒体": 0.6, "WebSearch": 0.5, "tavily": 0.5, "估算": 0.4, "推断": 0.3,
+            "官方/一手": 1.0,
+            "公司公告": 1.0,
+            "年报": 1.0,
+            "招股书": 1.0,
+            "专业数据": 0.9,
+            "Wind": 0.9,
+            "Bloomberg": 0.9,
+            "akshare": 0.85,
+            "baostock": 0.85,
+            "研报": 0.8,
+            "行业白皮书": 0.8,
+            "Gartner": 0.85,
+            "IDC": 0.85,
+            "媒体": 0.6,
+            "WebSearch": 0.5,
+            "tavily": 0.5,
+            "估算": 0.4,
+            "推断": 0.3,
         },
         "authority": {  # 来源权威度
-            "官方": 1.0, "监管": 1.0, "交易所": 0.95, "协会": 0.85,
-            "头部机构": 0.9, "券商": 0.8, "咨询": 0.75, "媒体": 0.5,
+            "官方": 1.0,
+            "监管": 1.0,
+            "交易所": 0.95,
+            "协会": 0.85,
+            "头部机构": 0.9,
+            "券商": 0.8,
+            "咨询": 0.75,
+            "媒体": 0.5,
         },
     }
 
@@ -627,9 +692,11 @@ class AgentEnricher:
                 # test_data_enrichment 断言 cd["fig_revenue_trend"]["2024"]==60 也 KeyError。
                 # 修复：chart_data[key] 保持扁平（下游不变），unit/note/source 存入
                 # 伴生字典 chart_data["_caliber"][key] 供需要处读取。
-                chart_data[key] = fdata if isinstance(fdata, dict) else {
-                    str(i): v for i, v in enumerate(fdata) if not isinstance(v, (dict, list))
-                }
+                chart_data[key] = (
+                    fdata
+                    if isinstance(fdata, dict)
+                    else {str(i): v for i, v in enumerate(fdata) if not isinstance(v, (dict, list))}
+                )
                 caliber = chart_data.setdefault("_caliber", {})
                 caliber[key] = {
                     "unit": item.get("unit", ""),
@@ -687,8 +754,7 @@ class AgentEnricher:
             # FP2: 供 Iron Gate 校验的可追溯来源清单
             "source_registry": sources_registry,
         }
-        logger.info("[ENRICH] accepted=%d rejected=%d (%s)",
-                    len(accepted), len(rejected), path.name)
+        logger.info("[ENRICH] accepted=%d rejected=%d (%s)", len(accepted), len(rejected), path.name)
         if rejected:
             logger.warning("[ENRICH] rejected items: %s", json.dumps(rejected, ensure_ascii=False)[:300])
         return data
@@ -697,6 +763,7 @@ class AgentEnricher:
 # ═══════════════════════════════════════════════════════════════
 # E2EOrchestrator 节点入口
 # ═══════════════════════════════════════════════════════════════
+
 
 def enrich_node(node_id: str, context: dict) -> dict:
     """AgentGraph 的 enrich 节点函数。
@@ -718,8 +785,7 @@ def enrich_node(node_id: str, context: dict) -> dict:
     universe_action = universe_summary.get("recommend_action", "")
 
     # 1. 充足性检查
-    check = DataSufficiencyChecker.check(data, universe_summary=universe_summary,
-                                         report_type=report_type)
+    check = DataSufficiencyChecker.check(data, universe_summary=universe_summary, report_type=report_type)
     context["data_sufficiency"] = check
 
     # 2. 本地兜底
@@ -731,18 +797,22 @@ def enrich_node(node_id: str, context: dict) -> dict:
         """
         try:
             from pipeline.universe_build import UniverseBuilder
+
             _ub = UniverseBuilder()
-            _ub_result = _ub.build(asset=asset, collected_data=data,
-                                   report_type=context.get("report_type", "industry_deep"))
+            _ub_result = _ub.build(
+                asset=asset, collected_data=data, report_type=context.get("report_type", "industry_deep")
+            )
             _new_summary = _ub_result.get("universe_summary", {})
             if _new_summary.get("total_players", 0) > 0:
                 universe_summary = _new_summary
                 context["universe_summary"] = _new_summary
                 context["universe_gap"] = None  # 重算后清空旧缺口
-                logger.info("[ENRICH-R69] universe coverage 重算: %s/%s (%s)",
-                            _new_summary.get("covered_players", 0),
-                            _new_summary.get("total_players", 0),
-                            _new_summary.get("coverage_rate", 0))
+                logger.info(
+                    "[ENRICH-R69] universe coverage 重算: %s/%s (%s)",
+                    _new_summary.get("covered_players", 0),
+                    _new_summary.get("total_players", 0),
+                    _new_summary.get("coverage_rate", 0),
+                )
         except Exception as e:
             logger.debug("[ENRICH-R69] universe 重算失败（沿用 enrich 前摘要）: %s", e)
         return universe_summary
@@ -754,8 +824,7 @@ def enrich_node(node_id: str, context: dict) -> dict:
         # 立即重算 universe coverage，否则 decision_memo 因 coverage<0.5 恒阻断
         if universe_summary.get("coverage_rate", 1.0) < 0.5:
             universe_summary = _recompute_universe(asset, data, context, universe_summary)
-        check = DataSufficiencyChecker.check(data, universe_summary=universe_summary,
-                                             report_type=report_type)
+        check = DataSufficiencyChecker.check(data, universe_summary=universe_summary, report_type=report_type)
         context["data_sufficiency"] = check
 
     # 3. agent 补充数据 merge（enrich-file 由 scheduler 注入）
@@ -766,10 +835,10 @@ def enrich_node(node_id: str, context: dict) -> dict:
         # 不静默带病进下游。
         try:
             from core.data_contract import validate_enrich_file_merge
+
             _ok, _problems = validate_enrich_file_merge(data, enrich_file)
             if not _ok:
-                logger.warning("[ENRICH-CONTRACT] 数据契约违规 %d 项: %s",
-                               len(_problems), "; ".join(_problems[:5]))
+                logger.warning("[ENRICH-CONTRACT] 数据契约违规 %d 项: %s", len(_problems), "; ".join(_problems[:5]))
                 context["enrich_contract_violations"] = _problems
             else:
                 logger.info("[ENRICH-CONTRACT] 数据契约校验通过")
@@ -780,8 +849,7 @@ def enrich_node(node_id: str, context: dict) -> dict:
         # 修复 R68 缺陷：universe_build 在 enrich 前计算 coverage，
         # 若不重算则覆盖率恒 < 0.5、sufficient 恒 False，导致主题跑偏。
         universe_summary = _recompute_universe(asset, data, context, universe_summary)
-        check = DataSufficiencyChecker.check(data, universe_summary=universe_summary,
-                                             report_type=report_type)
+        check = DataSufficiencyChecker.check(data, universe_summary=universe_summary, report_type=report_type)
         context["data_sufficiency"] = check
 
     # R68: Universe 缺口清单注入 gap_manifest（供 generate+enrich 补采）
@@ -791,9 +859,12 @@ def enrich_node(node_id: str, context: dict) -> dict:
             "coverage_gap": universe_missing,
             "missing_player_names": [p.get("name") for p in universe_missing if isinstance(p, dict)],
         }
-        logger.warning("[ENRICH] Universe coverage gap: %d missing players in %s (coverage=%s)",
-                       len(universe_missing), universe_summary.get("industry", "unknown"),
-                       universe_summary.get("coverage_rate", 0))
+        logger.warning(
+            "[ENRICH] Universe coverage gap: %d missing players in %s (coverage=%s)",
+            len(universe_missing),
+            universe_summary.get("industry", "unknown"),
+            universe_summary.get("coverage_rate", 0),
+        )
 
     # 4. 信号与降级标记
     needs_agent = not check["sufficient"]
@@ -864,9 +935,9 @@ def _write_gap_manifest(asset: str, context: dict, check: dict) -> str:
         "universe_gap": context.get("universe_gap"),
         # 告诉 agent 下一步怎么补
         "next_steps": [
-            f"1. 用 WebSearch/akshare-MCP 补充核心财务数据（fig_revenue_trend + fig_profitability），来源必须标注",
+            "1. 用 WebSearch/akshare-MCP 补充核心财务数据（fig_revenue_trend + fig_profitability），来源必须标注",
             "2. 生成 enrich-file JSON（schema 见 pipeline/data_enrichment.py）",
-            f"3. 重跑: python pipeline/scheduler.py \"{asset}\" --enrich-file <enrich.json>",
+            f'3. 重跑: python pipeline/scheduler.py "{asset}" --enrich-file <enrich.json>',
         ],
     }
     path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -901,9 +972,9 @@ def _write_backlog_task(asset: str, context: dict, check: dict) -> str:
         "escalated": False,
         # 兜底操作指引
         "how_to_fix": [
-            f"python scripts/agent_backfill.py check \"{asset}\"",
-            f"python scripts/agent_backfill.py template \"{asset}\" --out enrich.json",
-            f"python scripts/agent_backfill.py run \"{asset}\" --enrich-file enrich.json",
+            f'python scripts/agent_backfill.py check "{asset}"',
+            f'python scripts/agent_backfill.py template "{asset}" --out enrich.json',
+            f'python scripts/agent_backfill.py run "{asset}" --enrich-file enrich.json',
         ],
     }
     # 同资产已有任务则不重复创建
@@ -920,13 +991,13 @@ def _write_backlog_task(asset: str, context: dict, check: dict) -> str:
     return str(path)
 
 
-def data_check_only(asset: str, report_type: str = "listed_company",
-                    output_dir: str = "output", enrich_file: str = None) -> dict:
+def data_check_only(
+    asset: str, report_type: str = "listed_company", output_dir: str = "output", enrich_file: str = None
+) -> dict:
     """快速数据检查（不跑完整管线，只到 enrich 节点）
 
     供 agent 在补数据前快速确认数据缺口。返回缺口清单 + 是否满足。
     """
-    from pipeline.e2e_orchestrator import E2ENodes
     ctx = {
         "asset": asset,
         "report_type": report_type,
@@ -938,6 +1009,7 @@ def data_check_only(asset: str, report_type: str = "listed_company",
     # 只跑 data + enrich 两个节点
     try:
         from pipeline.data_collector import DataCollectorV5
+
         dc = DataCollectorV5()
         data = dc.collect(asset, report_type, {})
         ctx["collected_data"] = data or {}
@@ -959,6 +1031,7 @@ def data_check_only(asset: str, report_type: str = "listed_company",
 # ═══════════════════════════════════════════════════════════════
 # CLI（供 agent 手动兜底后生成 enrich-file 参考）
 # ═══════════════════════════════════════════════════════════════
+
 
 def make_enrich_template(asset: str, path: str | Path) -> Path:
     """生成一个 enrich-file 模板，帮助 agent 理解 schema"""
@@ -984,6 +1057,7 @@ def make_enrich_template(asset: str, path: str | Path) -> Path:
 
 if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser(description="2hao 数据增强桥接层")
     sub = parser.add_subparsers(dest="cmd")
     p1 = sub.add_parser("template", help="生成 enrich-file 模板")

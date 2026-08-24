@@ -10,10 +10,11 @@ Design principle: "宁可拒真，不可放伪"
 
 from __future__ import annotations
 
-from core.enforcer.schema import EnforcedReport, EnforcedSection, EnforcementResult, EnforcementError
-from core.enforcer.checklist import ComplianceChecklist, ComplianceChecklistItem
 from dataclasses import dataclass, field
 from typing import Optional
+
+from core.enforcer.checklist import ComplianceChecklist, ComplianceChecklistItem
+from core.enforcer.schema import EnforcedReport, EnforcedSection, EnforcementError, EnforcementResult
 
 
 @dataclass
@@ -28,12 +29,13 @@ class EnforcerConfig:
 class Enforcer:
     """Main entry point for constraint enforcement."""
 
-    def __init__(self, config: Optional[EnforcerConfig] = None):
+    def __init__(self, config: EnforcerConfig | None = None):
         self.config = config or EnforcerConfig()
         self.checklist = ComplianceChecklist()
 
-    def enforce(self, text: str, sac_id: str = "", required_dims: list[str] = None,
-                context: dict = None) -> EnforcementResult:
+    def enforce(
+        self, text: str, sac_id: str = "", required_dims: list[str] = None, context: dict = None
+    ) -> EnforcementResult:
         """Run all enforcement checks and return results."""
         context = context or {}
         result = EnforcementResult()
@@ -47,8 +49,7 @@ class Enforcer:
 
         # 2. Compliance checklist
         if self.config.run_checklist:
-            check_result = self.checklist.run(text, sac_id=sac_id,
-                                              required_dims=required_dims)
+            check_result = self.checklist.run(text, sac_id=sac_id, required_dims=required_dims)
             result.checklist_passed = check_result["passed"]
             result.checklist_items = check_result["items"]
 
@@ -56,6 +57,7 @@ class Enforcer:
         # Block mode: raise if not passed
         if self.config.mode == "block" and not result.passed:
             from core.enforcer.schema import EnforcementError
+
             raise EnforcementError(
                 f"Enforcer blocked: schema={result.schema_passed}, checklist={result.checklist_passed}",
                 result=result,
@@ -65,7 +67,7 @@ class Enforcer:
     def _check_schema(self, text: str, required_dims: list[str]) -> dict:
         """Verify report structure against EnforcedReport schema."""
         issues = []
-        sections = [s for s in text.split('\n## ') if s.strip()]
+        sections = [s for s in text.split("\n## ") if s.strip()]
 
         if len(sections) < 2:
             return {"passed": False, "issues": ["No ## sections found"], "section_count": 0}
@@ -75,11 +77,11 @@ class Enforcer:
             sec2 = sections[1][:300]
             has_disagreement = any(m in sec2 for m in ["分歧", "共识", "不同于", "市场认为"])
             if not has_disagreement:
-                issues.append(f"第2页(核心分歧): 未检测到争议定位")
+                issues.append("第2页(核心分歧): 未检测到争议定位")
 
         # Check required dimensions are present as ## sections
         if required_dims:
-            section_titles = [s.split('\n')[0].strip().lower() for s in sections[1:]]
+            section_titles = [s.split("\n")[0].strip().lower() for s in sections[1:]]
             for dim in required_dims:
                 dim_lower = dim.lower()
                 # Fuzzy match: dim keyword appears in any section title
@@ -101,17 +103,15 @@ class Enforcer:
             "section_count": len(sections),
         }
 
-    def enforce_section(self, section_text: str, section_id: str,
-                        requirements: dict = None) -> dict:
+    def enforce_section(self, section_text: str, section_id: str, requirements: dict = None) -> dict:
         """Enforce a single section (for section-gating mode)."""
         issues = []
-        lines = [l for l in section_text.strip().split('\n') if l.strip()]
+        lines = [l for l in section_text.strip().split("\n") if l.strip()]
         if not lines:
             return {"passed": False, "issues": ["Empty section"]}
 
         first_line = lines[0]
-        has_judgment = any(j in first_line for j in
-                           ["我们认为", "预计", "核心", "关键", "估值", "风险"])
+        has_judgment = any(j in first_line for j in ["我们认为", "预计", "核心", "关键", "估值", "风险"])
         if not has_judgment:
             issues.append("首句不是判断句")
 

@@ -5,13 +5,14 @@ Additional dataclasses needed by V53 integration.
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 @dataclass
 class ChartSpec:
     """Specification for a single chart in a report."""
+
     chart_id: str = ""
     chart_type: str = "bar"
     title: str = ""
@@ -24,9 +25,14 @@ class ChartSpec:
 @dataclass
 class WritingDNA:
     """Institutional writing style DNA."""
+
     institution_name: str = ""
-    judgment_verbs: dict = field(default_factory=lambda: {"primary": "我们认为", "secondary": "我们判断", "frequency": 0.7})
-    paragraph_start: dict = field(default_factory=lambda: {"preferred": ["我们认为", "从基本面看"], "avoid": ["值得注意的是", "综上所"]})
+    judgment_verbs: dict = field(
+        default_factory=lambda: {"primary": "我们认为", "secondary": "我们判断", "frequency": 0.7}
+    )
+    paragraph_start: dict = field(
+        default_factory=lambda: {"preferred": ["我们认为", "从基本面看"], "avoid": ["值得注意的是", "综上所"]}
+    )
     uncertainty: dict = field(default_factory=lambda: {"preferred": ["我们预计"], "avoid": ["可能"]})
     first_person: dict = field(default_factory=lambda: {"we_frequency": 0.8, "passive_allowed": False})
     p0_tolerance: float = 0.0
@@ -36,6 +42,7 @@ class WritingDNA:
 @dataclass
 class ProvenanceRecord:
     """Record of data provenance for traceability."""
+
     source: str = ""
     field: str = ""
     value: str = ""
@@ -45,21 +52,22 @@ class ProvenanceRecord:
 @dataclass
 class ReportBlueprint:
     """Blueprint for a report structure."""
+
     report_type: str = "listed_company"
-    sections: list[str] = field(default_factory=lambda: [
-        "Executive Summary",
-        "Industry Overview",
-        "Company Analysis",
-        "Financial Analysis",
-        "Forecast & Valuation",
-        "Risk Factors",
-        "Appendix"
-    ])
-    mandatory_sections: list[str] = field(default_factory=lambda: [
-        "Executive Summary",
-        "Financial Analysis",
-        "Forecast & Valuation"
-    ])
+    sections: list[str] = field(
+        default_factory=lambda: [
+            "Executive Summary",
+            "Industry Overview",
+            "Company Analysis",
+            "Financial Analysis",
+            "Forecast & Valuation",
+            "Risk Factors",
+            "Appendix",
+        ]
+    )
+    mandatory_sections: list[str] = field(
+        default_factory=lambda: ["Executive Summary", "Financial Analysis", "Forecast & Valuation"]
+    )
     style_id: str = "cicc"
     language: str = "zh-CN"
 
@@ -87,13 +95,9 @@ def get_blueprint(report_type: str = "listed_company") -> ReportBlueprint:
                 "Financial Analysis",
                 "Forecast & Valuation",
                 "Risk Factors",
-                "Appendix"
+                "Appendix",
             ],
-            mandatory_sections=[
-                "Executive Summary",
-                "Financial Analysis",
-                "Forecast & Valuation"
-            ]
+            mandatory_sections=["Executive Summary", "Financial Analysis", "Forecast & Valuation"],
         ),
         "industry": ReportBlueprint(
             report_type="industry",
@@ -103,13 +107,9 @@ def get_blueprint(report_type: str = "listed_company") -> ReportBlueprint:
                 "Industry Chain Analysis",
                 "Competitive Landscape",
                 "Trends & Outlook",
-                "Appendix"
+                "Appendix",
             ],
-            mandatory_sections=[
-                "Executive Summary",
-                "Industry Overview",
-                "Competitive Landscape"
-            ]
+            mandatory_sections=["Executive Summary", "Industry Overview", "Competitive Landscape"],
         ),
         "macro": ReportBlueprint(
             report_type="macro",
@@ -119,13 +119,9 @@ def get_blueprint(report_type: str = "listed_company") -> ReportBlueprint:
                 "Policy Analysis",
                 "Risk Assessment",
                 "Investment Implications",
-                "Appendix"
+                "Appendix",
             ],
-            mandatory_sections=[
-                "Executive Summary",
-                "Global Outlook",
-                "Risk Assessment"
-            ]
+            mandatory_sections=["Executive Summary", "Global Outlook", "Risk Assessment"],
         ),
     }
     return blueprints.get(report_type, blueprints["listed_company"])

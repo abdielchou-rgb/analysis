@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 维度分组器（Dimension Grouper）— R15 维度级并行提速核心
 
@@ -19,7 +18,9 @@
 **listed 专属**：financial_analysis / governance_esg / catalyst / accounting_penetration 并入相关组
 **unlisted 专属**：funding_history / founder_team / product_tech / exit_analysis 等并入相关组
 """
+
 from __future__ import annotations
+
 import logging
 
 logger = logging.getLogger("2hao.dimension_grouper")
@@ -29,24 +30,75 @@ logger = logging.getLogger("2hao.dimension_grouper")
 GROUP_DEFS = {
     "industry_deep": {
         "A 市场空间": ["market_size", "industry_boundary", "supply_demand", "global_market_sizing"],
-        "B 竞争格局": ["competitive", "profit_pool", "peer_benchmarking", "global_competition", "unlisted_players", "industry_consolidation"],
+        "B 竞争格局": [
+            "competitive",
+            "profit_pool",
+            "peer_benchmarking",
+            "global_competition",
+            "unlisted_players",
+            "industry_consolidation",
+        ],
         "C 技术生命周期": ["technology", "life_cycle", "elasticity_analysis"],
         "D 政策与产业链": ["policy", "industry_chain", "signal_chain", "geopolitical_risk", "esg_materiality"],
         "E 资金与资本市场": ["capital_flow", "capital_market"],
-        "F 核心判断": ["bold_call", "core_disagreement", "decision_gate", "falsification", "investable_standouts", "core_hypothesis"],
+        "F 核心判断": [
+            "bold_call",
+            "core_disagreement",
+            "decision_gate",
+            "falsification",
+            "investable_standouts",
+            "core_hypothesis",
+        ],
     },
     "listed_company": {
         "A 公司概况与商业模式": ["business_model", "financial_analysis"],
-        "B 竞争与增长": ["competitive_position", "growth_drivers", "peer_benchmarking", "global_peer_comparison", "overseas_revenue", "industry_consolidation"],
+        "B 竞争与增长": [
+            "competitive_position",
+            "growth_drivers",
+            "peer_benchmarking",
+            "global_peer_comparison",
+            "overseas_revenue",
+            "industry_consolidation",
+        ],
         "C 治理与资金": ["governance_esg", "capital_flow", "accounting_penetration", "esg_materiality"],
-        "D 估值与判断": ["valuation_assessment", "catalyst", "falsification", "core_disagreement", "decision_gate", "management_quality", "geopolitical_exposure", "core_hypothesis"],
+        "D 估值与判断": [
+            "valuation_assessment",
+            "catalyst",
+            "falsification",
+            "core_disagreement",
+            "decision_gate",
+            "management_quality",
+            "geopolitical_exposure",
+            "core_hypothesis",
+        ],
     },
     "unlisted_company": {
         "A 公司基本面": ["company_profile", "business_kpi", "market_traction", "product_tech"],
         "B 团队与融资": ["founder_team", "funding_history", "capital_efficiency", "founder_risk_signals"],
-        "C 竞争与估值": ["competitive_moat", "valuation_estimate", "reference_class_forecast", "deal_win_analysis", "global_benchmark"],
-        "D 退出与风险": ["exit_analysis", "exit_cycle_analysis", "milestone_runway_map", "due_diligence", "industry_chain", "overseas_expansion", "cross_border_dd"],
-        "E 判断与合规": ["decision_gate", "falsification", "data_declaration", "policy_score", "core_hypothesis", "esg_materiality"],
+        "C 竞争与估值": [
+            "competitive_moat",
+            "valuation_estimate",
+            "reference_class_forecast",
+            "deal_win_analysis",
+            "global_benchmark",
+        ],
+        "D 退出与风险": [
+            "exit_analysis",
+            "exit_cycle_analysis",
+            "milestone_runway_map",
+            "due_diligence",
+            "industry_chain",
+            "overseas_expansion",
+            "cross_border_dd",
+        ],
+        "E 判断与合规": [
+            "decision_gate",
+            "falsification",
+            "data_declaration",
+            "policy_score",
+            "core_hypothesis",
+            "esg_materiality",
+        ],
     },
     # P0-1（2026-08-07）：决策备忘录维度分组。SAC required_dimensions 12 个维度，
     # 此前无 decision_memo 分组 → 全部落入"其他维度"默认组 → 维度未合理分组
@@ -107,9 +159,12 @@ def group_dimensions(report_type: str, dim_ids: list[str]) -> list[dict]:
         result.append({"group_name": _DEFAULT_GROUP, "dimensions": groups[_DEFAULT_GROUP]})
     # 过滤空组
     result = [g for g in result if g["dimensions"]]
-    logger.info("[DIM-GROUP] %s → %d 个并行组: %s",
-                report_type, len(result),
-                [f"{g['group_name']}({len(g['dimensions'])}维)" for g in result])
+    logger.info(
+        "[DIM-GROUP] %s → %d 个并行组: %s",
+        report_type,
+        len(result),
+        [f"{g['group_name']}({len(g['dimensions'])}维)" for g in result],
+    )
     return result
 
 
@@ -127,10 +182,13 @@ def verify_coverage(report_type: str, dim_ids: list[str], groups: list[dict]) ->
 
 if __name__ == "__main__":
     import sys
+
     sys.path.insert(0, ".")
     import logging
+
     logging.basicConfig(level=logging.INFO)
     from core.sacs import SACLoader
+
     for rt in ["industry_deep", "listed_company", "unlisted_company"]:
         s = SACLoader(rt)
         dims = [d["id"] for d in s.get_dimensions()]

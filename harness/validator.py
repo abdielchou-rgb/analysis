@@ -4,15 +4,13 @@
 设计原则：所有检查必须是确定性的（zero-LLM），在 500ms 内完成。
 """
 
-import sys
-import os
 import ast
-import re
 import importlib
 import logging
-from pathlib import Path
+import re
+import sys
 from dataclasses import dataclass, field
-from typing import Optional
+from pathlib import Path
 
 logger = logging.getLogger("2hao.harness")
 
@@ -23,6 +21,7 @@ if str(_ROOT) not in sys.path:
 
 # ── 数据类型 ──
 
+
 @dataclass
 class CheckResult:
     name: str
@@ -30,9 +29,11 @@ class CheckResult:
     detail: str = ""
     severity: str = "P0"  # P0=blocking, P1=warning
 
+
 @dataclass
 class HarnessReport:
     """验证报告 — 整体通过/失败"""
+
     passed: bool = False
     checks: list[CheckResult] = field(default_factory=list)
     duration_ms: float = 0
@@ -40,24 +41,29 @@ class HarnessReport:
     def to_dict(self) -> dict:
         return {
             "passed": self.passed,
-            "checks": [{"name": c.name, "passed": c.passed, "severity": c.severity, "detail": c.detail} for c in self.checks],
+            "checks": [
+                {"name": c.name, "passed": c.passed, "severity": c.severity, "detail": c.detail} for c in self.checks
+            ],
             "failed": [c.name for c in self.checks if not c.passed and c.severity == "P0"],
         }
 
     def print_report(self):
-        print(f"\n{'='*60}")
-        print(f"  Harness 验证报告")
-        print(f"{'='*60}")
+        print(f"\n{'=' * 60}")
+        print("  Harness 验证报告")
+        print(f"{'=' * 60}")
         for c in self.checks:
             icon = "✓" if c.passed else "✗"
             tag = f"[{c.severity}]" if not c.passed else ""
             print(f"  {icon} {tag} {c.name}: {c.detail[:80]}")
-        print(f"{'='*60}")
-        print(f"  结果: {'通过' if self.passed else '阻断'} ({len([c for c in self.checks if not c.passed])}/{len(self.checks)} 项失败)")
+        print(f"{'=' * 60}")
+        print(
+            f"  结果: {'通过' if self.passed else '阻断'} ({len([c for c in self.checks if not c.passed])}/{len(self.checks)} 项失败)"
+        )
         return self.passed
 
 
 # ── 检查器 ──
+
 
 class ImportChainValidator:
     """验证关键模块的 import 链路是否完整"""
@@ -118,8 +124,8 @@ class ApiKeyLeakScanner:
     """扫描硬编码的 API key"""
 
     PATTERNS = [
-        re.compile(r'sk-[a-zA-Z0-9]{20,}'),
-        re.compile(r'tvly-dev-[a-zA-Z0-9]{20,}'),
+        re.compile(r"sk-[a-zA-Z0-9]{20,}"),
+        re.compile(r"tvly-dev-[a-zA-Z0-9]{20,}"),
     ]
 
     def check(self) -> CheckResult:
@@ -170,8 +176,7 @@ class PipelineContractChecker:
             mod = importlib.import_module(module_name)
             for attr in expected:
                 if not hasattr(mod, attr):
-                    return CheckResult(f"contract.{module_name}", False,
-                                       f"Missing: {attr}", severity="P1")
+                    return CheckResult(f"contract.{module_name}", False, f"Missing: {attr}", severity="P1")
             return CheckResult(f"contract.{module_name}", True, f"All {len(expected)} attrs OK")
         except Exception as e:
             return CheckResult(f"contract.{module_name}", False, str(e), severity="P0")
@@ -179,9 +184,11 @@ class PipelineContractChecker:
 
 # ── 主入口 ──
 
+
 def run_all() -> HarnessReport:
     """运行全部 Harness 检查"""
     import time
+
     start = time.time()
     checks = []
 

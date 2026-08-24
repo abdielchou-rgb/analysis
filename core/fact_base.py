@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """fact_base.py — 行业事实库（P2-2，2026-08-07）
 
 把"行业事实点"结构化沉淀为可检索的事实库（工作台文档的缺口）：
@@ -13,10 +12,13 @@
   results = fb.search("油位 市场")
   fb.correct("油位市场规模", "全球46亿→65亿美元(2030)")  # 纠偏 → corrected
 """
+
 from __future__ import annotations
-import os, json, time, logging
+
+import json
+import logging
+import time
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger("2hao.fact_base")
 
@@ -28,7 +30,7 @@ LEVELS = {"verified", "corrected", "unverified"}
 
 
 class FactBase:
-    def __init__(self, path: Optional[Path] = None):
+    def __init__(self, path: Path | None = None):
         self.path = Path(path or FACT_BASE_FILE)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.data = self._load()
@@ -42,11 +44,17 @@ class FactBase:
         return {"version": 1, "facts": {}}
 
     def _save(self):
-        self.path.write_text(json.dumps(self.data, ensure_ascii=False, indent=1),
-                             encoding="utf-8")
+        self.path.write_text(json.dumps(self.data, ensure_ascii=False, indent=1), encoding="utf-8")
 
-    def add(self, fact_id: str, value: str, level: str = "verified",
-            source: str = "", intent: str = "", tags: Optional[list] = None) -> None:
+    def add(
+        self,
+        fact_id: str,
+        value: str,
+        level: str = "verified",
+        source: str = "",
+        intent: str = "",
+        tags: list | None = None,
+    ) -> None:
         """新增/更新事实点。level: verified/corrected/unverified。"""
         level = level if level in LEVELS else "unverified"
         self.data["facts"][fact_id] = {
@@ -66,8 +74,14 @@ class FactBase:
         prev = self.data["facts"].get(fact_id, {})
         history = prev.get("history", [])
         if prev.get("value"):
-            history.append({"old": prev["value"], "old_level": prev.get("level"),
-                            "corrected_to": value, "ts": time.strftime("%Y-%m-%dT%H:%M:%S")})
+            history.append(
+                {
+                    "old": prev["value"],
+                    "old_level": prev.get("level"),
+                    "corrected_to": value,
+                    "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                }
+            )
         self.data["facts"][fact_id] = {
             "value": value,
             "level": "corrected",
@@ -87,8 +101,8 @@ class FactBase:
         if not a or not b:
             return 0.0
         # 字符 3-gram 集合
-        ga = {a[i:i+3] for i in range(len(a)-2)} if len(a) >= 3 else {a}
-        gb = {b[i:i+3] for i in range(len(b)-2)} if len(b) >= 3 else {b}
+        ga = {a[i : i + 3] for i in range(len(a) - 2)} if len(a) >= 3 else {a}
+        gb = {b[i : i + 3] for i in range(len(b) - 2)} if len(b) >= 3 else {b}
         inter = len(ga & gb)
         union = len(ga | gb) or 1
         return inter / union
@@ -98,25 +112,26 @@ class FactBase:
         q = query.lower()
         results = []
         for fid, f in self.data.get("facts", {}).items():
-            hay = f"{fid} {f.get('value','')} {' '.join(f.get('tags',[]))}".lower()
+            hay = f"{fid} {f.get('value', '')} {' '.join(f.get('tags', []))}".lower()
             if q in hay or any(t.lower() in q for t in f.get("tags", [])):
-                if intent and intent.lower() not in f"{fid} {f.get('intent','')}".lower():
+                if intent and intent.lower() not in f"{fid} {f.get('intent', '')}".lower():
                     continue
                 results.append({"id": fid, **f})
         # 相似度排序（embedding 近似）
         for r in results:
-            r["_sim"] = self._similarity(query, f"{r.get('id','')} {r.get('value','')}")
+            r["_sim"] = self._similarity(query, f"{r.get('id', '')} {r.get('value', '')}")
         # 分级排序 + 相似度
         rank = {"corrected": 0, "verified": 1, "unverified": 2}
         results.sort(key=lambda x: (rank.get(x.get("level", "unverified"), 3), -x.get("_sim", 0)))
         return results
 
-    def get(self, fact_id: str) -> Optional[dict]:
+    def get(self, fact_id: str) -> dict | None:
         return self.data.get("facts", {}).get(fact_id)
 
     def stats(self) -> dict:
         facts = self.data.get("facts", {})
         from collections import Counter
+
         levels = Counter(f.get("level", "unverified") for f in facts.values())
         return {"total": len(facts), "levels": dict(levels)}
 
@@ -127,9 +142,10 @@ class FactBase:
             return ""
         lines = ["=== 行业事实库（分级：verified可直接引用 / corrected已修正 / unverified须标E）==="]
         for r in results:
-            mark = {"verified": "✓", "corrected": "✎修正", "unverified": "△"} \
-                .get(r.get("level", "unverified"), "?")
-            lines.append(f"- [{mark}] {r['id']}: {r.get('value','')}"
-                         + (f"（来源:{r.get('source','')}）" if r.get("source") else ""))
+            mark = {"verified": "✓", "corrected": "✎修正", "unverified": "△"}.get(r.get("level", "unverified"), "?")
+            lines.append(
+                f"- [{mark}] {r['id']}: {r.get('value', '')}"
+                + (f"（来源:{r.get('source', '')}）" if r.get("source") else "")
+            )
         lines.append("=== 事实库结束 ===")
         return "\n".join(lines)

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """cap_table.py — 资本结构分析（2026-08-08 非上市 PE/VC）
 
 顶级 PE 决策：cap table / 优先股 / 清算优先权 / 稀释。
@@ -11,7 +10,9 @@
   ct = CapTable(founder=0.6, team=0.1, investors=0.25, option_pool=0.05,
                 liquidation_multiple=1.0, participation=True)
 """
+
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 
@@ -20,9 +21,9 @@ logger = logging.getLogger("2hao.cap_table")
 
 @dataclass
 class CapTable:
-    founder: float = 0.6       # 创始人持股
-    team: float = 0.1          # 团队/员工
-    investors: float = 0.25    # 机构
+    founder: float = 0.6  # 创始人持股
+    team: float = 0.1  # 团队/员工
+    investors: float = 0.25  # 机构
     option_pool: float = 0.05  # 期权池
     liquidation_multiple: float = 1.0  # 清算优先倍数
     participation: bool = False  # 是否参与分红（参与优先股）
@@ -58,5 +59,7 @@ class CapTable:
 
 
 def build_prompt(ct: CapTable) -> str:
-    return (f"Cap table：创始人{ct.founder:.0%} 团队{ct.team:.0%} 机构{ct.investors:.0%} "
-            f"期权池{ct.option_pool:.0%}；{ct.investor_terms()} → 控制风险{ct.control_risk():.0%}（{ct.verdict()}）")
+    return (
+        f"Cap table：创始人{ct.founder:.0%} 团队{ct.team:.0%} 机构{ct.investors:.0%} "
+        f"期权池{ct.option_pool:.0%}；{ct.investor_terms()} → 控制风险{ct.control_risk():.0%}（{ct.verdict()}）"
+    )

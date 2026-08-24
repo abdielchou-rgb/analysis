@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 图注数据驱动渲染器（Chart Caption Data-Driven Renderer）— R49 二期
 
@@ -12,8 +11,9 @@ DCF 敏感性"最悲观仍高于当前价5%"等周期性复发。
 **用法**：
   caption = render_chart_caption("financial_trends", data_dict, asset)
 """
+
 from __future__ import annotations
-import json
+
 import logging
 from pathlib import Path
 
@@ -33,8 +33,7 @@ def _num(d: dict, *keys, default=None):
     return default
 
 
-def render_chart_caption(chart_id: str, data_dict: dict,
-                         asset: str = "") -> str:
+def render_chart_caption(chart_id: str, data_dict: dict, asset: str = "") -> str:
     """根据图表类型从 data_dict 渲染图注。
 
     Args:
@@ -54,10 +53,8 @@ def render_chart_caption(chart_id: str, data_dict: dict,
     if chart_id in ("financial_trends", "fig_financial_trends"):
         rev_24 = _num(d, "revenue_trend_2024", "fig_revenue_trend_2024")
         rev_25 = _num(d, "revenue_trend_2025", "fig_revenue_trend_2025")
-        prof_25 = _num(d, "profitability_2025", "fig_profitability_2025",
-                       "net_profit_2025", "归母净利_2025")
-        prof_24 = _num(d, "profitability_2024", "fig_profitability_2024",
-                       "net_profit_2024", "归母净利_2024")
+        prof_25 = _num(d, "profitability_2025", "fig_profitability_2025", "net_profit_2025", "归母净利_2025")
+        prof_24 = _num(d, "profitability_2024", "fig_profitability_2024", "net_profit_2024", "归母净利_2024")
         parts = []
         if rev_25 and rev_24:
             growth = (rev_25 / rev_24 - 1) * 100
@@ -111,20 +108,25 @@ def render_chart_caption(chart_id: str, data_dict: dict,
 def render_all_captions(data_dict: dict, asset: str = "") -> dict:
     """渲染所有已知图表的图注。返回 {chart_id: caption}。"""
     chart_ids = [
-        "financial_trends", "profit_margin",
-        "fig_valuation", "capital_flow",
+        "financial_trends",
+        "profit_margin",
+        "fig_valuation",
+        "capital_flow",
     ]
-    return {cid: render_chart_caption(cid, data_dict, asset)
-            for cid in chart_ids}
+    return {cid: render_chart_caption(cid, data_dict, asset) for cid in chart_ids}
 
 
 if __name__ == "__main__":
     # 自测
     sample = {
-        "revenue_trend_2024": 12.95, "revenue_trend_2025": 15.58,
-        "profitability_2024": 2.61, "profitability_2025": 1.68,
-        "margin_2018": 40.87, "margin_2025": 34.5,
-        "pe_ttm": 78.1, "industry_pe_ttm": 46.56,
+        "revenue_trend_2024": 12.95,
+        "revenue_trend_2025": 15.58,
+        "profitability_2024": 2.61,
+        "profitability_2025": 1.68,
+        "margin_2018": 40.87,
+        "margin_2025": 34.5,
+        "pe_ttm": 78.1,
+        "industry_pe_ttm": 46.56,
         "capital_margin_balance_latest": 5.7,
         "capital_north_net_latest": -67.75,
     }

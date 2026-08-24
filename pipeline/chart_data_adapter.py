@@ -2,11 +2,14 @@
 2hao-analyst Chart Data Adapter
 Flattens nested compute data into {label: value} for chart_engine.
 """
-from typing import Any, Dict
+
 import logging
+from typing import Any
+
 logger = logging.getLogger("2hao.chart_adapter")
 
-def flatten_data(data: Any, prefix: str = "", max_items: int = 15) -> Dict[str, float]:
+
+def flatten_data(data: Any, prefix: str = "", max_items: int = 15) -> dict[str, float]:
     result = {}
     if data is None:
         return result
@@ -32,7 +35,8 @@ def flatten_data(data: Any, prefix: str = "", max_items: int = 15) -> Dict[str, 
                 break
     return result
 
-def generate_chart_data(compute_results: Dict[str, Any]) -> Dict[str, float]:
+
+def generate_chart_data(compute_results: dict[str, Any]) -> dict[str, float]:
     flat = flatten_data(compute_results)
     if not flat:
         return None

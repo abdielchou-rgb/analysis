@@ -5,23 +5,29 @@ Provides style profiles for different investment banks and consultancies.
 """
 
 from __future__ import annotations
+
 import logging
-from dataclasses import dataclass, field
 
 logger = logging.getLogger("v53.writing_dna")
 
 
 class WritingDNA:
-    def __init__(self, institution_name: str = "",
-                 judgment_verbs: dict = None,
-                 paragraph_start: dict = None,
-                 uncertainty: dict = None,
-                 first_person: dict = None,
-                 p0_tolerance: float = 0.0,
-                 data_citation: dict = None):
+    def __init__(
+        self,
+        institution_name: str = "",
+        judgment_verbs: dict = None,
+        paragraph_start: dict = None,
+        uncertainty: dict = None,
+        first_person: dict = None,
+        p0_tolerance: float = 0.0,
+        data_citation: dict = None,
+    ):
         self.institution_name = institution_name
         self.judgment_verbs = judgment_verbs or {"primary": "我们认为", "secondary": "我们判断", "frequency": 0.7}
-        self.paragraph_start = paragraph_start or {"preferred": ["我们认为", "从基本面看", "综合来看"], "avoid": ["值得注意的是", "综上所述"]}
+        self.paragraph_start = paragraph_start or {
+            "preferred": ["我们认为", "从基本面看", "综合来看"],
+            "avoid": ["值得注意的是", "综上所述"],
+        }
         self.uncertainty = uncertainty or {"preferred": ["我们预计", "大概率"], "avoid": ["可能", "不排除"]}
         self.first_person = first_person or {"we_frequency": 0.8, "passive_allowed": False}
         self.p0_tolerance = p0_tolerance

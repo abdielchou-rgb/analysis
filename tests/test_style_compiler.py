@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from core.style import StyleCompiler, get_cicc_profile, get_gs_profile
+from core.style import StyleCompiler, get_cicc_profile
 
 
 def prep() -> StyleCompiler:
@@ -22,7 +23,7 @@ def test_remove_ai_patterns():
     assert "从某种程度上说" not in result.compiled
     assert "该公司营收增长15%" in result.compiled
     assert len(result.rules_applied) > 0
-    print(f"  [PASS] test_remove_ai_patterns")
+    print("  [PASS] test_remove_ai_patterns")
 
 
 def test_conclusion_first():
@@ -38,27 +39,27 @@ def test_conclusion_first():
             first = l
             break
     assert "我们认为" in first or "增长15%" not in first.split("。")[0]
-    print(f"  [PASS] test_conclusion_first")
+    print("  [PASS] test_conclusion_first")
 
 
 def test_term_replacement_cicc():
     """Term replacement removed in V51 (StyleCompiler 3 rules only)."""
-    print(f"  [SKIP] test_term_replacement_cicc (removed in V51)")
+    print("  [SKIP] test_term_replacement_cicc (removed in V51)")
 
 
 def test_term_replacement_gs():
     """Term replacement removed in V51 (StyleCompiler 3 rules only)."""
-    print(f"  [SKIP] test_term_replacement_gs (removed in V51)")
+    print("  [SKIP] test_term_replacement_gs (removed in V51)")
 
 
 def test_sentence_length_normalization():
     """Sentence length normalization removed in V51 (StyleCompiler 3 rules only)."""
-    print(f"  [SKIP] test_sentence_length_normalization (removed in V51)")
+    print("  [SKIP] test_sentence_length_normalization (removed in V51)")
 
 
 def test_citation_style_unification():
     """Citation style removed in V51 (StyleCompiler 3 rules only)."""
-    print(f"  [SKIP] test_citation_style_unification (removed in V51)")
+    print("  [SKIP] test_citation_style_unification (removed in V51)")
 
 
 def test_judgment_density_detection():
@@ -69,7 +70,7 @@ def test_judgment_density_detection():
     result = sc.compile(text)
     deviations = [d for d in result.deviations if "judgment_density" in d]
     assert len(deviations) >= 0  # not blocking, just flagging
-    print(f"  [PASS] test_judgment_density_detection")
+    print("  [PASS] test_judgment_density_detection")
 
 
 def test_full_cicc_pipeline():
@@ -82,7 +83,7 @@ def test_full_cicc_pipeline():
     assert "值得注意的是" not in result.compiled
     # conclusion_first flag may or may not apply depending on char threshold
     assert result.compiled != ""
-    print(f"  [PASS] test_full_cicc_pipeline")
+    print("  [PASS] test_full_cicc_pipeline")
 
 
 if __name__ == "__main__":
@@ -95,5 +96,6 @@ if __name__ == "__main__":
                 n_pass += 1
             except Exception as e:
                 import traceback
+
                 print(f"  [FAIL] {name}: {e}")
                 traceback.print_exc()

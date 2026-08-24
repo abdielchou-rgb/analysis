@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 方法反思闭环（Method Reflection）— FP5 + FP8 演化接线
 
@@ -11,7 +10,9 @@
                       frameworks=["bottleneck_engine"], gate_score=0.92,
                       data_sufficiency={"sufficient": True}, notes="卡点分析有效")
 """
+
 from __future__ import annotations
+
 import json
 import logging
 from datetime import datetime
@@ -37,23 +38,30 @@ def _save_json(path: Path, data: dict) -> None:
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def record_reflection(asset: str, report_type: str, frameworks: list[str],
-                      gate_score: float, data_sufficiency: dict | None = None,
-                      notes: str = "") -> bool:
+def record_reflection(
+    asset: str,
+    report_type: str,
+    frameworks: list[str],
+    gate_score: float,
+    data_sufficiency: dict | None = None,
+    notes: str = "",
+) -> bool:
     """记录一次报告的方法选择效果，回写 registry 效果字段。"""
     try:
         # 1. 追加到反思日志
         log = _load_json(REFLECTION_LOG_PATH)
         entries = log.get("entries", [])
-        entries.append({
-            "timestamp": datetime.now().isoformat(),
-            "asset": asset,
-            "report_type": report_type,
-            "frameworks": frameworks,
-            "gate_score": round(float(gate_score), 4),
-            "data_sufficiency": (data_sufficiency or {}).get("sufficient"),
-            "notes": notes[:200],
-        })
+        entries.append(
+            {
+                "timestamp": datetime.now().isoformat(),
+                "asset": asset,
+                "report_type": report_type,
+                "frameworks": frameworks,
+                "gate_score": round(float(gate_score), 4),
+                "data_sufficiency": (data_sufficiency or {}).get("sufficient"),
+                "notes": notes[:200],
+            }
+        )
         log["entries"] = entries[-200:]  # 最多保留 200 条
         _save_json(REFLECTION_LOG_PATH, log)
 
@@ -108,6 +116,7 @@ def get_reflection_stats() -> dict:
 
 if __name__ == "__main__":
     import sys
+
     if len(sys.argv) > 1 and sys.argv[1] == "--stats":
         print(json.dumps(get_reflection_stats(), ensure_ascii=False, indent=2))
     else:

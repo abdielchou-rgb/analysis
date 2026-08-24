@@ -6,13 +6,13 @@ V53 Layer 1: 130家估值模型 批量提取脚本 (优化版)
 """
 
 from __future__ import annotations
+
 import json
 import logging
 import os
 import re
 import sys
 from pathlib import Path
-from typing import Optional
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(message)s")
 logger = logging.getLogger("batch_extract")
@@ -25,6 +25,7 @@ except ImportError:
 
 try:
     import xlrd
+
     _HAS_XLRD = True
 except ImportError:
     _HAS_XLRD = False
@@ -62,15 +63,16 @@ def guess_industry(company_name: str, dir_name: str = "") -> str:
 
 def extract_company_name(filename: str) -> str:
     name = os.path.splitext(filename)[0]
-    name = re.sub(r'^[A-Z0-9]+\+', '', name)
-    for suffix in ['财务估值模型', '估值模型', '财务预测估值模型', '财务预测']:
-        name = name.replace(suffix, '')
+    name = re.sub(r"^[A-Z0-9]+\+", "", name)
+    for suffix in ["财务估值模型", "估值模型", "财务预测估值模型", "财务预测"]:
+        name = name.replace(suffix, "")
     return name.strip()
 
 
 # --- Fast cell scanning ---
-def scan_for_numbers(ws, labels: list[str], max_row=80, max_col=20, offset_range=(1, 3), 
-                     value_range=(None, None)) -> Optional[float]:
+def scan_for_numbers(
+    ws, labels: list[str], max_row=80, max_col=20, offset_range=(1, 3), value_range=(None, None)
+) -> float | None:
     """快速扫描表：找到标签后读取附近数值"""
     lo, hi = value_range
     for row in ws.iter_rows(min_row=1, max_row=max_row, max_col=max_col, values_only=False):
@@ -102,7 +104,7 @@ def scan_for_numbers(ws, labels: list[str], max_row=80, max_col=20, offset_range
     return None
 
 
-def find_label_row(ws, label: str, max_row=50) -> Optional[int]:
+def find_label_row(ws, label: str, max_row=50) -> int | None:
     """找到标签所在行"""
     for row in ws.iter_rows(min_row=1, max_row=max_row, max_col=5, values_only=False):
         for cell in row:
@@ -111,14 +113,14 @@ def find_label_row(ws, label: str, max_row=50) -> Optional[int]:
     return None
 
 
-def compute_revenue_cagr(ws, max_row=50) -> Optional[float]:
+def compute_revenue_cagr(ws, max_row=50) -> float | None:
     """从利润表计算营收CAGR"""
     rev_row = find_label_row(ws, "营业总收入", max_row)
     if not rev_row:
         rev_row = find_label_row(ws, "营业收入", max_row)
     if not rev_row:
         return None
-    
+
     values = []
     for col in range(3, 8):  # Columns C-G
         cell = ws.cell(row=rev_row, column=col)
@@ -129,21 +131,21 @@ def compute_revenue_cagr(ws, max_row=50) -> Optional[float]:
                     values.append(v)
             except Exception:
                 pass  # Layer 5: bare except replaced with Exception
-    
+
     if len(values) >= 3:
         if values[0] > 0 and values[-1] > 0:
             n_years = len(values) - 1
-            return (values[-1] / values[0]) ** (1/n_years) - 1
+            return (values[-1] / values[0]) ** (1 / n_years) - 1
     return None
 
 
-def find_gross_margin_from_sheet(ws, max_row=60) -> Optional[float]:
+def find_gross_margin_from_sheet(ws, max_row=60) -> float | None:
     """从利润表计算毛利率"""
     rev_row = find_label_row(ws, "营业总收入", max_row)
     if not rev_row:
         rev_row = find_label_row(ws, "营业收入", max_row)
     cost_row = find_label_row(ws, "营业成本", max_row)
-    
+
     if rev_row and cost_row:
         for col in range(3, 8):
             r = ws.cell(row=rev_row, column=col)
@@ -158,7 +160,7 @@ def find_gross_margin_from_sheet(ws, max_row=60) -> Optional[float]:
     return None
 
 
-def extract_from_xlsx(path: Path) -> Optional[dict]:
+def extract_from_xlsx(path: Path) -> dict | None:
     try:
         wb = openpyxl.load_workbook(str(path), read_only=True, data_only=True)
         sheets = wb.sheetnames
@@ -167,20 +169,27 @@ def extract_from_xlsx(path: Path) -> Optional[dict]:
         return None
 
     result = {
-        "file": path.name, "company": extract_company_name(path.name),
+        "file": path.name,
+        "company": extract_company_name(path.name),
         "dir": path.parent.name,
-        "wacc": None, "terminal_growth": None, "revenue_cagr_3y": None,
-        "gross_margin": None, "target_pe": None, "beta": None,
-        "roe": None, "target_pb": None,
-        "source_sheets": [], "extraction_quality": "none",
+        "wacc": None,
+        "terminal_growth": None,
+        "revenue_cagr_3y": None,
+        "gross_margin": None,
+        "target_pe": None,
+        "beta": None,
+        "roe": None,
+        "target_pb": None,
+        "source_sheets": [],
+        "extraction_quality": "none",
     }
 
     # Priority: DCF > 估值 > Cover > first sheets
-    dcf_sheets = [s for s in sheets if 'dcf' in s.lower()]
+    dcf_sheets = [s for s in sheets if "dcf" in s.lower()]
     if not dcf_sheets:
-        dcf_sheets = [s for s in sheets if '估值' in s.lower()]
+        dcf_sheets = [s for s in sheets if "估值" in s.lower()]
     if not dcf_sheets:
-        dcf_sheets = [s for s in sheets if 'cover' in s.lower()]
+        dcf_sheets = [s for s in sheets if "cover" in s.lower()]
     if not dcf_sheets:
         dcf_sheets = sheets[:2]
 
@@ -188,34 +197,51 @@ def extract_from_xlsx(path: Path) -> Optional[dict]:
     for sname in dcf_sheets[:2]:
         ws = wb[sname]
         result["source_sheets"].append(sname)
-        
+
         if result["wacc"] is None:
-            v = scan_for_numbers(ws, ["wacc", "加权平均资本成本(WACC)", "加权平均资本成本", "资本成本"],
-                                 offset_range=(1, 4), value_range=(0.01, 0.30))
-            if v: result["wacc"] = round(v, 4)
+            v = scan_for_numbers(
+                ws,
+                ["wacc", "加权平均资本成本(WACC)", "加权平均资本成本", "资本成本"],
+                offset_range=(1, 4),
+                value_range=(0.01, 0.30),
+            )
+            if v:
+                result["wacc"] = round(v, 4)
 
         if result["terminal_growth"] is None:
-            v = scan_for_numbers(ws, ["永续增长率g", "永续增长率", "terminal growth", "Terminal Growth", "增长率g"],
-                                 offset_range=(1, 4), value_range=(0.0, 0.10))
-            if v: result["terminal_growth"] = round(v, 4)
+            v = scan_for_numbers(
+                ws,
+                ["永续增长率g", "永续增长率", "terminal growth", "Terminal Growth", "增长率g"],
+                offset_range=(1, 4),
+                value_range=(0.0, 0.10),
+            )
+            if v:
+                result["terminal_growth"] = round(v, 4)
 
         if result["beta"] is None:
-            v = scan_for_numbers(ws, ["β系数", "β", "beta", "Beta", "贝塔"],
-                                 offset_range=(1, 3), value_range=(0.2, 2.5))
-            if v: result["beta"] = round(v, 2)
+            v = scan_for_numbers(
+                ws, ["β系数", "β", "beta", "Beta", "贝塔"], offset_range=(1, 3), value_range=(0.2, 2.5)
+            )
+            if v:
+                result["beta"] = round(v, 2)
 
         if result["target_pe"] is None:
-            v = scan_for_numbers(ws, ["目标PE", "target PE", "Target PE", "PE（倍）", "PE(TTM)"],
-                                 offset_range=(1, 3), value_range=(3, 150))
-            if v: result["target_pe"] = round(v, 1)
+            v = scan_for_numbers(
+                ws,
+                ["目标PE", "target PE", "Target PE", "PE（倍）", "PE(TTM)"],
+                offset_range=(1, 3),
+                value_range=(3, 150),
+            )
+            if v:
+                result["target_pe"] = round(v, 1)
 
         if result["roe"] is None:
-            v = scan_for_numbers(ws, ["roe", "ROE", "净资产收益率"],
-                                 offset_range=(1, 3), value_range=(0.01, 0.50))
-            if v: result["roe"] = round(v, 4)
+            v = scan_for_numbers(ws, ["roe", "ROE", "净资产收益率"], offset_range=(1, 3), value_range=(0.01, 0.50))
+            if v:
+                result["roe"] = round(v, 4)
 
     # Income statement sheets for CAGR and gross margin
-    inc_sheets = [s for s in sheets if '利润' in s or 'income' in s.lower()]
+    inc_sheets = [s for s in sheets if "利润" in s or "income" in s.lower()]
     for sname in inc_sheets[:2]:
         ws = wb[sname]
         if result["revenue_cagr_3y"] is None:
@@ -231,16 +257,21 @@ def extract_from_xlsx(path: Path) -> Optional[dict]:
 
     wb.close()
 
-    found = sum(1 for k in ["wacc","terminal_growth","revenue_cagr_3y","gross_margin","target_pe","beta"] if result.get(k))
-    if found >= 5: result["extraction_quality"] = "high"
-    elif found >= 3: result["extraction_quality"] = "medium"
-    elif found >= 1: result["extraction_quality"] = "low"
+    found = sum(
+        1 for k in ["wacc", "terminal_growth", "revenue_cagr_3y", "gross_margin", "target_pe", "beta"] if result.get(k)
+    )
+    if found >= 5:
+        result["extraction_quality"] = "high"
+    elif found >= 3:
+        result["extraction_quality"] = "medium"
+    elif found >= 1:
+        result["extraction_quality"] = "low"
 
     result["industry"] = guess_industry(result["company"], result["dir"])
     return result
 
 
-def extract_from_xls(path: Path) -> Optional[dict]:
+def extract_from_xls(path: Path) -> dict | None:
     if not _HAS_XLRD:
         return None
     try:
@@ -250,15 +281,22 @@ def extract_from_xls(path: Path) -> Optional[dict]:
         return None
 
     result = {
-        "file": path.name, "company": extract_company_name(path.name),
+        "file": path.name,
+        "company": extract_company_name(path.name),
         "dir": path.parent.name,
-        "wacc": None, "terminal_growth": None, "revenue_cagr_3y": None,
-        "gross_margin": None, "target_pe": None, "beta": None,
-        "roe": None, "target_pb": None,
-        "source_sheets": [], "extraction_quality": "none",
+        "wacc": None,
+        "terminal_growth": None,
+        "revenue_cagr_3y": None,
+        "gross_margin": None,
+        "target_pe": None,
+        "beta": None,
+        "roe": None,
+        "target_pb": None,
+        "source_sheets": [],
+        "extraction_quality": "none",
     }
 
-    dcf_sheets = [s for s in sheets if 'dcf' in s.lower() or '估值' in s.lower()]
+    dcf_sheets = [s for s in sheets if "dcf" in s.lower() or "估值" in s.lower()]
     if not dcf_sheets:
         dcf_sheets = sheets[:2]
 
@@ -271,11 +309,11 @@ def extract_from_xls(path: Path) -> Optional[dict]:
                 if cell.ctype != 1:  # Not text
                     continue
                 val = str(cell.value).strip().lower()
-                
-                if result["wacc"] is None and any(k in val for k in ['wacc', '加权平均资本成本', '资本成本']):
+
+                if result["wacc"] is None and any(k in val for k in ["wacc", "加权平均资本成本", "资本成本"]):
                     for dc in range(1, 4):
-                        if c+dc < ws.ncols:
-                            n = ws.cell(r, c+dc)
+                        if c + dc < ws.ncols:
+                            n = ws.cell(r, c + dc)
                             if n.ctype in (2, 3):
                                 try:
                                     v = float(n.value)
@@ -284,8 +322,8 @@ def extract_from_xls(path: Path) -> Optional[dict]:
                                 except Exception:
                                     pass  # Layer 5: bare except replaced with Exception
                     # also check cell below
-                    if r+1 < ws.nrows:
-                        n = ws.cell(r+1, c)
+                    if r + 1 < ws.nrows:
+                        n = ws.cell(r + 1, c)
                         if n.ctype in (2, 3):
                             try:
                                 v = float(n.value)
@@ -294,10 +332,12 @@ def extract_from_xls(path: Path) -> Optional[dict]:
                             except Exception:
                                 pass  # Layer 5: bare except replaced with Exception
 
-                if result["terminal_growth"] is None and any(k in val for k in ['永续增长率', 'terminal growth', '增长率g']):
+                if result["terminal_growth"] is None and any(
+                    k in val for k in ["永续增长率", "terminal growth", "增长率g"]
+                ):
                     for dc in range(1, 4):
-                        if c+dc < ws.ncols:
-                            n = ws.cell(r, c+dc)
+                        if c + dc < ws.ncols:
+                            n = ws.cell(r, c + dc)
                             if n.ctype in (2, 3):
                                 try:
                                     v = float(n.value)
@@ -306,10 +346,10 @@ def extract_from_xls(path: Path) -> Optional[dict]:
                                 except Exception:
                                     pass  # Layer 5: bare except replaced with Exception
 
-                if result["beta"] is None and any(k in val for k in ['β', 'beta', '贝塔']):
+                if result["beta"] is None and any(k in val for k in ["β", "beta", "贝塔"]):
                     for dc in range(1, 4):
-                        if c+dc < ws.ncols:
-                            n = ws.cell(r, c+dc)
+                        if c + dc < ws.ncols:
+                            n = ws.cell(r, c + dc)
                             if n.ctype in (2, 3):
                                 try:
                                     v = float(n.value)
@@ -318,10 +358,12 @@ def extract_from_xls(path: Path) -> Optional[dict]:
                                 except Exception:
                                     pass  # Layer 5: bare except replaced with Exception
 
-                if result["target_pe"] is None and any(k in val for k in ['目标pe', 'target pe', 'pe（倍）', 'pe(t', 'pe估值']):
+                if result["target_pe"] is None and any(
+                    k in val for k in ["目标pe", "target pe", "pe（倍）", "pe(t", "pe估值"]
+                ):
                     for dc in range(1, 4):
-                        if c+dc < ws.ncols:
-                            n = ws.cell(r, c+dc)
+                        if c + dc < ws.ncols:
+                            n = ws.cell(r, c + dc)
                             if n.ctype in (2, 3):
                                 try:
                                     v = float(n.value)
@@ -331,33 +373,37 @@ def extract_from_xls(path: Path) -> Optional[dict]:
                                     pass  # Layer 5: bare except replaced with Exception
 
     result["industry"] = guess_industry(result["company"], result["dir"])
-    found = sum(1 for k in ["wacc","terminal_growth","revenue_cagr_3y","gross_margin","target_pe","beta"] if result.get(k))
-    if found >= 3: result["extraction_quality"] = "medium"
-    elif found >= 1: result["extraction_quality"] = "low"
+    found = sum(
+        1 for k in ["wacc", "terminal_growth", "revenue_cagr_3y", "gross_margin", "target_pe", "beta"] if result.get(k)
+    )
+    if found >= 3:
+        result["extraction_quality"] = "medium"
+    elif found >= 1:
+        result["extraction_quality"] = "low"
     return result
 
 
 def main():
     data_dir = Path(r"D:\Claude\1hao-analyst-v51\data\130家估值模型")
     output_path = Path(r"D:\Claude\1hao-analyst-v51\data\assumption_db.json")
-    
+
     all_results = []
-    
+
     for root, dirs, files in os.walk(str(data_dir)):
         for f in sorted(files):
             path = Path(root) / f
-            if f.endswith('.xlsx'):
+            if f.endswith(".xlsx"):
                 r = extract_from_xlsx(path)
                 if r:
                     all_results.append(r)
-            elif f.endswith('.xls') and _HAS_XLRD:
+            elif f.endswith(".xls") and _HAS_XLRD:
                 r = extract_from_xls(path)
                 if r:
                     all_results.append(r)
 
-    with open(str(output_path), 'w', encoding='utf-8') as f:
+    with open(str(output_path), "w", encoding="utf-8") as f:
         for r in all_results:
-            f.write(json.dumps(r, ensure_ascii=False) + '\n')
+            f.write(json.dumps(r, ensure_ascii=False) + "\n")
 
     # Summary
     qc = {}
@@ -368,15 +414,17 @@ def main():
         ind = r.get("industry", "其他")
         ic[ind] = ic.get(ind, 0) + 1
 
-    logger.info(f"=== Layer 1 提取完成 ===")
+    logger.info("=== Layer 1 提取完成 ===")
     logger.info(f"总记录: {len(all_results)} → {output_path}")
     logger.info(f"提取质量: {qc}")
     logger.info(f"行业覆盖 ({len(ic)}): {dict(sorted(ic.items(), key=lambda x: -x[1]))}")
 
-    for k in ["wacc","terminal_growth","revenue_cagr_3y","gross_margin","target_pe","beta"]:
+    for k in ["wacc", "terminal_growth", "revenue_cagr_3y", "gross_margin", "target_pe", "beta"]:
         vals = [r[k] for r in all_results if r.get(k)]
         if vals:
-            logger.info(f"  {k}: {len(vals)} values, mean={sum(vals)/len(vals):.4f}, range=[{min(vals):.4f}, {max(vals):.4f}]")
+            logger.info(
+                f"  {k}: {len(vals)} values, mean={sum(vals) / len(vals):.4f}, range=[{min(vals):.4f}, {max(vals):.4f}]"
+            )
 
 
 if __name__ == "__main__":

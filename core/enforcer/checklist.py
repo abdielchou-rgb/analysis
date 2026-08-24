@@ -1,8 +1,9 @@
 """10-item compliance checklist for methodology enforcement."""
 
 from __future__ import annotations
+
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass
@@ -32,8 +33,7 @@ class ComplianceChecklist:
         ("number_consistency", "数值百分比上下文"),
     ]
 
-    def run(self, text: str, sac_id: str = "",
-            required_dims: list[str] = None) -> dict:
+    def run(self, text: str, sac_id: str = "", required_dims: list[str] = None) -> dict:
         """Run all checks, return results."""
         items = []
         for check_id, check_name in self.CHECKS:
@@ -50,14 +50,13 @@ class ComplianceChecklist:
     def _check_aigc_metadata(self, text, **kw) -> ComplianceChecklistItem:
         """Check that no AIGC metadata block remains."""
         text_head = text[:800]
-        patterns = [r'^---\\s*\nAIGC:', r'ContentProducer:', r'ReservedCode',
-                    r'^AIGC:\\s*\\S+']
+        patterns = [r"^---\\s*\nAIGC:", r"ContentProducer:", r"ReservedCode", r"^AIGC:\\s*\\S+"]
         found = [p for p in patterns if re.search(p, text_head, re.IGNORECASE)]
         return ComplianceChecklistItem(
             check_id="aigc_metadata",
             name="AIGC 元数据已切除",
             passed=len(found) == 0,
-            detail=f"仍然发现: {', '.join(found)}" if found else "通过"
+            detail=f"仍然发现: {', '.join(found)}" if found else "通过",
         )
 
     def _check_core_disagreement(self, text, **kw) -> ComplianceChecklistItem:
@@ -66,34 +65,35 @@ class ComplianceChecklist:
         # 导致报告明明写了分歧仍被误判。改为全文检测关键词。
         has = any(m in text for m in ["核心分歧", "分歧", "共识", "不同于", "市场认为", "核心矛盾"])
         return ComplianceChecklistItem(
-            check_id="core_disagreement", name="核心分歧已写",
-            passed=has, detail=("检测到" if has else "未检测到核心分歧表述")
+            check_id="core_disagreement",
+            name="核心分歧已写",
+            passed=has,
+            detail=("检测到" if has else "未检测到核心分歧表述"),
         )
 
     def _check_dimensions_covered(self, text, **kw) -> ComplianceChecklistItem:
         required_dims = kw.get("required_dims", [])
         if not required_dims:
             return ComplianceChecklistItem("dimensions_covered", "SAC 维度覆盖", True, "无 required_dims 约束")
-        titles = [s.split('\n')[0].strip().lower() for s in text.split('\n## ')[1:]]
+        titles = [s.split("\n")[0].strip().lower() for s in text.split("\n## ")[1:]]
         missing = [d for d in required_dims if not any(d.lower() in t for t in titles)]
         return ComplianceChecklistItem(
-            check_id="dimensions_covered", name="SAC 维度覆盖",
+            check_id="dimensions_covered",
+            name="SAC 维度覆盖",
             passed=len(missing) == 0,
-            detail=f"缺少: {', '.join(missing)}" if missing else f"{len(required_dims)} 维度全部覆盖"
+            detail=f"缺少: {', '.join(missing)}" if missing else f"{len(required_dims)} 维度全部覆盖",
         )
 
     def _check_falsification(self, text, **kw) -> ComplianceChecklistItem:
         has = any(m in text for m in ["如果", "假设", "证伪", "条件", "如果...那么"])
         return ComplianceChecklistItem(
-            check_id="falsification", name="证伪条件已写",
-            passed=has, detail="检测到" if has else "未检测到证伪条件"
+            check_id="falsification", name="证伪条件已写", passed=has, detail="检测到" if has else "未检测到证伪条件"
         )
 
     def _check_counter_case(self, text, **kw) -> ComplianceChecklistItem:
         has = any(m in text for m in ["反方", "反对", "不同观点", "另一方", "批评者", "看空"])
         return ComplianceChecklistItem(
-            check_id="counter_case", name="反方观点存在",
-            passed=has, detail="检测到" if has else "未检测到反方观点"
+            check_id="counter_case", name="反方观点存在", passed=has, detail="检测到" if has else "未检测到反方观点"
         )
 
     def _check_forbidden_patterns(self, text, **kw) -> ComplianceChecklistItem:
@@ -101,42 +101,47 @@ class ComplianceChecklist:
         p0 = ["值得注意的是", "从某种程度上说", "综上所述", "不可否认的是"]
         found = [p for p in p0 if p in text]
         return ComplianceChecklistItem(
-            check_id="forbidden_patterns", name="禁止模式未出现",
+            check_id="forbidden_patterns",
+            name="禁止模式未出现",
             passed=len(found) == 0,
-            detail=f"发现: {', '.join(found)}" if found else "未发现 P0 禁止模式"
+            detail=f"发现: {', '.join(found)}" if found else "未发现 P0 禁止模式",
         )
 
     def _check_evidence_sources(self, text, **kw) -> ComplianceChecklistItem:
-        count = len(re.findall(r'(来源[：:]|据[^。，]{2,15})', text))
+        count = len(re.findall(r"(来源[：:]|据[^。，]{2,15})", text))
         return ComplianceChecklistItem(
-            check_id="evidence_sources", name="数据来源已标注",
+            check_id="evidence_sources",
+            name="数据来源已标注",
             passed=count > 0,
-            detail=f"{count} 处来源标注" if count > 0 else "无来源标注"
+            detail=f"{count} 处来源标注" if count > 0 else "无来源标注",
         )
 
     def _check_no_first_person_system(self, text, **kw) -> ComplianceChecklistItem:
-        found = re.findall(r'(?<!\\w)本系统(?!\\w)', text)
+        found = re.findall(r"(?<!\\w)本系统(?!\\w)", text)
         return ComplianceChecklistItem(
-            check_id="no_first_person_system", name="无第一人称系统指代",
+            check_id="no_first_person_system",
+            name="无第一人称系统指代",
             passed=len(found) == 0,
-            detail=f"发现 '本系统' {len(found)} 次" if found else "通过"
+            detail=f"发现 '本系统' {len(found)} 次" if found else "通过",
         )
 
     def _check_no_self_evaluation(self, text, **kw) -> ComplianceChecklistItem:
-        found = re.findall(r'本报告已[达到经过][^。]*标准', text)
+        found = re.findall(r"本报告已[达到经过][^。]*标准", text)
         return ComplianceChecklistItem(
-            check_id="no_self_evaluation", name="无自我评价",
+            check_id="no_self_evaluation",
+            name="无自我评价",
             passed=len(found) == 0,
-            detail=f"发现: {', '.join(found)}" if found else "通过"
+            detail=f"发现: {', '.join(found)}" if found else "通过",
         )
 
     def _check_no_internal_methodology(self, text, **kw) -> ComplianceChecklistItem:
         tags = ["SAC", "MECE", "Writing Scaffold", "Research Protocol", "Serenity"]
-        found = [t for t in tags if re.search(rf'\\b{t}\\b', text)]
+        found = [t for t in tags if re.search(rf"\\b{t}\\b", text)]
         return ComplianceChecklistItem(
-            check_id="no_internal_methodology", name="无内部方法论术语泄露",
+            check_id="no_internal_methodology",
+            name="无内部方法论术语泄露",
             passed=len(found) == 0,
-            detail=f"发现: {', '.join(found)}" if found else "通过"
+            detail=f"发现: {', '.join(found)}" if found else "通过",
         )
 
     def _check_ai_disclaimer(self, text, **kw) -> ComplianceChecklistItem:
@@ -144,28 +149,29 @@ class ComplianceChecklist:
         # These phrases directly violate FP4 (Turing test)
         patterns = [
             "由AI生成",
-            "AI生成", "本报告由AI", "本内容由AI",
-            "AI分析", "以上内容由AI",
+            "AI生成",
+            "本报告由AI",
+            "本内容由AI",
+            "AI分析",
+            "以上内容由AI",
         ]
         found = [p for p in patterns if p in text]
         return ComplianceChecklistItem(
             check_id="ai_disclaimer",
             name="无AI免责声明",
             passed=len(found) == 0,
-            detail=f"发现: {', '.join(found)}" if found else "通过"
+            detail=f"发现: {', '.join(found)}" if found else "通过",
         )
+
     def _check_source_credibility(self, text, **kw) -> ComplianceChecklistItem:
         """Check that sources have credibility signals (distinguish company data from estimates)."""
         # Look for credibility signals: "可信度", "公司公告", "官方", "测算", "估算"
         has_credibility_signal = any(m in text for m in ["可信度", "公司公告", "官方数据", "公司披露"])
         has_estimation_signal = any(m in text for m in ["测算", "估算", "推测", "假设"])
         # Only meaningful if there are data sources AND some credibility distinction
-        source_count = len(re.findall(r'来源[：:]', text))
+        source_count = len(re.findall(r"来源[：:]", text))
         if source_count < 2:
-            return ComplianceChecklistItem(
-                "source_credibility", "数据来源可信度判断",
-                True, "来源较少，无需分档"
-            )
+            return ComplianceChecklistItem("source_credibility", "数据来源可信度判断", True, "来源较少，无需分档")
         # PASS if both credibility and estimation signals exist (sources are differentiated)
         passed = has_credibility_signal and has_estimation_signal
         detail = ""
@@ -174,34 +180,32 @@ class ComplianceChecklist:
         else:
             detail = f"未区分可信度等级 ({source_count} 处来源均无分级判断)"
         return ComplianceChecklistItem(
-            check_id="source_credibility", name="数据来源可信度判断",
-            passed=passed, detail=detail
+            check_id="source_credibility", name="数据来源可信度判断", passed=passed, detail=detail
         )
 
     def _check_number_consistency(self, text, **kw) -> ComplianceChecklistItem:
         """Check that numbers with % in report have a clear base reference nearby."""
         import re
+
         # Find percentage statements without clear base: "增长15%" without "同比增长" or "环比" nearby
-        lines = text.split('\n')
+        lines = text.split("\n")
         suspect = 0
         total_pct = 0
         for line in lines:
-            pct_matches = re.findall(r'(\d+\.?\d*%)', line)
+            pct_matches = re.findall(r"(\d+\.?\d*%)", line)
             if pct_matches:
                 total_pct += len(pct_matches)
                 # Check if the line has context words
-                has_context = any(w in line for w in ["同比", "环比", "占比", "毛利率", "净利率", "增长率", "增速", "率"])
+                has_context = any(
+                    w in line for w in ["同比", "环比", "占比", "毛利率", "净利率", "增长率", "增速", "率"]
+                )
                 if not has_context:
                     suspect += len(pct_matches)
         if total_pct == 0:
-            return ComplianceChecklistItem(
-                "number_consistency", "数值百分比上下文",
-                True, "无比分比数据"
-            )
+            return ComplianceChecklistItem("number_consistency", "数值百分比上下文", True, "无比分比数据")
         ratio = suspect / total_pct
         passed = ratio < 0.3
         detail = f"{total_pct} 处百分比, {suspect} 处缺少上下文" if suspect > 0 else f"{total_pct} 处百分比均有上下文"
         return ComplianceChecklistItem(
-            check_id="number_consistency", name="数值百分比上下文",
-            passed=passed, detail=detail
+            check_id="number_consistency", name="数值百分比上下文", passed=passed, detail=detail
         )

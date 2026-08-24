@@ -9,7 +9,7 @@ V50+ 可观测性基础设施（第一性原理新增）
 
 from __future__ import annotations
 
-import json
+import json  # noqa: F401  (dead-import debt)
 import logging
 import sqlite3
 from dataclasses import dataclass, field
@@ -25,22 +25,24 @@ OBSERVABILITY_DIR = Path(__file__).resolve().parent
 @dataclass
 class LLMCallLog:
     """一次 LLM 调用的完整记录"""
+
     timestamp: str = ""
-    module: str = ""              # "T2b_prose_engine", "T0_hypothesis", etc.
-    section_id: str = ""          # 哪个段
-    model: str = ""               # "claude-3.5-sonnet", "gpt-4", etc.
+    module: str = ""  # "T2b_prose_engine", "T0_hypothesis", etc.
+    section_id: str = ""  # 哪个段
+    model: str = ""  # "claude-3.5-sonnet", "gpt-4", etc.
     prompt_tokens: int = 0
     completion_tokens: int = 0
     latency_ms: int = 0
-    status: str = ""              # "success" / "error" / "timeout"
+    status: str = ""  # "success" / "error" / "timeout"
     error: str = ""
     style_profile: str = ""
-    provider: str = ""            # 2026-08-07：通道标记 deepseek/openrouter/agent_provider
+    provider: str = ""  # 2026-08-07：通道标记 deepseek/openrouter/agent_provider
 
 
 @dataclass
 class ValidateHistory:
     """一次 validate 的历史记录"""
+
     timestamp: str = ""
     report_id: str = ""
     sac_coverage: dict = field(default_factory=dict)
@@ -138,43 +140,64 @@ class ObservabilityDB:
     def log_llm_call(self, entry: LLMCallLog):
         """记录一次 LLM 调用"""
         conn = sqlite3.connect(self.db_path)
-        conn.execute("""
+        conn.execute(
+            """
             INSERT INTO llm_calls
             (timestamp, module, section_id, model,
              prompt_tokens, completion_tokens, total_tokens,
              latency_ms, status, error, style_profile, provider)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            entry.timestamp or datetime.now().isoformat(),
-            entry.module, entry.section_id, entry.model,
-            entry.prompt_tokens, entry.completion_tokens,
-            entry.prompt_tokens + entry.completion_tokens,
-            entry.latency_ms, entry.status, entry.error,
-            entry.style_profile, entry.provider,
-        ))
+        """,
+            (
+                entry.timestamp or datetime.now().isoformat(),
+                entry.module,
+                entry.section_id,
+                entry.model,
+                entry.prompt_tokens,
+                entry.completion_tokens,
+                entry.prompt_tokens + entry.completion_tokens,
+                entry.latency_ms,
+                entry.status,
+                entry.error,
+                entry.style_profile,
+                entry.provider,
+            ),
+        )
         conn.commit()
         conn.close()
 
-    def log_llm_call_simple(self, module: str, section_id: str,
-                             prompt_tokens: int, completion_tokens: int,
-                             latency_ms: int, status: str = "success",
-                             provider: str = ""):
+    def log_llm_call_simple(
+        self,
+        module: str,
+        section_id: str,
+        prompt_tokens: int,
+        completion_tokens: int,
+        latency_ms: int,
+        status: str = "success",
+        provider: str = "",
+    ):
         """简化版 LLM 调用记录（2026-08-07 增 provider 通道标记）"""
-        self.log_llm_call(LLMCallLog(
-            timestamp=datetime.now().isoformat(),
-            module=module, section_id=section_id,
-            prompt_tokens=prompt_tokens,
-            completion_tokens=completion_tokens,
-            latency_ms=latency_ms, status=status,
-            style_profile="", provider=provider,
-        ))
+        self.log_llm_call(
+            LLMCallLog(
+                timestamp=datetime.now().isoformat(),
+                module=module,
+                section_id=section_id,
+                prompt_tokens=prompt_tokens,
+                completion_tokens=completion_tokens,
+                latency_ms=latency_ms,
+                status=status,
+                style_profile="",
+                provider=provider,
+            )
+        )
 
     # ─── Validate 历史 ─────────────────────
 
     def log_validation(self, entry: ValidateHistory):
         """记录一次 validate"""
         conn = sqlite3.connect(self.db_path)
-        conn.execute("""
+        conn.execute(
+            """
             INSERT INTO validate_history
             (timestamp, report_id,
              sac_dimensions_covered, sac_dimensions_required, sac_passed,
@@ -182,18 +205,21 @@ class ObservabilityDB:
              modification_count, generation_duration_seconds,
              passed, notes)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            entry.timestamp or datetime.now().isoformat(),
-            entry.report_id,
-            entry.sac_coverage.get("covered", 0),
-            entry.sac_coverage.get("required", 0),
-            int(entry.sac_coverage.get("passed", False)),
-            entry.judgment_density,
-            entry.style_deviation_score,
-            entry.modification_count,
-            entry.generation_duration_seconds,
-            int(entry.passed), entry.notes,
-        ))
+        """,
+            (
+                entry.timestamp or datetime.now().isoformat(),
+                entry.report_id,
+                entry.sac_coverage.get("covered", 0),
+                entry.sac_coverage.get("required", 0),
+                int(entry.sac_coverage.get("passed", False)),
+                entry.judgment_density,
+                entry.style_deviation_score,
+                entry.modification_count,
+                entry.generation_duration_seconds,
+                int(entry.passed),
+                entry.notes,
+            ),
+        )
         conn.commit()
         conn.close()
 
@@ -203,7 +229,8 @@ class ObservabilityDB:
         """今日 LLM 用量统计"""
         today = datetime.now().strftime("%Y-%m-%d")
         conn = sqlite3.connect(self.db_path)
-        row = conn.execute("""
+        row = conn.execute(
+            """
             SELECT
                 COUNT(*) as calls,
                 COALESCE(SUM(total_tokens), 0) as total_tokens,
@@ -211,11 +238,14 @@ class ObservabilityDB:
                 SUM(CASE WHEN status != 'success' THEN 1 ELSE 0 END) as errors
             FROM llm_calls
             WHERE timestamp LIKE ?
-        """, (f"{today}%",)).fetchone()
+        """,
+            (f"{today}%",),
+        ).fetchone()
         conn.close()
 
         return {
-            "calls": row[0], "total_tokens": row[1],
+            "calls": row[0],
+            "total_tokens": row[1],
             "avg_latency_ms": round(row[2], 1),
             "errors": row[3],
         }
@@ -231,7 +261,8 @@ class ObservabilityDB:
         _args = (f"%{module_filter}%",) if module_filter else ()
 
         # 按模块聚合
-        by_module = conn.execute(f"""
+        by_module = conn.execute(
+            f"""
             SELECT module, COUNT(*) as calls,
                    COALESCE(SUM(prompt_tokens),0) as prompt_tk,
                    COALESCE(SUM(completion_tokens),0) as comp_tk,
@@ -239,33 +270,51 @@ class ObservabilityDB:
                    COALESCE(AVG(latency_ms),0) as avg_latency
             FROM llm_calls{_where}
             GROUP BY module ORDER BY total_tk DESC
-        """, _args).fetchall()
+        """,
+            _args,
+        ).fetchall()
 
         # 按通道聚合
-        by_provider = conn.execute(f"""
+        by_provider = conn.execute(
+            f"""
             SELECT COALESCE(provider,'unknown') as p,
                    COUNT(*) as calls, COALESCE(SUM(total_tokens),0) as total_tk
             FROM llm_calls{_where}
             GROUP BY p ORDER BY total_tk DESC
-        """, _args).fetchall()
+        """,
+            _args,
+        ).fetchall()
 
         # 汇总
-        total_row = conn.execute(f"""
+        total_row = conn.execute(
+            f"""
             SELECT COUNT(*), COALESCE(SUM(total_tokens),0),
                    COALESCE(SUM(latency_ms),0)
             FROM llm_calls{_where}
-        """, _args).fetchone()
+        """,
+            _args,
+        ).fetchone()
         conn.close()
 
-        modules = [{
-            "module": r[0] or "?",
-            "calls": r[1], "prompt_tokens": r[2],
-            "completion_tokens": r[3], "total_tokens": r[4],
-            "avg_latency_ms": round(r[5], 1),
-        } for r in by_module]
-        channels = [{
-            "channel": r[0], "calls": r[1], "total_tokens": r[2],
-        } for r in by_provider]
+        modules = [
+            {
+                "module": r[0] or "?",
+                "calls": r[1],
+                "prompt_tokens": r[2],
+                "completion_tokens": r[3],
+                "total_tokens": r[4],
+                "avg_latency_ms": round(r[5], 1),
+            }
+            for r in by_module
+        ]
+        channels = [
+            {
+                "channel": r[0],
+                "calls": r[1],
+                "total_tokens": r[2],
+            }
+            for r in by_provider
+        ]
         return {
             "filter": module_filter or "all",
             "total_calls": total_row[0],
@@ -278,7 +327,8 @@ class ObservabilityDB:
     def get_validate_trend(self, days: int = 7) -> list[dict]:
         """最近 N 天的 validate 趋势"""
         conn = sqlite3.connect(self.db_path)
-        rows = conn.execute("""
+        rows = conn.execute(
+            """
             SELECT date(timestamp) as day,
                    COUNT(*) as reports,
                    AVG(CASE WHEN passed THEN 1 ELSE 0 END) * 100 as pass_rate,
@@ -288,12 +338,19 @@ class ObservabilityDB:
             WHERE timestamp >= date('now', ?)
             GROUP BY date(timestamp)
             ORDER BY day
-        """, (f"-{days} days",)).fetchall()
+        """,
+            (f"-{days} days",),
+        ).fetchall()
         conn.close()
 
         return [
-            {"day": r[0], "reports": r[1], "pass_rate": round(r[2], 1),
-             "avg_density": round(r[3], 2), "avg_modifications": round(r[4], 1)}
+            {
+                "day": r[0],
+                "reports": r[1],
+                "pass_rate": round(r[2], 1),
+                "avg_density": round(r[3], 2),
+                "avg_modifications": round(r[4], 1),
+            }
             for r in rows
         ]
 
@@ -338,13 +395,18 @@ class FailureRegistry:
             for f in fails:
                 logger.warning(...)
     """
+
     _failures: dict[str, dict] = {}
 
     @classmethod
     def record(cls, module: str, error: str = ""):
         if module not in cls._failures:
-            cls._failures[module] = {"count": 0, "consecutive": 0,
-                                     "last_error": "", "first_at": datetime.now().isoformat()}
+            cls._failures[module] = {
+                "count": 0,
+                "consecutive": 0,
+                "last_error": "",
+                "first_at": datetime.now().isoformat(),
+            }
         cls._failures[module]["count"] += 1
         cls._failures[module]["consecutive"] += 1
         cls._failures[module]["last_error"] = str(error)[:300]
@@ -359,11 +421,7 @@ class FailureRegistry:
     @classmethod
     def report(cls) -> list[dict]:
         """杩斿洖鎵€鏈夎繛缁け璐?>= 3 娆＄殑妯″潡"""
-        return [
-            {"module": m, **v}
-            for m, v in cls._failures.items()
-            if v["consecutive"] >= 3
-        ]
+        return [{"module": m, **v} for m, v in cls._failures.items() if v["consecutive"] >= 3]
 
     @classmethod
     def snapshot(cls) -> dict:
