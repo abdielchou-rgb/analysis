@@ -1,0 +1,10 @@
+{
+ "absolute": {"chars": 5000, "jp_count": 5, "data_points": 20, "cp_count": 3},
+ "relative": {
+   "enabled": true,
+   "min_ratio": 0.40,
+   "metric_keys": ["chars", "jp_count", "data_points", "cp_count"],
+   "_comment": "相对基线容差=黄金集中位数×ratio；豁免清单用于异质历史样本（如旧版个股点评天然短于深度行业报告）",
+   "exempt_files": ["gas_sensor_cicc.md"]
+ }
+}
