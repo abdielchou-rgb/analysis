@@ -50,13 +50,12 @@ def test_pledge_ratio_by_code():
     assert 0 <= pr["pledge_ratio_pct"] <= 100, f"质押率应在0-100: {pr}"
 
 
-@pytest.mark.xfail(
-    reason="功能缺口（存量）：load_consensus 未实现 Marvis R53 扩采字段 "
-           "revision_slope/revision_breadth——需要 consensus_estimates.db 中"
-           "多期一致预期序列的斜率计算，属数据层新功能，待专项实现。",
-    strict=False)
 def test_consensus_revision_slope():
-    """consensus loader 应含 revision_slope（Marvis R53 扩采字段）。"""
+    """consensus loader 应含 revision_slope（Marvis R53 扩采字段）。
+
+    P3-audit 2026-08-24：load_consensus 已实现回退链——最新快照缺字段时
+    取历史最近非空快照，仍无则用最近两期 eps_2026e/rating_buy 现算。
+    """
     import pytest
     from core.data_basement import load_consensus
     cs = load_consensus("002594")

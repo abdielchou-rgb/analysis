@@ -983,6 +983,42 @@ def load_consensus(code: str) -> dict | None:
             # R53：revision_slope 有值 → 记录预测斜率可用（景气预期框架）
             if result.get("revision_slope") is not None:
                 result["_has_revision_slope"] = True
+            else:
+                # P3-audit 2026-08-24 回退链：最新快照常缺 revision 字段
+                #（扩采批扫覆盖有限），回退①取历史最近非空快照；
+                # 回退②用最近两个快照的 eps_2026e/rating_buy 现算。
+                row2 = conn.execute(
+                    "SELECT as_of, revision_slope, revision_breadth FROM consensus "
+                    "WHERE code=? AND revision_slope IS NOT NULL ORDER BY as_of DESC LIMIT 1",
+                    (code,)).fetchone()
+                if row2:
+                    result["revision_slope"] = float(row2["revision_slope"])
+                    result["_revision_as_of"] = str(row2["as_of"])
+                    if row2["revision_breadth"] is not None:
+                        result["revision_breadth"] = float(row2["revision_breadth"])
+                    result["_has_revision_slope"] = True
+                else:
+                    snaps = conn.execute(
+                        "SELECT as_of, eps_2026e, rating_buy, n_analysts FROM consensus "
+                        "WHERE code=? AND eps_2026e IS NOT NULL ORDER BY as_of DESC LIMIT 2",
+                        (code,)).fetchall()
+                    if len(snaps) == 2 and snaps[1]["eps_2026e"]:
+                        prev_eps = float(snaps[1]["eps_2026e"])
+                        if abs(prev_eps) > 1e-9:
+                            result["revision_slope"] = round(
+                                (float(snaps[0]["eps_2026e"]) - prev_eps) / abs(prev_eps), 4)
+                            result["_revision_computed"] = True
+                            result["_has_revision_slope"] = True
+                        try:
+                            na_new = float(snaps[0]["n_analysts"] or 0)
+                            na_old = float(snaps[1]["n_analysts"] or 0)
+                            if na_new > 0 and na_old > 0:
+                                b_new = float(snaps[0]["rating_buy"] or 0) / na_new
+                                b_old = float(snaps[1]["rating_buy"] or 0) / na_old
+                                result["revision_breadth"] = round(b_new - b_old, 4)
+                                result["_revision_computed"] = True
+                        except Exception:
+                            pass
     except Exception as e:
         logger.debug("[BASEMENT] consensus 读取失败: %s", e)
     finally:
