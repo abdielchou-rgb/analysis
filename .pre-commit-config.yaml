@@ -25,10 +25,18 @@ repos:
         args: [--maxkb=500]
       - id: detect-private-key
 
-  # P3-audit 2026-08-24：本地钩子改用 .venv 解释器——系统 python 缺依赖会误报；
-  # sdd-docs-sync 钩子退役：generate_claude_md() 是硬编码旧模板，与手写
-  # CLAUDE.md 必然分叉（每次提交必败 → 门禁剧场）。
-  # 待 generate_docs 改为从 iron_gate 注册表真实生成后再恢复。
+  # P3-audit 2026-08-24：SDD 治理闭环恢复——不再比对硬编码 CLAUDE.md，
+  # 改为强制同步"从运行时代码生成的" docs/PIPELINE_FACTS.md（IronGate
+  # 注册表/SAC 维度/Provider 表实时提取，改代码不改文档即被拦）。
+  - repo: local
+    hooks:
+      - id: sdd-facts-sync
+        name: SDD — PIPELINE_FACTS.md must match live code
+        entry: .venv/Scripts/python.exe harness/sdd_facts_sync.py
+        language: system
+        files: '^(pipeline/checks/|pipeline/iron_gate\.py|core/sacs/|core/deepseek_client\.py|harness/(generate_docs|sdd_facts_sync)\.py|docs/PIPELINE_FACTS\.md)'
+        pass_filenames: false
+        verbose: true
   - repo: local
     hooks:
       - id: harness-validator

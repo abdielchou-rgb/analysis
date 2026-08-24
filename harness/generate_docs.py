@@ -1,11 +1,18 @@
-"""2hao-analyst SDD 文档生成器 — 从代码自动生成 CLAUDE.md / SKILL.md / README
+"""2hao-analyst SDD 文档生成器 — 从代码自动生成管线事实文档
 
 核心思想（来自 Normal Computing SDD 论文）：
   - 规格（spec）是代码和文档的共同父级
   - 不是"写文档→写代码→更新文档"，而是"规格→代码+文档同时生成"
-  - 本脚本从 pipeline contracts + SAC YAML + 代码 docstring 生成所有文档
+
+P3-audit 2026-08-24 重构定位：
+  - generate_pipeline_facts() —— 唯一真实生成的产物：docs/PIPELINE_FACTS.md，
+    数据全部来自运行时代码（IronGate 注册表 / SAC YAML / Provider 注册表 /
+    校准阈值），由 pre-commit 的 sdd-facts-sync 钩子强制同步
+  - generate_claude_md() 保留但已退役——CLAUDE.md 是手写宪法，不应被
+    硬编码模板覆盖（旧钩子每次提交必败的根因）
 """
 
+import re
 import sys
 from pathlib import Path
 
@@ -14,6 +21,82 @@ from harness.pipeline_contract import IRON_GATE_CONTRACT
 _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
+
+
+def generate_pipeline_facts() -> str:
+    """从运行时代码提取管线事实 → docs/PIPELINE_FACTS.md（全自动同步）。"""
+    lines = [
+        "# PIPELINE FACTS",
+        "",
+        "> 本文件由 harness/generate_docs.py 从代码实时生成（pre-commit 强制同步）。",
+        "> 手改无效——事实变更请改代码本身。生成时间见文件尾。",
+        "",
+    ]
+
+    # ── IronGate 检查清单（AST 扫 checks/*.py + iron_gate 本体）──
+    import ast
+
+    defined = set()
+    for f in (_ROOT / "pipeline" / "checks").glob("*.py"):
+        try:
+            tree = ast.parse(f.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith("_check_"):
+                defined.add(node.name)
+    ig_src = (_ROOT / "pipeline" / "iron_gate.py").read_text(encoding="utf-8")
+    executed = set(re.findall(r"self\.(_check_[A-Za-z0-9_]+)", ig_src))
+    lines += [
+        "## IronGate",
+        f"- 注册检查方法数（checks/）：{len(defined)}",
+        f"- run_all 引用检查数：{len(executed)}",
+        f"- 迁移完整性：{'OK' if defined == executed else 'DRIFT! defined-executed=' + str(sorted(defined - executed))}",
+        f"- 合约 min_score：{IRON_GATE_CONTRACT.get('min_score')}",
+        "",
+    ]
+
+    # ── SAC 报告类型与维度 ──
+    try:
+        from core.sacs import SACLoader
+
+        sac_types = {}
+        for rt in ("listed_company", "industry_deep", "unlisted_company", "earnings_notes", "decision_memo"):
+            try:
+                dims = SACLoader(rt).get_dimension_ids()
+                sac_types[rt] = len(dims)
+            except Exception:
+                continue
+        lines.append("## SAC")
+        for rt, n in sorted(sac_types.items()):
+            lines.append(f"- {rt}: {n} 维")
+        lines.append("")
+    except Exception as e:
+        lines += ["## SAC", f"- 加载失败: {e}", ""]
+
+    # ── LLM Provider 优先级 ──
+    try:
+        from core.deepseek_client import PROVIDER_PRIORITY
+
+        lines.append("## LLM Providers（priority 越小越优先）")
+        for name, pri in sorted(PROVIDER_PRIORITY.items(), key=lambda x: x[1]):
+            lines.append(f"- {name}: {pri}")
+        lines.append("")
+    except Exception as e:
+        lines += ["## LLM Providers", f"- 加载失败: {e}", ""]
+
+    # ── 校准阈值 ──
+    cal = _ROOT / "benchmark" / "calibrated_thresholds.json"
+    lines.append("## 阈值来源")
+    lines.append(f"- calibrated_thresholds.json: {'存在' if cal.exists() else '缺失（用内置默认）'}")
+    # P3-audit: 不嵌入时间戳——确定性输出是 facts-sync 钩子可判等的前提
+    return "\n".join(lines) + "\n"
+
+
+def write_pipeline_facts() -> Path:
+    out = _ROOT / "docs" / "PIPELINE_FACTS.md"
+    out.write_text(generate_pipeline_facts(), encoding="utf-8")
+    return out
 
 
 def generate_claude_md() -> str:
