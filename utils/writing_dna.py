@@ -70,9 +70,22 @@ INSTITUTION_DNA: dict[str, dict] = {
 }
 
 
+_STYLE_ALIASES = {
+    # 管线 style id → INSTITUTION_DNA 键
+    "gs": "goldman_sachs",
+    "goldman": "goldman_sachs",
+    "mck": "mckinsey",
+    "bcg": "mckinsey",  # 咨询腔最近似
+    "bain": "mckinsey",
+    "jpm": "standard",
+    "ms": "goldman_sachs",
+}
+
+
 def get_dna(style_id: str) -> WritingDNA:
     """Get institutional writing DNA profile."""
-    data = INSTITUTION_DNA.get(style_id, INSTITUTION_DNA["standard"])
+    sid = _STYLE_ALIASES.get(style_id, style_id)
+    data = INSTITUTION_DNA.get(sid, INSTITUTION_DNA["standard"])
     return WritingDNA(**data)
 
 

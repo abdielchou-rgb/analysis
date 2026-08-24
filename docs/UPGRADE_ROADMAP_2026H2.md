@@ -234,3 +234,16 @@ instruction hierarchy + spotlighting（已做第一层）。
   flywheel 外）→ Phase B 待办：阈值分型
 - Gate 收敛最后一公里：SAC 维度覆盖（segment_analysis/outlook_implication）
   属修订循环工艺，基础设施已就位
+
+## 附录：Phase B 执行纪要（2026-08-25）
+
+- M1 规则库 2/13→13/13（15 键），新 schema 含 applicability+failure_modes，
+  回归测试 test_methodology_rules.py
+- S1 指纹向量化 v1：core/style_fingerprint.py（8 维+距离）+ 构建器脚本；
+  golden_deep 基准档案已生成（judgment_density 2.66 / number_density 12.95 /
+  claim_first）
+- S2 风格距离门禁：_check_style_distance warning 注册；实测 _gate_prev.md
+  距离 0.20 PASS
+- S3 接线：persona md + WritingDNA 进 _call_llm；get_dna 增加 gs/mck/bcg 别名
+- 遗留#2：eval_gate 分型阈值上线，earnings_notes 飞轮入库端到端验证通过
+- 额外真 bug：_call_llm 第二份硬编码柯力锚点（P0-5 残留副本）已清除

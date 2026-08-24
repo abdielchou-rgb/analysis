@@ -1717,30 +1717,58 @@ class SectionWriter:
         # R85（2026-08-07）：decision_memo 数据锚定强制约束（A1/A2/A3）
         # 治"LLM 换行业叙事"根因——enrich 数据从"可选参考"变为"强制约束"
         if self.report_type == "decision_memo":
+            # P0-5 残留修复（P3-audit 2026-08-24）：原此处硬编码柯力传感项目
+            # 专属锚点/禁令名单/执行摘要数字——任何其他标的都会被注入无关
+            # 行业禁令与假数据锚。改为通用纪律；具体锚点一律来自 enrich 数据。
             sp += (
-                "\n## [数据锚定-必须引用] 本报告是给委托方决策者的备忘录，下列数据点必须出现在正文"
-                "（禁止遗漏，禁止用其他数据替代）：\n"
-                "  1. 全球油位市场规模 46亿美元(2024)→65亿美元(2030)，来自 enrich fig_revenue_trend\n"
-                "  2. 中国市场规模 166亿(2024)→172亿(2025)元，来自 enrich fig_market_size_china\n"
-                "  3. 竞争真相：托肯恒山(中石化核心)/富仁高科(国标制定者)/KROHNE，来自 enrich competition_truth\n"
-                "  4. 卡脖子：磁致伸缩丝被日企TDK垄断，国产化率约30%，来自 enrich tech_route\n"
-                "  5. 政策窗口：加油站防渗改造执行率62%→2026H2替换高峰，来自 enrich policy_chain\n"
-                "  6. 生产主体：华虹科技(柯力控股子公司,拟增持96%)，来自 enrich huahong_intro\n"
-                "  7. 整合对象：久通物联(80+国家渠道)，来自 enrich jiutong_intro\n"
-                "  8. 决策结论(必须来自 DecisionEngine，禁止自编)：卡位评分X.X/5、三年投入约1.5-2亿、"
-                "最坏损失约2亿≈0.6倍归母净利\n"
+                "\n## [决策锚定-强约束] 全文所有数字与竞品名以【可用数据】与"
+                "【共享数据字典】为唯一来源；任何不在数据中的市场规模/竞品/价格锚一律禁止。"
+                "关键结论需可复算（保留分子分母）。\n"
             )
             sp += (
-                "\n## [数据来源禁令-禁止引入] 下列实体/叙事在 enrich 数据中不存在，禁止写入正文"
-                "（它们是另一个行业的叙事）：\n"
-                "  禁止: 商用车/车规/汽车油箱/国四排放/整车厂/苏奥传感/奥联电子/武汉凡谷\n"
-                "  若必须补充行业知识，标注(E)估算+来源，不得冒充 enrich 数据\n"
+                "\n## [叙事越界禁令] 仅可使用【可用数据】中出现的实体与行业叙事；"
+                "若发现自身试图引入数据中不存在的公司/技术路线/政策链，立即停止——"
+                "如需补充行业常识，标注(E)估算+来源，不得冒充 enrich 数据。\n"
             )
             sp += (
-                "\n## [执行摘要强制] 执行摘要必须包含：一句话结论(进/不进/条件性进)+卡位评分+"
-                "三年投入+最坏损失+执行前提(久通订单承诺≥5000只/年)。禁止把委托方匿名化，"
-                "必须写明'柯力传感'与'华虹科技'。"
+                "\n## [执行摘要强制] 执行摘要必须一句话给出：结论(进/不进/条件性进)"
+                "+卡位评分(如有数据)+投入量级+最坏损失上限+执行前提。"
+                "涉及主体必须使用数据中的真实公司名，禁止匿名化或代入其他标的名。"
             )
+
+        # S3（P3-B）：机构人格卡 + 写作 DNA 接线——此前两资产零消费
+        try:
+            _persona_map = {"cicc": "cicc_analyst.md", "gs": "goldman_sachs.md", "mck": "mckinsey_consultant.md"}
+            from pathlib import Path as _P
+
+            _pf = (
+                _P(__file__).resolve().parent.parent
+                / "prompts"
+                / "system"
+                / _persona_map.get(self.style, "common_principles.md")
+            )
+            if _pf.exists():
+                sp += "\n## [机构人格]\n" + _pf.read_text(encoding="utf-8")[:1800]
+        except Exception:
+            pass
+        try:
+            from utils.writing_dna import get_dna
+
+            dna = get_dna(self.style or "")
+            if dna and getattr(dna, "institution_name", ""):
+                _ps = dna.paragraph_start or {}
+                _un = dna.uncertainty or {}
+                _fp = dna.first_person or {}
+                sp += (
+                    f"\n## [机构写作DNA·{dna.institution_name}] "
+                    f"判断动词首选『{dna.judgment_verbs.get('primary', '')}』；"
+                    f"段首避免 {'/'.join(_ps.get('avoid', [])[:3]) or '无'}；"
+                    f"不确定表述用 {'/'.join(_un.get('preferred', []))}，"
+                    f"禁用 {'/'.join(_un.get('avoid', []))}；"
+                    f"'我们'频率≈{_fp.get('we_frequency', 0.8):.0%}。"
+                )
+        except Exception:
+            pass
         try:
             if style_override:
                 enriched_sp = KnowledgeInjector.enrich_writing_prompt(sp, style_override)

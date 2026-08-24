@@ -1,195 +1,715 @@
 {
-  "valuation": [
+ "valuation": [
+  {
+   "rule_id": "valuation_dcf_principle",
+   "name": "收益现值法核心逻辑",
+   "source": "MinerU解析-Goldman Sachs 清华MBA估值培训讲座",
+   "inputs": [
+    "未来现金流",
+    "折现率",
+    "期限"
+   ],
+   "rules": [
     {
-      "rule_id": "valuation_dcf_principle",
-      "name": "收益现值法核心逻辑",
-      "source": "MinerU解析-Goldman Sachs 清华MBA估值培训讲座",
-      "inputs": [
-        "未来现金流",
-        "折现率",
-        "期限"
-      ],
-      "rules": [
-        {
-          "condition": "未来收益可量化",
-          "stage": "收益现值法",
-          "implication": "价值=Σ未来收益折现，需合理折现率"
-        },
-        {
-          "condition": "不确定性高",
-          "stage": "实物期权补充",
-          "implication": "NPV低估灵活性价值，期权法修正"
-        }
-      ],
-      "decision_hints": "收益法对折现率敏感，需做敏感性分析"
+     "condition": "未来收益可量化",
+     "stage": "收益现值法",
+     "implication": "价值=Σ未来收益折现，需合理折现率"
     },
     {
-      "rule_id": "valuation_dcf_principle",
-      "name": "收益现值法核心逻辑",
-      "source": "MinerU解析-中金企业估值方法培训",
-      "inputs": [
-        "未来现金流",
-        "折现率",
-        "期限"
-      ],
-      "rules": [
-        {
-          "condition": "未来收益可量化",
-          "stage": "收益现值法",
-          "implication": "价值=Σ未来收益折现，需合理折现率"
-        },
-        {
-          "condition": "不确定性高",
-          "stage": "实物期权补充",
-          "implication": "NPV低估灵活性价值，期权法修正"
-        }
-      ],
-      "decision_hints": "收益法对折现率敏感，需做敏感性分析"
-    },
-    {
-      "rule_id": "valuation_dcf_principle",
-      "name": "收益现值法核心逻辑",
-      "source": "MinerU解析-中金公司估值方法",
-      "inputs": [
-        "未来现金流",
-        "折现率",
-        "期限"
-      ],
-      "rules": [
-        {
-          "condition": "未来收益可量化",
-          "stage": "收益现值法",
-          "implication": "价值=Σ未来收益折现，需合理折现率"
-        },
-        {
-          "condition": "不确定性高",
-          "stage": "实物期权补充",
-          "implication": "NPV低估灵活性价值，期权法修正"
-        }
-      ],
-      "decision_hints": "收益法对折现率敏感，需做敏感性分析"
-    },
-    {
-      "rule_id": "valuation_dcf_principle",
-      "name": "收益现值法核心逻辑",
-      "source": "MinerU解析-公司价值与公司价值评估",
-      "inputs": [
-        "未来现金流",
-        "折现率",
-        "期限"
-      ],
-      "rules": [
-        {
-          "condition": "未来收益可量化",
-          "stage": "收益现值法",
-          "implication": "价值=Σ未来收益折现，需合理折现率"
-        },
-        {
-          "condition": "不确定性高",
-          "stage": "实物期权补充",
-          "implication": "NPV低估灵活性价值，期权法修正"
-        }
-      ],
-      "decision_hints": "收益法对折现率敏感，需做敏感性分析"
-    },
-    {
-      "rule_id": "valuation_method_comparison",
-      "name": "估值方法三法对比（成本/收益/市场）",
-      "source": "MinerU解析-技术价值评估方法的研究思路",
-      "inputs": [
-        "资产属性",
-        "数据可得性",
-        "可比性"
-      ],
-      "rules": [
-        {
-          "condition": "无市场参照+专有技术",
-          "stage": "成本法",
-          "implication": "成本法：以重置成本为基础，适合无市场参照的专有技术"
-        },
-        {
-          "condition": "未来收益可预测",
-          "stage": "收益法",
-          "implication": "折现估值，公认最佳但假设敏感"
-        },
-        {
-          "condition": "可比交易充分",
-          "stage": "市场法",
-          "implication": "直接反映供需，弱可比性受限"
-        }
-      ],
-      "decision_hints": "估值方法选择取决于资产属性与数据可得性；多方法交叉验证"
-    },
-    {
-      "rule_id": "valuation_dcf_principle",
-      "name": "收益现值法核心逻辑",
-      "source": "MinerU解析-技术价值评估方法的研究思路",
-      "inputs": [
-        "未来现金流",
-        "折现率",
-        "期限"
-      ],
-      "rules": [
-        {
-          "condition": "未来收益可量化",
-          "stage": "收益现值法",
-          "implication": "价值=Σ未来收益折现，需合理折现率"
-        },
-        {
-          "condition": "不确定性高",
-          "stage": "实物期权补充",
-          "implication": "NPV低估灵活性价值，期权法修正"
-        }
-      ],
-      "decision_hints": "收益法对折现率敏感，需做敏感性分析"
-    },
-    {
-      "rule_id": "valuation_dcf_principle",
-      "name": "收益现值法核心逻辑",
-      "source": "MinerU解析-高盛清华MBA估值_完整",
-      "inputs": [
-        "未来现金流",
-        "折现率",
-        "期限"
-      ],
-      "rules": [
-        {
-          "condition": "未来收益可量化",
-          "stage": "收益现值法",
-          "implication": "价值=Σ未来收益折现，需合理折现率"
-        },
-        {
-          "condition": "不确定性高",
-          "stage": "实物期权补充",
-          "implication": "NPV低估灵活性价值，期权法修正"
-        }
-      ],
-      "decision_hints": "收益法对折现率敏感，需做敏感性分析"
+     "condition": "不确定性高",
+     "stage": "实物期权补充",
+     "implication": "NPV低估灵活性价值，期权法修正"
     }
-  ],
-  "industry_framework": [
+   ],
+   "decision_hints": "收益法对折现率敏感，需做敏感性分析",
+   "applicability": {},
+   "failure_modes": []
+  },
+  {
+   "rule_id": "valuation_dcf_principle",
+   "name": "收益现值法核心逻辑",
+   "source": "MinerU解析-中金企业估值方法培训",
+   "inputs": [
+    "未来现金流",
+    "折现率",
+    "期限"
+   ],
+   "rules": [
     {
-      "rule_id": "industry_auto_framework",
-      "name": "汽车行业分析框架",
-      "source": "MinerU解析-汽车业_完整",
-      "inputs": [
-        "产销量",
-        "区域结构",
-        "渗透率"
-      ],
-      "rules": [
-        {
-          "condition": "全球销量CAGR稳定",
-          "stage": "成熟市场",
-          "implication": "看格局与成本，非总量"
-        },
-        {
-          "condition": "区域渗透率提升",
-          "stage": "成长市场",
-          "implication": "看渗透率天花板"
-        }
-      ],
-      "decision_hints": "汽车分析先分区域看渗透率阶段"
+     "condition": "未来收益可量化",
+     "stage": "收益现值法",
+     "implication": "价值=Σ未来收益折现，需合理折现率"
+    },
+    {
+     "condition": "不确定性高",
+     "stage": "实物期权补充",
+     "implication": "NPV低估灵活性价值，期权法修正"
     }
-  ]
+   ],
+   "decision_hints": "收益法对折现率敏感，需做敏感性分析",
+   "applicability": {},
+   "failure_modes": []
+  },
+  {
+   "rule_id": "valuation_dcf_principle",
+   "name": "收益现值法核心逻辑",
+   "source": "MinerU解析-中金公司估值方法",
+   "inputs": [
+    "未来现金流",
+    "折现率",
+    "期限"
+   ],
+   "rules": [
+    {
+     "condition": "未来收益可量化",
+     "stage": "收益现值法",
+     "implication": "价值=Σ未来收益折现，需合理折现率"
+    },
+    {
+     "condition": "不确定性高",
+     "stage": "实物期权补充",
+     "implication": "NPV低估灵活性价值，期权法修正"
+    }
+   ],
+   "decision_hints": "收益法对折现率敏感，需做敏感性分析",
+   "applicability": {},
+   "failure_modes": []
+  },
+  {
+   "rule_id": "valuation_dcf_principle",
+   "name": "收益现值法核心逻辑",
+   "source": "MinerU解析-公司价值与公司价值评估",
+   "inputs": [
+    "未来现金流",
+    "折现率",
+    "期限"
+   ],
+   "rules": [
+    {
+     "condition": "未来收益可量化",
+     "stage": "收益现值法",
+     "implication": "价值=Σ未来收益折现，需合理折现率"
+    },
+    {
+     "condition": "不确定性高",
+     "stage": "实物期权补充",
+     "implication": "NPV低估灵活性价值，期权法修正"
+    }
+   ],
+   "decision_hints": "收益法对折现率敏感，需做敏感性分析",
+   "applicability": {},
+   "failure_modes": []
+  },
+  {
+   "rule_id": "valuation_method_comparison",
+   "name": "估值方法三法对比（成本/收益/市场）",
+   "source": "MinerU解析-技术价值评估方法的研究思路",
+   "inputs": [
+    "资产属性",
+    "数据可得性",
+    "可比性"
+   ],
+   "rules": [
+    {
+     "condition": "无市场参照+专有技术",
+     "stage": "成本法",
+     "implication": "成本法：以重置成本为基础，适合无市场参照的专有技术"
+    },
+    {
+     "condition": "未来收益可预测",
+     "stage": "收益法",
+     "implication": "折现估值，公认最佳但假设敏感"
+    },
+    {
+     "condition": "可比交易充分",
+     "stage": "市场法",
+     "implication": "直接反映供需，弱可比性受限"
+    }
+   ],
+   "decision_hints": "估值方法选择取决于资产属性与数据可得性；多方法交叉验证",
+   "applicability": {},
+   "failure_modes": []
+  },
+  {
+   "rule_id": "valuation_dcf_principle",
+   "name": "收益现值法核心逻辑",
+   "source": "MinerU解析-技术价值评估方法的研究思路",
+   "inputs": [
+    "未来现金流",
+    "折现率",
+    "期限"
+   ],
+   "rules": [
+    {
+     "condition": "未来收益可量化",
+     "stage": "收益现值法",
+     "implication": "价值=Σ未来收益折现，需合理折现率"
+    },
+    {
+     "condition": "不确定性高",
+     "stage": "实物期权补充",
+     "implication": "NPV低估灵活性价值，期权法修正"
+    }
+   ],
+   "decision_hints": "收益法对折现率敏感，需做敏感性分析",
+   "applicability": {},
+   "failure_modes": []
+  },
+  {
+   "rule_id": "valuation_dcf_principle",
+   "name": "收益现值法核心逻辑",
+   "source": "MinerU解析-高盛清华MBA估值_完整",
+   "inputs": [
+    "未来现金流",
+    "折现率",
+    "期限"
+   ],
+   "rules": [
+    {
+     "condition": "未来收益可量化",
+     "stage": "收益现值法",
+     "implication": "价值=Σ未来收益折现，需合理折现率"
+    },
+    {
+     "condition": "不确定性高",
+     "stage": "实物期权补充",
+     "implication": "NPV低估灵活性价值，期权法修正"
+    }
+   ],
+   "decision_hints": "收益法对折现率敏感，需做敏感性分析",
+   "applicability": {},
+   "failure_modes": []
+  }
+ ],
+ "industry_framework": [
+  {
+   "rule_id": "industry_auto_framework",
+   "name": "汽车行业分析框架",
+   "source": "MinerU解析-汽车业_完整",
+   "inputs": [
+    "产销量",
+    "区域结构",
+    "渗透率"
+   ],
+   "rules": [
+    {
+     "condition": "全球销量CAGR稳定",
+     "stage": "成熟市场",
+     "implication": "看格局与成本，非总量"
+    },
+    {
+     "condition": "区域渗透率提升",
+     "stage": "成长市场",
+     "implication": "看渗透率天花板"
+    }
+   ],
+   "decision_hints": "汽车分析先分区域看渗透率阶段",
+   "applicability": {},
+   "failure_modes": []
+  }
+ ],
+ "industry_lifecycle": [
+  {
+   "rule_id": "lifecycle_stage_logic",
+   "name": "行业生命周期阶段判断",
+   "source": "P3-B 骨架（SAC 维度定义+评审实录提炼，待语料增厚）",
+   "inputs": [
+    "行业增速",
+    "渗透率",
+    "竞争格局CR3"
+   ],
+   "rules": [
+    {
+     "condition": "渗透率<20%且增速>20%",
+     "stage": "导入期",
+     "implication": "看空间与卡位，估值用PS/远期PE"
+    },
+    {
+     "condition": "渗透率20-60%",
+     "stage": "成长期",
+     "implication": "看份额提升速度，PEG锚定"
+    },
+    {
+     "condition": "渗透率>60%增速<10%",
+     "stage": "成熟期",
+     "implication": "看格局与现金流，DCF/股息贴现"
+    }
+   ],
+   "applicability": {
+    "industries": [
+     "全行业"
+    ],
+    "cycle_stage": [
+     "导入期",
+     "成长期",
+     "成熟期"
+    ],
+    "data_requirements": [
+     "industry_penetration",
+     "industry_growth"
+    ]
+   },
+   "failure_modes": [
+    "政策突变可使生命周期跳变（如补贴退坡）——需标注政策依赖度"
+   ]
+  }
+ ],
+ "business_model": [
+  {
+   "rule_id": "bm_value_driver",
+   "name": "商业模式价值主语识别",
+   "source": "P3-B 骨架（SAC 维度定义+评审实录提炼，待语料增厚）",
+   "inputs": [
+    "收入结构",
+    "毛利率",
+    "资本开支"
+   ],
+   "rules": [
+    {
+     "condition": "收入一次性项目占比>40%",
+     "stage": "项目型",
+     "implication": "估值折价：关注在手订单与现金回款"
+    },
+    {
+     "condition": "订阅/耗材收入占比>30%",
+     "stage": "复购型",
+     "implication": "估值溢价：关注续费率与NRR"
+    },
+    {
+     "condition": "重资产+高经营杠杆",
+     "stage": "产能型",
+     "implication": "看利用率拐点，盈亏平衡销量是核心变量"
+    }
+   ],
+   "applicability": {
+    "industries": [
+     "全行业"
+    ],
+    "cycle_stage": [
+     "任意"
+    ],
+    "data_requirements": [
+     "revenue_structure"
+    ]
+   },
+   "failure_modes": [
+    "商业模型标签漂移：同一公司跨期切换口径需显式说明"
+   ]
+  }
+ ],
+ "profit_pool": [
+  {
+   "rule_id": "profit_pool_migration",
+   "name": "利润池迁移判断",
+   "source": "P3-B 骨架（SAC 维度定义+评审实录提炼，待语料增厚）",
+   "inputs": [
+    "细分市场规模",
+    "分环节毛利率",
+    "竞争格局"
+   ],
+   "rules": [
+    {
+     "condition": "下游环节利润池增速>上游2倍",
+     "stage": "利润下游迁移",
+     "implication": "标的价值链位置重估"
+    },
+    {
+     "condition": "环节CR3>60%且毛利率稳定",
+     "stage": "寡头锁定",
+     "implication": "该环节定价权持续，龙头溢价"
+    }
+   ],
+   "applicability": {
+    "industries": [
+     "半导体",
+     "消费电子",
+     "汽车"
+    ],
+    "cycle_stage": [
+     "成长期",
+     "成熟期"
+    ],
+    "data_requirements": [
+     "segment_margin"
+    ]
+   },
+   "failure_modes": [
+    "总量扩张被误读为迁移：区分蛋糕变大与结构移动"
+   ]
+  }
+ ],
+ "competitive_forces": [
+  {
+   "rule_id": "five_forces_quant",
+   "name": "五力量量化版",
+   "source": "P3-B 骨架（SAC 维度定义+评审实录提炼，待语料增厚）",
+   "inputs": [
+    "CR3",
+    "毛利率差",
+    "替代品价格比"
+   ],
+   "rules": [
+    {
+     "condition": "CR3<30%且毛利率离散度高",
+     "stage": "混沌竞争",
+     "implication": "无定价权，回避价格战参与者"
+    },
+    {
+     "condition": "CR3>60%且龙头毛利率高出行业5pp+",
+     "stage": "寡头秩序",
+     "implication": "龙头享结构性溢价"
+    }
+   ],
+   "applicability": {
+    "industries": [
+     "全行业"
+    ],
+    "cycle_stage": [
+     "任意"
+    ],
+    "data_requirements": [
+     "competitive_landscape"
+    ]
+   },
+   "failure_modes": [
+    "份额数据口径不一（出货 vs 收入）会颠覆结论——必须统一口径再比较"
+   ]
+  }
+ ],
+ "elasticity_analysis": [
+  {
+   "rule_id": "price_elasticity_floor",
+   "name": "提价弹性下限",
+   "source": "P3-B 骨架（SAC 维度定义+评审实录提炼，待语料增厚）",
+   "inputs": [
+    "提价幅度",
+    "销量变化",
+    "竞品价差"
+   ],
+   "rules": [
+    {
+     "condition": "提价5%销量降幅<2%",
+     "stage": "低弹性",
+     "implication": "提价权成立，毛利改善可直接线性外推"
+    },
+    {
+     "condition": "提价5%销量降幅>8%",
+     "stage": "高弹性",
+     "implication": "提价不可持续，份额逻辑优先于利润逻辑"
+    }
+   ],
+   "applicability": {
+    "industries": [
+     "消费",
+     "医药"
+    ],
+    "cycle_stage": [
+     "任意"
+    ],
+    "data_requirements": [
+     "price_history"
+    ]
+   },
+   "failure_modes": [
+    "弹性系数跨周期不稳定：衰退期弹性放大2-3倍"
+   ]
+  }
+ ],
+ "signal_chain": [
+  {
+   "rule_id": "signal_chain_ordering",
+   "name": "信号链传导排序",
+   "source": "P3-B 骨架（SAC 维度定义+评审实录提炼，待语料增厚）",
+   "inputs": [
+    "先行指标",
+    "同步指标",
+    "滞后指标"
+   ],
+   "rules": [
+    {
+     "condition": "先行指标拐点出现",
+     "stage": "传导前段",
+     "implication": "布局窗口，验证点=订单/排产"
+    },
+    {
+     "condition": "同步指标确认而股价未反应",
+     "stage": "预期差窗口",
+     "implication": "加仓信号；反之为拥挤"
+    }
+   ],
+   "applicability": {
+    "industries": [
+     "制造",
+     "科技"
+    ],
+    "cycle_stage": [
+     "任意"
+    ],
+    "data_requirements": [
+     "leading_indicators"
+    ]
+   },
+   "failure_modes": [
+    "传导时延随政策/库存扰动漂移：需给出本期预期时延区间"
+   ]
+  }
+ ],
+ "policy_transmission": [
+  {
+   "rule_id": "policy_transmission_chain",
+   "name": "政策传导三段式",
+   "source": "P3-B 骨架（SAC 维度定义+评审实录提炼，待语料增厚）",
+   "inputs": [
+    "政策文件",
+    "执行细则",
+    "受益主体订单"
+   ],
+   "rules": [
+    {
+     "condition": "仅文件出台无细则",
+     "stage": "主题阶段",
+     "implication": "只给事件性溢价，不给盈利上修"
+    },
+    {
+     "condition": "细则落地且受益方中标可查",
+     "stage": "兑现阶段",
+     "implication": "可上修盈利，标注订单金额来源"
+    }
+   ],
+   "applicability": {
+    "industries": [
+     "全行业"
+    ],
+    "cycle_stage": [
+     "任意"
+    ],
+    "data_requirements": [
+     "policy_chain"
+    ]
+   },
+   "failure_modes": [
+    "把'方向利好'直接换算成EPS是常见伪推理——必须给出量级桥"
+   ]
+  }
+ ],
+ "global_competition": [
+  {
+   "rule_id": "global_benchmark_gap",
+   "name": "全球对标差距表",
+   "source": "P3-B 骨架（SAC 维度定义+评审实录提炼，待语料增厚）",
+   "inputs": [
+    "海外龙头份额",
+    "国内龙头份额",
+    "技术代际"
+   ],
+   "rules": [
+    {
+     "condition": "国内份额/海外龙头<1/3 且技术代际≤1代",
+     "stage": "追赶期",
+     "implication": "国产替代空间=份额缺口×替代概率"
+    },
+    {
+     "condition": "份额接近且成本领先",
+     "stage": "出海窗口",
+     "implication": "海外放量是第二曲线核心假设"
+    }
+   ],
+   "applicability": {
+    "industries": [
+     "全行业"
+    ],
+    "cycle_stage": [
+     "任意"
+    ],
+    "data_requirements": [
+     "global_leaders"
+    ]
+   },
+   "failure_modes": [
+    "简单线性填坑假设忽略贸易壁垒——出海部分单独做敏感性"
+   ]
+  }
+ ],
+ "technology_roadmap": [
+  {
+   "rule_id": "tech_route_probability",
+   "name": "技术路线概率加权",
+   "source": "P3-B 骨架（SAC 维度定义+评审实录提炼，待语料增厚）",
+   "inputs": [
+    "路线市占趋势",
+    "专利/研发强度",
+    "龙头站队"
+   ],
+   "rules": [
+    {
+     "condition": "两条路线市占均>30%且龙头分裂",
+     "stage": "路线之争",
+     "implication": "目标估值按情景加权，禁止单一路线外推"
+    }
+   ],
+   "applicability": {
+    "industries": [
+     "科技",
+     "新能源"
+    ],
+    "cycle_stage": [
+     "任意"
+    ],
+    "data_requirements": [
+     "tech_route"
+    ]
+   },
+   "failure_modes": [
+    "技术迭代节奏被低估：给每条路线加'证伪时间点'"
+   ]
+  }
+ ],
+ "capital_market": [
+  {
+   "rule_id": "davis_dual_gate",
+   "name": "戴维斯双击/双杀门控",
+   "source": "P3-B 骨架（SAC 维度定义+评审实录提炼，待语料增厚）",
+   "inputs": [
+    "EPS方向",
+    "PE相对行业位置"
+   ],
+   "rules": [
+    {
+     "condition": "EPS上行+PE低于行业中位",
+     "stage": "双击区",
+     "implication": "最佳做多窗口，明确催化时间点"
+    },
+    {
+     "condition": "EPS下行+PE高于中位",
+     "stage": "双杀区",
+     "implication": "规避；反弹按交易性处理"
+    }
+   ],
+   "applicability": {
+    "industries": [
+     "全行业"
+    ],
+    "cycle_stage": [
+     "任意"
+    ],
+    "data_requirements": [
+     "pe_ttm",
+     "eps_growth"
+    ]
+   },
+   "failure_modes": [
+    "EPS方向判断本身错误时框架失效——先验地给出EPS误判的观察信号"
+   ]
+  }
+ ],
+ "reference_class": [
+  {
+   "rule_id": "reference_class_forecast",
+   "name": "基准率外推纪律",
+   "source": "P3-B 骨架（SAC 维度定义+评审实录提炼，待语料增厚）",
+   "inputs": [
+    "同阶段可比样本数",
+    "成功基准率"
+   ],
+   "rules": [
+    {
+     "condition": "样本≥10且成功率<30%",
+     "stage": "低基准率领域",
+     "implication": "任何成功叙事必须解释为何偏离基准"
+    },
+    {
+     "condition": "样本不足10",
+     "stage": "不可外推",
+     "implication": "改用里程碑折现而非终值法"
+    }
+   ],
+   "applicability": {
+    "industries": [
+     "创新药",
+     "硬科技",
+     "早期成长"
+    ],
+    "cycle_stage": [
+     "导入期",
+     "成长期"
+    ],
+    "data_requirements": []
+   },
+   "failure_modes": [
+    "幸存者偏差：样本池必须包含失败案例"
+   ]
+  }
+ ],
+ "unit_economics": [
+  {
+   "rule_id": "unit_economics_floor",
+   "name": "单位经济学底线",
+   "source": "P3-B 骨架（SAC 维度定义+评审实录提炼，待语料增厚）",
+   "inputs": [
+    "单客/单店收入",
+    "变动成本",
+    "回收期"
+   ],
+   "rules": [
+    {
+     "condition": "边际贡献为负",
+     "stage": "失血扩张",
+     "implication": "增长毁灭价值，估值切到现金消耗模型"
+    },
+    {
+     "condition": "回收期>24个月",
+     "stage": "长回收",
+     "implication": "对融资环境敏感，列流动性红线"
+    }
+   ],
+   "applicability": {
+    "industries": [
+     "新消费",
+     "SaaS",
+     "连锁"
+    ],
+    "cycle_stage": [
+     "导入期",
+     "成长期"
+    ],
+    "data_requirements": [
+     "unit_economics"
+    ]
+   },
+   "failure_modes": [
+    "平均数掩盖分层：必须给出头部/尾部单元分布"
+   ]
+  }
+ ],
+ "exit_pathways": [
+  {
+   "rule_id": "exit_window_matrix",
+   "name": "退出路径矩阵",
+   "source": "P3-B 骨架（SAC 维度定义+评审实录提炼，待语料增厚）",
+   "inputs": [
+    "上市窗口",
+    "并购倍数",
+    "下一轮估值"
+   ],
+   "rules": [
+    {
+     "condition": "IPO窗口关闭+并购倍数下行",
+     "stage": "退出收紧",
+     "implication": "下调DLOM并延长持有期假设"
+    }
+   ],
+   "applicability": {
+    "industries": [
+     "非上市"
+    ],
+    "cycle_stage": [
+     "任意"
+    ],
+    "data_requirements": []
+   },
+   "failure_modes": [
+    "退出估值≠一级市场估值：流动性折价常被忽略"
+   ]
+  }
+ ]
 }

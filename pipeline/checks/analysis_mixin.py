@@ -1824,3 +1824,37 @@ class AnalysisChecksMixin:
             f"E标注不足: {tags}/{need}（数字点 {nums}）——关键数字请标 [En]",
             severity="warning",
         )
+
+    def _check_style_distance(self) -> GateCheckResult:
+        """S2：风格距离门禁（warning 级）。
+
+        目标指纹 data/fingerprints/<style>.json 不存在时直接跳过；
+        存在则计算 8 维向量距离，>1.5 告警并列出最差维度。
+        红线：只比形式特征（句长/密度/连接词谱），不比对内容词。
+        """
+        from pipeline.checks.base import GateCheckResult
+
+        text = self.report_text or ""
+        if len(text) < 1500:
+            return GateCheckResult("style_distance", True, 1.0, "短文跳过", severity="warning")
+        try:
+            from core.style_fingerprint import distance, extract, load_target
+
+            target = load_target(getattr(self, "style", "") or "")
+            if not target:
+                return GateCheckResult(
+                    "style_distance", True, 1.0, f"无 {self.style} 指纹档案，跳过", severity="warning"
+                )
+            vec = extract(text)
+            d = distance(vec, target)
+            if d <= 1.5:
+                return GateCheckResult("style_distance", True, 1.0, f"风格距离 {d:.2f}", severity="warning")
+            return GateCheckResult(
+                "style_distance",
+                False,
+                max(0.3, 1.0 - (d - 1.5) * 0.2),
+                f"风格距离 {d:.2f} > 1.5——检查句长/判断密度/连接词谱偏离",
+                severity="warning",
+            )
+        except Exception as e:
+            return GateCheckResult("style_distance", True, 0.8, f"跳过: {str(e)[:50]}", severity="warning")

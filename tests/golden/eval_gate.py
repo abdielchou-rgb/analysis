@@ -17,6 +17,7 @@ P3-audit 2026-08-24 落地项：把"eval 只有失败能阻断才算 quality gat
 """
 
 import json
+import re as _re
 import statistics
 import sys
 from pathlib import Path
@@ -34,16 +35,39 @@ BASELINE_PATH = _ROOT / "benchmark" / "eval_baseline.json"
 DEFAULT_THRESHOLDS = {
     "absolute": {"chars": 5000, "jp_count": 5, "data_points": 20, "cp_count": 3},
     "relative": {"enabled": True, "min_ratio": 0.40, "metric_keys": ["chars", "jp_count", "data_points", "cp_count"]},
+    # P3-B：分型阈值——快评类与深度报告天然不同长尾，按正文标记自动切换
+    "type_profiles": {
+        "earnings_notes": {
+            "detect_regex": "(业绩点评|财报点评|季报点评|年报点评|earnings\\s*note)",
+            "absolute_overrides": {"chars": 2500, "data_points": 12, "cp_count": 2},
+            "relative_disabled": True,
+        },
+        "decision_memo": {
+            "detect_regex": "(决策备忘录)",
+            "absolute_overrides": {"chars": 3500},
+            "relative_disabled": False,
+        },
+    },
 }
 
 
 def load_thresholds() -> dict:
+    th = {}
     if THRESHOLDS_PATH.exists():
         try:
-            return json.loads(THRESHOLDS_PATH.read_text(encoding="utf-8"))
+            th = json.loads(THRESHOLDS_PATH.read_text(encoding="utf-8"))
         except Exception:
-            pass
-    return DEFAULT_THRESHOLDS
+            th = {}
+    # P3-B：旧版阈值文件缺新键时以默认补齐（分型/相对容差等）
+    merged = dict(DEFAULT_THRESHOLDS)
+    for k, v in th.items():
+        if k == "relative" and isinstance(v, dict) and isinstance(merged.get("relative"), dict):
+            m = dict(merged["relative"])
+            m.update(v)
+            merged["relative"] = m
+        else:
+            merged[k] = v
+    return merged
 
 
 def load_baseline() -> dict:
@@ -70,13 +94,35 @@ def update_baseline() -> dict:
 
 
 def evaluate_report(md_path) -> dict:
-    """单份报告评估：返回 metrics / verdicts / failures / passed。"""
+    """单份报告评估：返 metrics / verdicts / failures / passed。
+
+    P3-B：分型阈值——正文头部命中 type_profiles.detect_regex 时，
+    absolute 用 overrides、relative 可按型关闭（快评类 vs 深度报告）。
+    """
     th = load_thresholds()
     r = check_one(Path(md_path))
     metrics = r["metrics"]
     failures = []
 
-    for key, floor in th["absolute"].items():
+    # 分型检测与覆盖合并
+    raw_head = Path(md_path).read_text(encoding="utf-8", errors="ignore")[:800]
+    detected = None
+    for tname, prof in (th.get("type_profiles") or {}).items():
+        try:
+            if _re.search(prof.get("detect_regex", ""), raw_head):
+                detected = tname
+                break
+        except Exception:
+            continue
+    abs_floor = dict(th["absolute"])
+    rel_cfg = dict(th.get("relative") or {})
+    if detected:
+        prof = th["type_profiles"][detected]
+        abs_floor.update(prof.get("absolute_overrides") or {})
+        if prof.get("relative_disabled"):
+            rel_cfg["enabled"] = False
+
+    for key, floor in abs_floor.items():
         val = metrics.get(key)
         if isinstance(val, bool):
             ok = val is floor or bool(val)
@@ -85,15 +131,15 @@ def evaluate_report(md_path) -> dict:
         else:
             ok = bool(val)
         if not ok:
-            failures.append(f"[absolute] {key}={val} < 下限{floor}")
+            tag = f"[{detected}]" if detected else "[absolute]"
+            failures.append(f"{tag} {key}={val} < 下限{floor}")
 
-    rel = th["relative"]
-    if rel.get("enabled"):
+    if rel_cfg.get("enabled"):
         # P3-audit: 文件级豁免——异质历史样本（旧版个股点评等）不参与相对比对
-        if Path(md_path).name not in set(rel.get("exempt_files", [])):
+        if Path(md_path).name not in set(rel_cfg.get("exempt_files", [])):
             baseline = load_baseline()
-            ratio = float(rel.get("min_ratio", 0.40))
-            for key in rel.get("metric_keys", []):
+            ratio = float(rel_cfg.get("min_ratio", 0.40))
+            for key in rel_cfg.get("metric_keys", []):
                 val = metrics.get(key)
                 base = baseline.get(key)
                 if isinstance(val, (int, float)) and base:

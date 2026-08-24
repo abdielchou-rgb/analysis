@@ -1,0 +1,25 @@
+{
+ "sent_len_p50": 49,
+ "sent_len_p90": 104,
+ "judgment_density": 2.66,
+ "number_density": 12.95,
+ "table_per_kchar": 0.46,
+ "connective_spectrum": {
+  "但": 0.488,
+  "这意味着": 0.159,
+  "因此": 0.159,
+  "然而": 0.106,
+  "同时": 0.056,
+  "反之": 0.013,
+  "核心在于": 0.013,
+  "此外": 0.003,
+  "综上": 0.0,
+  "一方面": 0.0
+ },
+ "heading_depth_hist": {
+  "h1": 3,
+  "h2": 27,
+  "h3": 34
+ },
+ "first_sentence_pattern": "claim_first"
+}

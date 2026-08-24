@@ -389,7 +389,8 @@ class IronGate(
             self._check_data_point_citation,  # R85: 数据点引用审计（enrich 关键数据进正文）
             self._check_source_reliability,
             self._check_methodology_compliance,
-            self._check_inline_citations,  # P3-B: [E#] 证据标注密度（warning）  # R87: 数据源可信度（enrich 幻觉修正值校验）
+            self._check_inline_citations,
+            self._check_style_distance,  # S2: 风格距离（warning）  # P3-B: [E#] 证据标注密度（warning）  # R87: 数据源可信度（enrich 幻觉修正值校验）
         ]
         checks = []
         # R15（2026-08-01 提速）：把 LLM 检查（ai_tone/human_impossible/数据验证，各 60s+）
