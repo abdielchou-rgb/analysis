@@ -272,49 +272,41 @@ class StyleCompiler:
 
     @staticmethod
     def _rule_inject_data_traceability(text, profile):
-        """自动补全来源标注（克制版 R35fix 2026-08-05）。
+        """R97 政策（P3-audit 2026-08-24）：不再机械注入泛化来源。
 
-        旧版问题：对每个含数字/判断词的段落机械追加同一句
-        "（数据来源：公司公告及行业公开资料）"，柯力报告 43 次重复，
-        视觉模板化且触发 template_repeat 审计。
+        旧版行为：对含数字且无来源词的段落自动追加
+        "（数据来源：公司公告）"等泛化句——与 IronGate source_entity
+        检查直接冲突（左手注入右手拦截），导致该 ERROR 永不收敛
+        （宁德时代 E2E 三轮复现）。
 
-        新版约束：
-          1. 仅当段落含【具体数字】且全文无任何来源词时才补；
-          2. 来源措辞从池中轮换，同一措辞全文最多出现 2 次；
-          3. 纯判断句（无具体数字）不补——判断句来源由上下文自然承担。
+        新版政策：
+          - 缺来源的段落保持原样（诚实留白优于伪造溯源）；
+          - 缺失由 Gate 的 data_traceability / source_entity 检查显式报告，
+            修订循环按 R97 指引要求 LLM 补具体【主体+文档名+日期】；
+          - 统计 skipped 数量写入 deviations 供观测。
         """
         import re
 
-        source_kws = re.compile(r"(?:来源|source|据|根据|sourced|年报|公告|报告|Wind|Bloomberg|Reuters|披露)", re.I)
-        source_pool = [
-            "（数据来源：公司年度报告）",
-            "（数据来源：公司公告）",
-            "（数据来源：券商研究报告）",
-            "（数据来源：公开行业资料）",
-        ]
-        usage = {s: 0 for s in source_pool}
+        source_kws = re.compile(
+            r"(?:来源|source|据|根据|sourced|年报|公告|报告|Wind|Bloomberg|Reuters|披露)",
+            re.I,
+        )
+        skipped = 0
         modified = False
+        deviations_local = []
         paras = text.split("\n\n")
         new_paras = []
         for para in paras:
             has_data = bool(re.search(r"\d+\.?\d*\s*[%亿万千元]", para))
             if has_data and not source_kws.search(para):
-                # 选一个当前使用次数最少的来源措辞（轮换，避免同句重复）
-                pool_sorted = sorted(source_pool, key=lambda s: usage[s])
-                chosen = pool_sorted[0]
-                if usage[chosen] >= 2:
-                    # 已用满 2 次 → 不再注入，保留原文（宁可少标，不可模板化）
-                    new_paras.append(para)
-                    continue
-                new_para = para.rstrip() + chosen
-                new_paras.append(new_para)
-                usage[chosen] += 1
-                modified = True
-            else:
-                new_paras.append(para)
-        if modified:
-            text = "\n\n".join(new_paras)
-        return text, modified, ["逐段来源标注补全（克制轮换）"] if modified else [], None
+                skipped += 1  # 不再注入——交给 Gate 报告 + 修订循环按 R97 补具体来源
+            new_paras.append(para)
+        if skipped:
+            modified = False  # 文本未改动
+            deviations_local.append(
+                f"data-traceability: {skipped} 段缺来源（R97 政策：不注入泛化来源，交由 Gate/修订处理）"
+            )
+        return text, modified, deviations_local, None
 
     @staticmethod
     def _rule_inject_chart_placeholder(text, profile):

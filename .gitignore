@@ -140,3 +140,4 @@ assets/valuation/
 # Coverage artifacts
 .coverage
 benchmark/coverage_baseline.json
+data/predictions.json
