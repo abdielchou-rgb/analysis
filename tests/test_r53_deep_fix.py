@@ -11,7 +11,7 @@
   4. P1-4: LLM provider 健康预检 + 快速失败
      （原：provider 不可用时 6 组各等满 300s，一轮空耗 10 分钟）
 """
-import os
+
 import sys
 from pathlib import Path
 
@@ -24,6 +24,7 @@ if str(_ROOT) not in sys.path:
 def test_dimension_source_is_sac_required():
     """_write_dimension_parallel 的维度来源必须与 IronGate 门禁同源（SAC required）。"""
     from pipeline.section_writer import SectionWriter
+
     for rt in ["industry_deep", "listed_company", "unlisted_company"]:
         sw = SectionWriter(rt, "cicc")
         # 新逻辑：all_dims 取 sac.get_dimension_ids()
@@ -40,8 +41,9 @@ def test_dimension_source_is_sac_required():
 
 def test_groups_cover_all_required_dims():
     """分组必须覆盖全部 SAC 必需维度（verify_coverage 通过）。"""
-    from pipeline.section_writer import SectionWriter
     from pipeline.dimension_grouper import group_dimensions, verify_coverage
+    from pipeline.section_writer import SectionWriter
+
     for rt in ["industry_deep", "listed_company", "unlisted_company"]:
         sw = SectionWriter(rt, "cicc")
         all_dims = sw.sac.get_dimension_ids()
@@ -51,13 +53,24 @@ def test_groups_cover_all_required_dims():
 
 def test_missing_global_dims_in_groups():
     """此前永久缺失的 global 维度必须在分组中。"""
-    from pipeline.section_writer import SectionWriter
     from pipeline.dimension_grouper import group_dimensions
+    from pipeline.section_writer import SectionWriter
+
     must_have = {
-        "industry_deep": {"global_market_sizing", "global_competition", "peer_benchmarking",
-                          "falsification", "geopolitical_risk"},
-        "listed_company": {"peer_benchmarking", "management_quality", "global_peer_comparison",
-                           "overseas_revenue", "geopolitical_exposure"},
+        "industry_deep": {
+            "global_market_sizing",
+            "global_competition",
+            "peer_benchmarking",
+            "falsification",
+            "geopolitical_risk",
+        },
+        "listed_company": {
+            "peer_benchmarking",
+            "management_quality",
+            "global_peer_comparison",
+            "overseas_revenue",
+            "geopolitical_exposure",
+        },
         "unlisted_company": {"global_benchmark", "overseas_expansion", "cross_border_dd"},
     }
     for rt, required in must_have.items():
@@ -72,8 +85,9 @@ def test_missing_global_dims_in_groups():
 # ── 2. P0-2：组级局部重写 ─────────────────────────────────────
 def test_rewrite_indices_maps_to_groups():
     """rewrite_indices（段索引）应映射到对应维度组。"""
-    from pipeline.section_writer import SectionWriter
     from pipeline.dimension_grouper import group_dimensions
+    from pipeline.section_writer import SectionWriter
+
     sw = SectionWriter("industry_deep", "cicc")
     all_dims = sw.sac.get_dimension_ids()
     groups = group_dimensions("industry_deep", all_dims)
@@ -87,6 +101,7 @@ def test_rewrite_indices_maps_to_groups():
 def test_extract_group_from_prev():
     """从上一轮报告文本提取组内容用于复用。"""
     from pipeline.section_writer import SectionWriter
+
     sw = SectionWriter("industry_deep", "cicc")
     prev = (
         "# 测试报告\n"
@@ -105,10 +120,18 @@ def test_extract_group_from_prev():
 
 # ── 3. P1-3：字数容量对标国际投行 ────────────────────────────
 def test_seg_max_tokens_default_10000():
-    """SEG_MAX_TOKENS 默认应为 10000（对标国际投行深度报告）。"""
-    # 直接读代码里的默认值
-    src = (Path(__file__).parent.parent / "pipeline" / "section_writer.py").read_text(encoding="utf-8")
-    assert 'SEG_MAX_TOKENS", "10000"' in src, "SEG_MAX_TOKENS 默认应提升到 10000"
+    """SEG_MAX_TOKENS 默认应为 10000（对标国际投行深度报告）。
+
+    P3-audit 2026-08-24：读取收口到 core/settings.seg_max_tokens()
+    （配置单一事实源），断言随之迁移。
+    """
+    import inspect
+
+    from core import settings
+
+    src = inspect.getsource(settings.seg_max_tokens)
+    assert '"SEG_MAX_TOKENS", 10_000' in src, "settings 中 SEG_MAX_TOKENS 默认应保持 10000"
+    assert settings.seg_max_tokens() >= 10000
 
 
 def test_group_char_requirement_800():
@@ -134,6 +157,7 @@ def test_llm_probe_fast_fail():
     """
     import core.deepseek_client as dc
     from core.deepseek_client import ProviderConfig
+
     # 隔离：快照并清空注册表，只留不可达 probe
     _saved_providers = dict(dc._registry._providers)
     _saved_fails = dict(getattr(dc._registry, "_consecutive_failures", {}))
@@ -141,10 +165,12 @@ def test_llm_probe_fast_fail():
     if hasattr(dc._registry, "_consecutive_failures"):
         dc._registry._consecutive_failures.clear()
     try:
-        p = ProviderConfig(name="probe_test", base_url="http://127.0.0.1:1/v1",
-                           api_key="test", models=["m"], priority=0)
+        p = ProviderConfig(
+            name="probe_test", base_url="http://127.0.0.1:1/v1", api_key="test", models=["m"], priority=0
+        )
         dc._registry._providers["probe_test"] = p
         import time
+
         t0 = time.time()
         try:
             dc.call_llm([{"role": "user", "content": "hi"}], provider="probe_test", max_tokens=10)
@@ -161,6 +187,7 @@ def test_llm_probe_fast_fail():
 
 if __name__ == "__main__":
     import traceback
+
     passed = failed = 0
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

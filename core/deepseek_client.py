@@ -1,4 +1,3 @@
-
 """
 deepseek_client.py — Multi-Model Provider Layer (V2)
 支持 DeepSeek + 开闭原则：添加新provider只需注册，不改调用代码
@@ -9,14 +8,19 @@ deepseek_client.py — Multi-Model Provider Layer (V2)
 - RetryWithFallback：失败时自动尝试下一个provider
 """
 
-import os, json, time, logging, threading
-from pathlib import Path
-from typing import Optional, Callable
+import json
+import logging
+import os
+import threading
+import time
 from dataclasses import dataclass, field
+
+from core import settings as _settings  # P3-audit: 配置单一事实源
 
 logger = logging.getLogger("2hao.deepseek")
 
 # ── Provider配置 ─────────────────────────────────────────────
+
 
 @dataclass
 class ProviderConfig:
@@ -27,7 +31,9 @@ class ProviderConfig:
     priority: int = 0  # 越小优先级越高
     rate_limit_rpm: int = 60
 
+
 # ── Provider注册表 ──────────────────────────────────────────
+
 
 class ProviderRegistry:
     """多Provider注册与切换
@@ -48,9 +54,9 @@ class ProviderRegistry:
     """
 
     # 指数退避参数
-    CIRCUIT_BREAK_COOLDOWN_BASE = 30    # 基础冷却秒数
-    CIRCUIT_BREAK_COOLDOWN_MAX = 600    # 最大冷却秒数 (10 分钟)
-    CIRCUIT_BREAK_THRESHOLD = 5         # 连续失败阈值（触发熔断）
+    CIRCUIT_BREAK_COOLDOWN_BASE = 30  # 基础冷却秒数
+    CIRCUIT_BREAK_COOLDOWN_MAX = 600  # 最大冷却秒数 (10 分钟)
+    CIRCUIT_BREAK_THRESHOLD = 5  # 连续失败阈值（触发熔断）
 
     def __init__(self):
         self._providers: dict[str, ProviderConfig] = {}
@@ -60,8 +66,7 @@ class ProviderRegistry:
 
     def register(self, name: str, config: ProviderConfig):
         self._providers[name] = config
-        logger.info("Provider registered: %s (%d models, priority=%d)",
-                    name, len(config.models), config.priority)
+        logger.info("Provider registered: %s (%d models, priority=%d)", name, len(config.models), config.priority)
 
     def _in_cooldown(self, name: str) -> bool:
         """检查 provider 是否在冷却期内"""
@@ -77,17 +82,19 @@ class ProviderRegistry:
             logger.info("Provider %s cooldown ended, allowing retry", name)
         return False
 
-    def get_best(self) -> Optional[ProviderConfig]:
+    def get_best(self) -> ProviderConfig | None:
         """返回最高优先级且未熔断（不在冷却期）的provider"""
         available = []
-        for name, config in sorted(self._providers.items(),
-                                    key=lambda x: x[1].priority):
+        for name, config in sorted(self._providers.items(), key=lambda x: x[1].priority):
             consecutive = self._consecutive_failures.get(name, 0)
             if consecutive >= self.CIRCUIT_BREAK_THRESHOLD and self._in_cooldown(name):
                 continue
             if consecutive >= self.CIRCUIT_BREAK_THRESHOLD:
-                logger.warning("Provider %s circuit-broken (%d consecutive failures, "
-                               "cooldown expired, allowing retry)", name, consecutive)
+                logger.warning(
+                    "Provider %s circuit-broken (%d consecutive failures, cooldown expired, allowing retry)",
+                    name,
+                    consecutive,
+                )
             available.append(config)
         return available[0] if available else None
 
@@ -103,8 +110,7 @@ class ProviderRegistry:
                 self.CIRCUIT_BREAK_COOLDOWN_MAX,
             )
             self._circuit_broken_until[name] = time.time() + cooldown
-            logger.warning("Provider %s circuit-broken for %.0fs (consecutive=%d)",
-                           name, cooldown, consecutive)
+            logger.warning("Provider %s circuit-broken for %.0fs (consecutive=%d)", name, cooldown, consecutive)
 
     def record_success(self, name: str):
         # 单次成功：清零连续失败计数和冷却时间
@@ -112,9 +118,11 @@ class ProviderRegistry:
         self._circuit_broken_until[name] = 0
 
     def all_available(self) -> list[str]:
-        return [n for n in self._providers
-                if self._consecutive_failures.get(n, 0) < self.CIRCUIT_BREAK_THRESHOLD
-                or not self._in_cooldown(n)]
+        return [
+            n
+            for n in self._providers
+            if self._consecutive_failures.get(n, 0) < self.CIRCUIT_BREAK_THRESHOLD or not self._in_cooldown(n)
+        ]
 
 
 # ── API配置 ─────────────────────────────────────────────────
@@ -125,10 +133,10 @@ DEEPSEEK_BASE_URL = "https://api.deepseek.com/v1"
 
 # Provider 优先级常量（2026-08-07 统一语义：数字越小优先级越高，防 R81 语义反转复发）
 PROVIDER_PRIORITY = {
-    "deepseek": 0,        # P0 主力：付费关键链（写作/组装/修订/终审）
-    "openrouter": 1,      # P1 兜底+圆桌：付费降级/异源评审
-    "ollama_local": 0,    # 本地（与 deepseek 同级，可用即用）
-    "agent_provider": 10, # P2 免费预取：仅兜底，绝不抢主链
+    "deepseek": 0,  # P0 主力：付费关键链（写作/组装/修订/终审）
+    "openrouter": 1,  # P1 兜底+圆桌：付费降级/异源评审
+    "ollama_local": 0,  # 本地（与 deepseek 同级，可用即用）
+    "agent_provider": 10,  # P2 免费预取：仅兜底，绝不抢主链
 }
 
 # ── 初始化provider注册表 ───────────────────────────────────
@@ -157,52 +165,70 @@ def _register_default_providers(registry: ProviderRegistry):
         _deepseek_base = os.environ.get("DEEPSEEK_BASE_URL", DEEPSEEK_BASE_URL)
         _deepseek_models = [DEFAULT_MODEL, REASONER_MODEL]
     if _deepseek_key and not _is_or_key:
-        registry.register("deepseek", ProviderConfig(
-            name="deepseek",
-            api_key=_deepseek_key,
-            base_url=_deepseek_base,
-            models=_deepseek_models,
-            priority=PROVIDER_PRIORITY.get("deepseek", 0),
-        ))
+        registry.register(
+            "deepseek",
+            ProviderConfig(
+                name="deepseek",
+                api_key=_deepseek_key,
+                base_url=_deepseek_base,
+                models=_deepseek_models,
+                priority=PROVIDER_PRIORITY.get("deepseek", 0),
+            ),
+        )
         logger.info("DeepSeek provider registered (key length=%d, base=%s)", len(_deepseek_key), _deepseek_base)
 
     # P1 兜底+圆桌：OpenRouter（若 OPENROUTER_API_KEY 存在）
     if _or_key:
-        registry.register("openrouter", ProviderConfig(
-            name="openrouter",
-            api_key=_or_key,
-            base_url=os.environ.get("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"),
-            models=os.environ.get("OPENROUTER_MODELS", "deepseek/deepseek-chat,deepseek/deepseek-reasoner,qwen/qwen3-turbo").split(","),
-            priority=PROVIDER_PRIORITY.get("openrouter", 1),
-        ))
-        logger.info("OpenRouter provider registered (key length=%d, models=%s)",
-                    len(_or_key), os.environ.get("OPENROUTER_MODELS", "deepseek/deepseek-chat,..."))
+        registry.register(
+            "openrouter",
+            ProviderConfig(
+                name="openrouter",
+                api_key=_or_key,
+                base_url=os.environ.get("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"),
+                models=os.environ.get(
+                    "OPENROUTER_MODELS", "deepseek/deepseek-chat,deepseek/deepseek-reasoner,qwen/qwen3-turbo"
+                ).split(","),
+                priority=PROVIDER_PRIORITY.get("openrouter", 1),
+            ),
+        )
+        logger.info(
+            "OpenRouter provider registered (key length=%d, models=%s)",
+            len(_or_key),
+            os.environ.get("OPENROUTER_MODELS", "deepseek/deepseek-chat,..."),
+        )
     elif _is_or_key:
         # 兼容：DEEPSEEK_API_KEY 是 OpenRouter key 时注册为 openrouter
-        registry.register("openrouter", ProviderConfig(
-            name="openrouter",
-            api_key=_deepseek_key,
-            base_url=_deepseek_base,
-            models=_deepseek_models,
-            priority=PROVIDER_PRIORITY.get("openrouter", 1),
-        ))
+        registry.register(
+            "openrouter",
+            ProviderConfig(
+                name="openrouter",
+                api_key=_deepseek_key,
+                base_url=_deepseek_base,
+                models=_deepseek_models,
+                priority=PROVIDER_PRIORITY.get("openrouter", 1),
+            ),
+        )
         logger.info("OpenRouter provider registered from DEEPSEEK_API_KEY (legacy)")
 
         # 注册本地Ollama(如果宿主机上运行了Ollama)
         _ollama_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1")
         try:
             import requests as _req
-            _r = _req.get(_ollama_url.replace('/v1', '/api/tags'), timeout=3)
+
+            _r = _req.get(_ollama_url.replace("/v1", "/api/tags"), timeout=3)
             if _r.status_code == 200:
-                _models = [m['name'] for m in _r.json().get('models', [])]
+                _models = [m["name"] for m in _r.json().get("models", [])]
                 if _models:
-                    registry.register("ollama_local", ProviderConfig(
-                        name="ollama_local",
-                        api_key="",
-                        base_url=_ollama_url,
-                        models=_models,
-                        priority=0,
-                    ))
+                    registry.register(
+                        "ollama_local",
+                        ProviderConfig(
+                            name="ollama_local",
+                            api_key="",
+                            base_url=_ollama_url,
+                            models=_models,
+                            priority=0,
+                        ),
+                    )
                     logger.info("Ollama registered: %s", _models)
         except Exception:
             logger.info("No local Ollama detected")
@@ -233,14 +259,17 @@ _MEM_RESP_CACHE: dict = {}
 
 def _cache_key(messages: list, model: str, temperature: float, max_tokens: int) -> str:
     import hashlib
-    raw = json.dumps({"m": messages, "model": model, "t": temperature,
-                      "mt": max_tokens}, ensure_ascii=False, sort_keys=True)
+
+    raw = json.dumps(
+        {"m": messages, "model": model, "t": temperature, "mt": max_tokens}, ensure_ascii=False, sort_keys=True
+    )
     return "llmresp_" + hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
 def _response_cache_get(key: str):
     try:
         from core.compute.llm_cache import get_cache
+
         c = get_cache()
         if c is not None:
             return c.get(key)
@@ -250,9 +279,10 @@ def _response_cache_get(key: str):
 
 
 def _response_cache_set(key: str, value):
-    ttl = int(os.environ.get("LLM_CACHE_TTL", "86400"))
+    ttl = _settings.llm_cache_ttl()
     try:
         from core.compute.llm_cache import get_cache
+
         c = get_cache()
         if c is not None:
             c.set(key, value, expire=ttl)
@@ -321,10 +351,12 @@ def _normalize_llm_response(data: dict) -> dict:
                 # 去掉思考痕迹前缀
                 for _drop in ("Therefore", "最终答案", "答案:", "综上", "结论:"):
                     if tail.startswith(_drop):
-                        tail = tail[len(_drop):].strip()
+                        tail = tail[len(_drop) :].strip()
                 msg["content"] = tail[:500]
-                logger.info("[LLM] 推理模型响应 content=None，已从 reasoning 提取尾部答案（%d字）",
-                            len(msg.get("content") or ""))
+                logger.info(
+                    "[LLM] 推理模型响应 content=None，已从 reasoning 提取尾部答案（%d字）",
+                    len(msg.get("content") or ""),
+                )
                 return data
         # 都拿不到 → 返回原样（调用方按空处理）
         return data
@@ -353,7 +385,7 @@ def call_llm(
 
     # P3-audit 2026-08-24：响应缓存（LLM_RESPONSE_CACHE=1 启用）。
     # 命中返回与成功响应同构的 dict，0 token；stream 模式不缓存。
-    if os.environ.get("LLM_RESPONSE_CACHE", "0").lower() in ("1", "true", "yes") and not stream:
+    if _settings.llm_response_cache() and not stream:
         _ck = _cache_key(messages, model, temperature, max_tokens)
         _hit = _response_cache_get(_ck)
         if _hit is not None:
@@ -363,11 +395,12 @@ def call_llm(
         _ck = None
 
     # R13: 强制指定 provider（若存在且未熔断）；否则按优先级取全部可用
-    _active = lambda: sorted(
-        (p for p in _registry._providers.values()
-         if _registry._consecutive_failures.get(p.name, 0) < 5),
-        key=lambda x: x.priority,
-    )
+    def _active():
+        return sorted(
+            (p for p in _registry._providers.values() if _registry._consecutive_failures.get(p.name, 0) < 5),
+            key=lambda x: x.priority,
+        )
+
     if provider and provider != "auto":
         target = _registry._providers.get(provider)
         if target and _registry._consecutive_failures.get(provider, 0) < 5:
@@ -387,13 +420,19 @@ def call_llm(
     _requested_provider = provider
     for pv in providers:
         # 可调用 provider（如 AgentProvider）——不走 HTTP，直接调用
-        if hasattr(pv, "__call__") and not hasattr(pv, "base_url") or (
-                hasattr(pv, "name") and pv.name == "agent_provider"):
+        if (
+            hasattr(pv, "__call__")
+            and not hasattr(pv, "base_url")
+            or (hasattr(pv, "name") and pv.name == "agent_provider")
+        ):
             try:
                 logger.info("[LLM] fallback 到可调用 provider: %s", pv.name)
                 return pv(
-                    messages, model=model, temperature=temperature,
-                    max_tokens=max_tokens, stream=stream,
+                    messages,
+                    model=model,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    stream=stream,
                 )
             except Exception as e:
                 last_error = e
@@ -407,8 +446,7 @@ def call_llm(
         # model 必须落在 provider 支持的模型列表内，否则使用 provider 首选模型
         m = model
         if pv.models and m not in pv.models:
-            logger.info("Model %s not in provider %s models %s, using %s",
-                        m, pv.name, pv.models, pv.models[0])
+            logger.info("Model %s not in provider %s models %s, using %s", m, pv.name, pv.models, pv.models[0])
             m = pv.models[0]
 
         headers = {
@@ -445,11 +483,12 @@ def call_llm(
                 # 5xx/连接异常视为服务不可用；4xx 视为可达（端点差异，继续完整请求）
                 if _probe_resp.status_code >= 500:
                     raise ConnectionError(f"probe HTTP {_probe_resp.status_code}")
-            except (requests.exceptions.ConnectionError,
-                    requests.exceptions.Timeout,
-                    requests.exceptions.ConnectTimeout) as _pe:
-                logger.warning("[LLM-PROBE] provider=%s 健康预检失败（跳过，避免300s空耗）: %s",
-                              pv.name, str(_pe)[:80])
+            except (
+                requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout,
+                requests.exceptions.ConnectTimeout,
+            ) as _pe:
+                logger.warning("[LLM-PROBE] provider=%s 健康预检失败（跳过，避免300s空耗）: %s", pv.name, str(_pe)[:80])
                 _registry.record_failure(pv.name)
                 continue
             except Exception:
@@ -461,8 +500,9 @@ def call_llm(
                 _t0 = time.perf_counter()  # P2-audit 2026-08-24: 单次调用真延迟
                 resp = requests.post(
                     f"{pv.base_url}/chat/completions",
-                    headers=headers, json=payload,
-                    timeout=int(os.environ.get("LLM_HTTP_TIMEOUT", "90")),  # 2026-08-07：300→90
+                    headers=headers,
+                    json=payload,
+                    timeout=_settings.llm_http_timeout(),
                 )
                 resp.raise_for_status()
                 _latency_ms = int((time.perf_counter() - _t0) * 1000)
@@ -471,9 +511,11 @@ def call_llm(
                 # P3-2 成本日志（2026-08-07）：记录每次调用 token/通道/耗时，可观测性
                 try:
                     from core.metrics import ObservabilityDB
+
                     _usage = _resp.get("usage", {})
                     ObservabilityDB().log_llm_call_simple(
-                        module="call_llm", section_id=m,
+                        module="call_llm",
+                        section_id=m,
                         prompt_tokens=_usage.get("prompt_tokens", 0),
                         completion_tokens=_usage.get("completion_tokens", 0),
                         latency_ms=_latency_ms,
@@ -490,8 +532,7 @@ def call_llm(
                 return _resp
             except requests.exceptions.RequestException as e:
                 last_error = e
-                logger.warning("LLM call attempt %d/2 failed (provider=%s model=%s): %s",
-                              attempt+1, pv.name, m, e)
+                logger.warning("LLM call attempt %d/2 failed (provider=%s model=%s): %s", attempt + 1, pv.name, m, e)
                 if attempt < 1:
                     time.sleep(1)
         _registry.record_failure(pv.name)
@@ -502,12 +543,16 @@ def call_llm(
     if _requested_provider and _requested_provider != "auto":
         _fallback = [p.name for p in _active()]
         if _fallback:
-            logger.warning("[LLM] 指定 provider=%s 全部失败，全量回退 %s",
-                           _requested_provider, _fallback)
+            logger.warning("[LLM] 指定 provider=%s 全部失败，全量回退 %s", _requested_provider, _fallback)
             try:
-                return call_llm(messages, model=model, temperature=temperature,
-                                max_tokens=max_tokens, stream=stream,
-                                provider="auto")
+                return call_llm(
+                    messages,
+                    model=model,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    stream=stream,
+                    provider="auto",
+                )
             except Exception as _e2:
                 last_error = _e2
     raise RuntimeError(f"LLM call failed after all providers: {last_error}")
@@ -539,8 +584,9 @@ def call_deepseek(
     provider: str = "deepseek",
 ) -> dict:
     """兼容旧接口（provider 默认 deepseek；三算力架构传其他值路由）"""
-    return call_llm(messages, model=model, temperature=temperature,
-                    max_tokens=max_tokens, stream=stream, provider=provider)
+    return call_llm(
+        messages, model=model, temperature=temperature, max_tokens=max_tokens, stream=stream, provider=provider
+    )
 
 
 class DeepSeekClient:
@@ -566,15 +612,14 @@ class DeepSeekClient:
         )
         return r["choices"][0]["message"]["content"]
 
-    def complete(self, messages: list, temperature: float = 0.3,
-                 max_tokens: int = 2048) -> str:
+    def complete(self, messages: list, temperature: float = 0.3, max_tokens: int = 2048) -> str:
         """多消息对话，返回文本内容。"""
-        r = call_deepseek(messages, model=self.model, temperature=temperature,
-                          max_tokens=max_tokens)
+        r = call_deepseek(messages, model=self.model, temperature=temperature, max_tokens=max_tokens)
         return r["choices"][0]["message"]["content"]
 
 
 # ── 评分/推理/章节生成（原函数保留） ─────────────────────
+
 
 def score_text(text: str, criteria: str = "quality") -> dict:
     """文本评分"""
@@ -600,7 +645,9 @@ def score_text(text: str, criteria: str = "quality") -> dict:
     try:
         result = call_llm(messages, temperature=0.1)
         content = result["choices"][0]["message"]["content"]
-        import re; json_match = re.search(r"\{.*\}", content, re.DOTALL)
+        import re
+
+        json_match = re.search(r"\{.*\}", content, re.DOTALL)
         if json_match:
             return json.loads(json_match.group())
         return {"overall": 0.5, "dimensions": {}, "issues": ["Parse failed"], "suggestions": []}

@@ -1,9 +1,19 @@
 """
 e2e_orchestrator.py V4 - Full integration with all new modules.
 """
+
 from __future__ import annotations
-import sys, os, re, json, logging, time, datetime, uuid
+
+import datetime
+import logging
+import os
+import re
+import sys
+import time
+import uuid
 from pathlib import Path
+
+from core import settings
 from pipeline.step_manager import StepManager
 from pipeline.universe_build import universe_build_node
 
@@ -15,12 +25,14 @@ logger = logging.getLogger("2hao.e2e")
 # === V51 merge: analysis modules (optional, with fallback) ===
 try:
     from core.argument import ArgumentEngine
+
     _HAS_ARGUMENT = True
 except ImportError:
     _HAS_ARGUMENT = False
 
 try:
-    from core.edit_learn import EditLearner
+    from core.edit_learn import EditLearner  # noqa: F401  (availability probe)
+
     _HAS_EDIT_LEARN = True
 except ImportError:
     _HAS_EDIT_LEARN = False
@@ -29,30 +41,35 @@ except ImportError:
     logger.warning("V51 import failed: _HAS_ARGUMENT=False, module unavailable")
 try:
     from core.style import StyleCompiler
+
     _HAS_STYLE = True
 except ImportError:
     _HAS_STYLE = False
     logger.warning("V51 import failed: _HAS_STYLE=False, module unavailable")
 try:
-    from core.verify import T3Orchestrator
+    from core.verify import T3Orchestrator  # noqa: F401  (availability probe)
+
     _HAS_VERIFY = False  # WIP: not yet wired into pipeline
 except ImportError:
     _HAS_VERIFY = False
     logger.warning("V51 import failed: _HAS_VERIFY=False, module unavailable")
 try:
     from core.scarcity_signals import ScarcitySignalChecker
+
     _HAS_SCARCITY = True
 except ImportError:
     _HAS_SCARCITY = False
     logger.warning("V51 import failed: _HAS_SCARCITY=False, module unavailable")
 try:
     from core.cross_validator import CrossValidator
+
     _HAS_CROSSVALIDATE = True
 except ImportError:
     _HAS_CROSSVALIDATE = False
     logger.warning("V51 import failed: _HAS_CROSSVALIDATE=False, module unavailable")
 try:
-    from export.integrated_exporter import IntegratedExporter
+    from export.integrated_exporter import IntegratedExporter  # noqa: F401  (availability probe)
+
     _HAS_INTEGRATED_EXPORT = False  # WIP: not yet wired into pipeline
 except ImportError:
     _HAS_INTEGRATED_EXPORT = False
@@ -60,18 +77,19 @@ except ImportError:
 
 # TemporalVerifier + ForwardPicksDB (depend on cognitive_baseline, may fail)
 try:
-    from core.temporal_verifier import TemporalVerifier
+    from core.temporal_verifier import TemporalVerifier  # noqa: F401  (availability probe)
+
     _HAS_TEMPORAL = False  # WIP: not yet wired into pipeline
 except ImportError:
     _HAS_TEMPORAL = False
     logger.warning("V51 import failed: _HAS_TEMPORAL=False, module unavailable")
 try:
-    from core.forward_picks import ForwardPicksDB
+    from core.forward_picks import ForwardPicksDB  # noqa: F401  (availability probe)
+
     _HAS_FORWARDPICKS = True
 except ImportError:
     _HAS_FORWARDPICKS = False
     logger.warning("V51 import failed: _HAS_FORWARDPICKS=False, module unavailable")
-
 
 
 class E2ENodes:
@@ -79,6 +97,7 @@ class E2ENodes:
     def preflight_check(node_id, context):
         try:
             from pipeline.runtime_gate import RuntimeGate
+
             gate = RuntimeGate(str(_ROOT))
             results = gate.check_all()
             context["runtime_score"] = results["summary"]["runtime_score"]
@@ -88,16 +107,15 @@ class E2ENodes:
             logger.debug("[PREFLIGHT] failed: %s", e)
         return {"runtime_score": context.get("runtime_score", 0.5)}
 
-
     @staticmethod
     def biz_macro_inject(node_id, context):
         """Inject business model and macro context."""
         try:
+            from core.data_stager import run_all_stagers, stager_summary
             from core.tools.business_model_classifier import classify_by_text
             from core.tools.macro_context import get_current_context
-            from core.data_stager import run_all_stagers, stager_summary
             from core.web_intel import collect_all, intel_to_context
-            import re
+
             asset = context.get("asset", "")
             report_type = context.get("report_type", "listed_company")
             # Business model classification
@@ -109,6 +127,7 @@ class E2ENodes:
             # Data staging — extract stock code from asset
             # R26: 统一走 asset_resolver，中文名（柯力传感）也能解析出代码
             from core.asset_resolver import resolve_asset
+
             _asset_obj = resolve_asset(asset)
             acode = _asset_obj.code or ""
             if _asset_obj.name:
@@ -135,38 +154,45 @@ class E2ENodes:
                 logger.warning("WebIntel failed: %s", e)
                 context["web_summary"] = ""
                 context["web_search_count"] = 0
-            logger.info("Biz: %s (%s) Macro: %s/%s",
-                     biz.biz_name, biz.biz_type,
-                     ctx.earnings_cycle, ctx.liquidity_cycle)
+            logger.info(
+                "Biz: %s (%s) Macro: %s/%s", biz.biz_name, biz.biz_type, ctx.earnings_cycle, ctx.liquidity_cycle
+            )
         except Exception as e:
             logger.warning("BizMacro failed: %s", e)
             context["biz_model"] = None
             context["macro_ctx"] = None
-        return {"biz_model": context.get("biz_model"),
-                "macro_ctx": context.get("macro_ctx")}
+        return {"biz_model": context.get("biz_model"), "macro_ctx": context.get("macro_ctx")}
 
     @staticmethod
     def hypothesis_check(node_id, context):
         """T0.5: Check if hypothesis is worth pursuing (block_on_fail via context['force'])"""
         try:
             from core.hypothesis_checker import HypothesisChecker
+
             hc = HypothesisChecker()
             force = context.get("force", False)  # --force flag overrides hypothesis gate
             result = hc.check(
                 asset=context.get("asset", ""),
                 hypothesis=context.get("hypothesis", ""),
                 context=context.get("user_context", ""),
-                block_on_fail=not force  # block if not force
+                block_on_fail=not force,  # block if not force
             )
             context["hypothesis_result"] = result
-            logger.info("[HYPOTHESIS] score=%.2f pass=%s dir=%s force=%s",
-                       result.score, result.passes_gate, result.suggested_direction, force)
+            logger.info(
+                "[HYPOTHESIS] score=%.2f pass=%s dir=%s force=%s",
+                result.score,
+                result.passes_gate,
+                result.suggested_direction,
+                force,
+            )
             if not result.passes_gate and context.get("hypothesis"):
                 if force:
                     logger.warning("[HYPOTHESIS] Failed gate but --force overrides: %s", result.risks)
                 else:
                     logger.warning("[HYPOTHESIS] BLOCKED: %s", result.risks)
-                    raise RuntimeError("Hypothesis gate blocked: score=%.2f < threshold, use --force to override" % result.score)
+                    raise RuntimeError(
+                        "Hypothesis gate blocked: score=%.2f < threshold, use --force to override" % result.score
+                    )
         except RuntimeError:
             raise
         except Exception as e:
@@ -193,8 +219,10 @@ class E2ENodes:
         # Primary: DataCollectorV5 (Tavily+yfinance+akshare multi-phase)
         try:
             from pipeline.data_collector import DataCollectorV5
+
             dc = DataCollectorV5()
             import os as _os
+
             ta_key = _os.environ.get("TAVILY_API_KEY", "")
             if ta_key:
                 dc._tavily = None  # will re-init with key
@@ -203,11 +231,12 @@ class E2ENodes:
                 logger.info("[DATA] DataCollectorV5: %d keys", len(data))
         except Exception as e:
             logger.warning("[DATA] DataCollectorV5 failed: %s", e)
-        
+
         # Fallback: DataPipeline
         if not data or len(data) < 2:
             try:
                 from pipeline.data_pipeline import DataPipeline
+
                 dp = DataPipeline()
                 data_fb = dp.collect(asset, rt)
                 if data_fb:
@@ -215,18 +244,19 @@ class E2ENodes:
                     logger.info("[DATA] DataPipeline fallback: merged %d keys", len(data_fb))
             except Exception as e2:
                 logger.warning("[DATA] DataPipeline fallback: %s", e2)
-        
+
         if not data:
             context["degradation_level"] = max(context.get("degradation_level", 0), 2)
             logger.warning("[L2 DEGRADATION] All data collectors failed")
             context["collected_data"] = {}
             return {"collected_data": {}}
-        
+
         context["collected_data"] = data
 
         # Also collect provenance
         try:
             from core.data_provenance import DataProvenance
+
             dp2 = DataProvenance()
             dp2.collect(asset=asset, context=str(data)[:3000])
             context["provenance"] = dp2
@@ -251,6 +281,7 @@ class E2ENodes:
         """
         try:
             from pipeline.data_enrichment import enrich_node as _enrich
+
             return _enrich(node_id, context)
         except Exception as e:
             logger.warning("[ENRICH] 桥接节点失败（不阻断管线）: %s", e)
@@ -261,21 +292,21 @@ class E2ENodes:
     @staticmethod
     def learning(node_id, context):
         from pipeline.learning_loop import LearningLoop
+
         try:
             ll = LearningLoop()
-            context["learning_findings"] = ll.before_report(
-                context.get("asset", ""), context.get("report_type", ""))
+            context["learning_findings"] = ll.before_report(context.get("asset", ""), context.get("report_type", ""))
         except Exception as e:
             logger.warning("learning: %s", e)
             context["learning_findings"] = ""
         return {"learning_findings": context.get("learning_findings", "")}
-
 
     @staticmethod
     def compute(node_id, context):
         """Compute engine — run DCF, comparable, scenario + knowledge modules"""
         try:
             from pipeline.compute_engine import ComputeEngine
+
             data = context.get("collected_data", {})
             engine = ComputeEngine()
             result = engine.compute(
@@ -300,7 +331,8 @@ class E2ENodes:
             return {"scaffold": None, "note": "ArgumentEngine not available"}
         try:
             ae = ArgumentEngine()
-            from core.models import WritingBrief, KnowledgePackage, DataPoint
+            from core.models import DataPoint, KnowledgePackage, WritingBrief
+
             brief = WritingBrief(asset=context.get("asset", ""))
             kp = KnowledgePackage()
             # Feed collected data into argument engine (as DataPoint objects)
@@ -342,13 +374,12 @@ class E2ENodes:
             style_name = context.get("style", "cicc")
             report_type = context.get("report_type", "standard")
             result = sc.compile(text, {"style": style_name, "report_type": report_type})
-            compiled = result.compiled if hasattr(result, 'compiled') else result
+            compiled = result.compiled if hasattr(result, "compiled") else result
             if isinstance(compiled, str) and compiled:
                 # P0-A 修复：原地写回 report_text，让下游消费清洗后的文本
                 context["report_text"] = compiled
                 context["compiled_text"] = compiled
-                logger.info("[STYLE] Compiled with %s style (len=%d→%d)",
-                            style_name, len(text), len(compiled))
+                logger.info("[STYLE] Compiled with %s style (len=%d→%d)", style_name, len(text), len(compiled))
             else:
                 context["compiled_text"] = context.get("report_text", "")
                 logger.warning("[STYLE] compile 返回空，保留原文")
@@ -393,6 +424,7 @@ class E2ENodes:
             # {source, year, scope, confidence} 四元组。
             try:
                 from core.models import DataPoint  # 局部导入（模块级未暴露）
+
                 chart_data = collected.get("chart_data", {}) if isinstance(collected, dict) else {}
                 meta = chart_data.get("_collection_meta", {}) if isinstance(chart_data, dict) else {}
                 if isinstance(chart_data, dict):
@@ -407,37 +439,44 @@ class E2ENodes:
                                 float(_val)
                             except (TypeError, ValueError):
                                 continue
-                            data_points.append(DataPoint(
-                                name=f"{_k}_{_yr}",
-                                value=float(_val),
-                                source=str(meta.get("source", "llm_collect")),
-                                confidence=str(meta.get("confidence", 0.5)),
-                            ))
+                            data_points.append(
+                                DataPoint(
+                                    name=f"{_k}_{_yr}",
+                                    value=float(_val),
+                                    source=str(meta.get("source", "llm_collect")),
+                                    confidence=str(meta.get("confidence", 0.5)),
+                                )
+                            )
                     if meta:
-                        logger.info("[CROSSVALIDATE] 接入 %d 个 LLM 采集数据点（source=%s, conf=%s）",
-                                    len(data_points), meta.get("source", "?"), meta.get("confidence", "?"))
+                        logger.info(
+                            "[CROSSVALIDATE] 接入 %d 个 LLM 采集数据点（source=%s, conf=%s）",
+                            len(data_points),
+                            meta.get("source", "?"),
+                            meta.get("confidence", "?"),
+                        )
             except Exception as _e:
                 logger.debug("[CROSSVALIDATE] chart_data 接入失败: %s", _e)
 
             if data_points:
                 result = cv.validate(data_points, context.get("asset", ""), text_data)
-                cv_result = result if hasattr(result, 'to_dict') else {"passed": True}
+                cv_result = result if hasattr(result, "to_dict") else {"passed": True}
                 context["cross_validation"] = cv_result
                 logger.info("[CROSSVALIDATE] Validated %d data points", len(data_points))
             else:
                 context["cross_validation"] = {"passed": True, "note": "no structured data"}
-            
+
             # FP2a: Run data credibility check on whatever data we have
             try:
                 from core.data_credibility import DataCredibilityEngine
+
                 dce = DataCredibilityEngine()
-                credibility = dce.evaluate(collected) if hasattr(dce, 'evaluate') else {"score": 0.5}
+                credibility = dce.evaluate(collected) if hasattr(dce, "evaluate") else {"score": 0.5}
                 context["data_credibility"] = credibility
                 logger.info("[CREDIBILITY] score=%.2f", credibility.get("score", 0))
             except Exception as ce:
                 logger.debug("[CREDIBILITY] %s", ce)
                 context["data_credibility"] = {"score": 0.5, "note": "module unavailable"}
-                
+
         except Exception as e:
             logger.debug("[CROSSVALIDATE] %s", e)
             context["cross_validation"] = {"passed": True, "note": str(e)[:50]}
@@ -453,8 +492,8 @@ class E2ENodes:
             data = {}
         try:
             from pipeline.chart_pipeline import ChartPipeline
-            cp = ChartPipeline(context.get("report_type", "industry_deep"),
-                             context.get("style", "cicc"))
+
+            cp = ChartPipeline(context.get("report_type", "industry_deep"), context.get("style", "cicc"))
             paths, template_flags = cp.generate_all(data)
             # R51（2026-08-02）：记录模板图标记（data=template），
             # 供 section_writer 在图表标注"示意/数据不足"，防止冒充真实证据。
@@ -464,7 +503,6 @@ class E2ENodes:
             # 这里仅做兜底：确保 SAC 期望的 fig id 在 chart_paths 中都有 key（值缺失时
             # 由 generate_all 已跳过，这里不补造数据）。
             chart_paths = dict(paths)
-            rt = context.get("report_type", "industry_deep")
             context["chart_paths"] = chart_paths
         except Exception as e:
             logger.error("charts: %s", e)
@@ -476,17 +514,16 @@ class E2ENodes:
         if chart_count < expected:
             context["degradation_level"] = max(
                 context.get("degradation_level", 0),
-                1  # L1: visual degradation
+                1,  # L1: visual degradation
             )
-            logger.info("[L1 DEGRADATION] Charts: %d/%d generated (using placeholders)",
-                       chart_count, expected)
+            logger.info("[L1 DEGRADATION] Charts: %d/%d generated (using placeholders)", chart_count, expected)
         return {"chart_paths": context.get("chart_paths", {})}
 
     @staticmethod
     def write_sections(node_id, context):
         from pipeline.section_writer import SectionWriter
-        sw = SectionWriter(context.get("report_type", "industry_deep"),
-                          context.get("style", "cicc"))
+
+        sw = SectionWriter(context.get("report_type", "industry_deep"), context.get("style", "cicc"))
         # Get scaffold from ArgumentEngine (V82 merge)
         scaffold = context.get("scaffold", None)
         # R13（2026-08-01 三算力架构）：起草 provider 与骨架模式可从环境/上下文配置
@@ -498,6 +535,7 @@ class E2ENodes:
         _run_mode = os.environ.get("RUN_MODE", "perf")
         try:
             from pipeline.route_policy import resolve_provider
+
             draft_provider = os.environ.get("LLM_PROVIDER") or resolve_provider("write", _run_mode)
         except Exception:
             draft_provider = os.environ.get("LLM_PROVIDER") or os.environ.get("DRAFT_PROVIDER", "deepseek")
@@ -589,6 +627,7 @@ class E2ENodes:
         """
         try:
             from pipeline.template_enforcer import TemplateEnforcer
+
             text = context.get("final_text", "") or context.get("report_text", "")
             if text:
                 # 修复（2026-08-01 审计）：原实现不传 SAC → self.sac=None，
@@ -597,6 +636,7 @@ class E2ENodes:
                 sac = None
                 try:
                     from core.sacs import SACLoader
+
                     sac = SACLoader(context.get("report_type", "industry_deep"))
                 except Exception:
                     pass
@@ -605,12 +645,11 @@ class E2ENodes:
                 context["template_result"] = result
                 # 取 BLOCK 级 violations（enforce 返回 violations 列表，不是 issues）
                 violations = result.get("violations", [])
-                block_violations = [v for v in violations if v.startswith('[BLOCK]')]
+                block_violations = [v for v in violations if v.startswith("[BLOCK]")]
                 if block_violations:
                     context["template_blocked"] = True
                     context["template_block_reasons"] = block_violations
-                    logger.warning("[TEMPLATE] %d BLOCK violations: %s",
-                                   len(block_violations), block_violations[:2])
+                    logger.warning("[TEMPLATE] %d BLOCK violations: %s", len(block_violations), block_violations[:2])
                 elif result.get("pass", True):
                     logger.info("[TEMPLATE] All template checks passed")
                 else:
@@ -624,8 +663,8 @@ class E2ENodes:
         text = context.get("report_text", "")
         chart_paths = context.get("chart_paths", {})
         from pipeline.chart_assembler import ChartAssembler
-        ca = ChartAssembler(context.get("report_type", "industry_deep"),
-                          context.get("style", "cicc"))
+
+        ca = ChartAssembler(context.get("report_type", "industry_deep"), context.get("style", "cicc"))
         final = ca.inject_charts_postprocess(text, chart_paths)
 
         # Inject provenance section
@@ -641,22 +680,25 @@ class E2ENodes:
         # 此前 assemble 节点被迭代调用（write-revise 循环 / agent 分段调度）时，
         # 附录被重复注入最多 3 次（AGENT_ENRICH_SOURCES 标记出现 6 次），
         # 直接污染排版。注入前检查标记是否已存在，已存在则跳过。
-        enrich = context.get("collected_data", {}).get("enrichment", {}) if isinstance(
-            context.get("collected_data", {}), dict) else {}
+        enrich = (
+            context.get("collected_data", {}).get("enrichment", {})
+            if isinstance(context.get("collected_data", {}), dict)
+            else {}
+        )
         if enrich and enrich.get("accepted_count"):
             if "AGENT_ENRICH_SOURCES" not in final:
                 try:
                     reg = enrich.get("source_registry", {})
-                    lines = ["\n\n<!-- AGENT_ENRICH_SOURCES -->",
-                             "### 数据补充来源（agent 兜底）",
-                             "以下数据点由 agent 联网/本地补充，均标注来源："]
+                    lines = [
+                        "\n\n<!-- AGENT_ENRICH_SOURCES -->",
+                        "### 数据补充来源（agent 兜底）",
+                        "以下数据点由 agent 联网/本地补充，均标注来源：",
+                    ]
                     for key, meta in (reg or {}).items():
                         src = meta.get("source", "未知")
                         conf = meta.get("confidence", 0.0)
                         unit = meta.get("unit", "")
-                        lines.append(
-                            f"- **{key}**: 来源={src}; 置信度={conf:.1f}"
-                            + (f"; 单位={unit}" if unit else ""))
+                        lines.append(f"- **{key}**: 来源={src}; 置信度={conf:.1f}" + (f"; 单位={unit}" if unit else ""))
                     lines.append("<!-- /AGENT_ENRICH_SOURCES -->")
                     if not final.rstrip().endswith("</body>"):
                         final = final.rstrip() + "\n\n" + "\n".join(lines)
@@ -668,7 +710,7 @@ class E2ENodes:
         # R10（2026-08-02）：解析未处理的 {ref:key}=value 占位符。
         # LLM 在引用数据字典时将 {ref:key}=0 原样输出为文本，而非解析为值。
         # 写入前清理：{ref:key}=value → value，保留已解析数值。
-        final = re.sub(r'\{ref:[A-Za-z0-9_]+\}\s*=\s*(\S+)', r'\1', final)
+        final = re.sub(r"\{ref:[A-Za-z0-9_]+\}\s*=\s*(\S+)", r"\1", final)
 
         # R89（2026-08-06）：市场规模错误口径后写清理器。
         # 不依赖 LLM 服从性——R85/R86 铁律已进 prompt，但 LLM 仍可能写出
@@ -676,6 +718,7 @@ class E2ENodes:
         # 在报告落盘与 Gate 前做最后兜底修正（只改市场规模语境，防误伤）。
         try:
             from pipeline.sw_serialize import sanitize_report_market_sizes
+
             _cd = context.get("collected_data", {})
             _chart_data = _cd.get("chart_data", {}) if isinstance(_cd, dict) else {}
             _prev_text = final
@@ -691,19 +734,22 @@ class E2ENodes:
     @staticmethod
     def validate(node_id, context):
         text = context.get("final_text", "") or context.get("report_text", "")
-        tmp_path = os.path.join(context.get("output_dir", str(_ROOT / "output")),
-                               "_gate_check.md")
+        tmp_path = os.path.join(context.get("output_dir", str(_ROOT / "output")), "_gate_check.md")
         with open(tmp_path, "w", encoding="utf-8") as f:
             f.write(text)
-        
+
         from pipeline.iron_gate import IronGate
+
         dl = context.get("degradation_level", 0)
-        ig = IronGate(tmp_path, report_type=context.get("report_type", "industry_deep"),
-                     style=context.get("style", "cicc"),
-                     degradation_level=dl,
-                     asset=context.get("asset", ""),
-                     chart_ids=set(context.get("chart_paths", {}).keys()),
-                     client_questions=context.get("client_questions", None))  # R84
+        ig = IronGate(
+            tmp_path,
+            report_type=context.get("report_type", "industry_deep"),
+            style=context.get("style", "cicc"),
+            degradation_level=dl,
+            asset=context.get("asset", ""),
+            chart_ids=set(context.get("chart_paths", {}).keys()),
+            client_questions=context.get("client_questions", None),
+        )  # R84
 
         # FP7b: Degradation-aware handling（P2-I 2026-07-31 审计修复）
         # 不再全局降低 min_score —— 数据质量越差，门禁不应越松。
@@ -716,7 +762,7 @@ class E2ENodes:
             logger.warning("[L3 DEGRADATION] Core LLM unavailable — output blocked")
             context["gate_result"] = {"passed": False, "score": 0.0, "failures": ["L3: Core LLM unavailable"]}
             return {"gate_result": context["gate_result"]}
-        
+
         result = ig.run_all()
         context["gate_result"] = result
         context["ig_report"] = result.to_dict()
@@ -730,6 +776,7 @@ class E2ENodes:
                 _req = context.get("custom_requirement", "") or os.environ.get("CUSTOM_REQUIREMENT", "")
                 if _req or context.get("report_type") == "decision_memo":
                     from core.intent_parser import IntentParser
+
                     _intent_plan = IntentParser().parse(
                         asset=context.get("asset", ""),
                         report_type=context.get("report_type", "decision_memo"),
@@ -737,6 +784,7 @@ class E2ENodes:
                     )
             if _intent_plan:
                 from core.intent_gate import check_intent_compliance
+
                 _ig_r = check_intent_compliance(text, _intent_plan)
                 context["intent_gate_result"] = _ig_r
                 if context.get("report_type") == "decision_memo" and not _ig_r["passed"]:
@@ -744,9 +792,14 @@ class E2ENodes:
                     result.overall_score = min(result.overall_score, 0.5)
                     result.failures = (result.failures or []) + [
                         f"[INTENT-GATE] 必答问题未覆盖 {_ig_r['answered']}/{_ig_r['total']}: "
-                        f"{'; '.join(_ig_r['gaps'][:3])}"]
-                logger.info("[INTENT-GATE] coverage=%.2f passed=%s (type=%s)",
-                            _ig_r["coverage"], _ig_r["passed"], context.get("report_type"))
+                        f"{'; '.join(_ig_r['gaps'][:3])}"
+                    ]
+                logger.info(
+                    "[INTENT-GATE] coverage=%.2f passed=%s (type=%s)",
+                    _ig_r["coverage"],
+                    _ig_r["passed"],
+                    context.get("report_type"),
+                )
         except Exception as _ig_e:
             logger.debug("[INTENT-GATE] %s", str(_ig_e)[:60])
 
@@ -756,8 +809,7 @@ class E2ENodes:
             reasons = context.get("template_block_reasons", [])
             result.passed = False
             result.overall_score = min(result.overall_score, 0.4)
-            result.failures = (result.failures or []) + \
-                [f"[BLOCK] template: {r}" for r in reasons[:3]]
+            result.failures = (result.failures or []) + [f"[BLOCK] template: {r}" for r in reasons[:3]]
             context["gate_result"] = result
             logger.warning("[TEMPLATE-BLOCK] %s", reasons[:2])
 
@@ -765,12 +817,14 @@ class E2ENodes:
         if dl > 0:
             msg += " [L%d degradation]" % dl
         logger.info(msg)
-        return {"gate_result": result.to_dict() if hasattr(result, 'to_dict') else {}}
+        return {"gate_result": result.to_dict() if hasattr(result, "to_dict") else {}}
+
     @staticmethod
     def compliance_check(node_id, context):
         """Run ComplianceChecklist after IronGate passes (advisory, non-blocking)."""
         try:
             from core.enforcer.checklist import ComplianceChecklist
+
             text = context.get("final_text", "") or context.get("report_text", "")
             if text:
                 cl = ComplianceChecklist()
@@ -778,11 +832,12 @@ class E2ENodes:
                 passed = result.get("passed", False)
                 items = result.get("items", [])
                 n_failed = sum(1 for i in items if not i.get("passed", False))
-                logger.info("[COMPLIANCE] %d/%d checks passed", len(items)-n_failed, len(items))
+                logger.info("[COMPLIANCE] %d/%d checks passed", len(items) - n_failed, len(items))
                 if not passed:
                     failed_items = [i for i in items if not i.get("passed", False)]
-                    logger.warning("[COMPLIANCE] %d checks failed: %s",
-                                  n_failed, [i.get("name", "") for i in failed_items[:5]])
+                    logger.warning(
+                        "[COMPLIANCE] %d checks failed: %s", n_failed, [i.get("name", "") for i in failed_items[:5]]
+                    )
                 context["compliance_result"] = result
         except Exception as e:
             logger.debug("[COMPLIANCE] failed: %s", e)
@@ -804,26 +859,35 @@ class E2ENodes:
         # FP7d: Gate 已通过 → 先预写管线指纹，再进入 export_report 校验，
         # 避免指纹在 PASSED 分支才写导致导出被 PipelineFingerprint 误拦截。
         try:
-            import json as _json
             import datetime as _dt
+            import json as _json
+
             safe = re.sub(r"[^\w一-鿿]+", "_", str(asset)).strip("_") or "asset"
             fp_path = output_dir / f"{safe}_pipeline_fingerprint.json"
             if not fp_path.exists():
-                fp_path.write_text(_json.dumps({
-                    "asset": asset,
-                    "report_type": context.get("report_type"),
-                    "style": style,
-                    "timestamp": _dt.datetime.now().isoformat(),
-                    "attempt": context.get("attempt", 0),
-                    "gate_score": gate.get("score", 0),
-                    "gate_passed": True,
-                    "via_pipeline": True,
-                    "pipeline": "E2EOrchestratorV2",
-                }, ensure_ascii=False, indent=2), encoding="utf-8")
+                fp_path.write_text(
+                    _json.dumps(
+                        {
+                            "asset": asset,
+                            "report_type": context.get("report_type"),
+                            "style": style,
+                            "timestamp": _dt.datetime.now().isoformat(),
+                            "attempt": context.get("attempt", 0),
+                            "gate_score": gate.get("score", 0),
+                            "gate_passed": True,
+                            "via_pipeline": True,
+                            "pipeline": "E2EOrchestratorV2",
+                        },
+                        ensure_ascii=False,
+                        indent=2,
+                    ),
+                    encoding="utf-8",
+                )
         except Exception as e:
             logger.warning("[FINGERPRINT] 预写失败: %s", e)
         try:
             from export.report_gate import export_report
+
             # Inject provenance data into text before export
             provenance = context.get("provenance")
             enriched_text = text
@@ -834,9 +898,9 @@ class E2ENodes:
                         enriched_text = text + "\n\n<!-- DATA_PROVENANCE: " + str(prov_summary)[:2000] + " -->"
                 except Exception:
                     pass
-            exported = export_report(enriched_text, docx_path,
-                                   report_type=context.get("report_type"),
-                                   style=style, title=asset)
+            exported = export_report(
+                enriched_text, docx_path, report_type=context.get("report_type"), style=style, title=asset
+            )
             context["_docx_path"] = exported
         except Exception as e:
             logger.warning("[EXPORT] failed: %s", e)
@@ -847,14 +911,19 @@ class E2ENodes:
     def record_results(node_id, context):
         try:
             from pipeline.learning_loop import LearningLoop
+
             gate = context.get("gate_result", {})
             ll = LearningLoop()
-            ll.after_report(context.get("asset", ""), context.get("report_type"), {
-                "iron_gate": gate.get("score", 0),
-                "passed": gate.get("passed", False),
-                "failures": [],
-                "attempt": context.get("attempt", 0),
-            })
+            ll.after_report(
+                context.get("asset", ""),
+                context.get("report_type"),
+                {
+                    "iron_gate": gate.get("score", 0),
+                    "passed": gate.get("passed", False),
+                    "failures": [],
+                    "attempt": context.get("attempt", 0),
+                },
+            )
 
             # R77（2026-08-05 P0-3）：方法选择数据驱动初代——
             # Gate 通过后自动记录方法反思（用了什么框架、Gate 分多少），
@@ -864,6 +933,7 @@ class E2ENodes:
             try:
                 if gate.get("passed", False):
                     from core.method_reflection import record_reflection
+
                     _ap = context.get("analysis_plan") or {}
                     _fw_list = _ap.get("frameworks", []) if isinstance(_ap, dict) else []
                     _fw_ids = [f.get("id", "") for f in _fw_list if isinstance(f, dict)]
@@ -881,8 +951,7 @@ class E2ENodes:
                         data_sufficiency=context.get("data_sufficiency", {}),
                         notes="e2e 出口自动记录",
                     )
-                    logger.info("[REFLECT] 报告完成自动记录方法反思: frameworks=%s gate=%.2f",
-                                _fw_ids, _gscore)
+                    logger.info("[REFLECT] 报告完成自动记录方法反思: frameworks=%s gate=%.2f", _fw_ids, _gscore)
             except Exception as _refl_e:
                 logger.warning("[REFLECT] e2e 出口反思记录失败: %s", str(_refl_e)[:80])
 
@@ -891,13 +960,10 @@ class E2ENodes:
             if text:
                 from core.bold_call_extractor import BoldCallExtractor
                 from core.tools.track_record import TrackRecordManager
+
                 bce = BoldCallExtractor()
                 tm = TrackRecordManager()
-                calls = bce.extract_and_register(
-                    text, context.get("asset", ""),
-                    context.get("report_type"),
-                    tm=tm
-                )
+                calls = bce.extract_and_register(text, context.get("asset", ""), context.get("report_type"), tm=tm)
                 logger.info("[RECORD] %d bold calls registered", len(calls))
 
                 # ForwardPicksDB: persistent prediction record (V82 merge)
@@ -906,8 +972,10 @@ class E2ENodes:
                 # try 吞掉（静默失败，预测从未入库）。改用 ForwardPick + append 走质量门槛。
                 if _HAS_FORWARDPICKS and calls:
                     try:
-                        from core.forward_picks import ForwardPicksDB, ForwardPick
                         import datetime as _dt
+
+                        from core.forward_picks import ForwardPick, ForwardPicksDB
+
                         fdb = ForwardPicksDB()
                         asset_id = context.get("asset_id", {})
                         _name = asset_id.get("name", context.get("asset", ""))
@@ -929,28 +997,30 @@ class E2ENodes:
                         logger.info("[FORWARDPICKS] %d predictions recorded", len(calls))
                     except Exception as e:
                         logger.debug("[FORWARDPICKS] failed: %s", e)
-            
+
             # FP5: Validate expired predictions against market data
             try:
                 from core.prediction_validator import validate_expired_predictions
+
                 pv_result = validate_expired_predictions()
                 if pv_result:
                     context["prediction_validation"] = str(pv_result)[:500]
                     logger.info("[RECORD] Prediction validation: %s", str(pv_result)[:80])
             except Exception as e:
                 logger.debug("[RECORD] PredictionValidator: %s", e)
-            
+
             # FP5: Wire EditClassifier — absorb edits from case DB
             try:
                 from core.edit import EditClassifier
+
                 text = context.get("final_text", "") or context.get("report_text", "")
-                edit_type = EditClassifier.classify(text) if hasattr(EditClassifier, 'classify') else None
+                edit_type = EditClassifier.classify(text) if hasattr(EditClassifier, "classify") else None
                 if edit_type:
                     context["edit_type"] = str(edit_type)
                     logger.info("[RECORD] Edit classified as: %s", edit_type)
             except Exception as e:
                 logger.debug("[RECORD] EditClassifier: %s", e)
-            
+
             # FP5: Wire ReportCalibrator — auto-fix gate failures
             gate_passed = gate.get("passed", False)
             # R66（2026-08-04）修复：GateReport.to_dict 字段是 overall_score 不是 score。
@@ -962,8 +1032,9 @@ class E2ENodes:
             if not gate_passed and gate_score < 0.7:
                 try:
                     from core.report_calibrator import ReportCalibrator
+
                     rc = ReportCalibrator()
-                    if hasattr(rc, 'analyze'):
+                    if hasattr(rc, "analyze"):
                         fix_plan = rc.analyze(
                             failures=gate.get("failures", []),
                             report_type=context.get("report_type", ""),
@@ -973,7 +1044,7 @@ class E2ENodes:
                             logger.info("[RECORD] Calibration plan: %d fixes", len(fix_plan))
                 except Exception as e:
                     logger.debug("[RECORD] CalibrationPlan: %s", e)
-                    
+
         except Exception as e:
             logger.debug("[RECORD] failed: %s", e)
         return {"_recorded": True}
@@ -983,6 +1054,7 @@ class E2ENodes:
         """Run data feeds (RSS/PDF/patents/basics)."""
         try:
             from pipeline.data_feeds_node import data_feeds_node
+
             return data_feeds_node(node_id, context)
         except Exception as e:
             logger.warning("DataFeeds failed: %s", e)
@@ -993,6 +1065,7 @@ class E2ENodes:
         """Multi-critic panel after gate passes."""
         try:
             from core.tools.critic_panel import critic_panel_node
+
             return critic_panel_node(node_id, context)
         except Exception as e:
             logger.warning("CriticPanel failed: %s", e)
@@ -1002,11 +1075,21 @@ class E2ENodes:
 class E2EOrchestratorV2:
     # R48（2026-08-02）：迭代上限支持环境变量 MAX_ATTEMPTS
     # 性能模式默认 3（快速收敛）；训练模式可设 5-10（自迭代打磨）
-    MAX_ATTEMPTS = int(os.environ.get("MAX_ATTEMPTS", "3"))
+    MAX_ATTEMPTS = settings.max_attempts()
 
-    def __init__(self, asset, report_type="listed_company", style="cicc",
-                 output_dir=None, hypothesis="", user_context="", force=False,
-                 enrich_file=None, analysis_plan=None, client_questions=None):
+    def __init__(
+        self,
+        asset,
+        report_type="listed_company",
+        style="cicc",
+        output_dir=None,
+        hypothesis="",
+        user_context="",
+        force=False,
+        enrich_file=None,
+        analysis_plan=None,
+        client_questions=None,
+    ):
         self.asset = asset
         self.report_type = report_type
         self.style = style
@@ -1034,9 +1117,9 @@ class E2EOrchestratorV2:
     def _normalize_asset(self, raw: str) -> dict:
         """Return standardized asset identity (IB建议的三字段方案)."""
         from core.asset_resolver import resolve_asset
+
         _a = resolve_asset(raw)
-        return {"name": _a.name or raw, "code": _a.code or "",
-                "display": _a.name or raw}
+        return {"name": _a.name or raw, "code": _a.code or "", "display": _a.name or raw}
 
     def _write_pipeline_fingerprint(self, ctx: dict, gate: dict) -> str:
         """写管线指纹文件 — 证明报告经由完整管线产出。
@@ -1044,8 +1127,9 @@ class E2EOrchestratorV2:
         export_report 会校验该指纹存在才放行。
         agent 绕过管线直接生成的报告文件（MD/DOCX）无对应指纹 → GateBlockedError。
         """
-        import json as _json
         import datetime as _dt
+        import json as _json
+
         output_dir = Path(ctx.get("output_dir", str(_ROOT / "output")))
         output_dir.mkdir(parents=True, exist_ok=True)
         safe = re.sub(r"[^\w一-鿿]+", "_", str(self.asset)).strip("_") or "asset"
@@ -1077,8 +1161,7 @@ class E2EOrchestratorV2:
             "via_pipeline": True,
             "pipeline": "E2EOrchestratorV2",
         }
-        fp_path.write_text(_json.dumps(fingerprint, ensure_ascii=False, indent=2),
-                          encoding="utf-8")
+        fp_path.write_text(_json.dumps(fingerprint, ensure_ascii=False, indent=2), encoding="utf-8")
         logger.info("[FINGERPRINT] 管线指纹已写入: %s", fp_path)
         # FP6/FP7d: 血缘追踪 — 结构化记录数据从哪来、补了什么、怎么到报告
         try:
@@ -1094,6 +1177,7 @@ class E2EOrchestratorV2:
         agent 补了什么、经过哪些阶段"。
         """
         import json as _json
+
         output_dir = Path(ctx.get("output_dir", str(_ROOT / "output")))
         output_dir.mkdir(parents=True, exist_ok=True)
         safe = re.sub(r"[^\w一-鿿]+", "_", str(self.asset)).strip("_") or "asset"
@@ -1105,22 +1189,24 @@ class E2EOrchestratorV2:
         if isinstance(data, dict):
             cd = data.get("chart_data", {}) or {}
             if cd.get("_local_backfill"):
-                sources.append({"kind": "local_backfill",
-                                "detail": cd["_local_backfill"].get("keys", [])})
+                sources.append({"kind": "local_backfill", "detail": cd["_local_backfill"].get("keys", [])})
             if data.get("enrichment", {}).get("accepted_count"):
                 src_reg = data["enrichment"].get("source_registry", {})
                 for key, meta in (src_reg or {}).items():
-                    sources.append({"kind": "agent_enrich", "key": key,
-                                    "source": meta.get("source", ""),
-                                    "confidence": meta.get("confidence", 0)})
+                    sources.append(
+                        {
+                            "kind": "agent_enrich",
+                            "key": key,
+                            "source": meta.get("source", ""),
+                            "confidence": meta.get("confidence", 0),
+                        }
+                    )
             if data.get("akshare_financials"):
                 sources.append({"kind": "akshare", "detail": "akshare_financials"})
             if cd:
-                non_backfill = [k for k in cd if not k.startswith("_")
-                                and k not in ("agent_news",)]
+                non_backfill = [k for k in cd if not k.startswith("_") and k not in ("agent_news",)]
                 if non_backfill:
-                    sources.append({"kind": "data_collector",
-                                    "detail": non_backfill[:10]})
+                    sources.append({"kind": "data_collector", "detail": non_backfill[:10]})
 
         # enrich/compute/write 各阶段信号
         lineage = {
@@ -1137,21 +1223,34 @@ class E2EOrchestratorV2:
                 "llm_degradation_level": ctx.get("llm_degradation_level", 0),
             },
             "stages": [
-                {"stage": "data_collect", "output_keys":
-                 list((data.get("chart_data") or {}).keys())[:15] if isinstance(data, dict) else []},
-                {"stage": "enrich", "needs_agent": ctx.get("needs_agent", False),
-                 "data_enriched": ctx.get("data_enriched", False),
-                 "sufficient": ctx.get("data_sufficiency", {}).get("sufficient")},
-                {"stage": "compute", "has_results":
-                 bool(ctx.get("compute_results")),
-                 "modules": list(ctx.get("compute_results", {}).keys())[:10] if isinstance(ctx.get("compute_results"), dict) else []},
-                {"stage": "write", "llm_provider":
-                 "agent_provider" if ctx.get("llm_degradation_level") == 3 else "deepseek",
-                 "text_len": len(ctx.get("final_text", "") or ctx.get("report_text", ""))},
-                {"stage": "gate", "score":
-                 gate.get("score", 0) if isinstance(gate, dict) else 0,
-                 "passed": gate.get("passed", False) if isinstance(gate, dict) else False,
-                 "failures": (gate.get("failures") or [])[:10] if isinstance(gate, dict) else []},
+                {
+                    "stage": "data_collect",
+                    "output_keys": list((data.get("chart_data") or {}).keys())[:15] if isinstance(data, dict) else [],
+                },
+                {
+                    "stage": "enrich",
+                    "needs_agent": ctx.get("needs_agent", False),
+                    "data_enriched": ctx.get("data_enriched", False),
+                    "sufficient": ctx.get("data_sufficiency", {}).get("sufficient"),
+                },
+                {
+                    "stage": "compute",
+                    "has_results": bool(ctx.get("compute_results")),
+                    "modules": list(ctx.get("compute_results", {}).keys())[:10]
+                    if isinstance(ctx.get("compute_results"), dict)
+                    else [],
+                },
+                {
+                    "stage": "write",
+                    "llm_provider": "agent_provider" if ctx.get("llm_degradation_level") == 3 else "deepseek",
+                    "text_len": len(ctx.get("final_text", "") or ctx.get("report_text", "")),
+                },
+                {
+                    "stage": "gate",
+                    "score": gate.get("score", 0) if isinstance(gate, dict) else 0,
+                    "passed": gate.get("passed", False) if isinstance(gate, dict) else False,
+                    "failures": (gate.get("failures") or [])[:10] if isinstance(gate, dict) else [],
+                },
             ],
             "sources": sources,
             # FP7d: 若 agent 兜底发生，记录兜底性质（数据/LLM）
@@ -1166,41 +1265,31 @@ class E2EOrchestratorV2:
                 "gate_feedback_passed": bool(ctx.get("gate_feedback")),
             },
         }
-        lg_path.write_text(_json.dumps(lineage, ensure_ascii=False, indent=2),
-                           encoding="utf-8")
+        lg_path.write_text(_json.dumps(lineage, ensure_ascii=False, indent=2), encoding="utf-8")
         logger.info("[LINEAGE] 血缘已写入: %s", lg_path)
         return str(lg_path)
 
     def _build_context(self):
-        ctx = {
+        # P3-audit 2026-08-24：构造收口到 context_schema.new_context——
+        # 全部键在 PipelineContext TypedDict 登记，未知键抛错（防 typo 潜伏）。
+        from pipeline.context_schema import new_context
+
+        ctx = new_context(
             # R78（2026-08-05）：轻量级 trace_id——一次运行一个可追溯 ID，
             # 注入日志/报告/checkpoint，跨环节定位问题。
-            "trace_id": self.trace_id,
-            "asset": self.asset,
-            "asset_id": self.asset_id,
-            "report_type": self.report_type,
-            "style": self.style,
-            "output_dir": self.output_dir,
-            "hypothesis": self.hypothesis,
-            "user_context": self.user_context,
-            "force": self.force,
-            "enrich_file": self.enrich_file,
-            "runtime_score": 0.5,
-            "hypothesis_result": None,
-            "collected_data": {},
-            "chart_paths": {},
-            "report_text": "",
-            "final_text": "",
-            "learning_findings": "",
-            "gate_feedback": "",
-            "provenance": None,
-            "gate_result": {},
-            "attempt": 0,
-            # R67: analysis_plan 注入 context（scheduler 传入实例，供 staticmethod 与 section_writer 消费）
-            "analysis_plan": self.analysis_plan,
-            # R83: 委托方必答问题清单注入 context（section_writer 消费）
-            "client_questions": self.client_questions,
-        }
+            trace_id=self.trace_id,
+            asset=self.asset,
+            asset_id=self.asset_id,
+            report_type=self.report_type,
+            style=self.style,
+            output_dir=self.output_dir,
+            hypothesis=self.hypothesis,
+            user_context=self.user_context,
+            force=self.force,
+            enrich_file=self.enrich_file,
+            analysis_plan=self.analysis_plan,
+            client_questions=self.client_questions,
+        )
         # 重试间缓存注入：非首轮复用首轮采集的数据，避免每轮重跑网络采集
         if self._cached_collected is not None:
             ctx["collected_data"] = self._cached_collected
@@ -1212,20 +1301,23 @@ class E2EOrchestratorV2:
         return ctx
 
     def run(self):
-        from pipeline.agent_graph import AgentGraph
         # R80 Phase5：token 预算制——防写改循环成本失控
         import time as _t
+
+        from pipeline.agent_graph import AgentGraph
+
         _budget_start = _t.time()
-        _token_budget = int(os.environ.get("REPORT_TOKEN_BUDGET", "1000000"))
+        _token_budget = settings.report_token_budget()
         last_error = None
         last_gate_feedback = ""
-        prev_full_text = ""      # R7: 上一轮完整报告（状态锚点）
-        prev_coverage = None     # R7: 上一轮 SAC 维度覆盖矩阵
+        prev_full_text = ""  # R7: 上一轮完整报告（状态锚点）
+        prev_coverage = None  # R7: 上一轮 SAC 维度覆盖矩阵
         # R78（2026-08-05 Phase2.3）：checkpoint 恢复——中断后续跑不重头。
         # 恢复 attempt 数/上轮报告/Gate 反馈/数据，从断点继续写改循环。
         _ck = {}
         try:
-            from pipeline.write_checkpoint import load_checkpoint, clear_checkpoint
+            from pipeline.write_checkpoint import clear_checkpoint, load_checkpoint
+
             _ck = load_checkpoint(self.asset) or {}
             if _ck:
                 _ck_start = _ck.get("attempt", 0)
@@ -1233,8 +1325,12 @@ class E2EOrchestratorV2:
                 prev_full_text = _ck.get("report_text", "")
                 self._cached_collected = _ck.get("collected_data") or self._cached_collected
                 self._cached_data_sufficiency = _ck.get("data_sufficiency") or self._cached_data_sufficiency
-                logger.info("[CHECKPOINT] 恢复 %s 从 attempt %d（Gate反馈=%s）",
-                           self.asset, _ck_start + 1, "有" if last_gate_feedback else "无")
+                logger.info(
+                    "[CHECKPOINT] 恢复 %s 从 attempt %d（Gate反馈=%s）",
+                    self.asset,
+                    _ck_start + 1,
+                    "有" if last_gate_feedback else "无",
+                )
         except Exception as _cke:
             logger.warning("[CHECKPOINT] 恢复失败（从头开始）: %s", str(_cke)[:80])
             _ck = {}
@@ -1242,32 +1338,33 @@ class E2EOrchestratorV2:
         ctx = {}  # R79-fix
 
         for attempt in range(_attempt_start, self.MAX_ATTEMPTS):
-            logger.info("Attempt %d/%d: %s (%s)", attempt+1, self.MAX_ATTEMPTS,
-                       self.asset, self.report_type)
+            logger.info("Attempt %d/%d: %s (%s)", attempt + 1, self.MAX_ATTEMPTS, self.asset, self.report_type)
             ctx = self._build_context()
             ctx["attempt"] = attempt
             # 写改循环：把上一轮 Gate 失败反馈带给本轮写作（FP5 学习闭环）
             if attempt > 0 and last_gate_feedback:
                 ctx["gate_feedback"] = last_gate_feedback
-                ctx["learning_findings"] = (ctx.get("learning_findings", "")
-                                            + "\n" + last_gate_feedback[:2000])
-                logger.info("[REVISE] Passing Gate feedback to attempt %d: %s",
-                           attempt+1, last_gate_feedback[:100])
+                ctx["learning_findings"] = ctx.get("learning_findings", "") + "\n" + last_gate_feedback[:2000]
+                logger.info("[REVISE] Passing Gate feedback to attempt %d: %s", attempt + 1, last_gate_feedback[:100])
             # R7 收敛锚点：把上一轮完整报告 + 维度覆盖矩阵带给本轮写作。
             # 这是"收敛机制"的核心 —— 没有锚点的迭代 = 每次重新掷骰子。
             # 上一轮全文让 LLM 知道"已写了什么"，覆盖矩阵让它知道"哪里缺、哪里别动"。
             if attempt > 0:
                 _scores = self.__dict__.get("_gate_score_history", [])
-                _regressed = (len(_scores) >= 2 and _scores[-1] < _scores[-2] - 0.05)
+                _regressed = len(_scores) >= 2 and _scores[-1] < _scores[-2] - 0.05
                 ctx["state_anchor"] = {
                     "prev_full_text": prev_full_text[:4000],  # 截断防超长
                     "prev_coverage": prev_coverage,
                     "revision_targets": _revision_targets_from_gate(last_gate_feedback),
                     "regression": _regressed,  # R8: 跨轮退化信号
                 }
-                logger.info("[STATE-ANCHOR] attempt %d 注入状态锚点: prev_text=%d字, coverage=%s, regression=%s",
-                           attempt+1, len(prev_full_text[:4000]),
-                           prev_coverage if prev_coverage else "N/A", _regressed)
+                logger.info(
+                    "[STATE-ANCHOR] attempt %d 注入状态锚点: prev_text=%d字, coverage=%s, regression=%s",
+                    attempt + 1,
+                    len(prev_full_text[:4000]),
+                    prev_coverage if prev_coverage else "N/A",
+                    _regressed,
+                )
             # StepManager: track pipeline execution with marker files
             try:
                 output_dir = self.output_dir or "output"
@@ -1277,44 +1374,71 @@ class E2EOrchestratorV2:
                 sm.mark_start("pipeline")
             except Exception:
                 pass
-            g = AgentGraph(f"{self.asset} attempt {attempt+1}")
+            g = AgentGraph(f"{self.asset} attempt {attempt + 1}")
 
             g.add_node("preflight", E2ENodes.preflight_check, deps=[], desc="runtime health")
-            g.add_node("biz_macro", E2ENodes.biz_macro_inject,
-                      deps=["preflight"], desc="biz model + macro context",
-                      )
-            g.add_node("data_feeds", E2ENodes.data_feeds,
-                      deps=["data"], desc="RSS/PDF/patent feeds (merged into collected_data)",
-                      )
+            g.add_node(
+                "biz_macro",
+                E2ENodes.biz_macro_inject,
+                deps=["preflight"],
+                desc="biz model + macro context",
+            )
+            g.add_node(
+                "data_feeds",
+                E2ENodes.data_feeds,
+                deps=["data"],
+                desc="RSS/PDF/patent feeds (merged into collected_data)",
+            )
             g.add_node("hypothesis", E2ENodes.hypothesis_check, deps=[], desc="hypothesis T0.5")
             g.add_node("data", E2ENodes.data, deps=[], desc="data + provenance")
-            g.add_node("universe_build", E2ENodes.universe_build, deps=["data"],
-                       desc="R68: Universe Building——全量竞争玩家清单+缺口检测")
-            g.add_node("enrich", E2ENodes.enrich_data,
-                      deps=["data", "universe_build"], desc="data sufficiency + local/agent backfill")
+            g.add_node(
+                "universe_build",
+                E2ENodes.universe_build,
+                deps=["data"],
+                desc="R68: Universe Building——全量竞争玩家清单+缺口检测",
+            )
+            g.add_node(
+                "enrich",
+                E2ENodes.enrich_data,
+                deps=["data", "universe_build"],
+                desc="data sufficiency + local/agent backfill",
+            )
             g.add_node("scarcity", E2ENodes.scarcity_signals, deps=["enrich"], desc="scarcity signals")
             g.add_node("cross_validate", E2ENodes.cross_validate, deps=["enrich"], desc="cross validate")
             g.add_node("argument", E2ENodes.argument_engine, deps=["enrich"], desc="argument engine")
             g.add_node("learning", E2ENodes.learning, deps=[], desc="learning loop")
-            g.add_node("compute", E2ENodes.compute, deps=["enrich"], desc="compute engine (DCF/comparable/knowledge modules)")
+            g.add_node(
+                "compute", E2ENodes.compute, deps=["enrich"], desc="compute engine (DCF/comparable/knowledge modules)"
+            )
             g.add_node("charts", E2ENodes.charts, deps=["enrich"], desc="charts")
-            g.add_node("write_sections", E2ENodes.write_sections,
-                      deps=["enrich", "charts", "compute", "learning", "hypothesis", "argument",
-                            "scarcity", "cross_validate"], desc="write")
-            g.add_node("style", E2ENodes.style_compile,
-                      deps=["write_sections", "charts"], desc="style compile")
-            g.add_node("template", E2ENodes.template_enforce,
-                      deps=["assemble"], desc="template enforcer (after assemble, checks final_text)")
-            g.add_node("assemble", E2ENodes.assemble,
-                      deps=["style", "charts"], desc="assemble")
+            g.add_node(
+                "write_sections",
+                E2ENodes.write_sections,
+                deps=[
+                    "enrich",
+                    "charts",
+                    "compute",
+                    "learning",
+                    "hypothesis",
+                    "argument",
+                    "scarcity",
+                    "cross_validate",
+                ],
+                desc="write",
+            )
+            g.add_node("style", E2ENodes.style_compile, deps=["write_sections", "charts"], desc="style compile")
+            g.add_node(
+                "template",
+                E2ENodes.template_enforce,
+                deps=["assemble"],
+                desc="template enforcer (after assemble, checks final_text)",
+            )
+            g.add_node("assemble", E2ENodes.assemble, deps=["style", "charts"], desc="assemble")
             g.add_node("validate", E2ENodes.validate, deps=["assemble"], desc="gate")
-            g.add_node("critic", E2ENodes.critic_review,
-                      deps=["validate"], desc="multi-critic panel")
+            g.add_node("critic", E2ENodes.critic_review, deps=["validate"], desc="multi-critic panel")
             g.add_node("compliance", E2ENodes.compliance_check, deps=["validate", "critic"], desc="compliance")
             g.add_node("export_docx", E2ENodes.export_docx, deps=["compliance"], desc="export")
-            g.add_node("record_results", E2ENodes.record_results,
-                      deps=["validate"], desc="record + bold calls")
-
+            g.add_node("record_results", E2ENodes.record_results, deps=["validate"], desc="record + bold calls")
 
             # 注入输出契约
             contracts = _build_output_contracts()
@@ -1339,6 +1463,7 @@ class E2EOrchestratorV2:
                 _cd = ctx.get("collected_data")
                 if isinstance(_cd, dict):
                     import hashlib as _hl
+
                     ctx["_data_hash"] = _hl.md5(
                         str({k: v for k, v in _cd.items() if not k.startswith("_")}).encode()
                     ).hexdigest()[:16]
@@ -1352,16 +1477,17 @@ class E2EOrchestratorV2:
                     self._cached_collected = cd
                     self._cached_data_sufficiency = ctx.get("data_sufficiency")
                     self._cached_needs_agent = bool(ctx.get("needs_agent"))
-                    logger.info("[CACHE] 首轮采集数据已缓存（%d keys），后续重试轮复用",
-                                len(cd))
+                    logger.info("[CACHE] 首轮采集数据已缓存（%d keys），后续重试轮复用", len(cd))
             # StepManager: mark completion for key pipeline steps
             try:
                 sm = ctx.get("_step_manager")
                 if sm:
                     for completed in ["data", "enrich", "charts", "write_sections", "validate"]:
                         if g._results.get(completed) and g._results[completed].duration_ms > 0:
-                            try: sm.mark_done(completed)
-                            except Exception: pass
+                            try:
+                                sm.mark_done(completed)
+                            except Exception:
+                                pass
             except Exception:
                 pass
             # Node profiling
@@ -1375,7 +1501,7 @@ class E2EOrchestratorV2:
                 ig_score = 0
 
             if result.passed and ig_passed:
-                logger.info("PASSED (attempt %d, score=%.2f)", attempt+1, ig_score)
+                logger.info("PASSED (attempt %d, score=%.2f)", attempt + 1, ig_score)
                 # FP7d: 管线指纹 —— 证明报告经由完整管线产出
                 # export_report 校验该指纹存在才放行；agent 绕过管线直接生成的文件无指纹 → 阻断
                 try:
@@ -1385,6 +1511,7 @@ class E2EOrchestratorV2:
                 # R78：报告完成 → 清除 checkpoint（防旧状态干扰下次运行）
                 try:
                     from pipeline.write_checkpoint import clear_checkpoint
+
                     clear_checkpoint(self.asset)
                 except Exception:
                     pass
@@ -1393,7 +1520,7 @@ class E2EOrchestratorV2:
                     "trace_id": ctx.get("trace_id", ""),
                     "elapsed_s": round(_t.time() - _budget_start, 1),
                     "token_budget": _token_budget,
-                    "attempt": attempt+1,
+                    "attempt": attempt + 1,
                     "report_text": ctx.get("final_text", ctx.get("report_text", "")),
                     "chart_paths": list(ctx.get("chart_paths", {}).values()),
                     "gate_result": gate,
@@ -1404,6 +1531,8 @@ class E2EOrchestratorV2:
                     "needs_agent": ctx.get("needs_agent", False),
                     "data_enriched": ctx.get("data_enriched", False),
                     "data_sufficiency": ctx.get("data_sufficiency", {}),
+                    # P3-audit: claim 级溯源附录的数据源（main.py 消费）
+                    "collected_data": ctx.get("collected_data", {}),
                 }
             last_error = ["Gate blocked"] if result.passed else result.failed_nodes
             # R8 跨轮质量退化报警：记录每轮 Gate score，比上一轮显著下降 → 报警。
@@ -1417,7 +1546,11 @@ class E2EOrchestratorV2:
                         logger.warning(
                             "[REGRESSION] 质量退化: attempt %d score=%.2f < attempt %d score=%.2f "
                             "（跨轮退化报警，下一轮须针对未改善项修订，不得整体推倒重写）",
-                            attempt+1, cur_s, attempt, prev_s)
+                            attempt + 1,
+                            cur_s,
+                            attempt,
+                            prev_s,
+                        )
             except Exception as _e:
                 logger.debug("[REGRESSION] track failed: %s", _e)
             # R51（2026-08-02 P0-2 收敛机制）：失败项变化检测
@@ -1426,7 +1559,7 @@ class E2EOrchestratorV2:
             try:
                 _cur_fails = set()
                 _fails_raw = gate.get("failures", []) if isinstance(gate, dict) else []
-                for _f in (_fails_raw or []):
+                for _f in _fails_raw or []:
                     # 归一化：取 [SEVERITY] name（去掉 details 细节，避免同一失败
                     # 因 details 措辞变化被误判为"不同失败"）
                     _nm = str(_f).split(":", 1)[0].strip()
@@ -1437,12 +1570,14 @@ class E2EOrchestratorV2:
                     ctx["stalled_failures"] = sorted(_cur_fails)[:5]
                     logger.warning(
                         "[STALL] 连续 %d 轮失败项相同: %s → 下一轮须换策略",
-                        self._consecutive_same_failures + 1, sorted(_cur_fails)[:3])
+                        self._consecutive_same_failures + 1,
+                        sorted(_cur_fails)[:3],
+                    )
                     if self._consecutive_same_failures >= 2:
                         # 连续 3 轮（含本轮）同失败 → 提前终止，避免无效重跑
                         logger.error(
-                            "[STALL] 失败项连续 3 轮未变化 %s → 提前终止（防无效重跑）",
-                            sorted(_cur_fails)[:3])
+                            "[STALL] 失败项连续 3 轮未变化 %s → 提前终止（防无效重跑）", sorted(_cur_fails)[:3]
+                        )
                         self._stall_aborted = True
                         break
                 elif _cur_fails:
@@ -1465,14 +1600,16 @@ class E2EOrchestratorV2:
                     _repair_map = self.__dict__.setdefault("_repair_count", {})
                     for _nm in _norm:
                         _repair_map[_nm] = _repair_map.get(_nm, 0) + 1
-                    _circuit_n = int(os.environ.get("REPAIR_CIRCUIT_BREAK", "3"))
+                    _circuit_n = settings.repair_circuit_break()
                     _broken = [k for k, v in _repair_map.items() if v >= _circuit_n]
                     if _broken:
                         ctx["circuit_broken"] = True
                         ctx["circuit_broken_items"] = sorted(_broken)[:5]
                         logger.warning(
                             "[CIRCUIT-BREAK] 失败项连续 %d 轮未修好 %s → 本轮降级全量重写该模块（防死锁）",
-                            _circuit_n, sorted(_broken)[:3])
+                            _circuit_n,
+                            sorted(_broken)[:3],
+                        )
                         # 清计数，避免下一轮立刻再次触发
                         for _k in _broken:
                             _repair_map[_k] = 0
@@ -1482,6 +1619,7 @@ class E2EOrchestratorV2:
             try:
                 prev_full_text = ctx.get("final_text", "") or ctx.get("report_text", "")
                 from pipeline.iron_gate import IronGate
+
                 _tmp = os.path.join(self.output_dir, "_gate_prev.md")
                 with open(_tmp, "w", encoding="utf-8") as _f:
                     _f.write(prev_full_text or "")
@@ -1492,8 +1630,7 @@ class E2EOrchestratorV2:
                     "details": _cov.details,
                     "score": _cov.score,
                 }
-                logger.info("[STATE-ANCHOR] 记录上一轮状态: text=%d字, SAC=%s",
-                           len(prev_full_text), _cov.details[:80])
+                logger.info("[STATE-ANCHOR] 记录上一轮状态: text=%d字, SAC=%s", len(prev_full_text), _cov.details[:80])
             except Exception as _e:
                 logger.debug("[STATE-ANCHOR] 记录失败: %s", _e)
             # R66（2026-08-04）best-so-far 稿保留：防止修订把好稿改成坏稿
@@ -1517,12 +1654,15 @@ class E2EOrchestratorV2:
                 _prev_txt = getattr(self, "_prev_attempt_text", None)
                 if attempt > 0 and _prev_txt and len(_prev_txt) > 500 and len(_cur_text) > 500:
                     from difflib import SequenceMatcher
+
                     _ratio = SequenceMatcher(None, _prev_txt[:3000], _cur_text[:3000]).ratio()
                     _g_note = gate.get("passed", False) if isinstance(gate, dict) else False
-                    if not _g_note and _ratio > float(os.environ.get("EARLY_STOP_SIMILARITY", "0.90")):
+                    if not _g_note and _ratio > settings.early_stop_similarity():
                         logger.warning(
                             "[EARLY-STOP] 本轮与上轮语义相似度 %.2f > 0.90 且 Gate 未过"
-                            " → 判定已收敛不再变化，提前停止（省 token）", _ratio)
+                            " → 判定已收敛不再变化，提前停止（省 token）",
+                            _ratio,
+                        )
                         ctx["early_stopped"] = True
                         # 用 best_so_far 稿交付（若有），避免把好稿空转改坏
                         _bsf2 = self.__dict__.get("_best_so_far", {"score": 0, "text": ""})
@@ -1536,6 +1676,7 @@ class E2EOrchestratorV2:
             # R78（2026-08-05 Phase2.3）：每轮结束保存 checkpoint（中断可续跑）
             try:
                 from pipeline.write_checkpoint import save_checkpoint
+
                 _ck_state = {
                     "attempt": attempt + 1,
                     "report_text": ctx.get("final_text", "") or ctx.get("report_text", ""),
@@ -1552,6 +1693,7 @@ class E2EOrchestratorV2:
             # 依赖 P0-2 module_version 地基。失败段定位用 rewrite_indices 已有逻辑。
             try:
                 from core.module_version import ModuleVersion
+
                 _mv = ModuleVersion(self.asset)
                 _cur_txt = ctx.get("final_text", "") or ctx.get("report_text", "")
                 _seg_txts = _split_report_sections(_cur_txt) if _cur_txt else {}
@@ -1563,8 +1705,7 @@ class E2EOrchestratorV2:
                         _status = "active" if _passed_this else "dirty"
                         _mv.commit(_seg_name, _seg_body, metadata={"status": _status})
                     if not _passed_this:
-                        logger.info("[MODVER] Gate 未过，%d 段已提交并标记 dirty（下一轮局部重写）",
-                                    len(_seg_txts))
+                        logger.info("[MODVER] Gate 未过，%d 段已提交并标记 dirty（下一轮局部重写）", len(_seg_txts))
             except Exception as _mve:
                 logger.debug("[MODVER] %s", str(_mve)[:60])
             if attempt < self.MAX_ATTEMPTS - 1:
@@ -1580,13 +1721,17 @@ class E2EOrchestratorV2:
                             feedback_lines.append("- " + str(f)[:160])
                         # 提取缺失维度名（如 [必需维度缺失=founder_ri, milestone_]）
                         import re as _re
-                        _m = _re.search(r'\[必需维度缺失=([^\]]+)\]', str(fails))
+
+                        _m = _re.search(r"\[必需维度缺失=([^\]]+)\]", str(fails))
                         if _m:
                             missing_dims = _m.group(1).split(",")
-                            feedback_lines.append("- 本轮必须补齐的 SAC 缺失维度: " + ", ".join(d.strip() for d in missing_dims if d.strip()))
+                            feedback_lines.append(
+                                "- 本轮必须补齐的 SAC 缺失维度: "
+                                + ", ".join(d.strip() for d in missing_dims if d.strip())
+                            )
                         last_gate_feedback = "\n".join(feedback_lines)
                     elif "score" in gate:
-                        last_gate_feedback = f"上一轮质量门禁 score={gate.get('score',0):.2f}，请提升报告质量。"
+                        last_gate_feedback = f"上一轮质量门禁 score={gate.get('score', 0):.2f}，请提升报告质量。"
                     # R51（2026-08-02 P0-2）：失败项连续未变 → 换策略指令
                     # 不让 LLM 用同样手法再写一遍（churn reduction）。
                     if ctx.get("stalled"):
@@ -1597,9 +1742,14 @@ class E2EOrchestratorV2:
                         )
                 try:
                     from pipeline.learning_loop import LearningLoop
-                    LearningLoop().after_report(self.asset, self.report_type, {
-                        "failures": [f"Attempt {attempt+1}: {last_error}"],
-                    })
+
+                    LearningLoop().after_report(
+                        self.asset,
+                        self.report_type,
+                        {
+                            "failures": [f"Attempt {attempt + 1}: {last_error}"],
+                        },
+                    )
                 except Exception:
                     pass
                 time.sleep(2)
@@ -1668,6 +1818,7 @@ def _split_report_sections(text: str) -> dict:
     返回 {段名: 段正文}。
     """
     import re as _re
+
     if not text:
         return {}
     sections = {}
@@ -1719,9 +1870,10 @@ def _revision_targets_from_gate(gate_feedback: str) -> list:
     # R12（2026-08-01 全量优化）：把缺失的 SAC 维度名解析成逐条修订目标，
     # 让写循环精确知道要补哪几个维度，而不是笼统的"补齐缺失维度"。
     import re as _re
-    _m = _re.search(r'\[必需维度缺失=([^\]]+)\]', gate_feedback)
+
+    _m = _re.search(r"\[必需维度缺失=([^\]]+)\]", gate_feedback)
     if _m:
-        for _dim in _m.group(1).split(','):
+        for _dim in _m.group(1).split(","):
             _d = _dim.strip()
             if _d and f"补齐 SAC 缺失维度: {_d}" not in targets:
                 targets.append(f"补齐 SAC 缺失维度: {_d}")
@@ -1738,7 +1890,10 @@ def _locate_failed_segments(context: dict, sw) -> list | None:
     原 103 行定位逻辑已抽离，保持接口不变。
     """
     from pipeline.fail_segment_locator import locate_failed_segments
+
     return locate_failed_segments(context, sw)
+
+
 def _build_output_contracts():
     contracts = {
         "preflight": {"runtime_score": {"type": float, "required": True, "severity": "warning"}},
@@ -1758,13 +1913,15 @@ def _build_output_contracts():
         "compliance": {"compliance_result": {"type": dict, "required": False, "severity": "warning"}},
         "export_docx": {"_docx_path": {"type": str, "required": False, "severity": "warning"}},
         "data_feeds": {"feeds_loaded": {"type": bool, "required": False, "severity": "warning"}},
-        "biz_macro": {"biz_model": {"type": object, "required": False, "severity": "warning"},
-                      "stage_ctx": {"type": object, "required": False, "severity": "warning"},
-                      "stage_summary": {"type": str, "required": False, "severity": "warning"},
-                      "macro_ctx": {"type": object, "required": False, "severity": "warning"}},
-        "critic": {"critic_report": {"type": object, "required": False, "severity": "warning"},
-                   "critic_passed": {"type": bool, "required": False, "severity": "warning"}},
+        "biz_macro": {
+            "biz_model": {"type": object, "required": False, "severity": "warning"},
+            "stage_ctx": {"type": object, "required": False, "severity": "warning"},
+            "stage_summary": {"type": str, "required": False, "severity": "warning"},
+            "macro_ctx": {"type": object, "required": False, "severity": "warning"},
+        },
+        "critic": {
+            "critic_report": {"type": object, "required": False, "severity": "warning"},
+            "critic_passed": {"type": bool, "required": False, "severity": "warning"},
+        },
     }
     return contracts
-
-

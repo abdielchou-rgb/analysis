@@ -1,14 +1,19 @@
-
 # chart_pipeline.py — 独立图表生成管线（V3: 移除假数据）
-import sys, os, re, json, logging
-import numpy as np
+import logging
+import os
+import sys
+
 import matplotlib
+import numpy as np
+
+from core import settings
+
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 # 负责：1) 自动生成专业图表  2) 嵌入报告 3) 验证图表质量
 # 优先使用 data_pipeline 采集的实时数据，无数据时使用智能模板数据
-import sys, os, re, json, logging
 from pathlib import Path
+
+import matplotlib.pyplot as plt
 
 _ROOT = Path(__file__).resolve().parent
 if str(_ROOT) not in sys.path:
@@ -21,91 +26,91 @@ logger = logging.getLogger("2hao.chart_pipeline")
 CHART_TEMPLATES = {
     "listed_company": [
         # 决策门 / 核心分歧
-        {"id": "decision_gate",        "type": "bar",         "title": "投资决策门",           "min": 1},
-        {"id": "consensus_vs_deviation","type": "bar_line",   "title": "市场共识与预期差",     "min": 1},
+        {"id": "decision_gate", "type": "bar", "title": "投资决策门", "min": 1},
+        {"id": "consensus_vs_deviation", "type": "bar_line", "title": "市场共识与预期差", "min": 1},
         # 商业模式
-        {"id": "revenue_structure",    "type": "bar",         "title": "收入结构分析",         "min": 1},
-        {"id": "business_segments",    "type": "pie",         "title": "业务分部构成",         "min": 1},
+        {"id": "revenue_structure", "type": "bar", "title": "收入结构分析", "min": 1},
+        {"id": "business_segments", "type": "pie", "title": "业务分部构成", "min": 1},
         # 财务验证
-        {"id": "financial_trends",     "type": "dual_axis",   "title": "营收与净利趋势",       "min": 1},
-        {"id": "profit_margin",        "type": "bar_line",    "title": "利润率分析",           "min": 1},
-        {"id": "cash_flow",            "type": "bar",         "title": "现金流结构",           "min": 1},
-        {"id": "balance_sheet",        "type": "bar",         "title": "资产负债结构",         "min": 1},
+        {"id": "financial_trends", "type": "dual_axis", "title": "营收与净利趋势", "min": 1},
+        {"id": "profit_margin", "type": "bar_line", "title": "利润率分析", "min": 1},
+        {"id": "cash_flow", "type": "bar", "title": "现金流结构", "min": 1},
+        {"id": "balance_sheet", "type": "bar", "title": "资产负债结构", "min": 1},
         # 竞争位置
-        {"id": "competitive_landscape","type": "bar_cluster", "title": "竞争格局对比",         "min": 1},
-        {"id": "market_position",      "type": "pie",         "title": "市场份额",             "min": 1},
-        {"id": "moat_analysis",        "type": "radar",       "title": "护城河雷达",           "min": 1},
+        {"id": "competitive_landscape", "type": "bar_cluster", "title": "竞争格局对比", "min": 1},
+        {"id": "market_position", "type": "pie", "title": "市场份额", "min": 1},
+        {"id": "moat_analysis", "type": "radar", "title": "护城河雷达", "min": 1},
         # 同业对标
-        {"id": "valuation_peers",      "type": "scatter",     "title": "同业估值散点",         "min": 1},
-        {"id": "peer_comparison",      "type": "bar_cluster", "title": "同业关键指标对比",     "min": 1},
+        {"id": "valuation_peers", "type": "scatter", "title": "同业估值散点", "min": 1},
+        {"id": "peer_comparison", "type": "bar_cluster", "title": "同业关键指标对比", "min": 1},
         # 增长驱动
-        {"id": "growth_drivers",       "type": "line",        "title": "增长驱动因素",         "min": 1},
-        {"id": "industry_chain",       "type": "waterfall",   "title": "产业链价值分布",       "min": 1},
+        {"id": "growth_drivers", "type": "line", "title": "增长驱动因素", "min": 1},
+        {"id": "industry_chain", "type": "waterfall", "title": "产业链价值分布", "min": 1},
         # 治理 ESG / 管理
-        {"id": "governance_esg",       "type": "radar",       "title": "治理与ESG评分",        "min": 1},
-        {"id": "management_quality",   "type": "bar",         "title": "管理层质量评估",       "min": 1},
+        {"id": "governance_esg", "type": "radar", "title": "治理与ESG评分", "min": 1},
+        {"id": "management_quality", "type": "bar", "title": "管理层质量评估", "min": 1},
         # 估值
-        {"id": "valuation_history",    "type": "line",        "title": "估值历史分位",         "min": 1},
-        {"id": "dcf_sensitivity",      "type": "bar",         "title": "DCF敏感性分析",        "min": 1},
+        {"id": "valuation_history", "type": "line", "title": "估值历史分位", "min": 1},
+        {"id": "dcf_sensitivity", "type": "bar", "title": "DCF敏感性分析", "min": 1},
         # 资金面 / 催化剂
-        {"id": "capital_flow",         "type": "bar",         "title": "资金流向",             "min": 1},
-        {"id": "catalyst_timeline",    "type": "line",        "title": "催化剂时间线",         "min": 1},
+        {"id": "capital_flow", "type": "bar", "title": "资金流向", "min": 1},
+        {"id": "catalyst_timeline", "type": "line", "title": "催化剂时间线", "min": 1},
     ],
     "industry_deep": [
         # 对齐 SAC chart_config（sac_industry_deep.yaml）——2026-08-01 修复
         # id 直接使用 SAC 的 fig_* 键
-        {"id": "fig_market_size_global",  "type": "bar",         "title": "全球市场规模趋势",     "min": 1},
-        {"id": "fig_market_size_china",   "type": "bar",         "title": "中国市场规模趋势",     "min": 1},
-        {"id": "fig_supply_demand",       "type": "dual_axis",   "title": "供需平衡分析",         "min": 1},
-        {"id": "fig_industry_chain",      "type": "waterfall",   "title": "产业链价值分布",       "min": 1},
-        {"id": "fig_profit_pool",         "type": "bar",         "title": "盈利池分布",           "min": 1},
-        {"id": "fig_competitive_landscape","type": "bar_cluster","title": "竞争格局",            "min": 1},
-        {"id": "fig_market_share",        "type": "pie",         "title": "市场份额分布",         "min": 1},
-        {"id": "fig_tech_trend",          "type": "line",        "title": "技术发展趋势",         "min": 1},
-        {"id": "fig_tech_segments",       "type": "pie",         "title": "技术路线份额",         "min": 1},
-        {"id": "fig_policy_impact",       "type": "bar",         "title": "政策影响分析",         "min": 1},
-        {"id": "fig_peer_comparison",     "type": "scatter",     "title": "同业关键指标对比",     "min": 1},
-        {"id": "fig_life_cycle",          "type": "line",        "title": "生命周期定位",         "min": 1},
-        {"id": "unlisted_threat_map",     "type": "table",       "title": "非上市玩家威胁地图",   "min": 1},
+        {"id": "fig_market_size_global", "type": "bar", "title": "全球市场规模趋势", "min": 1},
+        {"id": "fig_market_size_china", "type": "bar", "title": "中国市场规模趋势", "min": 1},
+        {"id": "fig_supply_demand", "type": "dual_axis", "title": "供需平衡分析", "min": 1},
+        {"id": "fig_industry_chain", "type": "waterfall", "title": "产业链价值分布", "min": 1},
+        {"id": "fig_profit_pool", "type": "bar", "title": "盈利池分布", "min": 1},
+        {"id": "fig_competitive_landscape", "type": "bar_cluster", "title": "竞争格局", "min": 1},
+        {"id": "fig_market_share", "type": "pie", "title": "市场份额分布", "min": 1},
+        {"id": "fig_tech_trend", "type": "line", "title": "技术发展趋势", "min": 1},
+        {"id": "fig_tech_segments", "type": "pie", "title": "技术路线份额", "min": 1},
+        {"id": "fig_policy_impact", "type": "bar", "title": "政策影响分析", "min": 1},
+        {"id": "fig_peer_comparison", "type": "scatter", "title": "同业关键指标对比", "min": 1},
+        {"id": "fig_life_cycle", "type": "line", "title": "生命周期定位", "min": 1},
+        {"id": "unlisted_threat_map", "type": "table", "title": "非上市玩家威胁地图", "min": 1},
     ],
     "unlisted_company": [
         # 对齐 SAC chart_config（sac_unlisted_company.yaml）——2026-08-01 修复
         # id 直接使用 SAC 的 fig_* 键，避免输出后需映射
-        {"id": "fig_business_model",       "type": "bar",         "title": "商业模式拆解",         "min": 1},
-        {"id": "fig_market_size",          "type": "bar",         "title": "市场规模与预测",       "min": 1},
-        {"id": "fig_market_positioning",   "type": "radar",       "title": "市场定位矩阵",         "min": 1},
-        {"id": "fig_growth_drivers",       "type": "line",        "title": "增长驱动因素",         "min": 1},
-        {"id": "fig_competitive_landscape","type": "bar_cluster", "title": "竞争格局概览",         "min": 1},
-        {"id": "fig_financial_trends",     "type": "dual_axis",   "title": "营收与净利趋势",       "min": 1},
-        {"id": "fig_funding_history",      "type": "bar",         "title": "融资历程与估值",       "min": 1},
-        {"id": "fig_industry_chain",       "type": "waterfall",   "title": "产业链价值分布",       "min": 1},
+        {"id": "fig_business_model", "type": "bar", "title": "商业模式拆解", "min": 1},
+        {"id": "fig_market_size", "type": "bar", "title": "市场规模与预测", "min": 1},
+        {"id": "fig_market_positioning", "type": "radar", "title": "市场定位矩阵", "min": 1},
+        {"id": "fig_growth_drivers", "type": "line", "title": "增长驱动因素", "min": 1},
+        {"id": "fig_competitive_landscape", "type": "bar_cluster", "title": "竞争格局概览", "min": 1},
+        {"id": "fig_financial_trends", "type": "dual_axis", "title": "营收与净利趋势", "min": 1},
+        {"id": "fig_funding_history", "type": "bar", "title": "融资历程与估值", "min": 1},
+        {"id": "fig_industry_chain", "type": "waterfall", "title": "产业链价值分布", "min": 1},
     ],
     "decision_memo": [  # R83: 决策备忘录轻量图（对齐 sac_decision_memo.yaml）
-        {"id": "fig_market_size_global",  "type": "bar",         "title": "全球市场规模趋势",     "min": 1},
-        {"id": "fig_market_size_china",   "type": "bar",         "title": "中国市场规模趋势",     "min": 1},
-        {"id": "fig_industry_chain",      "type": "waterfall",   "title": "产业链价值分布",       "min": 1},
-        {"id": "fig_competitive_landscape","type": "bar_cluster","title": "竞争格局",            "min": 1},
-        {"id": "fig_production_path",     "type": "flow",        "title": "生产主体三选决策图",   "min": 1},
-        {"id": "fig_roadmap",             "type": "timeline",    "title": "执行路线图",           "min": 1},
+        {"id": "fig_market_size_global", "type": "bar", "title": "全球市场规模趋势", "min": 1},
+        {"id": "fig_market_size_china", "type": "bar", "title": "中国市场规模趋势", "min": 1},
+        {"id": "fig_industry_chain", "type": "waterfall", "title": "产业链价值分布", "min": 1},
+        {"id": "fig_competitive_landscape", "type": "bar_cluster", "title": "竞争格局", "min": 1},
+        {"id": "fig_production_path", "type": "flow", "title": "生产主体三选决策图", "min": 1},
+        {"id": "fig_roadmap", "type": "timeline", "title": "执行路线图", "min": 1},
     ],
 }
 
 # data_pipeline 返回的 chart_data 键 → chart_pipeline chart_id 映射
 DATA_PIPELINE_CHART_MAP = {
-    "revenue_trend":      {"chart_id": "revenue_structure",     "type": "bar"},
-    "profit_trend":       {"chart_id": "profit_margin",         "type": "bar_line"},
-    "market_share":       {"chart_id": "market_position",       "type": "pie"},
-    "valuation":          {"chart_id": "valuation_peers",       "type": "scatter"},
-    "financials":         {"chart_id": "financial_trends",      "type": "dual_axis"},
-    "market_size":        {"chart_id": "market_size",           "type": "bar"},
+    "revenue_trend": {"chart_id": "revenue_structure", "type": "bar"},
+    "profit_trend": {"chart_id": "profit_margin", "type": "bar_line"},
+    "market_share": {"chart_id": "market_position", "type": "pie"},
+    "valuation": {"chart_id": "valuation_peers", "type": "scatter"},
+    "financials": {"chart_id": "financial_trends", "type": "dual_axis"},
+    "market_size": {"chart_id": "market_size", "type": "bar"},
     "competitive_landscape": {"chart_id": "competitive_landscape", "type": "bar_cluster"},
-    "industry_chain":     {"chart_id": "industry_chain",        "type": "waterfall"},
-    "tech_trend":         {"chart_id": "tech_trend",            "type": "line"},
-    "policy_impact":      {"chart_id": "policy_impact",         "type": "bar"},
-    "business_model":     {"chart_id": "business_model",        "type": "bar"},
-    "growth_metrics":     {"chart_id": "growth_metrics",        "type": "line"},
-    "competitive_edge":   {"chart_id": "competitive_edge",      "type": "radar"},
-    "market_opportunity": {"chart_id": "market_opportunity",    "type": "pie"},
+    "industry_chain": {"chart_id": "industry_chain", "type": "waterfall"},
+    "tech_trend": {"chart_id": "tech_trend", "type": "line"},
+    "policy_impact": {"chart_id": "policy_impact", "type": "bar"},
+    "business_model": {"chart_id": "business_model", "type": "bar"},
+    "growth_metrics": {"chart_id": "growth_metrics", "type": "line"},
+    "competitive_edge": {"chart_id": "competitive_edge", "type": "radar"},
+    "market_opportunity": {"chart_id": "market_opportunity", "type": "pie"},
 }
 
 
@@ -117,6 +122,7 @@ def _render_chart_task(payload):
     """
     tmpl, chart_data, has_real_data, report_type, style, output_dir = payload
     from pipeline.chart_pipeline import ChartPipeline
+
     cp = ChartPipeline(report_type=report_type, style=style, output_dir=output_dir)
     return cp._generate_chart(tmpl, data=chart_data, has_real_data=has_real_data)
 
@@ -127,14 +133,15 @@ class ChartPipeline:
         self.style = style
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # 配置matplotlib中文字体
         try:
             import core.cn_font_setup as cfs
+
             cfs.setup_cn_font()
         except Exception:
             pass
-    
+
     def _get_style_colors(self):
         colors = {
             "cicc": ["#003366", "#C41E3A", "#4CB8E8", "#E8C84C", "#00A86B", "#999999"],
@@ -148,9 +155,17 @@ class ChartPipeline:
         """Add professional-grade finishing to any chart."""
         src = data_source or tmpl.get("source", "")
         if src and ax is not None:
-            fig.text(0.99, -0.02, "数据来源: " + src,
-                    ha="right", va="top", fontsize=7, color="#666666",
-                    style="italic", transform=ax.transAxes)
+            fig.text(
+                0.99,
+                -0.02,
+                "数据来源: " + src,
+                ha="right",
+                va="top",
+                fontsize=7,
+                color="#666666",
+                style="italic",
+                transform=ax.transAxes,
+            )
         if ax is not None:
             for spine in ["top", "right"]:
                 if spine in ax.spines:
@@ -166,11 +181,16 @@ class ChartPipeline:
         offset = max_val * 0.02
         for i, v in enumerate(values):
             if v is not None:
-                ax.text(i, v + offset, format(v, fmt),
-                       ha="center", va="bottom" if v >= 0 else "top",
-                       fontsize=7, color="#333333")
+                ax.text(
+                    i,
+                    v + offset,
+                    format(v, fmt),
+                    ha="center",
+                    va="bottom" if v >= 0 else "top",
+                    fontsize=7,
+                    color="#333333",
+                )
 
-    
     def generate_all(self, data=None):
         """为报告类型生成所有图表，使用实时数据。
 
@@ -185,9 +205,7 @@ class ChartPipeline:
         chart_failures = {}  # P1: 显式标记生成失败的图表，供 gate 读取
 
         # 检查是否有实时数据源
-        has_real_data = bool(data.get("sources") and any(
-            v == "ok" for v in data["sources"].values()
-        ))
+        has_real_data = bool(data.get("sources") and any(v == "ok" for v in data["sources"].values()))
 
         # 从 data_pipeline 的 chart_data 提取已格式化的数据
         pipeline_chart_data = data.get("chart_data", {})
@@ -206,19 +224,18 @@ class ChartPipeline:
                 chart_data = pipeline_chart_data[tmpl["id"]]
             return tmpl, chart_data, bool(chart_data is None)
 
-        _use_pool = (os.environ.get("CHART_PARALLEL", "1").lower() in ("1", "true", "yes")
-                     and len(templates) >= 4)
+        _use_pool = settings.chart_parallel() and len(templates) >= 4
         if _use_pool:
             # P3-audit 2026-08-24：12 张串行 matplotlib → 进程池并行（渲染 CPU 密集）。
             # 任何池化异常自动回退串行，保证功能等价。
             try:
                 from concurrent.futures import ProcessPoolExecutor, as_completed
+
                 payloads = []
                 for tmpl in templates:
                     _t, _cd, _is_tmpl = _prep_payload(tmpl)
-                    payloads.append((_t, _cd, has_real_data, self.report_type,
-                                     self.style, str(self.output_dir)))
-                maxw = int(os.environ.get("CHART_PARALLEL_WORKERS", "4"))
+                    payloads.append((_t, _cd, has_real_data, self.report_type, self.style, str(self.output_dir)))
+                maxw = settings.chart_parallel_workers()
                 with ProcessPoolExecutor(max_workers=max(1, min(maxw, len(payloads)))) as ex:
                     fut_map = {ex.submit(_render_chart_task, pl): pl[0]["id"] for pl in payloads}
                     id2tmpl = {t["id"]: t for t in templates}
@@ -234,8 +251,7 @@ class ChartPipeline:
                         if path:
                             template_flags[cid] = id2tmpl_flag[cid]
             except Exception as pool_err:
-                logger.warning("chart process pool unavailable (%s), fallback serial",
-                               str(pool_err)[:80])
+                logger.warning("chart process pool unavailable (%s), fallback serial", str(pool_err)[:80])
                 _use_pool = False
         if not _use_pool:
             for tmpl in templates:
@@ -257,13 +273,12 @@ class ChartPipeline:
         pipeline_chart_data = data.get("chart_data", {})
         # Real data means at least one source returned data AND we have chart_data
         used_real_data = bool(
-            has_real_data
-            and pipeline_chart_data
-            and any(k in pipeline_chart_data for k in DATA_PIPELINE_CHART_MAP)
+            has_real_data and pipeline_chart_data and any(k in pipeline_chart_data for k in DATA_PIPELINE_CHART_MAP)
         )
         source_label = "real" if used_real_data else "template"
-        logger.info("Generated %d/%d charts for %s (data=%s)",
-                     len(chart_paths), len(templates), self.report_type, source_label)
+        logger.info(
+            "Generated %d/%d charts for %s (data=%s)", len(chart_paths), len(templates), self.report_type, source_label
+        )
         return chart_paths, template_flags
 
     def _safe_float(self, v) -> float:
@@ -276,8 +291,16 @@ class ChartPipeline:
         if not s or s in ("--", "-", "nan", "None"):
             return 0.0
         mult = 1.0
-        for unit, m in [("万亿", 1e12), ("千亿", 1e11), ("百亿", 1e10), ("十亿", 1e9),
-                        ("亿", 1e8), ("千万", 1e7), ("百万", 1e6), ("万", 1e4)]:
+        for unit, m in [
+            ("万亿", 1e12),
+            ("千亿", 1e11),
+            ("百亿", 1e10),
+            ("十亿", 1e9),
+            ("亿", 1e8),
+            ("千万", 1e7),
+            ("百万", 1e6),
+            ("万", 1e4),
+        ]:
             if unit in s:
                 mult = m
                 s = s.replace(unit, "")
@@ -376,33 +399,46 @@ class ChartPipeline:
                 if _all_scalar and not _dual_need:
                     _flat = {k: v for k, v in raw.items() if not str(k).startswith("_")}
                     if len(_flat) >= 2 and any(self._safe_float(v) != 0 for v in _flat.values()):
-                        return {**{"labels": list(_flat.keys()),
-                                "values": [self._safe_float(v) for v in _flat.values()]}, **_enrich_extra}
+                        return {
+                            **{"labels": list(_flat.keys()), "values": [self._safe_float(v) for v in _flat.values()]},
+                            **_enrich_extra,
+                        }
                 # akshare annual: {year: {revenue, net_profit, gross_margin, ...}}
                 years = [k for k in raw.keys() if str(k).isdigit() and 2000 <= int(k) <= 2030]
                 if years:
                     years = sorted(years, key=int)
+
                     def _series(key):
                         vals = []
                         for y in years:
                             v = raw[y].get(key) if isinstance(raw[y], dict) else None
                             vals.append(self._safe_float(v))
                         return vals
+
                     def _first_nonzero(*series):
                         for s in series:
                             if any(v != 0 for v in s):
                                 return s
                         return series[0] if series else []
+
                     if chart_id == "revenue_structure":
-                        return {"labels": years, "values": _first_nonzero(
-                            _series("revenue"), _series("营业收入"), _series("营业总收入"), _series("营收"))}
+                        return {
+                            "labels": years,
+                            "values": _first_nonzero(
+                                _series("revenue"), _series("营业收入"), _series("营业总收入"), _series("营收")
+                            ),
+                        }
                     if chart_id == "profit_margin":
-                        return {"labels": years, "values": _first_nonzero(
-                            _series("net_profit"), _series("净利润"), _series("归母净利润"))}
+                        return {
+                            "labels": years,
+                            "values": _first_nonzero(_series("net_profit"), _series("净利润"), _series("归母净利润")),
+                        }
                     if chart_id == "financial_trends":
-                        return {"labels": years,
-                                "revenue": _first_nonzero(_series("revenue"), _series("营业收入"), _series("营业总收入")),
-                                "profit": _first_nonzero(_series("net_profit"), _series("净利润"), _series("归母净利润"))}
+                        return {
+                            "labels": years,
+                            "revenue": _first_nonzero(_series("revenue"), _series("营业收入"), _series("营业总收入")),
+                            "profit": _first_nonzero(_series("net_profit"), _series("净利润"), _series("归母净利润")),
+                        }
                     # 2026-08-01 修复：fig_* 财务趋势图（SAC fig_financial_trends）
                     # dual_axis 需要 revenue+profit 双序列，不能走通用 fallback 单序列
                     if chart_id in ("fig_financial_trends", "fig_supply_demand"):
@@ -429,9 +465,7 @@ class ChartPipeline:
                         rev = _first_nonzero(_series("revenue"), _series("营业收入"))
                         prof = _first_nonzero(_series("net_profit"), _series("净利润"))
                         if any(rev) or any(prof):
-                            return {"labels": years,
-                                    "values": [rev, prof],
-                                    "series": ["营收(亿)", "净利(亿)"]}
+                            return {"labels": years, "values": [rev, prof], "series": ["营收(亿)", "净利(亿)"]}
                     # fig_profit_pool：盈利池（多环节利润率）
                     if chart_id == "fig_profit_pool":
                         gm = _first_nonzero(_series("gross_margin"), _series("销售毛利率"))
@@ -440,29 +474,27 @@ class ChartPipeline:
                             return {"labels": years, "values": [gm, np], "series": ["毛利率", "净利率"]}
                     # 衍生图表：同一份财务数据推导多张图（投行密度）
                     if chart_id == "growth_drivers":
-                        return {"labels": years, "values": _first_nonzero(
-                            _series("revenue"), _series("营业收入"))}
+                        return {"labels": years, "values": _first_nonzero(_series("revenue"), _series("营业收入"))}
                     if chart_id == "cash_flow":
-                        return {"labels": years, "values": _first_nonzero(
-                            _series("net_profit"), _series("净利润"))}
+                        return {"labels": years, "values": _first_nonzero(_series("net_profit"), _series("净利润"))}
                     if chart_id == "balance_sheet":
-                        return {"labels": years, "values": _first_nonzero(
-                            _series("asset_liability_ratio"), _series("资产负债率"))}
+                        return {
+                            "labels": years,
+                            "values": _first_nonzero(_series("asset_liability_ratio"), _series("资产负债率")),
+                        }
                     if chart_id == "decision_gate":
-                        return {"labels": years, "values": _first_nonzero(
-                            _series("roe"), _series("净资产收益率"))}
+                        return {"labels": years, "values": _first_nonzero(_series("roe"), _series("净资产收益率"))}
                     if chart_id == "consensus_vs_deviation":
-                        return {"labels": years, "values": _first_nonzero(
-                            _series("revenue"), _series("营业收入"))}
+                        return {"labels": years, "values": _first_nonzero(_series("revenue"), _series("营业收入"))}
                     if chart_id == "management_quality":
-                        return {"labels": years, "values": _first_nonzero(
-                            _series("roe"), _series("净资产收益率"))}
+                        return {"labels": years, "values": _first_nonzero(_series("roe"), _series("净资产收益率"))}
                     if chart_id == "governance_esg":
-                        return {"labels": years, "values": _first_nonzero(
-                            _series("asset_liability_ratio"), _series("资产负债率"))}
+                        return {
+                            "labels": years,
+                            "values": _first_nonzero(_series("asset_liability_ratio"), _series("资产负债率")),
+                        }
                     if chart_id == "catalyst_timeline":
-                        return {"labels": years, "values": _first_nonzero(
-                            _series("revenue"), _series("营业收入"))}
+                        return {"labels": years, "values": _first_nonzero(_series("revenue"), _series("营业收入"))}
                 # flat dict {year: value} or {label: value}
                 if all(str(k).isdigit() and 2000 <= int(k) <= 2030 for k in raw.keys()):
                     keys = sorted(raw.keys(), key=int)
@@ -470,15 +502,21 @@ class ChartPipeline:
                 if "labels" in raw and "values" in raw:
                     return {**raw, **_enrich_extra}
                 # flat dict {label: value}（分部占比/资金流/市场结构）
-                flat_vals = {k: self._safe_float(v) for k, v in raw.items() if not isinstance(v, dict) and not str(k).startswith("_")}
+                flat_vals = {
+                    k: self._safe_float(v)
+                    for k, v in raw.items()
+                    if not isinstance(v, dict) and not str(k).startswith("_")
+                }
                 if len(flat_vals) >= 2 and any(v != 0 for v in flat_vals.values()):
                     return {**{"labels": list(flat_vals.keys()), "values": list(flat_vals.values())}, **_enrich_extra}
                 # fig_peer_comparison: {company: {pe, mcap, ...}} → scatter 格式
                 if chart_id == "valuation_peers" and all(isinstance(v, dict) for v in raw.values()):
                     names = list(raw.keys())
-                    return {"peers": names,
-                            "pb": [self._safe_float(raw[n].get("pb", 0)) for n in names],
-                            "pe_ttm": [self._safe_float(raw[n].get("pe", raw[n].get("pe_ttm", 0))) for n in names]}
+                    return {
+                        "peers": names,
+                        "pb": [self._safe_float(raw[n].get("pb", 0)) for n in names],
+                        "pe_ttm": [self._safe_float(raw[n].get("pe", raw[n].get("pe_ttm", 0))) for n in names],
+                    }
                 # fig_peer_comparison → pie 格式（按市值占比）
                 if chart_id == "market_position" and all(isinstance(v, dict) for v in raw.values()):
                     names = list(raw.keys())
@@ -490,35 +528,44 @@ class ChartPipeline:
                 if chart_id == "market_position" and ("labels" in raw or "peers" in raw):
                     return raw
                 # fig_peer_comparison → bar_cluster（多组指标：营收/净利/PE）
-                if chart_id in ("competitive_landscape", "peer_comparison") and all(isinstance(v, dict) for v in raw.values()):
+                if chart_id in ("competitive_landscape", "peer_comparison") and all(
+                    isinstance(v, dict) for v in raw.values()
+                ):
                     names = list(raw.keys())
                     pe_vals = [self._safe_float(raw[n].get("pe", raw[n].get("pe_ttm", 0))) for n in names]
-                    mcap_vals = [self._safe_float(raw[n].get("mcap", raw[n].get("market_cap", 0))) / 10000 for n in names]
+                    mcap_vals = [
+                        self._safe_float(raw[n].get("mcap", raw[n].get("market_cap", 0))) / 10000 for n in names
+                    ]
                     return {"labels": names, "values": [pe_vals, mcap_vals], "series": ["PE", "市值(万亿)"]}
                 # fig_revenue_trend → radar（多维财务健康度，0-10 打分）
                 if chart_id == "moat_analysis":
                     raw2 = pipeline_chart_data.get("fig_revenue_trend", pipeline_chart_data.get("fig_profitability"))
                     if raw2 and isinstance(raw2, dict):
-                        years2 = sorted([k for k in raw2.keys() if str(k).isdigit() and 2000 <= int(k) <= 2030], key=int)
+                        years2 = sorted(
+                            [k for k in raw2.keys() if str(k).isdigit() and 2000 <= int(k) <= 2030], key=int
+                        )
                         if len(years2) >= 3:
                             last3 = years2[-3:]
+
                             def _series3(key):
                                 vals = []
                                 for y in last3:
                                     v = raw2[y].get(key) if isinstance(raw2[y], dict) else None
                                     vals.append(self._safe_float(v))
                                 return vals
+
                             rev = _series3("revenue")
                             prof = _series3("net_profit")
                             gm = _series3("gross_margin")
-                            roe = _series3("roe")
-                            debt = _series3("asset_liability_ratio")
+                            _roe_unused = _series3("roe")
+                            _debt_unused = _series3("asset_liability_ratio")
+
                             # 归一化到 0-10
                             def _norm(vals, scale=1.0):
                                 m = max(abs(v) for v in vals) if any(vals) else 1
                                 return [min(10, abs(v) / m * 10) for v in vals]
-                            return {"labels": ["成长性", "盈利质量", "毛利率", "ROE", "财务健康"],
-                                    "values": _norm(rev)}
+
+                            return {"labels": ["成长性", "盈利质量", "毛利率", "ROE", "财务健康"], "values": _norm(rev)}
                 if chart_id == "industry_chain":
                     raw3 = pipeline_chart_data.get("fig_peer_comparison")
                     if raw3 and isinstance(raw3, dict) and all(isinstance(v, dict) for v in raw3.values()):
@@ -539,10 +586,7 @@ class ChartPipeline:
                         # Filter out metadata keys
                         data_keys = [k for k in keys if not k.startswith("_")]
                         if data_keys:
-                            return {
-                                "labels": data_keys,
-                                "values": [self._safe_float(raw[k]) for k in data_keys]
-                            }
+                            return {"labels": data_keys, "values": [self._safe_float(raw[k]) for k in data_keys]}
                     # If already has labels/values, return as-is
                     if "labels" in raw and "values" in raw:
                         return raw
@@ -572,14 +616,13 @@ class ChartPipeline:
                     "revenue": [float(rev.get(y, 0)) for y in labels],
                     "profit": [float(prof.get(y, 0)) for y in labels],
                 }
-    
-    def _generate_chart(self, tmpl, data=None, has_real_data=False):
 
+    def _generate_chart(self, tmpl, data=None, has_real_data=False):
         cid = tmpl["id"]
         ctype = tmpl["type"]
         title = tmpl["title"]
         colors = self._get_style_colors()
-        
+
         fig = None
         try:
             if ctype == "bar":
@@ -602,24 +645,23 @@ class ChartPipeline:
                 fig = self._radar(tmpl, colors, data)
             elif ctype == "table":
                 fig = self._table_chart(tmpl, colors, data)
-            
+
             if fig:
                 path = str(self.output_dir / (cid + ".png"))
                 self._add_professional_finish(fig, fig.axes[0] if fig.axes else None, tmpl)
                 fig.savefig(path, dpi=200, bbox_inches="tight", facecolor="white")
                 plt.close(fig)
                 size = os.path.getsize(path)
-                logger.info("  %s: %s (%.1f KB)", cid, title, size/1024)
+                logger.info("  %s: %s (%.1f KB)", cid, title, size / 1024)
                 return path
         except Exception as e:
             logger.warning("  %s failed: %s", cid, e)
-            try: plt.close(fig)
+            try:
+                plt.close(fig)
             except Exception:
                 pass  # Layer 5: bare except replaced with Exception
-        
-    
-    def _bar_chart(self, tmpl, colors, data=None):
 
+    def _bar_chart(self, tmpl, colors, data=None):
         if data and "labels" in data and "values" in data:
             x = data["labels"]
             y = data["values"]
@@ -630,16 +672,15 @@ class ChartPipeline:
         ax.set_title(tmpl["title"], fontsize=12, fontweight="bold", color=colors[0], pad=12)
         ax.set_ylabel("金额（亿元）", fontsize=9)
         for i, v in enumerate(y):
-            ax.text(i, v+max(y)*0.02, "%.1f" % v, ha="center", fontsize=8, color=colors[0])
+            ax.text(i, v + max(y) * 0.02, "%.1f" % v, ha="center", fontsize=8, color=colors[0])
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
         ax.tick_params(labelsize=8)
         plt.setp(ax.get_xticklabels(), rotation=30, ha="right", fontsize=7)
         plt.tight_layout()
         return fig
-    
-    def _line_chart(self, tmpl, colors, data=None):
 
+    def _line_chart(self, tmpl, colors, data=None):
         if not data or "labels" not in data or "values" not in data:
             return None
         x = np.arange(len(data["labels"]))
@@ -657,9 +698,8 @@ class ChartPipeline:
         plt.setp(ax.get_xticklabels(), rotation=30, ha="right", fontsize=7)
         plt.tight_layout()
         return fig
-    
-    def _dual_axis(self, tmpl, colors, data=None):
 
+    def _dual_axis(self, tmpl, colors, data=None):
         if not data or "labels" not in data:
             return None
         x = data["labels"]
@@ -676,14 +716,15 @@ class ChartPipeline:
         ax2.set_ylabel("净利润（亿元）", fontsize=9, color=colors[1])
         l1, la1 = ax1.get_legend_handles_labels()
         l2, la2 = ax2.get_legend_handles_labels()
-        ax1.legend(l1+l2, la1+la2, fontsize=8, frameon=False)
-        ax1.spines["top"].set_visible(False); ax1.tick_params(labelsize=8); ax2.tick_params(labelsize=8)
+        ax1.legend(l1 + l2, la1 + la2, fontsize=8, frameon=False)
+        ax1.spines["top"].set_visible(False)
+        ax1.tick_params(labelsize=8)
+        ax2.tick_params(labelsize=8)
         plt.setp(ax1.get_xticklabels(), rotation=30, ha="right", fontsize=7)
         plt.tight_layout()
         return fig
-    
-    def _bar_cluster(self, tmpl, colors, data=None):
 
+    def _bar_cluster(self, tmpl, colors, data=None):
         fig, ax = plt.subplots(figsize=(6.5, 3.8))
         if not data or "labels" not in data or "values" not in data:
             plt.close(fig)
@@ -702,20 +743,25 @@ class ChartPipeline:
         for i, s_vals in enumerate(series):
             if len(s_vals) != len(labels):
                 continue
-            ax.bar(x + (i - n_series / 2 + 0.5) * width, s_vals, width,
-                   color=colors[i % len(colors)],
-                   label=(s_names[i] if i < len(s_names) else f"组{i+1}"))
+            ax.bar(
+                x + (i - n_series / 2 + 0.5) * width,
+                s_vals,
+                width,
+                color=colors[i % len(colors)],
+                label=(s_names[i] if i < len(s_names) else f"组{i + 1}"),
+            )
         ax.set_xticks(x)
         ax.set_xticklabels(labels, fontsize=8)
         ax.set_title(tmpl["title"], fontsize=12, fontweight="bold", color=colors[0], pad=12)
         ax.legend(fontsize=7, frameon=False)
-        ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False); ax.tick_params(labelsize=8)
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.tick_params(labelsize=8)
         plt.setp(ax.get_xticklabels(), rotation=30, ha="right", fontsize=7)
         plt.tight_layout()
         return fig
-    
-    def _pie_chart(self, tmpl, colors, data=None):
 
+    def _pie_chart(self, tmpl, colors, data=None):
         fig, ax = plt.subplots(figsize=(5.5, 4))
         if data and "labels" in data and "values" in data:
             labels = data["labels"]
@@ -723,15 +769,19 @@ class ChartPipeline:
         else:
             plt.close(fig)
             return None
-        wedges, texts, autotexts = ax.pie(vals, labels=labels, autopct="%1.0f%%", 
-                                           colors=colors[:len(labels)], startangle=90,
-                                           textprops={"fontsize": 8})
+        wedges, texts, autotexts = ax.pie(
+            vals,
+            labels=labels,
+            autopct="%1.0f%%",
+            colors=colors[: len(labels)],
+            startangle=90,
+            textprops={"fontsize": 8},
+        )
         ax.set_title(tmpl["title"], fontsize=12, fontweight="bold", color=colors[0], pad=12)
         plt.tight_layout()
         return fig
-    
-    def _scatter(self, tmpl, colors, data=None):
 
+    def _scatter(self, tmpl, colors, data=None):
         if data and "peers" in data:
             names = data.get("peers", [])
             x = data.get("pb", [])
@@ -747,45 +797,50 @@ class ChartPipeline:
         ax.scatter(x, y, c=c, s=80, zorder=3)
         for xi, yi, ni in zip(x, y, names):
             ax.annotate(ni, (xi, yi), fontsize=7, ha="center", va="bottom")
-        ax.set_xlabel("市净率(PB)", fontsize=9); ax.set_ylabel("市盈率(PE)", fontsize=9)
+        ax.set_xlabel("市净率(PB)", fontsize=9)
+        ax.set_ylabel("市盈率(PE)", fontsize=9)
         ax.set_title(tmpl["title"], fontsize=12, fontweight="bold", color=colors[0], pad=12)
-        ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False); ax.tick_params(labelsize=8)
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.tick_params(labelsize=8)
         plt.tight_layout()
         return fig
-    
-    def _waterfall(self, tmpl, colors, data=None):
 
+    def _waterfall(self, tmpl, colors, data=None):
         if not data or "labels" not in data or "values" not in data:
             return None
-        cat = data["labels"]; vals = data["values"]
+        cat = data["labels"]
+        vals = data["values"]
         fig, ax = plt.subplots(figsize=(7, 4))
-        ax.bar(cat, vals, color=colors[:len(cat)], width=0.55, edgecolor="white")
+        ax.bar(cat, vals, color=colors[: len(cat)], width=0.55, edgecolor="white")
         ax.set_title(tmpl["title"], fontsize=12, fontweight="bold", color=colors[0], pad=12)
         ax.set_ylabel("价值占比(%)", fontsize=9)
-        ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False); ax.tick_params(labelsize=8)
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.tick_params(labelsize=8)
         plt.setp(ax.get_xticklabels(), rotation=30, ha="right", fontsize=7)
         plt.tight_layout()
         return fig
-    
-    def _radar(self, tmpl, colors, data=None):
 
+    def _radar(self, tmpl, colors, data=None):
         fig, ax = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True))
         cat = data.get("labels") if data else None
         vals = np.array(data.get("values")) if data and data.get("values") else np.array([])
         if not cat or len(vals) < 3:
             plt.close(fig)
             return None
-        N = len(cat); angles = np.linspace(0, 2*np.pi, N, endpoint=False).tolist()
+        n_pts = len(cat)
+        angles = np.linspace(0, 2 * np.pi, n_pts, endpoint=False).tolist()
         ax.plot(angles + angles[:1], np.concatenate((vals, [vals[0]])), "o-", color=colors[0], linewidth=2)
         ax.fill(angles + angles[:1], np.concatenate((vals, [vals[0]])), alpha=0.1, color=colors[0])
-        ax.set_xticks(angles); ax.set_xticklabels(cat, fontsize=9)
+        ax.set_xticks(angles)
+        ax.set_xticklabels(cat, fontsize=9)
         ax.set_title(tmpl["title"], fontsize=12, fontweight="bold", color=colors[0], pad=20)
         ax.set_ylim(0, 10)
         plt.tight_layout()
         return fig
-    
-    def _bar_line(self, tmpl, colors, data=None):
 
+    def _bar_line(self, tmpl, colors, data=None):
         if not data or "labels" not in data or "values" not in data:
             return None
         x = np.arange(len(data["labels"]))
@@ -793,10 +848,13 @@ class ChartPipeline:
         vals = data["values"]
         fig, ax = plt.subplots(figsize=(6.5, 3.8))
         ax.bar(x, vals, 0.55, color=colors[0], label=tmpl.get("title", ""))
-        ax.set_xticks(x + 0.2); ax.set_xticklabels(labels, fontsize=8)
+        ax.set_xticks(x + 0.2)
+        ax.set_xticklabels(labels, fontsize=8)
         ax.set_title(tmpl["title"], fontsize=12, fontweight="bold", color=colors[0], pad=12)
         ax.legend(fontsize=8, frameon=False)
-        ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False); ax.tick_params(labelsize=8)
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.tick_params(labelsize=8)
         plt.setp(ax.get_xticklabels(), rotation=30, ha="right", fontsize=7)
         plt.tight_layout()
         return fig
@@ -829,10 +887,19 @@ class ChartPipeline:
                 cell.set_text_props(color="white", fontweight="bold")
             cell.set_edgecolor("#CCCCCC")
         if not rows:
-            ax.text(0.5, 0.12, "示意：无权威数据时须在报告中显式标注数据缺口（FP2诚实边界）",
-                    ha="center", va="center", fontsize=8, color="#999999", transform=ax.transAxes)
+            ax.text(
+                0.5,
+                0.12,
+                "示意：无权威数据时须在报告中显式标注数据缺口（FP2诚实边界）",
+                ha="center",
+                va="center",
+                fontsize=8,
+                color="#999999",
+                transform=ax.transAxes,
+            )
         plt.tight_layout()
         return fig
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -841,4 +908,4 @@ if __name__ == "__main__":
     print("\nGenerated %d charts:" % len(paths))
     for k, v in paths.items():
         s = os.path.getsize(v) if os.path.exists(v) else 0
-        print("  %s: %s (%.1f KB)" % (k, v, s/1024))
+        print("  %s: %s (%.1f KB)" % (k, v, s / 1024))

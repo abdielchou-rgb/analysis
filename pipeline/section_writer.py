@@ -7,19 +7,24 @@
 """
 
 from __future__ import annotations
-import json, logging, sys, re, collections, os
+
+import json
+import logging
+import os
+import re
+import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+
+from core import settings
 
 _ANALYST_ROOT = Path(__file__).resolve().parent.parent
 if str(_ANALYST_ROOT) not in sys.path:
     sys.path.insert(0, str(_ANALYST_ROOT))
 
-from core.sacs import SACLoader
 from core.deepseek_client import call_deepseek
-from core.framework_injector import inject_framework_prompt
 from core.knowledge_injector import KnowledgeInjector
+from core.sacs import SACLoader
 
 logger = logging.getLogger("2hao.section_writer")
 _CHART_DIR = "output/charts/"
@@ -89,7 +94,7 @@ def _extract_growth_rates(cd: dict) -> list:
     rev = cd.get("fig_revenue_trend")
     if not isinstance(rev, dict):
         return []
-    years = sorted((int(y) for y in rev if str(y).isdigit() and isinstance(rev[y], (int, float))))
+    years = sorted(int(y) for y in rev if str(y).isdigit() and isinstance(rev[y], (int, float)))
     if len(years) < 2:
         return []
     rates = []
@@ -119,15 +124,21 @@ class SectionWriter:
     def _build_segments(self):
         chain = self.logic_chain
         if not chain:
-            return [{"index": 0, "label": "P1", "steps": [], "dimension_ids": []},
-                    {"index": 1, "label": "P2", "steps": [], "dimension_ids": []},
-                    {"index": 2, "label": "P3", "steps": [], "dimension_ids": []}]
+            return [
+                {"index": 0, "label": "P1", "steps": [], "dimension_ids": []},
+                {"index": 1, "label": "P2", "steps": [], "dimension_ids": []},
+                {"index": 2, "label": "P3", "steps": [], "dimension_ids": []},
+            ]
         n = len(chain)
         splits = [min(1, n // 3) if n >= 3 else n, min(n // 3 * 2, n) if n >= 3 else n, n]
         if n <= 3:
             splits = [min(1, n), min(2, n), n]
         seg_labels = {
-            "listed_company": ["战略层：决策门→核心分歧→商业模式→财务验证", "竞争层：竞争位置→增长驱动→治理ESG→Bold Call", "前瞻层：估值映射→催化剂→证伪→资金面"],
+            "listed_company": [
+                "战略层：决策门→核心分歧→商业模式→财务验证",
+                "竞争层：竞争位置→增长驱动→治理ESG→Bold Call",
+                "前瞻层：估值映射→催化剂→证伪→资金面",
+            ],
             "industry_deep": ["战略层", "竞争层", "前瞻层"],
             "unlisted_company": ["战略层", "竞争层", "前瞻层"],
             "earnings_notes": ["战略层", "竞争层", "前瞻层"],
@@ -158,7 +169,14 @@ class SectionWriter:
                             dim_ids.update(v for v in val if isinstance(v, str) and v)
                         elif isinstance(val, str) and val:
                             dim_ids.add(val)
-            segs.append({"index": i, "label": labels[i] if i < len(labels) else "Part {}".format(i+1), "steps": steps, "dimension_ids": list(dim_ids)})
+            segs.append(
+                {
+                    "index": i,
+                    "label": labels[i] if i < len(labels) else f"Part {i + 1}",
+                    "steps": steps,
+                    "dimension_ids": list(dim_ids),
+                }
+            )
             prev = s
         return segs
 
@@ -166,9 +184,10 @@ class SectionWriter:
         """MECE + Serenity 9-step research protocol injection"""
         try:
             from core.protocol import SACToResearchProtocol
+
             rp = SACToResearchProtocol()
             protocol = rp.generate(self.sac, output_depth="standard")
-            if protocol and hasattr(protocol, 'to_agent_brief'):
+            if protocol and hasattr(protocol, "to_agent_brief"):
                 brief = protocol.to_agent_brief()
                 if brief and len(brief) > 50:
                     return "\\n=== MECE + Serenity 研究协议 ===\\n" + brief[:600] + "\\n=== 协议结束 ===\\n"
@@ -181,8 +200,9 @@ class SectionWriter:
         """Report blueprint injection — structured section template"""
         try:
             from core.report_blueprint import ReportBlueprint
+
             bp = ReportBlueprint(self.report_type, self.style)
-            sections = bp.get_sections_for_segment(seg_idx) if hasattr(bp, 'get_sections_for_segment') else []
+            sections = bp.get_sections_for_segment(seg_idx) if hasattr(bp, "get_sections_for_segment") else []
             if sections:
                 parts = ["[报告蓝图 - 本段建议结构]"]
                 for s in sections[:5]:
@@ -198,6 +218,7 @@ class SectionWriter:
         """注入投行方法论参考"""
         try:
             from core.methodology_injector import inject_into_protocol
+
             result = inject_into_protocol(protocol_text=self.report_type, sector="", depth="standard")
             if result and len(result) > 50:
                 return "\\n" + result[:600] + "\\n"
@@ -209,9 +230,23 @@ class SectionWriter:
         """为当前段注入匹配的外部分析方法论框架 — 数据驱动选择"""
         try:
             from core.framework_injector import get_frameworks_for_report
+
             _ind_hint = ""
-            _ast = getattr(self, '_asset', '') or ''
-            for _kw in ("半导体","芯片","传感器","光伏","锂电","医药","机器人","汽车","通信","油位","物位","消费"):
+            _ast = getattr(self, "_asset", "") or ""
+            for _kw in (
+                "半导体",
+                "芯片",
+                "传感器",
+                "光伏",
+                "锂电",
+                "医药",
+                "机器人",
+                "汽车",
+                "通信",
+                "油位",
+                "物位",
+                "消费",
+            ):
                 if _kw in str(_ast):
                     _ind_hint = _kw
                     break
@@ -219,57 +254,68 @@ class SectionWriter:
             if not frameworks:
                 return ""
             # Phase C: 数据驱动 — 根据_data_bundle动态选择
-            bundle = getattr(self, '_data_bundle', {})
+            bundle = getattr(self, "_data_bundle", {})
             dyn_frameworks = []
-            _biz = bundle.get('biz', {}) if isinstance(bundle, dict) else {}
-            _compute = bundle.get('compute', {}) if isinstance(bundle, dict) else {}
-            _ak = bundle.get('akshare', {}) if isinstance(bundle, dict) else {}
+            _biz = bundle.get("biz", {}) if isinstance(bundle, dict) else {}
+            _compute = bundle.get("compute", {}) if isinstance(bundle, dict) else {}
+            _ak = bundle.get("akshare", {}) if isinstance(bundle, dict) else {}
             # 高ROE → 高质量投资
-            if _ak and str(_ak.get('roe','')).replace('%','').strip().isdigit():
-                if float(str(_ak['roe']).replace('%','').strip()) > 15:
-                    dyn_frameworks.append('quality_investing')
+            if _ak and str(_ak.get("roe", "")).replace("%", "").strip().isdigit():
+                if float(str(_ak["roe"]).replace("%", "").strip()) > 15:
+                    dyn_frameworks.append("quality_investing")
             # 成长周期 → 周期思维
-            _xj = _compute.get('xiao_jing', {}) if isinstance(_compute, dict) else {}
-            if isinstance(_xj, dict) and _xj.get('life_cycle') == '成长期':
-                dyn_frameworks.append('cycle_thinking')
+            _xj = _compute.get("xiao_jing", {}) if isinstance(_compute, dict) else {}
+            if isinstance(_xj, dict) and _xj.get("life_cycle") == "成长期":
+                dyn_frameworks.append("cycle_thinking")
             # 护城河 → 经济护城河框架
-            _gw = _compute.get('greenwald', {}) if isinstance(_compute, dict) else {}
-            if isinstance(_gw, dict) and _gw.get('competitive_advantage'):
-                dyn_frameworks.append('moat_analysis')
+            _gw = _compute.get("greenwald", {}) if isinstance(_compute, dict) else {}
+            if isinstance(_gw, dict) and _gw.get("competitive_advantage"):
+                dyn_frameworks.append("moat_analysis")
             # 数据驱动优先,否则用维度匹配
             if dyn_frameworks:
                 # 把数据驱动的框架排到最前
                 for df in dyn_frameworks:
                     for fw in frameworks:
-                        if fw.get('id') == df or df in str(fw.get('name','')):
+                        if fw.get("id") == df or df in str(fw.get("name", "")):
                             if fw not in frameworks[:4]:
                                 frameworks.insert(0, frameworks.pop(frameworks.index(fw)))
                             break
             _dim_map = {
-                'data_declaration': 'governance_esg', 'company_profile': 'business_model',
-                'funding_history': 'capital_flow', 'business_kpi': 'financial_analysis',
-                'competitive_moat': 'competitive_position', 'valuation_estimate': 'valuation_assessment',
-                'exit_analysis': 'catalyst', 'due_diligence': 'falsification',
-                'founder_team': 'governance_esg', 'product_tech': 'competitive_position',
-                'market_traction': 'growth_drivers', 'capital_efficiency': 'financial_analysis',
-                'industry_chain': 'business_model', 'policy_score': 'governance_esg',
-                'headline': 'business_model', 'key_surprise': 'core_disagreement',
-                'segment_analysis': 'financial_analysis', 'balance_cashflow': 'financial_analysis',
-                'outlook_implication': 'catalyst', 'life_cycle': 'growth_drivers',
-                'supply_demand': 'competitive_position', 'profit_pool': 'financial_analysis',
-                'industry_boundary': 'business_model',
+                "data_declaration": "governance_esg",
+                "company_profile": "business_model",
+                "funding_history": "capital_flow",
+                "business_kpi": "financial_analysis",
+                "competitive_moat": "competitive_position",
+                "valuation_estimate": "valuation_assessment",
+                "exit_analysis": "catalyst",
+                "due_diligence": "falsification",
+                "founder_team": "governance_esg",
+                "product_tech": "competitive_position",
+                "market_traction": "growth_drivers",
+                "capital_efficiency": "financial_analysis",
+                "industry_chain": "business_model",
+                "policy_score": "governance_esg",
+                "headline": "business_model",
+                "key_surprise": "core_disagreement",
+                "segment_analysis": "financial_analysis",
+                "balance_cashflow": "financial_analysis",
+                "outlook_implication": "catalyst",
+                "life_cycle": "growth_drivers",
+                "supply_demand": "competitive_position",
+                "profit_pool": "financial_analysis",
+                "industry_boundary": "business_model",
             }
             seg_dims = set(_dim_map.get(d, d) for d in dim_ids)
             parts = ["[参考框架]"]
             for fw in frameworks:
-                fw_mapping = set(fw.get('_sac_mapping', []))
+                fw_mapping = set(fw.get("_sac_mapping", []))
                 overlap = seg_dims & fw_mapping
                 if overlap:
-                    name = fw.get('name', '?')
-                    thesis = fw.get('core_thesis', '')[:120]
-                    chain = fw.get('logic_chain', [])
-                    chain_summary = " → ".join([s.get('step', '')[:20] for s in chain[:4]])
-                    parts.append("  [{}] (映射: {})".format(name, ', '.join(sorted(overlap))))
+                    name = fw.get("name", "?")
+                    thesis = fw.get("core_thesis", "")[:120]
+                    chain = fw.get("logic_chain", [])
+                    chain_summary = " → ".join([s.get("step", "")[:20] for s in chain[:4]])
+                    parts.append("  [{}] (映射: {})".format(name, ", ".join(sorted(overlap))))
                     parts.append("    核心理念: " + thesis)
                     parts.append("    分析链: " + chain_summary)
                     parts.append("")
@@ -284,18 +330,23 @@ class SectionWriter:
         """注入历史Bold Call准确率"""
         try:
             from core.forward_picks import ForwardPicksDB
+
             fdb = ForwardPicksDB()
-            if hasattr(fdb, 'get_stats_by_report_type'):
+            if hasattr(fdb, "get_stats_by_report_type"):
                 stats = fdb.get_stats_by_report_type(self.report_type)
                 if stats:
                     total = stats.get("total", 0)
                     accuracy = stats.get("accuracy", 0)
                     if total >= 3:
                         if accuracy < 0.5:
-                            return ("\\n[历史预测校准] 系统在{rt}类报告的历史预测准确率为{acc}（{n}次预测）。"
-                                    "低于50%的准确率要求谨慎表达置信度。\\n").format(rt=self.report_type, acc="{:.0%}".format(accuracy), n=total)
+                            return (
+                                "\\n[历史预测校准] 系统在{rt}类报告的历史预测准确率为{acc}（{n}次预测）。"
+                                "低于50%的准确率要求谨慎表达置信度。\\n"
+                            ).format(rt=self.report_type, acc=f"{accuracy:.0%}", n=total)
                         elif accuracy < 0.7:
-                            return "\\n[历史预测校准] 系统在{rt}类报告的历史预测准确率为{acc}（{n}次预测）。\\n".format(rt=self.report_type, acc="{:.0%}".format(accuracy), n=total)
+                            return "\\n[历史预测校准] 系统在{rt}类报告的历史预测准确率为{acc}（{n}次预测）。\\n".format(
+                                rt=self.report_type, acc=f"{accuracy:.0%}", n=total
+                            )
             return ""
         except Exception:
             return ""
@@ -303,14 +354,20 @@ class SectionWriter:
     def _build_module_synthesis(self, seg_idx: int, compute_results: dict = None) -> str:
         """揭示知识模块间的矛盾"""
         try:
-            cr = compute_results or getattr(self, '_prompt_compute_results', {})
+            cr = compute_results or getattr(self, "_prompt_compute_results", {})
             if not cr:
                 return ""
             signals = {}
-            for mk, label in [("xiao_jing", "肖璟框架"), ("greenwald", "格林沃德框架"),
-                ("wang_siyu", "WangSiyu"), ("thinking_models", "12思维模型"),
-                ("page_models", "24思维模型"), ("serenity", "Serenity"),
-                ("liu_run", "刘润逻辑"), ("kelly", "凯利公式")]:
+            for mk, label in [
+                ("xiao_jing", "肖璟框架"),
+                ("greenwald", "格林沃德框架"),
+                ("wang_siyu", "WangSiyu"),
+                ("thinking_models", "12思维模型"),
+                ("page_models", "24思维模型"),
+                ("serenity", "Serenity"),
+                ("liu_run", "刘润逻辑"),
+                ("kelly", "凯利公式"),
+            ]:
                 md = cr.get(mk, {}) if isinstance(cr, dict) else {}
                 if isinstance(md, dict) and md.get("status") == "ok":
                     signals[label] = md
@@ -319,20 +376,24 @@ class SectionWriter:
             contradictions = []
             items = list(signals.items())
             for i in range(len(items)):
-                for j in range(i+1, len(items)):
-                    na, a = items[i]; nb, b = items[j]
+                for j in range(i + 1, len(items)):
+                    na, a = items[i]
+                    nb, b = items[j]
+
                     def get_dir(d):
                         for k in ["recommendation", "suggestion", "direction", "signal", "conclusion"]:
                             v = d.get(k, "") if isinstance(d, dict) else ""
-                            if v: return str(v)
+                            if v:
+                                return str(v)
                         return ""
+
                     da, db = get_dir(a), get_dir(b)
-                    bull_a = any(w in da for w in ["买入","增持","看多","positive","bullish"])
-                    bear_a = any(w in da for w in ["卖出","减持","看空","negative","bearish"])
-                    bull_b = any(w in db for w in ["买入","增持","看多","positive","bullish"])
-                    bear_b = any(w in db for w in ["卖出","减持","看空","negative","bearish"])
+                    bull_a = any(w in da for w in ["买入", "增持", "看多", "positive", "bullish"])
+                    bear_a = any(w in da for w in ["卖出", "减持", "看空", "negative", "bearish"])
+                    bull_b = any(w in db for w in ["买入", "增持", "看多", "positive", "bullish"])
+                    bear_b = any(w in db for w in ["卖出", "减持", "看空", "negative", "bearish"])
                     if (bull_a and bear_b) or (bear_a and bull_b):
-                        contradictions.append("{}和{}产生方向性分歧：{} vs {}".format(na, nb, da[:40], db[:40]))
+                        contradictions.append(f"{na}和{nb}产生方向性分歧：{da[:40]} vs {db[:40]}")
             if not contradictions:
                 return ""
             parts = ["\\n[多模型分歧提示] 系统内部多个知识模块对当前分析标的的判断存在分歧："]
@@ -353,7 +414,7 @@ class SectionWriter:
           seg2(前瞻层) → elasticity / multi_model
         """
         try:
-            cr = compute_results or getattr(self, '_prompt_compute_results', {})
+            cr = compute_results or getattr(self, "_prompt_compute_results", {})
             tm = cr.get("tool_modules", {}) if isinstance(cr, dict) else {}
             if not isinstance(tm, dict) or not tm:
                 return ""
@@ -374,9 +435,14 @@ class SectionWriter:
                 _data = {k: v for k, v in md.items() if k != "status"}
                 if not _data:
                     continue
-                _label = {"life_cycle": "生命周期", "moat": "护城河",
-                          "signal_chain": "信号链", "elasticity": "弹性分析",
-                          "multi_model": "多模型校验", "decision": "决策推理引擎"}.get(t, t)
+                _label = {
+                    "life_cycle": "生命周期",
+                    "moat": "护城河",
+                    "signal_chain": "信号链",
+                    "elasticity": "弹性分析",
+                    "multi_model": "多模型校验",
+                    "decision": "决策推理引擎",
+                }.get(t, t)
                 try:
                     _snippet = json.dumps(_data, ensure_ascii=False)[:400]
                 except Exception:
@@ -397,22 +463,23 @@ class SectionWriter:
         """
         try:
             from core.report_cache import ReportCache
+
             cache = ReportCache()
-            asset = getattr(self, '_asset', '') or ''
+            asset = getattr(self, "_asset", "") or ""
             sector_reports = cache.get_same_sector_reports(asset, self.report_type, limit=5)
             if sector_reports:
                 parts = ["[同赛道历史报告参照——必须在报告中对照以下已有判断]"]
                 for r in sector_reports:
-                    ra = r.get('asset', '?')
-                    rt = r.get('rating', '')
-                    tp = r.get('target_price', '')
-                    th = r.get('thesis', '')[:120]
+                    ra = r.get("asset", "?")
+                    rt = r.get("rating", "")
+                    tp = r.get("target_price", "")
+                    th = r.get("thesis", "")[:120]
                     parts.append(f"  - {ra}（{rt}/{tp}）: {th}")
                 parts.append("写作时主动回答：本标的与上述同赛道标的的替代/互补/资金分流关系。")
                 parts.append("[/同赛道参照]")
                 return "\n".join(parts)
             # 兜底：老方法
-            if hasattr(cache, 'get_related_judgments'):
+            if hasattr(cache, "get_related_judgments"):
                 judgments = cache.get_related_judgments(self.report_type, limit=3)
                 if judgments:
                     parts = ["[历史报告参照] 以下为与本报告相关的历史分析判断："]
@@ -505,8 +572,7 @@ class SectionWriter:
             "给出进入顺序、协同点与预计投入；数据不足时诚实标注(E)并说明获取路径。"
         ),
         "bottleneck": (
-            "决策备忘录场景：瓶颈维度聚焦产业链最卡环节（材料/设备/认证），"
-            "给出瓶颈环节的产能缺口、参与者与突破时间表。"
+            "决策备忘录场景：瓶颈维度聚焦产业链最卡环节（材料/设备/认证），给出瓶颈环节的产能缺口、参与者与突破时间表。"
         ),
     }
 
@@ -532,7 +598,7 @@ class SectionWriter:
             if q:
                 lines.append("**核心问题**: " + q)
             em = d.get("evidence_min", 1)
-            lines.append("**最少证据**: {} 条".format(em))
+            lines.append(f"**最少证据**: {em} 条")
             if d.get("counter_evidence", False):
                 lines.append("**反方论证**: 三段式（①具体情境②传导机制③杀伤力评估），禁止'概率XX%'空壳")
             req = d.get("required_elements", [])
@@ -542,27 +608,45 @@ class SectionWriter:
                     lines.append("- " + re_item[:80])
             sub = d.get("sub_questions", [])
             if sub:
-                lines.append("**二级分析框架** ({} 个子维度，必须全部覆盖):".format(len(sub)))
+                lines.append(f"**二级分析框架** ({len(sub)} 个子维度，必须全部覆盖):")
                 for i_sq, sq in enumerate(sub):
-                    lines.append("  {}. {}".format(i_sq+1, (sq if isinstance(sq, str) else json.dumps(sq, ensure_ascii=False))[:120]))
+                    lines.append(
+                        f"  {i_sq + 1}. {(sq if isinstance(sq, str) else json.dumps(sq, ensure_ascii=False))[:120]}"
+                    )
             lines.append("==")
         return "\n".join(lines)
 
     _CHART_SEC_MAP = {
-        'fig_revenue_trend': 1, 'fig_profitability': 1, 'fig_margin_trend': 1,
-        'fig_business_segments': 1, 'fig_business_model': 1, 'fig_revenue_change': 1,
-        'fig_profit_change': 1, 'fig_gross_margin': 1, 'fig_roe_trend': 1,
-        'fig_market_size_global': 1, 'fig_market_size_china': 1, 'fig_applications': 1,
-        'fig_peer_comparison': 2, 'fig_competitive_landscape': 2, 'fig_players': 2,
-        'fig_supply_chain': 2, 'fig_market_positioning': 2, 'fig_growth_drivers': 2,
-        'fig_segment_performance': 2, 'fig_tech_segments': 2,
-        'fig_valuation': 3, 'fig_guidance_track': 3, 'fig_capital_flow': 3, 'fig_funding_history': 3,
+        "fig_revenue_trend": 1,
+        "fig_profitability": 1,
+        "fig_margin_trend": 1,
+        "fig_business_segments": 1,
+        "fig_business_model": 1,
+        "fig_revenue_change": 1,
+        "fig_profit_change": 1,
+        "fig_gross_margin": 1,
+        "fig_roe_trend": 1,
+        "fig_market_size_global": 1,
+        "fig_market_size_china": 1,
+        "fig_applications": 1,
+        "fig_peer_comparison": 2,
+        "fig_competitive_landscape": 2,
+        "fig_players": 2,
+        "fig_supply_chain": 2,
+        "fig_market_positioning": 2,
+        "fig_growth_drivers": 2,
+        "fig_segment_performance": 2,
+        "fig_tech_segments": 2,
+        "fig_valuation": 3,
+        "fig_guidance_track": 3,
+        "fig_capital_flow": 3,
+        "fig_funding_history": 3,
     }
 
     def _map_chart_id_to_section(self, chart_id):
         idx = self._CHART_SEC_MAP.get(chart_id, 1)
-        seg = self.segments[idx-1] if idx <= len(self.segments) else self.segments[0]
-        return seg.get('label', 'Part %d' % idx)
+        seg = self.segments[idx - 1] if idx <= len(self.segments) else self.segments[0]
+        return seg.get("label", "Part %d" % idx)
 
     def _build_chart_assignments(self):
         cc = self.chart_config
@@ -587,7 +671,7 @@ class SectionWriter:
         charts = cc.get("charts", [])
         mc = cc.get("min_charts", 5)
         mt = cc.get("min_tables", 3)
-        lines = ["**图表要求**: 最少{}张图表, 最少{}个数据表格, 用 {{[CHART:fig_id, title]}} 在分析段落中标注".format(mc, mt), ""]
+        lines = [f"**图表要求**: 最少{mc}张图表, 最少{mt}个数据表格, 用 {{[CHART:fig_id, title]}} 在分析段落中标注", ""]
         lines.append("可用图表列表：")
         tf = getattr(self, "_chart_template_flags", {}) or {}
         for c in charts:
@@ -601,21 +685,33 @@ class SectionWriter:
             if tf.get(cid):
                 status = "[示意图-数据不足]"
                 cap = cap + "（模板示意，数据不足，待补真实数据后替换）"
-            lines.append("  - {} {{{{CHART:{}}}}} → {} (应放入{})".format(status, cid, cap, sec_name))
+            lines.append(f"  - {status} {{{{CHART:{cid}}}}} → {cap} (应放入{sec_name})")
         lines.append("")
         lines.append("注意：每张图表必须用[CHART:fig_id, title]占位符嵌入对应分析段落。")
         # 仅当存在模板图时，注入"不得引用示意数值"护栏（防模板图冒充真实证据）
         if any(tf.get(c.get("id")) for c in charts):
-            lines.append("注意：标注为[示意图-数据不足]的图表只能用于说明结构/趋势方向，"
-                         "正文不得引用其具体数值作为事实依据。")
+            lines.append(
+                "注意：标注为[示意图-数据不足]的图表只能用于说明结构/趋势方向，正文不得引用其具体数值作为事实依据。"
+            )
         return "\n".join(lines)
 
-    def write(self, asset, data_context=None, chart_paths=None,
-              gate_feedback="", learning_findings="",
-              style_override="", data_injection="", scaffold=None,
-              state_anchor=None, draft_provider="deepseek", skeleton_mode=False,
-              rewrite_indices=None, dimension_parallel=False,
-              chart_template_flags=None):
+    def write(
+        self,
+        asset,
+        data_context=None,
+        chart_paths=None,
+        gate_feedback="",
+        learning_findings="",
+        style_override="",
+        data_injection="",
+        scaffold=None,
+        state_anchor=None,
+        draft_provider="deepseek",
+        skeleton_mode=False,
+        rewrite_indices=None,
+        dimension_parallel=False,
+        chart_template_flags=None,
+    ):
         self._chart_paths = chart_paths or {}
         self._last_data_context = data_context or {}
         # R51（2026-08-02 P1-4）：模板图标记 {chart_id: bool}——True 表示该图用
@@ -628,12 +724,14 @@ class SectionWriter:
         _asset_code = ""
         try:
             from core.asset_resolver import resolve_asset
+
             _asset_obj = resolve_asset(asset)
             _asset_code = _asset_obj.code or ""
         except Exception as _e:
             logger.debug("[ASSET-RESOLVE] %s", _e)
         if not _asset_code:
             import re as _re_code
+
             _am0 = _re_code.search(r"(\d{6})", asset)
             if _am0:
                 _asset_code = _am0.group(1)
@@ -645,7 +743,8 @@ class SectionWriter:
         # R7 共享数据字典：正文数值必须引用 collected_data 的 key，禁止自由输出。
         # 这是"收敛机制"第二块 —— 消灭数字重复/矛盾/无来源的架构级约束。
         try:
-            from core.data_dict import build_data_dict, serialize_data_dict, save_data_dict
+            from core.data_dict import build_data_dict, save_data_dict, serialize_data_dict
+
             self._data_dict = build_data_dict(data_context or {})
             _dd_str = serialize_data_dict(self._data_dict)
             save_data_dict(asset, self._data_dict)
@@ -658,8 +757,8 @@ class SectionWriter:
         calib_str = ""
         self._data_conflicts = []
         try:
-            from core.data_caliber import (build_caliber_meta, serialize_caliber_annotations,
-                                           detect_value_conflicts)
+            from core.data_caliber import build_caliber_meta, detect_value_conflicts, serialize_caliber_annotations
+
             _meta = build_caliber_meta(self._data_dict)
             calib_str = serialize_caliber_annotations(_meta)
             self._data_conflicts = detect_value_conflicts(self._data_dict)
@@ -669,6 +768,7 @@ class SectionWriter:
         plan_str = ""
         try:
             from core.report_planner import build_report_plan, serialize_plan
+
             # R83：委托方必答问题清单注入（decision_memo 或 --client-questions）
             _cq = (self._last_data_context or {}).get("client_questions") or []
             _plan = build_report_plan(self.report_type, client_questions=_cq)
@@ -696,16 +796,21 @@ class SectionWriter:
                     _lines.append(f"选择理由: {_rt[:200]}")
                 fp8_plan_str = "\n".join(_lines)
             # 2026-08-07 柔性化定制：用户需求 → 技能组合方案注入（skill_composer）
-            _req = (self._last_data_context or {}).get("custom_requirement", "") or os.environ.get("CUSTOM_REQUIREMENT", "")
+            _req = (self._last_data_context or {}).get("custom_requirement", "") or os.environ.get(
+                "CUSTOM_REQUIREMENT", ""
+            )
             if _req:
                 try:
-                    from core.skill_composer import parse_requirement, compose_skill_plan
+                    from core.skill_composer import compose_skill_plan, parse_requirement
+
                     _reqp = parse_requirement(_req, self.report_type)
                     _plan = compose_skill_plan(_reqp)
-                    _pl = ["=== 柔性定制写作方案（按用户需求组装）===",
-                           f"需求: {_req}",
-                           f"深度: {_plan['depth']}（模块≈{_plan['params']['modules']}）",
-                           f"受众: {_plan['audience']}"]
+                    _pl = [
+                        "=== 柔性定制写作方案（按用户需求组装）===",
+                        f"需求: {_req}",
+                        f"深度: {_plan['depth']}（模块≈{_plan['params']['modules']}）",
+                        f"受众: {_plan['audience']}",
+                    ]
                     if _plan.get("focus_dims"):
                         _pl.append(f"侧重维度: {', '.join(_plan['focus_dims'])}（权重翻倍）")
                     if _plan.get("frameworks"):
@@ -719,6 +824,7 @@ class SectionWriter:
             if self.report_type == "decision_memo" or _req:
                 try:
                     from core.intent_parser import IntentParser
+
                     _ip = IntentParser()
                     self._intent_plan = _ip.parse(
                         asset=getattr(self, "asset", "") or (self._last_data_context or {}).get("asset", ""),
@@ -733,7 +839,7 @@ class SectionWriter:
             logger.debug("[FP8-PLAN] %s", _e)
         texts = []
         summaries = []
-        _cr = (self._last_data_context or {}).get("compute_results", {}) if hasattr(self, '_last_data_context') else {}
+        _cr = (self._last_data_context or {}).get("compute_results", {}) if hasattr(self, "_last_data_context") else {}
         self._prompt_compute_results = _cr
 
         # R15（2026-08-01 维度级并行）：把 SAC 维度按逻辑相关性分组成 4-6 个并行单元，
@@ -745,9 +851,18 @@ class SectionWriter:
                 if isinstance(state_anchor, dict):
                     _prev_full = state_anchor.get("prev_full_text", "") or ""
                 return self._write_dimension_parallel(
-                    asset, data_str, chart_md, _dd_str, gate_feedback,
-                    learning_findings, style_override, data_injection,
-                    state_anchor, draft_provider, calib_str, plan_str,
+                    asset,
+                    data_str,
+                    chart_md,
+                    _dd_str,
+                    gate_feedback,
+                    learning_findings,
+                    style_override,
+                    data_injection,
+                    state_anchor,
+                    draft_provider,
+                    calib_str,
+                    plan_str,
                     rewrite_indices=rewrite_indices,
                     prev_report_text=_prev_full,
                 )
@@ -760,7 +875,7 @@ class SectionWriter:
         # R13（2026-08-01 三算力架构）：起草段可用 draft_provider 指定资源
         # （Marvis=agent_provider 多实例并行 / local=Ollama），编辑合并仍走 DeepSeek。
         def _write_segment(idx, seg, prev_s):
-            logger.info("Writing seg %d/3: %s (provider=%s)", idx+1, seg["label"][:40], draft_provider)
+            logger.info("Writing seg %d/3: %s (provider=%s)", idx + 1, seg["label"][:40], draft_provider)
             dim_defs = self._build_dimension_defs_full(seg["dimension_ids"])
             # FP3-D5: Bold Call辩论(bull→bear→judge) — 在前瞻层触发
             if idx == 2:
@@ -771,41 +886,67 @@ class SectionWriter:
             # R13 骨架先行：先出骨架（快），再扩写（可选）
             if skeleton_mode:
                 sk_prompt = self._build_skeleton_prompt(idx, seg, asset, dim_defs, data_str, chart_md)
-                skeleton = self._call_llm(sk_prompt, idx, learning_findings, style_override,
-                                          data_injection, provider=draft_provider)
+                skeleton = self._call_llm(
+                    sk_prompt, idx, learning_findings, style_override, data_injection, provider=draft_provider
+                )
                 if skeleton and len(skeleton.strip()) > 100:
-                    logger.info("[SKELETON] seg %d 骨架就绪 (%d字)", idx+1, len(skeleton))
+                    logger.info("[SKELETON] seg %d 骨架就绪 (%d字)", idx + 1, len(skeleton))
                     # 深化：把骨架 + 完整 prompt 给编辑模型（DeepSeek）扩写
-                    prompt = self._build_prompt_v4(idx, seg, asset, dim_defs, data_str, chart_md,
-                                                   skeleton, gate_feedback, learning_findings,
-                                                   state_anchor=state_anchor, data_dict_str=_dd_str,
-                                                   fp8_plan_str=fp8_plan_str)
+                    prompt = self._build_prompt_v4(
+                        idx,
+                        seg,
+                        asset,
+                        dim_defs,
+                        data_str,
+                        chart_md,
+                        skeleton,
+                        gate_feedback,
+                        learning_findings,
+                        state_anchor=state_anchor,
+                        data_dict_str=_dd_str,
+                        fp8_plan_str=fp8_plan_str,
+                    )
                     text = self._call_llm(prompt, idx, learning_findings, style_override, data_injection)
                     if text and len(text.strip()) > 100:
                         return text
-            prompt = self._build_prompt_v4(idx, seg, asset, dim_defs, data_str, chart_md, prev_s, gate_feedback, learning_findings, state_anchor=state_anchor, data_dict_str=_dd_str, fp8_plan_str=fp8_plan_str)
-            text = self._call_llm(prompt, idx, learning_findings, style_override, data_injection, provider=draft_provider)
+            prompt = self._build_prompt_v4(
+                idx,
+                seg,
+                asset,
+                dim_defs,
+                data_str,
+                chart_md,
+                prev_s,
+                gate_feedback,
+                learning_findings,
+                state_anchor=state_anchor,
+                data_dict_str=_dd_str,
+                fp8_plan_str=fp8_plan_str,
+            )
+            text = self._call_llm(
+                prompt, idx, learning_findings, style_override, data_injection, provider=draft_provider
+            )
             if not text or len(text.strip()) < 50:
                 raise RuntimeError("SectionWriter produced empty output for segment %d" % idx)
             return text
 
         try:
             from concurrent.futures import ThreadPoolExecutor, as_completed
+
             _parallel = True
             # R13（2026-08-01 三算力架构/Phase4）：局部修订 —— rewrite_indices 指定要重写的段，
             # 其余段视为已达标跳过（不推倒重写，R7 收敛哲学）。None=全部写。
             _target = rewrite_indices if rewrite_indices is not None else list(range(len(self.segments)))
             # 并行生成目标段（辩论段也并行），prev_s 用空（靠数据字典衔接）
             with ThreadPoolExecutor(max_workers=min(3, len(_target) or 1)) as pool:
-                futures = {pool.submit(_write_segment, idx, self.segments[idx], ""): idx
-                           for idx in _target}
+                futures = {pool.submit(_write_segment, idx, self.segments[idx], ""): idx for idx in _target}
                 seg_texts = {}
                 for fut in as_completed(futures):
                     idx = futures[fut]
                     try:
                         seg_texts[idx] = fut.result()
                     except Exception as e:
-                        logger.warning("Seg %d failed: %s", idx+1, str(e)[:80])
+                        logger.warning("Seg %d failed: %s", idx + 1, str(e)[:80])
             # 按序组装（未重写段留空，由调用方填充）
             for idx in range(len(self.segments)):
                 if idx in seg_texts:
@@ -818,7 +959,7 @@ class SectionWriter:
             logger.warning("并行写作回退串行: %s", str(_pe)[:60])
             _parallel = False
             for idx, seg in enumerate(self.segments):
-                logger.info("Writing seg %d/3: %s", idx+1, seg["label"][:40])
+                logger.info("Writing seg %d/3: %s", idx + 1, seg["label"][:40])
                 dim_defs = self._build_dimension_defs_full(seg["dimension_ids"])
                 prev_s = summaries[-1] if summaries else ""
                 if idx == 2:
@@ -827,14 +968,27 @@ class SectionWriter:
                         texts.append(debate)
                         summaries.append(self._extract_summary(debate))
                         continue
-                prompt = self._build_prompt_v4(idx, seg, asset, dim_defs, data_str, chart_md, prev_s, gate_feedback, learning_findings, state_anchor=state_anchor, data_dict_str=_dd_str, fp8_plan_str=fp8_plan_str)
+                prompt = self._build_prompt_v4(
+                    idx,
+                    seg,
+                    asset,
+                    dim_defs,
+                    data_str,
+                    chart_md,
+                    prev_s,
+                    gate_feedback,
+                    learning_findings,
+                    state_anchor=state_anchor,
+                    data_dict_str=_dd_str,
+                    fp8_plan_str=fp8_plan_str,
+                )
                 text = self._call_llm(prompt, idx, learning_findings, style_override, data_injection)
                 if not text or len(text.strip()) < 50:
                     raise RuntimeError("SectionWriter produced empty output for segment %d" % idx)
                 texts.append(text)
                 summaries.append(self._extract_summary(text))
         report = self._assemble(asset, texts)
-        report = re.sub(r'\{CHART:(\w+)\}', r'![](chart:\1)', report)
+        report = re.sub(r"\{CHART:(\w+)\}", r"![](chart:\1)", report)
         report = self._remove_md_artifacts(report)
         return report
 
@@ -846,7 +1000,7 @@ class SectionWriter:
         治乱序/重复（AgentCPM 范式）。
         """
         return (
-            f"你是资深分析师，为《{asset}深度研究报告》第{seg_idx+1}部分「{seg['label']}」生成章节骨架。\n\n"
+            f"你是资深分析师，为《{asset}深度研究报告》第{seg_idx + 1}部分「{seg['label']}」生成章节骨架。\n\n"
             f"## 分析维度（必须全部出现在骨架中）\n{dim_defs[:1500]}\n\n"
             f"## 可用数据（骨架中的数据点从以下引用）\n{data_str[:800]}\n\n"
             f"## 图表\n{chart_md[:500]}\n\n"
@@ -856,32 +1010,51 @@ class SectionWriter:
             f"要求：覆盖全部维度、结构清晰、含 Bold Call 位置、数据引用标注来源。直接输出骨架。"
         )
 
-    def _build_prompt_v4(self, seg_idx, seg, asset, dim_defs, data_str,
-                         chart_md, prev_summary, gate_feedback, learning_findings="",
-                         scaffold_section="", state_anchor=None, data_dict_str=""):
+    def _build_prompt_v4(
+        self,
+        seg_idx,
+        seg,
+        asset,
+        dim_defs,
+        data_str,
+        chart_md,
+        prev_summary,
+        gate_feedback,
+        learning_findings="",
+        scaffold_section="",
+        state_anchor=None,
+        data_dict_str="",
+    ):
         # R82：数字单一事实源——防跨章节矛盾
         try:
             from core.data_single_source import single_source_prompt
+
             _single_source = single_source_prompt()
         except Exception:
             _single_source = ""
         # R83（2026-08-07）：decision_memo 最高优先级禁令——必须在 prompt 最前面
         _dm_ban = (
-            "## ⚠️【最高优先级禁令——违反即报告作废】\n"
-            "本报告是决策备忘录（面向委托方董事长/CEO），严禁出现以下任何内容：\n"
-            "- 投资评级（增持/买入/持有/中性/减持/卖出）\n"
-            "- 12个月目标价、目标价XX元\n"
-            "- 个股代码（如603662）、EPS预测、PE估值倍数\n"
-            "- 二级市场投资建议\n"
-            '- "深度研究报告""投资建议""行业研报"等二级市场报告用语\n'
-            "报告标题必须用「{0}决策备忘录」，第一段必须是「进入决策建议：进/不进/条件性进」。\n\n"
-        ).format(asset) if self.report_type == "decision_memo" else ""
+            (
+                "## ⚠️【最高优先级禁令——违反即报告作废】\n"
+                "本报告是决策备忘录（面向委托方董事长/CEO），严禁出现以下任何内容：\n"
+                "- 投资评级（增持/买入/持有/中性/减持/卖出）\n"
+                "- 12个月目标价、目标价XX元\n"
+                "- 个股代码（如603662）、EPS预测、PE估值倍数\n"
+                "- 二级市场投资建议\n"
+                '- "深度研究报告""投资建议""行业研报"等二级市场报告用语\n'
+                f"报告标题必须用「{asset}决策备忘录」，第一段必须是「进入决策建议：进/不进/条件性进」。\n\n"
+            )
+            if self.report_type == "decision_memo"
+            else ""
+        )
         parts = [
             _dm_ban,
             "你是一名资深行业分析师。请严格按照以下SAC分析框架，撰写{} {}第{} 部分：{}".format(
                 asset,
                 "决策备忘录" if self.report_type == "decision_memo" else "深度研究报告",
-                seg_idx+1, seg["label"]),
+                seg_idx + 1,
+                seg["label"],
+            ),
             "",
             _single_source,
             "",
@@ -894,23 +1067,29 @@ class SectionWriter:
                     else "行业分析对象，非单一个股；不输出个股代码/个股评级"
                     if self.report_type == "industry_deep"
                     else "证券代码 {}，A股主板".format(self._asset_code or "603662")
-                )
+                ),
             ),
             "",
             "每个维度的每个子问题都要入细节回答，给出具体数据、客户名称、概率、置信度、{}。".format(
                 "决策建议" if self.report_type == "decision_memo" else "目标价"
             ),
             # P2: 输出格式强制（R83：decision_memo 分支——禁评级/目标价，结论先行）
-            ("## [格式强制] 第一段=委托方决策建议（进/不进/条件性进）+依据+投入+回报+最坏损失。"
-             "每段结尾=SoWhat词。每个判断=反方论证（三段式：①具体情境②传导机制③杀伤力评估，禁止'概率XX%'空壳）。"
-             "本报告为决策备忘录：禁止输出个股评级/12个月目标价/二级市场投资建议；"
-             "每个分析板块结尾必须回答'这对委托方的进入决策意味着什么'。"
-             if self.report_type == "decision_memo"
-             else "## [格式强制] 第一段=决策门判断(2/3 GO)。开头=评级+目标价。每段结尾=SoWhat词。每个判断=反方论证（三段式：①具体情境②传导机制③杀伤力评估，禁止'概率XX%'空壳）。"),
+            (
+                "## [格式强制] 第一段=委托方决策建议（进/不进/条件性进）+依据+投入+回报+最坏损失。"
+                "每段结尾=SoWhat词。每个判断=反方论证（三段式：①具体情境②传导机制③杀伤力评估，禁止'概率XX%'空壳）。"
+                "本报告为决策备忘录：禁止输出个股评级/12个月目标价/二级市场投资建议；"
+                "每个分析板块结尾必须回答'这对委托方的进入决策意味着什么'。"
+                if self.report_type == "decision_memo"
+                else "## [格式强制] 第一段=决策门判断(2/3 GO)。开头=评级+目标价。每段结尾=SoWhat词。每个判断=反方论证（三段式：①具体情境②传导机制③杀伤力评估，禁止'概率XX%'空壳）。"
+            ),
             # R82（2026-08-06）：行业报告估值纪律——禁虚构个股EPS/目标价（v9事故）
-            ("## [估值纪律] 本报告为行业分析（非个股），禁止虚构个股 EPS/目标价/评级。"
-             "若行业无明确龙头标的，估值只给'行业估值锚'（如PE区间/EV-Sales）或'可选标的映射'。"
-             "数据不足则明确留白估值。" if self.report_type == "industry_deep" else ""),
+            (
+                "## [估值纪律] 本报告为行业分析（非个股），禁止虚构个股 EPS/目标价/评级。"
+                "若行业无明确龙头标的，估值只给'行业估值锚'（如PE区间/EV-Sales）或'可选标的映射'。"
+                "数据不足则明确留白估值。"
+                if self.report_type == "industry_deep"
+                else ""
+            ),
             "",
             # R82-v2（2026-08-06）：So What 链密度强制升级为零容忍
             # Gate so_what_chain 要求 avg>=0.6 且 min>=0.3。历史失败：多次出现 min=0.00 的段落。
@@ -924,7 +1103,7 @@ class SectionWriter:
             # R82（2026-08-06）：标注覆盖强制——Gate annotation_types 要求 A/E/F/B
             # 至少3种且必须含A。历史失败仅 A/E（缺 F/B）。必须主动使用全类型标注：
             # 实际(A)/估算(E)/远期预测(F)/行业基准(B)。
-            "## [数据标注覆盖强制] 全文数据点必须覆盖至少3种标注类型且必须含(A)：" 
+            "## [数据标注覆盖强制] 全文数据点必须覆盖至少3种标注类型且必须含(A)："
             "历史实际数据标(A)、估算值标(E)、2027年及以后远期预测标(F)、行业基准/对标值标(B)。"
             "严禁全篇只用(A)(E)两种；涉及目标价、未来市场规模、远期份额、预测增速时必须用(F)；"
             "涉及行业基准、可比公司对标、估值倍数时必须用(B)。",
@@ -944,7 +1123,7 @@ class SectionWriter:
             "",
             "## [框架应用结论强制] 每个注入的分析框架必须给出针对本报告标的具体应用结论。"
             "格式：'用【框架名】分析本标的下：具体结论【结论1】、【结论2】、【结论3】'。"
-            "【结论1】等必须替换为含数据/时间/对象的具体判断（如\"结论1：2026H2存量替换放量，对应约23%存量市场\"）。"
+            '【结论1】等必须替换为含数据/时间/对象的具体判断（如"结论1：2026H2存量替换放量，对应约23%存量市场"）。'
             "严禁输出字面占位符（X、Y、Z、【结论1】等字样），必须给出真实结论内容。禁止只提框架名不分析。",
             "",
             # R82（2026-08-06）：数字单一事实源约束——防跨章节矛盾（v9渗透率40vs50事故）
@@ -983,10 +1162,10 @@ class SectionWriter:
             self._build_cross_report_context(seg_idx),
             "",
             # 多模型分歧揭示
-            self._build_module_synthesis(seg_idx, getattr(self, '_prompt_compute_results', None)),
+            self._build_module_synthesis(seg_idx, getattr(self, "_prompt_compute_results", None)),
             "",
             # R60（2026-08-03 V83审计P0）：工具模块数据按维度注入
-            self._build_tool_modules_injection(seg_idx, getattr(self, '_prompt_compute_results', None)),
+            self._build_tool_modules_injection(seg_idx, getattr(self, "_prompt_compute_results", None)),
             "",
             "## 图表",
             chart_md,
@@ -995,20 +1174,20 @@ class SectionWriter:
         rhythm = self.rhythm
         if rhythm and rhythm.get("principles"):
             for p in rhythm.get("principles", []):
-                parts.append("- {}".format(p[:120]))
+                parts.append(f"- {p[:120]}")
             flow = rhythm.get("flow_diagram", "")
             if flow:
-                parts.append("逻辑流: {}".format(flow[:200]))
+                parts.append(f"逻辑流: {flow[:200]}")
         parts.append("")
         base_year = self.time_anchor.get("base_year", "2025")
         current_date = self.time_anchor.get("current_date", "2026-07-29")
         parts.append("")
         parts.append("## 时间范围与数据标注规则（重要）")
-        parts.append("当前日期：{}".format(current_date))
-        parts.append("- {} 及以前的年度数据均为已发布实际数据，标注为 (A)ctual".format(base_year))
-        parts.append("- {} 为当前年度，已发布实际数据标注(A)，未发布的标注(E)".format(str(int(base_year)+1)))
-        parts.append("- 例如：2022A / 2023A / 2024A / {}A / {}E".format(base_year, str(int(base_year)+1)))
-        parts.append("- {} 以后的年度为远期预测，标注为 (F)orecast".format(str(int(base_year)+2)))
+        parts.append(f"当前日期：{current_date}")
+        parts.append(f"- {base_year} 及以前的年度数据均为已发布实际数据，标注为 (A)ctual")
+        parts.append(f"- {str(int(base_year) + 1)} 为当前年度，已发布实际数据标注(A)，未发布的标注(E)")
+        parts.append(f"- 例如：2022A / 2023A / 2024A / {base_year}A / {str(int(base_year) + 1)}E")
+        parts.append(f"- {str(int(base_year) + 2)} 以后的年度为远期预测，标注为 (F)orecast")
         parts.append("- 行业基准数据标注为 (B)enchmark")
         parts.append("")
         # 历史预测校准
@@ -1016,42 +1195,46 @@ class SectionWriter:
         if track:
             parts.append(track)
         parts.append("")
-        
+
         # 方法论风格参考(按当前style注入对应机构)
         style_ref = self._build_institution_style_ref()
         if style_ref:
             parts.append(style_ref)
             parts.append("")
-        
+
         # 详细方法论注入(宏观/策略/生命周期等真实分析框架)
         method_ref = self._build_methodology_reference(seg_idx)
         if method_ref:
             parts.append(method_ref)
             parts.append("")
         # FP5: Hot failure注入 — 上次Gate失败的规则提到最前
-        if gate_feedback and '[HOT]' in gate_feedback:
+        if gate_feedback and "[HOT]" in gate_feedback:
             parts.append("## [⚠️ 上次评审未通过(必须修复)]")
-            for hf in gate_feedback.split('[HOT]'):
+            for hf in gate_feedback.split("[HOT]"):
                 hf = hf.strip()
                 if hf:
                     parts.append(f"- {hf}")
             parts.append("")
-        
+
         parts.append("## [内容要求]")
         parts.append("- 每段以So What链结尾: 数据→分析→判断→建议")
         parts.append("- 每个判断必须有反方论证（三段式：情境→机制→杀伤力，禁止'概率XX%'空壳）+证伪条件")
-        parts.append("- {}".format(
-            "包含决策建议、投入测算、最坏损失上限、执行路线图（R83 decision_memo：禁评级/目标价）"
-            if self.report_type == "decision_memo"
-            else "包含目标价、评级、3年盈利预测表"
-        ))
+        parts.append(
+            "- {}".format(
+                "包含决策建议、投入测算、最坏损失上限、执行路线图（R83 decision_memo：禁评级/目标价）"
+                if self.report_type == "decision_memo"
+                else "包含目标价、评级、3年盈利预测表"
+            )
+        )
         parts.append("- Bold Call必须有5要素: 方向/催化剂/概率/时限/确信度")
         parts.append("")
         parts.append("## [数据要求]")
         parts.append("- 每个数值标注(A)(E)(F)(B)类型")
         parts.append("- 每个数值标注来源(报告名称+机构+日期)")
         parts.append("- 每个数字标注置信度(H/M/L)")
-        parts.append("- 数据纪律：无来源/无依据的具体数字不得写入——无法给出依据的数字，改为'数据不足，明确留白'；估算(E)必须带估算依据(如'基于A×B')，禁止凭空数字贴E标签")
+        parts.append(
+            "- 数据纪律：无来源/无依据的具体数字不得写入——无法给出依据的数字，改为'数据不足，明确留白'；估算(E)必须带估算依据(如'基于A×B')，禁止凭空数字贴E标签"
+        )
         parts.append("- 至少3个结构化数据表格")
         parts.append("")
         parts.append("## [禁止事项]")
@@ -1063,6 +1246,7 @@ class SectionWriter:
         # R79 P0-1 写作端联动：把模板句黑名单注入写作提示，从源头拦截套话生成
         try:
             from core.template_blacklist import TEMPLATE_BLACKLIST
+
             if TEMPLATE_BLACKLIST:
                 parts.append("- 以下句子为模板句黑名单，**禁止出现或改写变体出现**：")
                 for _p in TEMPLATE_BLACKLIST:
@@ -1078,11 +1262,17 @@ class SectionWriter:
             parts.append(scaffold_section)
             parts.append("[/骨架] 报告蓝图/方法论片段仅作思路参考，禁止产生第二套章节编号。")
         if prev_summary:
-            parts.append(""); parts.append("## 前段摘要"); parts.append(prev_summary)
+            parts.append("")
+            parts.append("## 前段摘要")
+            parts.append(prev_summary)
         if gate_feedback:
-            parts.append(""); parts.append("## 上一轮评审反馈"); parts.append(gate_feedback)
+            parts.append("")
+            parts.append("## 上一轮评审反馈")
+            parts.append(gate_feedback)
         if learning_findings:
-            parts.append(""); parts.append("## 历史学习反馈"); parts.append(learning_findings)
+            parts.append("")
+            parts.append("## 历史学习反馈")
+            parts.append(learning_findings)
         # R7 收敛锚点：上一轮完整报告 + 维度覆盖矩阵 + 修订目标
         # 这是"收敛机制"核心——LLM 必须知道已写了什么、哪里缺、哪里别动，
         # 否则每轮重写等于重新掷骰子（发散根因）。
@@ -1103,44 +1293,46 @@ class SectionWriter:
                 # 只给上一轮本段相关的摘要（首段全文+后续段浓缩）
                 parts.append(f"- 上一轮全文开头节选（前{len(prev_text[:1200])}字）:")
                 parts.append(prev_text[:1200])
-            parts.append("- 注意：已覆盖维度不要从零重写，只针对缺失/失败项修订；"
-                        "保持已达标部分（数据口径、章节结构）不变。")
+            parts.append(
+                "- 注意：已覆盖维度不要从零重写，只针对缺失/失败项修订；保持已达标部分（数据口径、章节结构）不变。"
+            )
             # R8 跨轮退化信号：上一轮比上上轮差时，明确禁止推倒重写
             if state_anchor.get("regression"):
-                parts.append("- [⚠️ 跨轮退化] 上一轮质量比前一轮下降。禁止整体推倒重写，"
-                            "必须基于上一轮全文做针对性修订，只改导致退化的部分。")
+                parts.append(
+                    "- [⚠️ 跨轮退化] 上一轮质量比前一轮下降。禁止整体推倒重写，"
+                    "必须基于上一轮全文做针对性修订，只改导致退化的部分。"
+                )
         return "\n".join(parts)
 
     def _debate_bold_call(self, asset, data_str):
         """FP3-D5: Bold Call辩论 — bull agent vs bear agent vs judge"""
         try:
-            base_prompt = (
-                f'分析标的:{asset}\n\n可用数据:{data_str[:500]}\n\n'
-                f'请给出该标的的核心投资判断。'
-            )
+            base_prompt = f"分析标的:{asset}\n\n可用数据:{data_str[:500]}\n\n请给出该标的的核心投资判断。"
             # Bull agent
             _bull_prompt = (
-                '\n\n从看多角度给出核心论点(200字以内),包含催化剂与预期回报。'
+                "\n\n从看多角度给出核心论点(200字以内),包含催化剂与预期回报。"
                 if self.report_type == "decision_memo"
-                else '\n\n从看多角度给出核心论点(200字以内),包含目标价和催化剂。'
+                else "\n\n从看多角度给出核心论点(200字以内),包含目标价和催化剂。"
             )
-            bull = self._call_llm(base_prompt + _bull_prompt, 99, style_override='')
-            # Bear agent  
+            bull = self._call_llm(base_prompt + _bull_prompt, 99, style_override="")
+            # Bear agent
             bear = self._call_llm(
-                base_prompt + f'\n\n看多方认为:{bull[:300]}\n\n从看空角度反驳(200字以内),包含风险因素。',
-                100, style_override='')
+                base_prompt + f"\n\n看多方认为:{bull[:300]}\n\n从看空角度反驳(200字以内),包含风险因素。",
+                100,
+                style_override="",
+            )
             # Judge agent
             _judge_prompt = (
-                f'作为首席分析师,综合双方观点给出最终Bold Call(200字),包含概率、时间窗口和证伪条件。'
+                "作为首席分析师,综合双方观点给出最终Bold Call(200字),包含概率、时间窗口和证伪条件。"
                 if self.report_type == "decision_memo"
-                else f'作为首席分析师,综合双方观点给出最终Bold Call(200字),包含目标价、概率、时间窗口和证伪条件。'
+                else "作为首席分析师,综合双方观点给出最终Bold Call(200字),包含目标价、概率、时间窗口和证伪条件。"
             )
             judge = self._call_llm(
-                base_prompt + f'\n\n看多:{bull[:300]}\n\n看空:{bear[:300]}\n\n' + _judge_prompt,
-                101, style_override='')
+                base_prompt + f"\n\n看多:{bull[:300]}\n\n看空:{bear[:300]}\n\n" + _judge_prompt, 101, style_override=""
+            )
             return judge
         except Exception as e:
-            logger.debug('[DEBATE] %s', e)
+            logger.debug("[DEBATE] %s", e)
             return ""
 
     def _build_data_bundle(self, data_context):
@@ -1151,95 +1343,107 @@ class SectionWriter:
         """
         bundle = {"live": {}, "reference": {}}
         data = data_context or {}
-        
+
         # ═══ LIVE 实时数据层 (akshare实时拉取) ═══
         # akshare结构化财务(每次运行实时拉取)
         fin = data.get("financials", {}) if isinstance(data, dict) else {}
         if fin:
             bundle["live"]["financials"] = fin
-        
+
         # akshare实时行情/估值
-        if isinstance(data, dict) and data.get('chart_data'):
-            cd = data['chart_data']
+        if isinstance(data, dict) and data.get("chart_data"):
+            cd = data["chart_data"]
             if isinstance(cd, dict):
                 bundle["live"]["chart_data"] = cd
-        
+
         # Tavily新闻(实时搜索)
-        if isinstance(data, dict) and data.get('tavily'):
-            bundle["live"]["news"] = data['tavily']
-        
+        if isinstance(data, dict) and data.get("tavily"):
+            bundle["live"]["news"] = data["tavily"]
+
         # compute_results(实时计算)
         cr = data.get("compute_results", {}) if isinstance(data, dict) else {}
         if cr:
             bundle["live"]["compute"] = cr
-        
+
         # 宏观(实时)
         macro = data.get("macro_ctx", {}) if isinstance(data, dict) else {}
         if macro:
             bundle["live"]["macro"] = {
-                "earnings_cycle": getattr(macro, 'earnings_cycle', ''),
-                "liquidity_cycle": getattr(macro, 'liquidity_cycle', ''),
-                "risk_preference": getattr(macro, 'risk_preference', ''),
+                "earnings_cycle": getattr(macro, "earnings_cycle", ""),
+                "liquidity_cycle": getattr(macro, "liquidity_cycle", ""),
+                "risk_preference": getattr(macro, "risk_preference", ""),
             }
 
         # data_feeds 产出（行业新闻/研报/专利/雪球情绪/招聘信号）
         # 修复（2026-08-01 审计）：feeds 曾只写 context 顶层未被消费，现随 collected_data 进入 live 层
-        feed_keys = ["feed_news", "feed_news_raw", "feed_reports", "feed_report_count",
-                     "feed_target_reports", "feed_basics", "feed_patents",
-                     "extra_sentiment", "extra_jobs"]
+        feed_keys = [
+            "feed_news",
+            "feed_news_raw",
+            "feed_reports",
+            "feed_report_count",
+            "feed_target_reports",
+            "feed_basics",
+            "feed_patents",
+            "extra_sentiment",
+            "extra_jobs",
+        ]
         feeds = {k: data.get(k) for k in feed_keys if data.get(k) is not None}
         if feeds:
             bundle["live"]["feeds"] = feeds
-        
+
         # ═══ REFERENCE 静态知识层 (你喂的,只作参考) ═══
         # 估值参数(历史投行模型)
         try:
             from core.model_extractor import get_params
-            _asset_name = data.get('asset', '') if isinstance(data, dict) else ''
-            _company_key = str(_asset_name).split(' ')[0].split('(')[0].strip() if _asset_name else ''
+
+            _asset_name = data.get("asset", "") if isinstance(data, dict) else ""
+            _company_key = str(_asset_name).split(" ")[0].split("(")[0].strip() if _asset_name else ""
             if _company_key:
                 _vparams = get_params(_company_key)
                 if _vparams:
                     bundle["reference"]["valuation_params"] = _vparams
         except Exception:
             pass
-        
+
         # 行业基线/一致预期/驱动(历史研报)
         try:
             import json as _json
             from pathlib import Path as _P
-            _data_dir = _P(__file__).resolve().parent.parent / 'data'
-            for key, fname in [("industry_baselines","industry_baselines.json"),
-                               ("consensus_prices","consensus_prices.json"),
-                               ("industry_drivers","industry_drivers.json"),
-                               ("methodology_styles","methodology_styles.json"),
-                               ("methodology_frameworks","methodology_frameworks.json"),
-                               ("methodology_detailed","methodology_frameworks_detailed.json"),
-                               ("baseline_findings","baseline_findings.json"),
-                               ("ib_templates","investment_bank_templates.json"),
-                               # 2026-08-01 吸收产物：1hao 资料库全量扫描
-                               ("absorbed_baseline","absorbed_baseline.json"),
-                               ("absorbed_style_dna","absorbed_style_dna.json"),
-                               ("absorbed_methodology","absorbed_methodology.json")]:
+
+            _data_dir = _P(__file__).resolve().parent.parent / "data"
+            for key, fname in [
+                ("industry_baselines", "industry_baselines.json"),
+                ("consensus_prices", "consensus_prices.json"),
+                ("industry_drivers", "industry_drivers.json"),
+                ("methodology_styles", "methodology_styles.json"),
+                ("methodology_frameworks", "methodology_frameworks.json"),
+                ("methodology_detailed", "methodology_frameworks_detailed.json"),
+                ("baseline_findings", "baseline_findings.json"),
+                ("ib_templates", "investment_bank_templates.json"),
+                # 2026-08-01 吸收产物：1hao 资料库全量扫描
+                ("absorbed_baseline", "absorbed_baseline.json"),
+                ("absorbed_style_dna", "absorbed_style_dna.json"),
+                ("absorbed_methodology", "absorbed_methodology.json"),
+            ]:
                 _fp = _data_dir / fname
                 if _fp.exists():
-                    bundle["reference"][key] = _json.loads(_fp.read_text(encoding='utf-8'))
+                    bundle["reference"][key] = _json.loads(_fp.read_text(encoding="utf-8"))
         except Exception:
             pass
-        
+
         # 商业模式(知识)
         biz = data.get("biz_model", {}) if isinstance(data, dict) else {}
         if biz:
             bundle["reference"]["biz"] = {
-                "type": getattr(biz, 'biz_name', ''),
-                "industry": getattr(biz, 'industry_tags', []),
+                "type": getattr(biz, "biz_name", ""),
+                "industry": getattr(biz, "industry_tags", []),
             }
-        
+
         # 估值分位(实时/静态混合)
         val = data.get("valuation_percentile", {}) if isinstance(data, dict) else {}
         if val:
             bundle["live"]["valuation"] = val
-        
+
         return bundle
 
     def _build_institution_baseline(self) -> str:
@@ -1252,10 +1456,11 @@ class SectionWriter:
         try:
             import json as _json
             from pathlib import Path as _P
-            _path = _P(__file__).resolve().parent.parent / 'data' / 'absorbed_baseline.json'
+
+            _path = _P(__file__).resolve().parent.parent / "data" / "absorbed_baseline.json"
             if not _path.exists():
                 return ""
-            base = _json.loads(_path.read_text(encoding='utf-8'))
+            base = _json.loads(_path.read_text(encoding="utf-8"))
             # 取券商报告/深度报告/全量 三个基准，作为写作密度目标
             targets = []
             for cat in ("券商报告", "深度报告", "all"):
@@ -1269,8 +1474,10 @@ class SectionWriter:
                     )
             if not targets:
                 return ""
-            lines = ["## 机构写作基准（对标顶级机构研报统计）",
-                     "以下为真实顶级机构研报的写作密度统计，你的正文应达到相近密度（判断密度尤其重要）："]
+            lines = [
+                "## 机构写作基准（对标顶级机构研报统计）",
+                "以下为真实顶级机构研报的写作密度统计，你的正文应达到相近密度（判断密度尤其重要）：",
+            ]
             lines.extend(f"- {t}" for t in targets)
             lines.append("重点：保持高判断密度（多用'我们认为/预计/判断'），体现反共识观点，标注数据来源。")
             lines.append("")
@@ -1297,18 +1504,19 @@ class SectionWriter:
         try:
             import json as _json
             from pathlib import Path as _P
+
             root = _P(__file__).resolve().parent.parent
             # 三级优先（宏观方法论）
             _paths = [
-                root / 'data' / 'methodology_macro_deep.json',
-                root / 'data' / 'methodology_macro_absorbed.json',
-                root / 'data' / 'methodology_frameworks_detailed.json',
+                root / "data" / "methodology_macro_deep.json",
+                root / "data" / "methodology_macro_absorbed.json",
+                root / "data" / "methodology_frameworks_detailed.json",
             ]
             detailed = None
             for _p in _paths:
                 if _p.exists():
                     try:
-                        detailed = _json.loads(_p.read_text(encoding='utf-8'))
+                        detailed = _json.loads(_p.read_text(encoding="utf-8"))
                         if detailed:
                             break
                     except Exception:
@@ -1318,13 +1526,18 @@ class SectionWriter:
 
             # R56：加载深度吸收产物（行业/估值/研报/回测）
             _kb = {}
-            for _name in ('methodology_industry_deep', 'methodology_valuation_deep',
-                          'methodology_reports_deep', 'methodology_backtest_deep',
-                          'methodology_consulting_deep', 'methodology_audit_deep'):
-                _p = root / 'data' / f'{_name}.json'
+            for _name in (
+                "methodology_industry_deep",
+                "methodology_valuation_deep",
+                "methodology_reports_deep",
+                "methodology_backtest_deep",
+                "methodology_consulting_deep",
+                "methodology_audit_deep",
+            ):
+                _p = root / "data" / f"{_name}.json"
                 if _p.exists():
                     try:
-                        _kb[_name] = _json.loads(_p.read_text(encoding='utf-8'))
+                        _kb[_name] = _json.loads(_p.read_text(encoding="utf-8"))
                     except Exception:
                         continue
 
@@ -1332,11 +1545,11 @@ class SectionWriter:
             # segment 1(竞争层) → 策略/行业竞争/研报范式
             # segment 2(前瞻层) → 估值/宏观/回测基准
             topic_map = {
-                0: ['business_model', 'industry_lifecycle'],
-                1: ['strategy'],
-                2: ['macro', 'strategy'],
+                0: ["business_model", "industry_lifecycle"],
+                1: ["strategy"],
+                2: ["macro", "strategy"],
             }
-            topics = topic_map.get(seg_idx, ['macro'])
+            topics = topic_map.get(seg_idx, ["macro"])
 
             parts = ["[方法论参考]"]
             for topic in topics:
@@ -1345,12 +1558,12 @@ class SectionWriter:
                     continue
                 # 取前2份
                 for item in items[:2]:
-                    title = item.get('title', '')[:50]
-                    summary = item.get('summary', '')
-                    framework = item.get('framework', '')
-                    points = item.get('points', [])
-                    methods = item.get('methods', [])
-                    key_signals = item.get('key_signals', [])
+                    title = item.get("title", "")[:50]
+                    summary = item.get("summary", "")
+                    framework = item.get("framework", "")
+                    points = item.get("points", [])
+                    methods = item.get("methods", [])
+                    key_signals = item.get("key_signals", [])
                     if not (title or framework):
                         continue
                     parts.append(f"  [{title}]")
@@ -1363,7 +1576,7 @@ class SectionWriter:
                     if key_signals:
                         for sig in key_signals[:3]:
                             if isinstance(sig, dict):
-                                parts.append(f"    信号[{sig.get('signal','')[:40]}]: {sig.get('meaning','')[:80]}")
+                                parts.append(f"    信号[{sig.get('signal', '')[:40]}]: {sig.get('meaning', '')[:80]}")
                     if points:
                         for p in points[:3]:
                             parts.append(f"    · {p}")
@@ -1376,63 +1589,73 @@ class SectionWriter:
             # segment 2(前瞻层) → 估值模型 + 回测基准
             if _kb:
                 parts.append("  [深度知识库]")
-                if seg_idx == 0 and 'methodology_industry_deep' in _kb:
-                    _ind = _kb['methodology_industry_deep']
-                    for _k, _label in [('industry_structure', '行业结构'),
-                                       ('supply_demand', '供需分析'),
-                                       ('lifecycle', '生命周期')]:
+                if seg_idx == 0 and "methodology_industry_deep" in _kb:
+                    _ind = _kb["methodology_industry_deep"]
+                    for _k, _label in [
+                        ("industry_structure", "行业结构"),
+                        ("supply_demand", "供需分析"),
+                        ("lifecycle", "生命周期"),
+                    ]:
                         _blk = _ind.get(_k, {})
-                        _rules = _blk.get('checklist') or _blk.get('core_principles') or []
+                        _rules = _blk.get("checklist") or _blk.get("core_principles") or []
                         if _rules:
                             parts.append(f"    {_label}: {'; '.join(str(r)[:60] for r in _rules[:3])}")
                 elif seg_idx == 1:
-                    if 'methodology_industry_deep' in _kb:
-                        _ind = _kb['methodology_industry_deep']
-                        for _k, _label in [('competitive', '竞争格局'),
-                                           ('global_regional', '全球-区域')]:
+                    if "methodology_industry_deep" in _kb:
+                        _ind = _kb["methodology_industry_deep"]
+                        for _k, _label in [("competitive", "竞争格局"), ("global_regional", "全球-区域")]:
                             _blk = _ind.get(_k, {})
-                            _rules = _blk.get('checklist') or _blk.get('quant_methods') or []
+                            _rules = _blk.get("checklist") or _blk.get("quant_methods") or []
                             if _rules:
                                 parts.append(f"    {_label}: {'; '.join(str(r)[:60] for r in _rules[:3])}")
-                    if 'methodology_reports_deep' in _kb:
-                        _rp = _kb['methodology_reports_deep']
-                        _jd = _rp.get('judgment_density', {}).get('baseline', {})
+                    if "methodology_reports_deep" in _kb:
+                        _rp = _kb["methodology_reports_deep"]
+                        _jd = _rp.get("judgment_density", {}).get("baseline", {})
                         if _jd:
                             parts.append(f"    判断密度基准: {str(_jd)[:80]}")
                     # R57：MBB咨询方法论（问题树/假设驱动/利润池）
-                    if 'methodology_consulting_deep' in _kb:
-                        _mc = _kb['methodology_consulting_deep']
-                        for _k, _label in [('issue_tree_mece', '问题树MECE'),
-                                           ('profit_pool', '利润池'),
-                                           ('rule_of_three', '三四规则')]:
+                    if "methodology_consulting_deep" in _kb:
+                        _mc = _kb["methodology_consulting_deep"]
+                        for _k, _label in [
+                            ("issue_tree_mece", "问题树MECE"),
+                            ("profit_pool", "利润池"),
+                            ("rule_of_three", "三四规则"),
+                        ]:
                             _blk = _mc.get(_k, {})
-                            _rules = _blk.get('checklist') or _blk.get('core_principles') or []
+                            _rules = _blk.get("checklist") or _blk.get("core_principles") or []
                             if _rules:
                                 parts.append(f"    {_label}: {'; '.join(str(r)[:55] for r in _rules[:2])}")
                 elif seg_idx == 2:
-                    if 'methodology_valuation_deep' in _kb:
-                        _val = _kb['methodology_valuation_deep']
-                        for _k, _label in [('dcf', 'DCF'), ('comparable', '可比估值'),
-                                           ('three_statement', '三表勾稽'),
-                                           ('cross_validation', '估值交叉验证')]:
+                    if "methodology_valuation_deep" in _kb:
+                        _val = _kb["methodology_valuation_deep"]
+                        for _k, _label in [
+                            ("dcf", "DCF"),
+                            ("comparable", "可比估值"),
+                            ("three_statement", "三表勾稽"),
+                            ("cross_validation", "估值交叉验证"),
+                        ]:
                             _blk = _val.get(_k, {})
-                            _rules = _blk.get('checklist') or _blk.get('core_principles') or []
+                            _rules = _blk.get("checklist") or _blk.get("core_principles") or []
                             if _rules:
                                 parts.append(f"    {_label}: {'; '.join(str(r)[:60] for r in _rules[:3])}")
-                    if 'methodology_backtest_deep' in _kb:
-                        _bt = _kb['methodology_backtest_deep']
-                        _prof = _bt.get('gold_report_profile', {})
+                    if "methodology_backtest_deep" in _kb:
+                        _bt = _kb["methodology_backtest_deep"]
+                        _prof = _bt.get("gold_report_profile", {})
                         if _prof:
-                            parts.append(f"    金牌报告基准: 判断{_prof.get('judgment_density','?')}/千字, "
-                                         f"数据{_prof.get('data_density','?')}/千字")
+                            parts.append(
+                                f"    金牌报告基准: 判断{_prof.get('judgment_density', '?')}/千字, "
+                                f"数据{_prof.get('data_density', '?')}/千字"
+                            )
                     # R57：四大审计方法论（财务真实性核查）
-                    if 'methodology_audit_deep' in _kb:
-                        _ma = _kb['methodology_audit_deep']
-                        for _k, _label in [('fraud_signals', '财务造假信号'),
-                                           ('revenue_recognition', '收入确认'),
-                                           ('working_capital_quality', '营运资本质量')]:
+                    if "methodology_audit_deep" in _kb:
+                        _ma = _kb["methodology_audit_deep"]
+                        for _k, _label in [
+                            ("fraud_signals", "财务造假信号"),
+                            ("revenue_recognition", "收入确认"),
+                            ("working_capital_quality", "营运资本质量"),
+                        ]:
                             _blk = _ma.get(_k, {})
-                            _rules = _blk.get('checklist') or _blk.get('core_principles') or []
+                            _rules = _blk.get("checklist") or _blk.get("core_principles") or []
                             if _rules:
                                 parts.append(f"    {_label}: {'; '.join(str(r)[:55] for r in _rules[:2])}")
             if len(parts) == 1:
@@ -1447,23 +1670,27 @@ class SectionWriter:
         try:
             import json as _json
             from pathlib import Path as _P
-            _styles_path = _P(__file__).resolve().parent.parent / 'data' / 'methodology_styles.json'
+
+            _styles_path = _P(__file__).resolve().parent.parent / "data" / "methodology_styles.json"
             if not _styles_path.exists():
                 return ""
-            styles = _json.loads(_styles_path.read_text(encoding='utf-8'))
+            styles = _json.loads(_styles_path.read_text(encoding="utf-8"))
             # 映射2hao风格到机构
             inst_map = {
-                'cicc': 'cicc', 'goldman_sachs': 'goldman_sachs',
-                'mckinsey': 'bcg', 'bcg': 'bcg',
-                'ms': 'morgan_stanley', 'morgan_stanley': 'morgan_stanley',
+                "cicc": "cicc",
+                "goldman_sachs": "goldman_sachs",
+                "mckinsey": "bcg",
+                "bcg": "bcg",
+                "ms": "morgan_stanley",
+                "morgan_stanley": "morgan_stanley",
             }
-            inst = inst_map.get(self.style, '')
+            inst = inst_map.get(self.style, "")
             inst_styles = styles.get(inst, []) if inst else []
             if not inst_styles:
                 return ""
             # 取第一份报告的结构
             sample = inst_styles[0]
-            sections = sample.get('sections', {})
+            sections = sample.get("sections", {})
             if not sections:
                 return ""
             parts = [f"[机构风格参考: {inst}]"]
@@ -1481,24 +1708,30 @@ class SectionWriter:
         # R85（2026-08-07）：decision_memo 数据锚定强制约束（A1/A2/A3）
         # 治"LLM 换行业叙事"根因——enrich 数据从"可选参考"变为"强制约束"
         if self.report_type == "decision_memo":
-            sp += ("\n## [数据锚定-必须引用] 本报告是给委托方决策者的备忘录，下列数据点必须出现在正文"
-                   "（禁止遗漏，禁止用其他数据替代）：\n"
-                   "  1. 全球油位市场规模 46亿美元(2024)→65亿美元(2030)，来自 enrich fig_revenue_trend\n"
-                   "  2. 中国市场规模 166亿(2024)→172亿(2025)元，来自 enrich fig_market_size_china\n"
-                   "  3. 竞争真相：托肯恒山(中石化核心)/富仁高科(国标制定者)/KROHNE，来自 enrich competition_truth\n"
-                   "  4. 卡脖子：磁致伸缩丝被日企TDK垄断，国产化率约30%，来自 enrich tech_route\n"
-                   "  5. 政策窗口：加油站防渗改造执行率62%→2026H2替换高峰，来自 enrich policy_chain\n"
-                   "  6. 生产主体：华虹科技(柯力控股子公司,拟增持96%)，来自 enrich huahong_intro\n"
-                   "  7. 整合对象：久通物联(80+国家渠道)，来自 enrich jiutong_intro\n"
-                   "  8. 决策结论(必须来自 DecisionEngine，禁止自编)：卡位评分X.X/5、三年投入约1.5-2亿、"
-                   "最坏损失约2亿≈0.6倍归母净利\n")
-            sp += ("\n## [数据来源禁令-禁止引入] 下列实体/叙事在 enrich 数据中不存在，禁止写入正文"
-                   "（它们是另一个行业的叙事）：\n"
-                   "  禁止: 商用车/车规/汽车油箱/国四排放/整车厂/苏奥传感/奥联电子/武汉凡谷\n"
-                   "  若必须补充行业知识，标注(E)估算+来源，不得冒充 enrich 数据\n")
-            sp += ("\n## [执行摘要强制] 执行摘要必须包含：一句话结论(进/不进/条件性进)+卡位评分+"
-                   "三年投入+最坏损失+执行前提(久通订单承诺≥5000只/年)。禁止把委托方匿名化，"
-                   "必须写明'柯力传感'与'华虹科技'。")
+            sp += (
+                "\n## [数据锚定-必须引用] 本报告是给委托方决策者的备忘录，下列数据点必须出现在正文"
+                "（禁止遗漏，禁止用其他数据替代）：\n"
+                "  1. 全球油位市场规模 46亿美元(2024)→65亿美元(2030)，来自 enrich fig_revenue_trend\n"
+                "  2. 中国市场规模 166亿(2024)→172亿(2025)元，来自 enrich fig_market_size_china\n"
+                "  3. 竞争真相：托肯恒山(中石化核心)/富仁高科(国标制定者)/KROHNE，来自 enrich competition_truth\n"
+                "  4. 卡脖子：磁致伸缩丝被日企TDK垄断，国产化率约30%，来自 enrich tech_route\n"
+                "  5. 政策窗口：加油站防渗改造执行率62%→2026H2替换高峰，来自 enrich policy_chain\n"
+                "  6. 生产主体：华虹科技(柯力控股子公司,拟增持96%)，来自 enrich huahong_intro\n"
+                "  7. 整合对象：久通物联(80+国家渠道)，来自 enrich jiutong_intro\n"
+                "  8. 决策结论(必须来自 DecisionEngine，禁止自编)：卡位评分X.X/5、三年投入约1.5-2亿、"
+                "最坏损失约2亿≈0.6倍归母净利\n"
+            )
+            sp += (
+                "\n## [数据来源禁令-禁止引入] 下列实体/叙事在 enrich 数据中不存在，禁止写入正文"
+                "（它们是另一个行业的叙事）：\n"
+                "  禁止: 商用车/车规/汽车油箱/国四排放/整车厂/苏奥传感/奥联电子/武汉凡谷\n"
+                "  若必须补充行业知识，标注(E)估算+来源，不得冒充 enrich 数据\n"
+            )
+            sp += (
+                "\n## [执行摘要强制] 执行摘要必须包含：一句话结论(进/不进/条件性进)+卡位评分+"
+                "三年投入+最坏损失+执行前提(久通订单承诺≥5000只/年)。禁止把委托方匿名化，"
+                "必须写明'柯力传感'与'华虹科技'。"
+            )
         try:
             if style_override:
                 enriched_sp = KnowledgeInjector.enrich_writing_prompt(sp, style_override)
@@ -1511,21 +1744,22 @@ class SectionWriter:
             # 用户标准：字数容量对标国际顶级投行（深度报告 1.2-1.5万字）。
             # 此前 6000 token（约3000-4000汉字）→ 组级 400*16=6400 字上限 → 实际产出 ~3900字，
             # 远低于投行标准。10000 token 足够 6000+ 汉字/组。
-            _mt = int(os.environ.get("SEG_MAX_TOKENS", "10000"))
-            r = call_deepseek([
-                {"role": "system", "content": sp},
-                {"role": "user", "content": prompt}
-            ], temperature=0.35, max_tokens=_mt, provider=provider)
+            _mt = settings.seg_max_tokens()
+            r = call_deepseek(
+                [{"role": "system", "content": sp}, {"role": "user", "content": prompt}],
+                temperature=0.35,
+                max_tokens=_mt,
+                provider=provider,
+            )
             return self._clean(r["choices"][0]["message"]["content"])
         except Exception as e:
             logger.error("Seg %d failed: %s", seg_idx, e)
             # P2-audit 2026-08-24: raise from e 保住根因链（此前根因被切断）
-            raise RuntimeError("LLM call failed for section %d" % (seg_idx+1)) from e
+            raise RuntimeError("LLM call failed for section %d" % (seg_idx + 1)) from e
 
     @staticmethod
     def _clean(text):
-        for p in ["好的，收到", "以下是为您呈现", "作为资深行业分析师", "好的，我将",
-                   "以下是我的"]:
+        for p in ["好的，收到", "以下是为您呈现", "作为资深行业分析师", "好的，我将", "以下是我的"]:
             if p in text[:200]:
                 text = text.replace(p, "", 1)
                 break
@@ -1545,25 +1779,26 @@ class SectionWriter:
         不再剥光排版。若管道后续 StyleCompiler 需要纯文本，由 style 节点处理。
         """
         import re as _re
+
         # 1. 移除 HTML 注释块
-        text = _re.sub(r'<!--.*?-->', '', text, flags=_re.DOTALL)
+        text = _re.sub(r"<!--.*?-->", "", text, flags=_re.DOTALL)
         # 2. 压缩连续空行
-        text = _re.sub(r'\n{3,}', '\n\n', text)
+        text = _re.sub(r"\n{3,}", "\n\n", text)
         # 3. 移除 LLM 尾部自述（白名单：仅当位于文末 300 字内）
         tail_phrases = [
-            r'以下(?:是|为).{0,20}(?:呈现|生成|我的回答).{0,80}$',
-            r'希望(?:这份|这个|以上).{0,40}(?:对您有帮助|能帮助到你).{0,80}$',
-            r'作为一名.{0,20}(?:分析师|AI|语言模型).{0,80}$',
-            r'^好的[,，](?:收到|明白|我(?:已|会|将)).{0,80}$',
+            r"以下(?:是|为).{0,20}(?:呈现|生成|我的回答).{0,80}$",
+            r"希望(?:这份|这个|以上).{0,40}(?:对您有帮助|能帮助到你).{0,80}$",
+            r"作为一名.{0,20}(?:分析师|AI|语言模型).{0,80}$",
+            r"^好的[,，](?:收到|明白|我(?:已|会|将)).{0,80}$",
         ]
         for pat in tail_phrases:
-            text = _re.sub(pat, '', text, flags=_re.MULTILINE)
+            text = _re.sub(pat, "", text, flags=_re.MULTILINE)
         # 4. 去除首尾空白
         return text.strip()
 
     @staticmethod
     def _extract_summary(text):
-        m = re.findall(r'[^。]*?(?:我们认为|我们判断|核心判断|核心结论|我们预计)[^。]*。', text)
+        m = re.findall(r"[^。]*?(?:我们认为|我们判断|核心判断|核心结论|我们预计)[^。]*。", text)
         return " | ".join(m[:3]) if m else text[:200].replace("\n", " ") + "…"
 
     @staticmethod
@@ -1572,12 +1807,26 @@ class SectionWriter:
         原 129 行序列化逻辑已抽离，保持接口不变（resume_driver 等外部调用兼容）。
         """
         from pipeline.sw_serialize import serialize_chart_data
+
         return serialize_chart_data(data)
-    def _write_dimension_parallel(self, asset, data_str, chart_md, _dd_str,
-                                  gate_feedback, learning_findings, style_override,
-                                  data_injection, state_anchor, draft_provider,
-                                  calib_str="", plan_str="",
-                                  rewrite_indices=None, prev_report_text=""):
+
+    def _write_dimension_parallel(
+        self,
+        asset,
+        data_str,
+        chart_md,
+        _dd_str,
+        gate_feedback,
+        learning_findings,
+        style_override,
+        data_injection,
+        state_anchor,
+        draft_provider,
+        calib_str="",
+        plan_str="",
+        rewrite_indices=None,
+        prev_report_text="",
+    ):
         """R15 维度级并行：SAC 维度分组 → 各组并行写 → 编辑合并。
 
         比 3 段并行更细粒度：每组 2-4 维、1200-1800 字，单次调用 20-30s。
@@ -1593,6 +1842,7 @@ class SectionWriter:
         （若上一轮文本可用）从 prev_report_text 提取复用，避免全量重写。
         """
         from concurrent.futures import ThreadPoolExecutor, as_completed
+
         from pipeline.dimension_grouper import group_dimensions, verify_coverage
 
         # 1. 获取全部维度并分组
@@ -1615,11 +1865,11 @@ class SectionWriter:
         # R53（2026-08-03 P0-1）：强制覆盖校验——分组必须覆盖全部必需维度，
         # 否则抛异常（fail-fast），由 orchestrator 升级为明确信号而非盲重试。
         if not verify_coverage(self.report_type, all_dims, groups):
-            missing_dims = [d for d in all_dims
-                            if d not in {x for g in groups for x in g["dimensions"]}]
+            missing_dims = [d for d in all_dims if d not in {x for g in groups for x in g["dimensions"]}]
             raise RuntimeError(
                 f"[DIM-COVERAGE] 分组未覆盖必需维度: {missing_dims} — 请检查 "
-                f"dimension_grouper.GROUP_DEFS 与 SAC required_dimensions 对齐")
+                f"dimension_grouper.GROUP_DEFS 与 SAC required_dimensions 对齐"
+            )
 
         # R53（2026-08-03 P0-2）：组级局部重写——确定要重写的组。
         # rewrite_indices=[0,2] 是 3 段结构的段索引；把失败段的维度映射到组，
@@ -1635,51 +1885,56 @@ class SectionWriter:
                 if _g_dims & _seg_dims:
                     rewrite_group_names.add(_g["group_name"])
             if rewrite_group_names:
-                logger.info("[DIM-PARALLEL] 组级局部重写: 仅重写 %s（段%s → %d组）",
-                            sorted(rewrite_group_names), rewrite_indices, len(rewrite_group_names))
+                logger.info(
+                    "[DIM-PARALLEL] 组级局部重写: 仅重写 %s（段%s → %d组）",
+                    sorted(rewrite_group_names),
+                    rewrite_indices,
+                    len(rewrite_group_names),
+                )
 
         # P3-audit 2026-08-24 Strangler-Fig 重构：R16~R81 注入链（原约500行、
         # 20+ 个同构 try/import/build 块）迁入 pipeline/prompt_injectors.py 注册表。
         # 变量名与原实现一一对应，下游组级 prompt 组装零改动；
         # 新增注入只需在 INJECTORS 登记，不再往本方法贴补丁。
         from pipeline.prompt_injectors import build_injections
+
         _inj = build_injections(
             asset=asset,
             report_type=self.report_type,
-            data_context=getattr(self, '_last_data_context', None) or {},
-            asset_code=getattr(self, '_asset_code', ''),
-            data_dict=getattr(self, '_data_dict', None) or {},
+            data_context=getattr(self, "_last_data_context", None) or {},
+            asset_code=getattr(self, "_asset_code", ""),
+            data_dict=getattr(self, "_data_dict", None) or {},
         )
-        fc_str = _inj['fc_str']
-        ac_str = _inj['ac_str']
-        mr_str = _inj['mr_str']
-        ts_str = _inj['ts_str']
-        hf_str = _inj['hf_str']
-        rdcf_str = _inj['rdcf_str']
-        cat_str = _inj['cat_str']
-        bb_str = _inj['bb_str']
-        ur_str = _inj['ur_str']
-        bn_str = _inj['bn_str']
-        ma_str = _inj['ma_str']
-        ut_str = _inj['ut_str']
-        di_str = _inj['di_str']
-        ex_str = _inj['ex_str']
-        esg_str = _inj['esg_str']
-        global_str = _inj['global_str']
-        tri_str = _inj['tri_str']
-        geo_str = _inj['geo_str']
-        ss_str = _inj['ss_str']
-        cc_str = _inj['cc_str']
-        sf_str = _inj['sf_str']
-        cf_str = _inj['cf_str']
-        us_str = _inj['us_str']
-        vc_str = _inj['vc_str']
-        audit_str = _inj['audit_str']
-        surp_str = _inj['surp_str']
-        pm_str = _inj['pm_str']
-        tt_str = _inj['tt_str']
-        bm_str = _inj['bm_str']
-        _tm_str = _inj['_tm_str']
+        fc_str = _inj["fc_str"]
+        ac_str = _inj["ac_str"]
+        mr_str = _inj["mr_str"]
+        ts_str = _inj["ts_str"]
+        hf_str = _inj["hf_str"]
+        rdcf_str = _inj["rdcf_str"]
+        cat_str = _inj["cat_str"]
+        bb_str = _inj["bb_str"]
+        ur_str = _inj["ur_str"]
+        bn_str = _inj["bn_str"]
+        ma_str = _inj["ma_str"]
+        ut_str = _inj["ut_str"]
+        di_str = _inj["di_str"]
+        ex_str = _inj["ex_str"]
+        esg_str = _inj["esg_str"]
+        global_str = _inj["global_str"]
+        tri_str = _inj["tri_str"]
+        geo_str = _inj["geo_str"]
+        ss_str = _inj["ss_str"]
+        cc_str = _inj["cc_str"]
+        sf_str = _inj["sf_str"]
+        cf_str = _inj["cf_str"]
+        us_str = _inj["us_str"]
+        vc_str = _inj["vc_str"]
+        audit_str = _inj["audit_str"]
+        surp_str = _inj["surp_str"]
+        pm_str = _inj["pm_str"]
+        tt_str = _inj["tt_str"]
+        bm_str = _inj["bm_str"]
+        _tm_str = _inj["_tm_str"]
 
         # 2. 各组并行写
         def _write_group(g):
@@ -1704,36 +1959,48 @@ class SectionWriter:
             # industry_deep 的判断结论应该是"行业增速预测/推荐超配低配/受益标的清单"，
             # 而非"12个月目标价XX元"。unlisted 同理——没有公开股价就没有目标价。
             _is_valuation_group = any(
-                d in ("valuation_assessment", "decision_gate", "core_disagreement",
-                      "bold_call", "falsification", "catalyst")
-                for d in dims)
+                d
+                in (
+                    "valuation_assessment",
+                    "decision_gate",
+                    "core_disagreement",
+                    "bold_call",
+                    "falsification",
+                    "catalyst",
+                )
+                for d in dims
+            )
             if _is_valuation_group and self.report_type == "decision_memo":
                 _conclusion_req = (
                     "## 结论强制要求（本组含决策/判断维度，必须满足）\n"
-                    f"- 必须给出明确的【进入决策建议】（进/不进/条件性进），附依据摘要\n"
-                    f"- 必须给出【最坏损失上限】具体金额（元），不得'有一定风险'式模糊定性\n"
-                    f"- 必须给出【执行路线图】（分季度里程碑+验收标准），让委托方能立即落地\n"
-                    f"- 禁止输出个股投资评级/12个月目标价——这是决策备忘录，面向委托方（董事长/CEO）\n\n")
+                    "- 必须给出明确的【进入决策建议】（进/不进/条件性进），附依据摘要\n"
+                    "- 必须给出【最坏损失上限】具体金额（元），不得'有一定风险'式模糊定性\n"
+                    "- 必须给出【执行路线图】（分季度里程碑+验收标准），让委托方能立即落地\n"
+                    "- 禁止输出个股投资评级/12个月目标价——这是决策备忘录，面向委托方（董事长/CEO）\n\n"
+                )
             elif _is_valuation_group and self.report_type == "listed_company":
                 _conclusion_req = (
                     "## 结论强制要求（本组含估值/判断维度，必须满足）\n"
-                    f"- 必须给出明确的【投资评级】（增持/买入/持有/中性/减持/卖出）\n"
-                    f"- 必须给出【12个月目标价】具体数字（元），并说明与当前股价的上行/下行空间\n"
-                    f"- 若多估值方法（DCF/PE/可比）结论不一致，必须声明最终取值逻辑\n"
-                    f"- 引用估值锚交叉验证结果，确保评级-目标价-估值自洽\n\n")
+                    "- 必须给出明确的【投资评级】（增持/买入/持有/中性/减持/卖出）\n"
+                    "- 必须给出【12个月目标价】具体数字（元），并说明与当前股价的上行/下行空间\n"
+                    "- 若多估值方法（DCF/PE/可比）结论不一致，必须声明最终取值逻辑\n"
+                    "- 引用估值锚交叉验证结果，确保评级-目标价-估值自洽\n\n"
+                )
             elif _is_valuation_group and self.report_type == "industry_deep":
                 _conclusion_req = (
                     "## 结论强制要求（本组含估值/判断维度，必须满足）\n"
-                    f"- 必须给出明确的【行业增速预测】具体数字（未来3年CAGR），并说明区间上下限依据\n"
-                    f"- 必须给出【行业配置建议】（超配/标配/低配），并说明与市场一致预期的差异\n"
-                    f"- 必须给出【受益标的清单】（至少2家上市公司），说明'看好该行业→买谁'的传导逻辑\n"
-                    f"- 不需要给个股目标价——这是行业报告，不是个股报告\n\n")
+                    "- 必须给出明确的【行业增速预测】具体数字（未来3年CAGR），并说明区间上下限依据\n"
+                    "- 必须给出【行业配置建议】（超配/标配/低配），并说明与市场一致预期的差异\n"
+                    "- 必须给出【受益标的清单】（至少2家上市公司），说明'看好该行业→买谁'的传导逻辑\n"
+                    "- 不需要给个股目标价——这是行业报告，不是个股报告\n\n"
+                )
             elif _is_valuation_group and self.report_type == "unlisted_company":
                 _conclusion_req = (
                     "## 结论强制要求（本组含估值/判断维度，必须满足）\n"
-                    f"- 必须给出明确的【投资价值区间】（估值上/下限），三个独立口径交叉验证\n"
-                    f"- 必须给出【退出路径判断】（IPO/并购/下一轮），含时间窗口与可行性概率\n"
-                    f"- 不需要给'目标价'——非上市公司没有公开股价，估值用区间不用点位\n\n")
+                    "- 必须给出明确的【投资价值区间】（估值上/下限），三个独立口径交叉验证\n"
+                    "- 必须给出【退出路径判断】（IPO/并购/下一轮），含时间窗口与可行性概率\n"
+                    "- 不需要给'目标价'——非上市公司没有公开股价，估值用区间不用点位\n\n"
+                )
             else:
                 _conclusion_req = ""
             # 构建组级 prompt（比全段更聚焦）
@@ -1743,45 +2010,52 @@ class SectionWriter:
             _cp_str = ""
             try:
                 from core.content_precheck import run_content_precheck
-                _cp = run_content_precheck(
-                    (self._last_data_context or {}).get("collected_data", {}),
-                    dims)
+
+                _cp = run_content_precheck((self._last_data_context or {}).get("collected_data", {}), dims)
                 if _cp:
                     _cp_str = f"\n{_cp}\n"
             except Exception as _e:
                 logger.debug("[CONTENT-PRECHECK] %s", _e)
             # R83（2026-08-07）：decision_memo 最高优先级禁令——必须在 prompt 最前面
             _group_dm_ban = (
-                "## ⚠️【最高优先级禁令——违反即报告作废】\n"
-                "本报告是决策备忘录（面向委托方董事长/CEO），严禁出现以下任何内容：\n"
-                "- 投资评级（增持/买入/持有/中性/减持/卖出）\n"
-                "- 12个月目标价、目标价XX元\n"
-                "- 个股代码（如603662）、EPS预测、PE估值倍数\n"
-                "- 二级市场投资建议\n"
-                '- "深度研究报告""投资建议""行业研报"等二级市场报告用语\n'
-                "报告标题必须用「{0}决策备忘录」，第一段必须是「进入决策建议：进/不进/条件性进」。\n\n"
-            ).format(asset) if self.report_type == "decision_memo" else ""
+                (
+                    "## ⚠️【最高优先级禁令——违反即报告作废】\n"
+                    "本报告是决策备忘录（面向委托方董事长/CEO），严禁出现以下任何内容：\n"
+                    "- 投资评级（增持/买入/持有/中性/减持/卖出）\n"
+                    "- 12个月目标价、目标价XX元\n"
+                    "- 个股代码（如603662）、EPS预测、PE估值倍数\n"
+                    "- 二级市场投资建议\n"
+                    '- "深度研究报告""投资建议""行业研报"等二级市场报告用语\n'
+                    f"报告标题必须用「{asset}决策备忘录」，第一段必须是「进入决策建议：进/不进/条件性进」。\n\n"
+                )
+                if self.report_type == "decision_memo"
+                else ""
+            )
             prompt = (
                 _group_dm_ban
                 + f"你是资深分析师，为《{asset}{_title}》撰写章节「{gname}」。\n\n"
                 # R81（2026-08-06 补齐并行路径）：标的锚定 + 竞争真相 + 框架应用结论强制
                 # 与串行路径 _build_prompt_v4 的 R73fix/R69/R81 指令同源，保证并行/串行行为一致
                 + f"## [分析标的锚定（最高优先级，R73fix/R69）]\n"
-                  f"本次分析唯一标的：{asset}（行业分析对象，非单一个股）。全文必须围绕该标的撰写；"
-                  f"严禁更换分析对象、严禁将其他行业/公司作为分析主体（其他公司仅可作为可比公司或产业链上下游引用）；"
-                  f"所有行业/公司数据必须来自【可用数据】与【共享数据字典】；若数据来源与标的无关，一律忽略。\n\n"
-                + f"## [竞争真相强制] 竞争格局分析必须基于具体玩家名单（来自【可用数据】的fig_players/竞争数据），"
-                  f"逐家评估：威胁等级、客户结构、技术壁垒、集团归属。禁止泛泛'竞争激烈/格局清晰'，必须点名："
-                  f"如'托肯恒山是中石化核心供应商(Dover体系)'。品牌与实体要分清（如Tokheim品牌 vs 托肯恒山中国实体）。\n\n"
-                + f"## [框架应用结论强制] 每个注入的分析框架必须给出针对本报告标的具体应用结论。"
-                  f"格式：'用【框架名】分析本标的下：具体结论【结论1】、【结论2】、【结论3】'。"
-                  f"【结论1】等必须替换为含数据/时间/对象的具体判断（如\"结论1：2026H2存量替换放量，对应约23%存量市场\"）。"
-                  f"严禁输出字面占位符（X、Y、Z、【结论1】等字样），必须给出真实结论内容。禁止只提框架名不分析。\n\n"
+                f"本次分析唯一标的：{asset}（行业分析对象，非单一个股）。全文必须围绕该标的撰写；"
+                f"严禁更换分析对象、严禁将其他行业/公司作为分析主体（其他公司仅可作为可比公司或产业链上下游引用）；"
+                f"所有行业/公司数据必须来自【可用数据】与【共享数据字典】；若数据来源与标的无关，一律忽略。\n\n"
+                + "## [竞争真相强制] 竞争格局分析必须基于具体玩家名单（来自【可用数据】的fig_players/竞争数据），"
+                "逐家评估：威胁等级、客户结构、技术壁垒、集团归属。禁止泛泛'竞争激烈/格局清晰'，必须点名："
+                "如'托肯恒山是中石化核心供应商(Dover体系)'。品牌与实体要分清（如Tokheim品牌 vs 托肯恒山中国实体）。\n\n"
+                + "## [框架应用结论强制] 每个注入的分析框架必须给出针对本报告标的具体应用结论。"
+                "格式：'用【框架名】分析本标的下：具体结论【结论1】、【结论2】、【结论3】'。"
+                '【结论1】等必须替换为含数据/时间/对象的具体判断（如"结论1：2026H2存量替换放量，对应约23%存量市场"）。'
+                "严禁输出字面占位符（X、Y、Z、【结论1】等字样），必须给出真实结论内容。禁止只提框架名不分析。\n\n"
                 + f"## 分析维度（必须全部覆盖）\n{dim_defs[:3400]}\n\n"
                 f"## 可用数据\n{data_str[:1500]}\n\n"
                 f"## 共享数据字典\n{_dd_str[:1500]}\n\n"
                 + (_cp_str if _cp_str else "")
-                + (f"## 数据口径标注（正文引用数值必须带单位/时期，禁止臆断）\n{calib_str[:1200]}\n\n" if calib_str else "")
+                + (
+                    f"## 数据口径标注（正文引用数值必须带单位/时期，禁止臆断）\n{calib_str[:1200]}\n\n"
+                    if calib_str
+                    else ""
+                )
                 + (f"## 写作规划（必须回答的问题 + 结论自洽约束）\n{plan_str[:1200]}\n\n" if plan_str else "")
                 + f"## 图表\n{chart_md[:400]}\n\n"
                 + (f"## 盈利预测模型（引用到估值/前瞻章节）\n{fc_str[:1200]}\n\n" if fc_str else "")
@@ -1793,31 +2067,74 @@ class SectionWriter:
                 + (f"## 催化剂日历（引用到催化剂/风险章节，未来4季度时间轴）\n{cat_str[:1000]}\n\n" if cat_str else "")
                 + (f"## 多空逻辑表（Bull/Bear，引用到核心判断/风险章节）\n{bb_str[:1000]}\n\n" if bb_str else "")
                 + (f"## 非上市反向定价 + 里程碑时间轴（引用到估值/退出章节）\n{ur_str[:900]}\n\n" if ur_str else "")
-                + (f"## 供应链瓶颈分析（卡位判断+利润池+TOC迭代，引用到竞争/卡点章节）\n{bn_str[:1500]}\n\n" if bn_str else "")
-                + (f"## 并购估值/行业整合（引用到竞争/格局/资本市场章节，整合阶段+并购倍数）\n{ma_str[:900]}\n\n" if ma_str else "")
+                + (
+                    f"## 供应链瓶颈分析（卡位判断+利润池+TOC迭代，引用到竞争/卡点章节）\n{bn_str[:1500]}\n\n"
+                    if bn_str
+                    else ""
+                )
+                + (
+                    f"## 并购估值/行业整合（引用到竞争/格局/资本市场章节，整合阶段+并购倍数）\n{ma_str[:900]}\n\n"
+                    if ma_str
+                    else ""
+                )
                 + (f"## 非上市威胁度（引用到竞争章节，非上市玩家威胁度量化）\n{ut_str[:800]}\n\n" if ut_str else "")
-                + (f"## 玩家清单完整性提示（品牌映射/集团归属修正，写作时避免口径混淆）\n{us_str[:700]}\n\n" if us_str else "")
-                + (f"## 行业戴维斯双击/双杀分析（引用到资本市场章节，EPS方向×PE方向）\n{di_str[:700]}\n\n" if di_str else "")
+                + (
+                    f"## 玩家清单完整性提示（品牌映射/集团归属修正，写作时避免口径混淆）\n{us_str[:700]}\n\n"
+                    if us_str
+                    else ""
+                )
+                + (
+                    f"## 行业戴维斯双击/双杀分析（引用到资本市场章节，EPS方向×PE方向）\n{di_str[:700]}\n\n"
+                    if di_str
+                    else ""
+                )
                 + (f"## 退出路径分析（引用到估值/退出章节，仅非上市）\n{ex_str[:700]}\n\n" if ex_str else "")
-                + (f"## ESG实质性议题（引用到ESG章节，GRI/SASB/TCFD对标，对估值的影响）\n{esg_str[:800]}\n\n" if esg_str else "")
-                + (f"## 中美竞争与地缘政治（引用到地缘/风险章节，政策时间线+双轨情景+国产替代+量化指标）\n{geo_str[:900]}\n\n" if geo_str else "")
+                + (
+                    f"## ESG实质性议题（引用到ESG章节，GRI/SASB/TCFD对标，对估值的影响）\n{esg_str[:800]}\n\n"
+                    if esg_str
+                    else ""
+                )
+                + (
+                    f"## 中美竞争与地缘政治（引用到地缘/风险章节，政策时间线+双轨情景+国产替代+量化指标）\n{geo_str[:900]}\n\n"
+                    if geo_str
+                    else ""
+                )
                 + (global_str[:900] if global_str else "")
                 + (tri_str if tri_str else "")
-                + (f"## 做空者视角审查（引用到风险/核心判断章节，Bull Case的Short防御力）\n{ss_str[:700]}\n\n" if ss_str else "")
+                + (
+                    f"## 做空者视角审查（引用到风险/核心判断章节，Bull Case的Short防御力）\n{ss_str[:700]}\n\n"
+                    if ss_str
+                    else ""
+                )
                 + (f"## 监管合规成本（引用到竞争/政策章节，认证/许可的持续壁垒）\n{cc_str[:700]}\n\n" if cc_str else "")
-                + (f"## 系统失效状态（引用到证伪章节，Bridgewater Sustained Failure Mode）\n{sf_str[:600]}\n\n" if sf_str else "")
-                + (f"## 资金面四层剥离（引用到资本流动章节，Morgan Stanley Flow Monitor框架）\n{cf_str[:800]}\n\n" if cf_str else "")
+                + (
+                    f"## 系统失效状态（引用到证伪章节，Bridgewater Sustained Failure Mode）\n{sf_str[:600]}\n\n"
+                    if sf_str
+                    else ""
+                )
+                + (
+                    f"## 资金面四层剥离（引用到资本流动章节，Morgan Stanley Flow Monitor框架）\n{cf_str[:800]}\n\n"
+                    if cf_str
+                    else ""
+                )
                 + (f"## 估值锚交叉验证（引用到估值章节，多方法必须自洽）\n{vc_str[:900]}\n\n" if vc_str else "")
                 + (f"## 三表勾稽验证（引用到财务章节，审计式核查）\n{audit_str[:900]}\n\n" if audit_str else "")
                 + (f"## 预期差信号（引用到核心判断章节，一致预期vs实际）\n{surp_str[:700]}\n\n" if surp_str else "")
                 + (f"## 可比对标矩阵（引用到竞争章节，行业基准对比）\n{pm_str[:900]}\n\n" if pm_str else "")
                 + (f"## 目标价追踪（引用到估值章节，分析师历史准确率档案）\n{tt_str[:900]}\n\n" if tt_str else "")
                 + (f"## 基准对标（引用到竞争/判断章节，个股 vs 指数/行业基准）\n{bm_str[:900]}\n\n" if bm_str else "")
-                + (f"## 工具模块数据（弹性/信号链/护城河/生命周期/多模型，引用到对应分析章节）\n{_tm_str[:1200]}\n\n" if _tm_str else "")
+                + (
+                    f"## 工具模块数据（弹性/信号链/护城河/生命周期/多模型，引用到对应分析章节）\n{_tm_str[:1200]}\n\n"
+                    if _tm_str
+                    else ""
+                )
                 + (fw_str[:1500] + "\n\n" if fw_str else "")
                 + _conclusion_req
-                + (f"## 上一轮评审反馈（仅本组相关部分，须针对性修复）\n"
-                   f"{gate_feedback[:2500]}\n\n" if gate_feedback else "")
+                + (
+                    f"## 上一轮评审反馈（仅本组相关部分，须针对性修复）\n{gate_feedback[:2500]}\n\n"
+                    if gate_feedback
+                    else ""
+                )
                 + f"## 要求\n"
                 f"- 每个维度都要深入分析，给出具体数据、判断、概率\n"
                 f"- 每个判断带反方论证（三段式：情境→机制→杀伤力）+ So What 链\n"
@@ -1841,19 +2158,20 @@ class SectionWriter:
             # 是否已产好该组候选草稿（channel=marvis，来源标记 free）。候选可用则
             # 直接采用（省 token），否则走正常 LLM 写。失败即弃，绝不阻塞主链。
             try:
-                if os.environ.get("MARVIS_PREFETCH", "0") == "1":
+                if settings.marvis_prefetch():
                     from core.marvis_prefetch import MarvisPrefetch
+
                     _pm = MarvisPrefetch()
                     _cand = _pm.poll(asset, gname)
                     if _cand and len(_cand.strip()) >= 150:
                         text = self._clean(_cand)
-                        logger.info("[MARVIS-PREFETCH] 组 %s 采用免费候选 (%d字, 省一次付费调用)",
-                                    gname, len(text))
+                        logger.info("[MARVIS-PREFETCH] 组 %s 采用免费候选 (%d字, 省一次付费调用)", gname, len(text))
             except Exception as _pe:
                 logger.debug("[MARVIS-PREFETCH] %s", str(_pe)[:60])
             if not text:
-                text = self._call_llm(prompt, 0, learning_findings, style_override,
-                                      data_injection, provider=draft_provider)
+                text = self._call_llm(
+                    prompt, 0, learning_findings, style_override, data_injection, provider=draft_provider
+                )
             if not text or len(text.strip()) < 100:
                 raise RuntimeError(f"组 {gname} 产出为空")
             return gname, text
@@ -1861,12 +2179,12 @@ class SectionWriter:
         group_texts = {}
         # R53（2026-08-03 P0-2）：组级局部重写——只写目标组；非目标组从上一轮
         # 报告文本提取对应章节复用（prev_report_text），避免全量重写。
-        _target_groups = [g for g in groups
-                          if not rewrite_group_names or g["group_name"] in rewrite_group_names]
+        _target_groups = [g for g in groups if not rewrite_group_names or g["group_name"] in rewrite_group_names]
         _keep_groups = [g for g in groups if rewrite_group_names and g["group_name"] not in rewrite_group_names]
         if _keep_groups:
-            logger.info("[DIM-PARALLEL] %d 组从上一轮复用: %s",
-                        len(_keep_groups), [g["group_name"] for g in _keep_groups])
+            logger.info(
+                "[DIM-PARALLEL] %d 组从上一轮复用: %s", len(_keep_groups), [g["group_name"] for g in _keep_groups]
+            )
 
         # R23（2026-08-02 FM 差异化加速）：行业报告结构稳定放宽并发到 8，个股/非上市保持 6
         _max_workers = 8 if self.report_type == "industry_deep" else 6
@@ -1879,7 +2197,10 @@ class SectionWriter:
                     group_texts[gname] = text
                 except Exception as e:
                     import traceback as _tb
-                    logger.warning("[DIM-PARALLEL] 组 %s 失败: %s\n%s", g.get("group_name"), str(e)[:300], _tb.format_exc()[-1500:])
+
+                    logger.warning(
+                        "[DIM-PARALLEL] 组 %s 失败: %s\n%s", g.get("group_name"), str(e)[:300], _tb.format_exc()[-1500:]
+                    )
 
         # 非目标组：尝试从 prev_report_text 提取复用（按组名标题定位）
         for g in _keep_groups:
@@ -1912,6 +2233,7 @@ class SectionWriter:
         if not prev_text or not group_name:
             return ""
         import re as _re
+
         # 组名如 "A 市场空间" → 核心词 "市场空间"
         _core = group_name.split(" ", 1)[-1].strip() if " " in group_name else group_name.strip()
         _core_kws = [k for k in (_core, _core[:2]) if k]
@@ -1956,14 +2278,16 @@ class SectionWriter:
             if q:
                 lines.append("**核心问题**: " + q)
             em = d.get("evidence_min", 1)
-            lines.append("**最少证据**: {} 条".format(em))
+            lines.append(f"**最少证据**: {em} 条")
             if d.get("counter_evidence", False):
                 lines.append("**反方论证**: 三段式（①具体情境②传导机制③杀伤力评估），禁止'概率XX%'空壳")
             sub = d.get("sub_questions", [])
             if sub:
                 lines.append("**二级框架**:")
                 for i_sq, sq in enumerate(sub):
-                    lines.append("  {}. {}".format(i_sq+1, (sq if isinstance(sq, str) else json.dumps(sq, ensure_ascii=False))[:120]))
+                    lines.append(
+                        f"  {i_sq + 1}. {(sq if isinstance(sq, str) else json.dumps(sq, ensure_ascii=False))[:120]}"
+                    )
         return "\n".join(lines)
 
     def _editor_merge(self, asset, group_texts, _dd_str, provider):
@@ -1975,7 +2299,7 @@ class SectionWriter:
         # 控制输入长度（组数×3000 字上限，R53 提额）
         sections = []
         for i, t in enumerate(group_texts):
-            sections.append(f"### 组{i+1}输出\n{t[:4500]}")
+            sections.append(f"### 组{i + 1}输出\n{t[:4500]}")
         joined = "\n\n".join(sections)
         # R83（2026-08-07）：按报告类型构造合并提示
         _title = "决策备忘录" if self.report_type == "decision_memo" else "深度研究报告"
@@ -1983,34 +2307,36 @@ class SectionWriter:
             "4. 报告开头（前2000字内）必须给出明确的【决策建议】（进/不进/条件性进），不得输出个股评级/12个月目标价/二级市场投资建议\n"
             if self.report_type == "decision_memo"
             else "4. 报告开头（前2000字内）必须包含明确的【投资评级】和【12个月目标价】具体数字\n"
-                 "   ——格式示例：『投资评级：增持 ｜ 12个月目标价：XX.XX元』；若草稿缺评级/目标价，"
-                 "须基于估值数据补充，不得省略\n"
+            "   ——格式示例：『投资评级：增持 ｜ 12个月目标价：XX.XX元』；若草稿缺评级/目标价，"
+            "须基于估值数据补充，不得省略\n"
         )
         prompt = (
             (
                 "## ⚠️【最高优先级禁令——违反即报告作废】\n"
                 "本报告是决策备忘录（面向委托方董事长/CEO），严禁出现：投资评级/目标价/个股代码/EPS/PE/二级市场投资建议。"
-                "标题必须用「{}决策备忘录」，第一段必须是「进入决策建议：进/不进/条件性进」。\n\n"
-            ).format(asset) if self.report_type == "decision_memo" else ""
+                f"标题必须用「{asset}决策备忘录」，第一段必须是「进入决策建议：进/不进/条件性进」。\n\n"
+            )
+            if self.report_type == "decision_memo"
+            else ""
             f"你是资深主编，把以下《{asset}{_title}》的分章节草稿合并成一份连贯的报告。\n\n"
             f"## 分章节草稿\n{joined[:20000]}\n\n"
             f"## 要求\n"
             f"1. 消除章节间的重复内容（同一数据点只保留一处）\n"
             f"2. 保证逻辑连贯（市场→竞争→技术→政策→估值→判断）\n"
             f"3. 开篇给核心判断（Bold Call），含方向+时间窗口+触发变量+证伪条件\n"
-            + _rating_req +
-            f"5. 数值保持来源标注 (A)/(E)/(F)/(B)\n"
-            f"6. 用 Markdown 标题组织（# 主标题 / ## 章节 / ### 小节）\n"
-            f"7. 不要新增编造的数据点，只整理已有内容\n"
-            f"8. [R35 数值纪律] 合并时不得改变草稿中的原始数值；比例/占比类数值若草稿缺少"
-            f"分子分母依据，必须保留原始数字（如『北向持股X万股，总股本Y亿股』）而非只写占比；"
-            f"估值区间中值必须是 (下沿+上沿)/2，禁止凑数。\n"
-            f"9. [R54 表格纪律] 表格必须完整、独立成行：每个表格行以 `|` 开头且以 `|` 结尾，"
-            f"单元格内不得出现句号+正文（禁止『|。这一趋势若延续...』这类表格行尾粘连正文）。"
-            f"表格结束后换行再开始新段落，表格后的分析文字必须另起一行，不得接在表格行尾。\n"
-            f"10. [R72 禁止AI免责] 禁止在任何位置出现『内容由AI生成/仅供参考/AI辅助/本报告由系统生成』"
-            f"等AI免责痕迹——报告必须像人类专业分析师撰写。\n"
-            f"直接输出完整合并后的报告正文。"
+            + _rating_req
+            + "5. 数值保持来源标注 (A)/(E)/(F)/(B)\n"
+            "6. 用 Markdown 标题组织（# 主标题 / ## 章节 / ### 小节）\n"
+            "7. 不要新增编造的数据点，只整理已有内容\n"
+            "8. [R35 数值纪律] 合并时不得改变草稿中的原始数值；比例/占比类数值若草稿缺少"
+            "分子分母依据，必须保留原始数字（如『北向持股X万股，总股本Y亿股』）而非只写占比；"
+            "估值区间中值必须是 (下沿+上沿)/2，禁止凑数。\n"
+            "9. [R54 表格纪律] 表格必须完整、独立成行：每个表格行以 `|` 开头且以 `|` 结尾，"
+            "单元格内不得出现句号+正文（禁止『|。这一趋势若延续...』这类表格行尾粘连正文）。"
+            "表格结束后换行再开始新段落，表格后的分析文字必须另起一行，不得接在表格行尾。\n"
+            "10. [R72 禁止AI免责] 禁止在任何位置出现『内容由AI生成/仅供参考/AI辅助/本报告由系统生成』"
+            "等AI免责痕迹——报告必须像人类专业分析师撰写。\n"
+            "直接输出完整合并后的报告正文。"
         )
         try:
             _sys_role = (
@@ -2018,10 +2344,15 @@ class SectionWriter:
                 if self.report_type == "decision_memo"
                 else "你是资深投行主编，擅长合并润色深度研究报告。"
             )
-            r = call_deepseek([
-                {"role": "system", "content": _sys_role},
-                {"role": "user", "content": prompt},
-            ], temperature=0.3, max_tokens=int(os.environ.get("SEG_MAX_TOKENS", "10000")), provider=provider)
+            r = call_deepseek(
+                [
+                    {"role": "system", "content": _sys_role},
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.3,
+                max_tokens=settings.seg_max_tokens(),
+                provider=provider,
+            )
             return r["choices"][0]["message"]["content"]
         except Exception as e:
             logger.warning("[EDITOR] 编辑合并失败，直接拼接: %s", str(e)[:80])
@@ -2041,34 +2372,35 @@ class SectionWriter:
         header_line = f"报告日期：{date_str} | 报告级别：深度 | 分析师：2号分析师"
 
         # 1. 删除 LLM 自生成的日期/署名行（R81：删除所有"报告日期"行，含无分析师退化形态）
-        text = re.sub(r'^\s*报告日期：[^\n]*\n?', '', text, flags=re.MULTILINE)
-        text = re.sub(r'报告日期：\s*\d{4}年\d{1,2}月[^\n]*\n?', '', text)
+        text = re.sub(r"^\s*报告日期：[^\n]*\n?", "", text, flags=re.MULTILINE)
+        text = re.sub(r"报告日期：\s*\d{4}年\d{1,2}月[^\n]*\n?", "", text)
 
         # 2. 在 # 标题后插入标准头部行
-        lines = text.split('\n')
+        lines = text.split("\n")
         result = []
         injected = False
         for line in lines:
             result.append(line)
-            if not injected and re.match(r'^#\s+\S', line.strip()):
-                result.append('')
+            if not injected and re.match(r"^#\s+\S", line.strip()):
+                result.append("")
                 result.append(header_line)
-                result.append('')
+                result.append("")
                 injected = True
 
         if not injected:
             # 无 # 标题 → 注入到最开头
             result.insert(0, header_line)
-            result.insert(0, '')
+            result.insert(0, "")
 
-        return '\n'.join(result)
+        return "\n".join(result)
 
     def _assemble(self, asset, texts):
         report = "\n\n".join(texts)
         # R7 共享数据字典：把正文中的 {ref:key} 占位符替换为真实数值。
         # 若引用不存在的 key，保留占位符（IronGate 会识别为未解析引用）。
-        if hasattr(self, '_data_dict') and self._data_dict:
+        if hasattr(self, "_data_dict") and self._data_dict:
             import re as _re
+
             def _sub(m):
                 key = m.group(1)
                 v = self._data_dict.get(key)
@@ -2076,7 +2408,8 @@ class SectionWriter:
                     return m.group(0)  # 未解析，保留
                 # 整数不带小数，其余保留 2 位
                 return str(int(v)) if float(v).is_integer() else f"{v:.2f}"
-            report = _re.sub(r'\{ref:([A-Za-z0-9_一-鿿]+)\}', _sub, report)
+
+            report = _re.sub(r"\{ref:([A-Za-z0-9_一-鿿]+)\}", _sub, report)
         report = self._inject_report_header(report)
         return report
 
