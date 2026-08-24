@@ -125,23 +125,38 @@ def test_editor_merge_no_hard_truncation():
 
 # ── 4. P1-4：LLM provider 健康预检 ───────────────────────────
 def test_llm_probe_fast_fail():
-    """provider 不可用时应快速失败（probe 短超时），不空耗 300s。"""
+    """provider 不可用时应快速失败（probe 短超时），不空耗 300s。
+
+    P1-audit 2026-08-24 隔离修复：此前 probe_test 失败后 R77 全量回退会尝试
+    其余 provider——.env 有真实 key 且网络可达时会真实调用成功，
+    既烧钱又触发"不可达 provider 不应调用成功"的误报断言。
+    现测试期间摘除其余 provider，finally 还原。
+    """
     import core.deepseek_client as dc
     from core.deepseek_client import ProviderConfig
-    # mock 一个不可达 provider（127.0.0.1:1 拒绝连接）
-    p = ProviderConfig(name="probe_test", base_url="http://127.0.0.1:1/v1",
-                       api_key="test", models=["m"], priority=0)
-    dc._registry._providers["probe_test"] = p
-    import time
-    t0 = time.time()
+    # 隔离：快照并清空注册表，只留不可达 probe
+    _saved_providers = dict(dc._registry._providers)
+    _saved_fails = dict(getattr(dc._registry, "_consecutive_failures", {}))
+    dc._registry._providers.clear()
+    if hasattr(dc._registry, "_consecutive_failures"):
+        dc._registry._consecutive_failures.clear()
     try:
-        dc.call_llm([{"role": "user", "content": "hi"}], provider="probe_test", max_tokens=10)
-        assert False, "不可达 provider 不应调用成功"
-    except RuntimeError:
-        elapsed = time.time() - t0
-        assert elapsed < 20, f"应快速失败, 实际 {elapsed:.1f}s"
-    # 清理
-    dc._registry._providers.pop("probe_test", None)
+        p = ProviderConfig(name="probe_test", base_url="http://127.0.0.1:1/v1",
+                           api_key="test", models=["m"], priority=0)
+        dc._registry._providers["probe_test"] = p
+        import time
+        t0 = time.time()
+        try:
+            dc.call_llm([{"role": "user", "content": "hi"}], provider="probe_test", max_tokens=10)
+            assert False, "不可达 provider 不应调用成功"
+        except RuntimeError:
+            elapsed = time.time() - t0
+            assert elapsed < 20, f"应快速失败, 实际 {elapsed:.1f}s"
+    finally:
+        dc._registry._providers.clear()
+        dc._registry._providers.update(_saved_providers)
+        if hasattr(dc._registry, "_consecutive_failures"):
+            dc._registry._consecutive_failures.update(_saved_fails)
 
 
 if __name__ == "__main__":

@@ -38,4 +38,17 @@ ignore = ["E501", "N802"]
 minversion = "7.0"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-addopts = "-v --tb=short"
+addopts = "-v --tb=short --strict-markers"
+# P1-audit 2026-08-24: marker 注册（此前 0 注册、0 timeout、0 coverage）
+markers = [
+    "unit: 纯离线单元测试",
+    "integration: 跨模块集成测试（仍离线）",
+    "e2e: 端到端管线测试",
+    "network: 需要真实网络/LLM key 的测试",
+    "golden: 黄金样本回归评估",
+    "slow: 慢速测试",
+]
+timeout = 300
+[tool.coverage.run]
+source = ["pipeline", "core", "export", "harness", "utils"]
+omit = ["*/__pycache__/*", "temp/*"]

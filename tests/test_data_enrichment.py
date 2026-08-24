@@ -156,3 +156,8 @@ def run(report=None) -> tuple:
 if __name__ == "__main__":
     np_, nf_ = run()
     sys.exit(1 if nf_ > 0 else 0)
+
+# ── P1-audit 2026-08-24 收编：原 run() 只 print 不 raise，pytest 看不见 ──
+def test_orphan_suite():
+    _p, _f = run()
+    assert _f == 0, f"{_f} 个断言失败 / 共 {_p + _f} 条"

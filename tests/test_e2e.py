@@ -151,3 +151,7 @@ else:
 print(f"\n=== E2E: {n_pass} passed, {n_fail} failed ===")
 if __name__ == "__main__":
     sys.exit(1 if n_fail > 0 else 0)
+
+# ── P1-audit 2026-08-24 收编：模块级 t() 只 print 不 raise，pytest 看不见 ──
+def test_orphan_suite():
+    assert n_fail == 0, f"{n_fail} 个断言失败 / 共 {n_pass + n_fail} 条"

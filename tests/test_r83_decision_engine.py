@@ -18,9 +18,18 @@ if str(_ROOT) not in sys.path:
 
 
 def _load_enrich_data() -> dict:
-    """读取 enrich v086 → 构造 chart_data dict。"""
-    p = _ROOT / "data" / "keli_oil_enrich_v086.json"
-    payload = json.loads(p.read_text(encoding="utf-8"))
+    """读取 enrich 数据 → 构造 chart_data dict。
+
+    P1-audit 2026-08-24：v086 样本已被 v087_corrected 取代，
+    按存在性回退；两者皆缺时抛 FileNotFoundError 由上层跳过。
+    """
+    for name in ("keli_oil_enrich_v087_corrected.json", "keli_oil_enrich_v086.json"):
+        p = _ROOT / "data" / name
+        if p.exists():
+            payload = json.loads(p.read_text(encoding="utf-8"))
+            break
+    else:
+        raise FileNotFoundError("no keli_oil_enrich_*.json fixture in data/")
     cd = {}
     for it in payload.get("items", []):
         if it.get("type") == "fig_data":
@@ -131,3 +140,12 @@ if __name__ == "__main__":
     p, f = run()
     print(f"\nR83 决策推理引擎回归测试: {p} passed, {f} failed")
     sys.exit(1 if f else 0)
+
+# ── P1-audit 2026-08-24 收编：原 run() 只 print 不 raise，pytest 看不见 ──
+def test_orphan_suite():
+    try:
+        _p, _f = run()
+    except FileNotFoundError as e:
+        import pytest
+        pytest.skip(f"fixture 缺失: {e}")
+    assert _f == 0, f"{_f} 个断言失败 / 共 {_p + _f} 条"

@@ -19,12 +19,20 @@ def _src(rel: str) -> str:
 
 
 def test_self_audit_bom_tolerant():
-    """_self_audit.py 编译检查应剥离 BOM 容错。"""
+    """_self_audit.py 编译检查应剥离 BOM 容错。
+
+    P1-audit 2026-08-24：_self_audit.py 源文件已从仓库移除（仅剩孤儿 pyc），
+    被测对象消亡 → 条件跳过而非永久 FAIL。
+    """
+    import pytest
+    target = _ROOT / "_self_audit.py"
+    if not target.exists():
+        pytest.skip("_self_audit.py 已移除，BOM 容错断言随之退役")
     src = _src("_self_audit.py")
     assert "lstrip" in src and "\\ufeff" in src, "self_audit 应剥离 BOM"
     # 实际跑 self_audit 应 PASS
     import subprocess, sys as _sys
-    r = subprocess.run([_sys.executable, str(_ROOT / "_self_audit.py")],
+    r = subprocess.run([_sys.executable, str(target)],
                        capture_output=True, text=True, timeout=30)
     assert "Result: PASS" in r.stdout, f"self_audit 应 PASS: {r.stdout[-200:]}"
 
