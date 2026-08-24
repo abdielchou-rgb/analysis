@@ -28,6 +28,8 @@ line-length = 120
 target-version = "py311"
 # P3-audit: 仓库根 .ruff_cache 写入被拒（权限）→ 指到用户可写临时区
 cache-dir = "D:/Temp/opencode/ruff_cache"
+# 冻结归档区（V50~V56 数据平台）整体排除在 lint/format 之外
+extend-exclude = ["legacy"]
 
 [tool.ruff.lint]
 # P3-audit 2026-08-24 校准：钩子首次真实通电，规则集与 9.4 万行存量对齐。
@@ -45,6 +47,8 @@ ignore = ["E501", "E402", "E701", "E702",
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
 "tests/**" = ["S101", "E402"]
+# P3-audit: legacy/ 为冻结归档（V50~V56 数据平台），不参与 lint 门禁
+"legacy/**" = ["E", "F", "W", "I", "N", "UP", "S"]
 
 [tool.pytest.ini_options]
 minversion = "7.0"

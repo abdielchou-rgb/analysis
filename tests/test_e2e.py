@@ -20,7 +20,7 @@ from core.argument import ArgumentEngine
 from core.models import WritingBrief
 from core.protocol import SACToResearchProtocol
 from core.style import StyleCompiler
-from data.orchestrator import KnowledgeOrchestrator
+from legacy.data_platform.orchestrator import KnowledgeOrchestrator
 
 n_pass, n_fail = 0, 0
 
@@ -146,7 +146,7 @@ proto3 = gen3.generate(sac3, core_question="字节跳动非上市企业分析", 
 t("e2e-3a: unlisted protocol has 9 dims", sum(1 for t in proto3.tasks) >= 9)
 
 # Test: T2a with unlisted sac
-from data.orchestrator import SACLoader
+from legacy.data_platform.orchestrator import SACLoader
 
 loader = SACLoader()
 loaded_sac = loader.load(brief3.report_type)

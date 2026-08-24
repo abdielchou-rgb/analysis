@@ -140,7 +140,7 @@ t("gate empty passes", gate.check(s, kp_sac).get("passed"))
 # 7. Data pipeline
 # R5（2026-07-31 Marvis 二轮审计）：EastMoneyEngine 网络调用不可复现，
 # 加 try/except 降级为 WARN（CacheEngine 才是稳定路径）
-from data.engine import CacheEngine, DataQuery, EastMoneyEngine
+from legacy.data_platform.engine import CacheEngine, DataQuery, EastMoneyEngine
 
 try:
     em = EastMoneyEngine()
@@ -214,7 +214,7 @@ except ImportError:
 
 # ── 11. Data Source Manager ──────────────────────────────────
 
-from data.datasource_manager import (
+from legacy.data_platform.datasource_manager import (
     CircuitBreaker,
     DataSourceManager,
     EngineConfig,
@@ -250,7 +250,7 @@ called = []
 
 def mock_fetch(q):
     called.append(q)
-    from data.engine import DataResponse
+    from legacy.data_platform.engine import DataResponse
 
     return DataResponse(points=[], source="mock")
 
@@ -261,7 +261,7 @@ t("registered name is mock", mgr.registered_engines[0] == "mock")
 t("engine health shows mock", "mock" in mgr.engine_health())
 
 # Test fetch_with_fallback via direct call (skip threading edge)
-from data.engine import DataQuery
+from legacy.data_platform.engine import DataQuery
 
 q = DataQuery(assets=["600519"])
 # Direct engine access
@@ -285,7 +285,7 @@ t("engine config retries", ec.max_retries == 3)
 
 # ── 12. Consensus Connector ──────────────────────────────────
 
-from data.consensus_connector import fetch_consensus
+from legacy.data_platform.consensus_connector import fetch_consensus
 
 t("consensus importable", fetch_consensus is not None)
 
@@ -348,7 +348,7 @@ t("no bare except in core modules", len(bare_except_files) == 0, f"Bare except f
 
 # ── 15. Async Pipeline Tests ─────────────────────────────────
 
-from data.async_engine import AsyncDataPipeline, async_pipeline
+from legacy.data_platform.async_engine import AsyncDataPipeline, async_pipeline
 
 t("async pipeline importable", AsyncDataPipeline is not None)
 t("async singleton exists", async_pipeline is not None)
@@ -356,7 +356,7 @@ t("async pipeline has fetch", callable(getattr(async_pipeline, "fetch", None)))
 t("async pipeline has kline", callable(getattr(async_pipeline, "fetch_kline", None)))
 
 # Verify KLineEngine now has fetch_kline_raw
-from data.engine import KLineEngine
+from legacy.data_platform.engine import KLineEngine
 
 engine = KLineEngine()
 t("kline engine has fetch_kline_raw", hasattr(engine, "fetch_kline_raw"))
@@ -478,7 +478,7 @@ except ImportError:
 
 # ── 22. V51 Optimisation: datasource_manager lazy init ────────
 
-from data.datasource_manager import data_manager as dm2
+from legacy.data_platform.datasource_manager import data_manager as dm2
 
 # 22a. Before init, singleton may have 0 engines (lazy init not yet triggered)
 # Reset to test lazy behaviour
@@ -486,7 +486,7 @@ orig_engines = dict(dm2._engines)
 dm2._engines.clear()
 
 # Force re-init
-import data.datasource_manager as dsm
+import legacy.data_platform.datasource_manager as dsm
 
 dsm._builtin_initialized = False
 dsm._init_builtin_engines()
@@ -555,13 +555,13 @@ mgr3 = DataSourceManager()
 
 def slow_fetch(q):
     time.sleep(5.0)
-    from data.engine import DataResponse
+    from legacy.data_platform.engine import DataResponse
 
     return DataResponse(points=[], source="slow")
 
 
 def fast_fetch(q):
-    from data.engine import DataResponse
+    from legacy.data_platform.engine import DataResponse
 
     return DataResponse(points=[DataPoint(name="fast", value=1, source="fast")], source="fast")
 
@@ -591,7 +591,7 @@ t("all fail has error message", result_fail.error != "")
 
 # ── 25. V51 Optimisation: KLineEngine fetch_kline_raw ─────────
 
-from data.engine import KLineEngine as KLE2
+from legacy.data_platform.engine import KLineEngine as KLE2
 
 kle = KLE2()
 t("kline fetch_kline_raw callable", callable(kle.fetch_kline_raw))

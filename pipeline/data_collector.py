@@ -535,7 +535,7 @@ class DataCollectorV5:
         """Use StockSDK for A-share financial data."""
         result = {}
         try:
-            from data.stock_sdk_bridge import StockSDKBridge
+            from core.stock_sdk_bridge import StockSDKBridge
 
             bridge = StockSDKBridge()
             if not bridge.available:
