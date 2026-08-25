@@ -1996,6 +1996,7 @@ class SectionWriter:
         # P3-B：方法论置信度先验 + [E#] 证据清单
         mc_str = _inj["mc_str"]
         ev_str = _inj["ev_str"]
+        rp_str = _inj["rp_str"]
 
         # 2. 各组并行写
         def _write_group(g):
@@ -2197,6 +2198,7 @@ class SectionWriter:
                     f"## 工具模块数据（弹性/信号链/护城河/生命周期/多模型，引用到对应分析章节）\n{_tm_str[:1200]}\n\n"
                     + (f"{ev_str[:1600]}\n\n" if ev_str else "")
                     + (f"{mc_str[:600]}\n\n" if mc_str else "")
+                    + (f"{rp_str[:1200]}\n\n" if rp_str else "")
                     if _tm_str
                     else ""
                 )

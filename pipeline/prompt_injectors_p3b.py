@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""prompt_injectors_p3b.py — P3-B 追加注入器（方法论置信度 / [E#] 证据清单）。
+"""P3-B 追加注入器（方法论置信度 / [E#] 证据清单 / 研究问题树）。
 
 与 prompt_injectors.py 同契约：纯函数 `(ctx) -> str`。
 在此独立成文件以便增量演进；注册仍集中在 prompt_injectors.INJECTORS。
@@ -44,3 +44,24 @@ def _inj_ev_str(ctx):
     except Exception as e:
         logger.debug("[EV] %s", e)
     return ""
+
+
+def _inj_rp_str(ctx):
+    """P3-B：研究规划注入器——必答问题 + 冲突追问。
+
+    从 collected_data 的 _research_questions/_followup_queries 读取，
+    生成研究阶段必须覆盖的问题清单块。
+    """
+    dc = ctx.get("data_context") or {}
+    rqs = dc.get("_research_questions") or []
+    fq = dc.get("_followup_queries") or []
+    if not rqs and not fq:
+        return ""
+    lines = ["## [研究必答问题] 写作时须逐条回应以下研究问题："]
+    for i, q in enumerate(rqs[:15], 1):
+        lines.append(f"  {i}. {q}")
+    if fq:
+        lines.append("\n## [数据冲突追问] 以下口径冲突需在正文中显式解释或补充来源：")
+        for j, q in enumerate(fq, 1):
+            lines.append(f"  {j}. {q}")
+    return "\n".join(lines)

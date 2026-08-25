@@ -1452,6 +1452,39 @@
       "gate_score": 0.9,
       "data_sufficiency": true,
       "notes": ""
+    },
+    {
+      "timestamp": "2026-08-25T11:34:54.471053",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-25T11:34:54.488275",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-25T11:34:54.496268",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
     }
   ]
 }

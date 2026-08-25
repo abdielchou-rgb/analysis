@@ -202,6 +202,14 @@ def run_pipeline(
                 cleaned_md = append_citation_appendix(cleaned_md, pipe_result.get("collected_data", {}) or {})
         except Exception as _cc_err:
             logger.warning("[CITATION] 溯源附录生成失败: %s", str(_cc_err)[:80])
+    # P3-B：双声部分离——编辑声部段落归位到文末统一块
+    if os.environ.get("REPORT_VOICE_SEPARATION", "0") == "1":
+        try:
+            from core.voice_separation import separate_voices
+
+            cleaned_md = separate_voices(cleaned_md)
+        except Exception as _vs_err:
+            logger.warning("[VOICE] 双声部分离失败: %s", str(_vs_err)[:60])
     md_path.write_text(cleaned_md, encoding="utf-8")
     result["md"] = str(md_path)
     print(f"  MD: {md_path}")

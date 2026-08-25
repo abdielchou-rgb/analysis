@@ -432,6 +432,16 @@ class E2ENodes:
                 "research_plan": r,
                 "followup_queries": r.get("followup_queries", []),
             }
+            # P3-B 接线：把研究问题摘要写入 collected_data，
+            # 让 section_writer 的注入器可消费（否则只 log 不影响写作）。
+            _cd = context.get("collected_data", {}) or {}
+            if isinstance(_cd, dict):
+                _rq = [q for node in r.get("question_tree", []) for q in node.get("questions", [])]
+                if _rq or r.get("followup_queries"):
+                    _cd["_research_questions"] = _rq[:20]
+                    _cd["_followup_queries"] = r.get("followup_queries", [])[:5]
+                    out["collected_data"] = _cd
+                    context["collected_data"] = _cd
             if r.get("n_conflicts"):
                 import logging
 
