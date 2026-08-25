@@ -4,13 +4,24 @@ R61（2026-08-03 迁移）：由 scripts/migrate_iron_gate.py 自动生成。
 方法原样迁移自 pipeline/iron_gate.py，签名不变，IronGate 继承后行为零变化。
 """
 
-import os
 import re
 
 from pipeline.checks.base import GateCheckResult, logger
 
 
 class LlmChecksMixin:
+    @staticmethod
+    def _get_cross_audit_provider(writing_provider: str = "deepseek") -> tuple[str, str]:
+        """T-11：异源审查——Gate LLM 检查强制路由到非写作 provider。
+
+        写作用 DeepSeek → 审查用 OpenRouter（真实可用的异源通道）。
+        写作用 OpenRouter → 审查用 DeepSeek。
+        避免同一模型"自采自校验"的同源偏见。
+        """
+        if "deepseek" in writing_provider.lower():
+            return "openrouter", ""
+        return "deepseek", "deepseek-reasoner"
+
     """llm_checks 类检查方法。"""
 
     def _check_ai_tone_by_llm(self) -> GateCheckResult:
@@ -43,14 +54,8 @@ class LlmChecksMixin:
             from core.deepseek_client import call_llm
 
             # P0-1: 使用 deepseek-reasoner（与生成端 deepseek-chat 不同模型）作为独立审计器
-            _audit_model = "deepseek-reasoner"
-            # R13（2026-08-01 三算力架构）：审计器默认保持独立模型（deepseek-reasoner），
-            # 保证"第三方审计"设计不破坏。可通过 LOCAL_AUDITOR=1 显式路由到本地 Ollama
-            # （牺牲一点审计精度换取速度，需先验证偏差<5%）。
-            _audit_provider = "deepseek"
-            if os.environ.get("LOCAL_AUDITOR", "0") == "1":
-                _audit_provider = "ollama_local"
-                _audit_model = ""
+            # T-11：异源审查——强制路由到非写作 provider
+            _audit_provider, _audit_model = self._get_cross_audit_provider("deepseek")
             result = call_llm(
                 messages=[{"role": "user", "content": prompt}],
                 model=_audit_model,

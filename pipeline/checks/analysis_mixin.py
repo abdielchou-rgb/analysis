@@ -967,6 +967,37 @@ class AnalysisChecksMixin:
         severity = "warning" if self._allow_placeholder_degradation else "error"
         return GateCheckResult("so_what_chain", passed, final_score, detail, severity=severity)
 
+    @staticmethod
+    def _content_depth_score(section_text: str) -> float:
+        """A-08：评估一段文字的内容深度（0~1）。
+
+        深度标准：
+        - 含具体数字/百分比 → +0.2
+        - 含因果连接词（因为/由于/驱动/导致/归因于）→ +0.2
+        - 含比较级或变化方向（提升/下降/超过/低于/优于）→ +0.2
+        - 含条件句（如果/若/假设/在…情况下）→ +0.2
+        - 不含重复短语（同一段内同一 8 字片段出现 ≤1 次）→ +0.2
+        """
+        import re
+
+        score = 0.0
+        if re.search(r"\d+\.?\d*\s*(?:%|亿|万|倍|元|pp)", section_text):
+            score += 0.2
+        if re.search(r"(?:因为|由于|驱动|导致|归因于|来自)", section_text):
+            score += 0.2
+        if re.search(r"(?:提升|下降|超过|低于|优于|恶化|改善)", section_text):
+            score += 0.2
+        if re.search(r"(?:如果|若|假设|在.{1,8}情况| scenario)", section_text):
+            score += 0.2
+        # 重复检测：8 字滑窗去重比
+        clean = re.sub(r"\s", "", section_text)
+        if len(clean) > 20:
+            grams = [clean[i : i + 8] for i in range(0, len(clean) - 7, 4)]
+            unique_ratio = len(set(grams)) / max(len(grams), 1)
+            if unique_ratio > 0.85:
+                score += 0.2
+        return min(score, 1.0)
+
     def _check_explicit_conclusion(self) -> GateCheckResult:
         """FP6 L1: Check that report contains an explicit conclusion/investment thesis.
 
