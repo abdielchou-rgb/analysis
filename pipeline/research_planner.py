@@ -1,37 +1,65 @@
 # -*- coding: utf-8 -*-
-"""H: research_planner v1 — 研究阶段规划器（零 LLM，确定性）。
+"""H: research_planner v2 — 研究阶段规划器（LLM 智能问题生成 + 确定性冲突检测）。
 
-P3-B 落地：把"冲突检测"从 Gate（事后）前移到研究阶段（事前）。
-输入 enrich 后的 collected_data：
-  1. 问题树：SAC 维度 × 模板 → 每维 2 条必答问题
-  2. 冲突扫描：复用 data_caliber.detect_value_conflicts
-  3. 追问查询：对每个冲突生成定向补采查询串
-
-LLM 驱动的深版（多视角模拟对话）为 Phase C 项；本 v1 提供确定性骨架。
+v2 升级：问题树从模板匹配升级为 LLM 生成——每维度产出资产专属、
+挑战共识的非显性研究问题。LLM 不可用时回退 v1 模板。
 """
 
 from __future__ import annotations
 
+import logging
+
+logger = logging.getLogger("2hao.research_planner")
+
+
+# ── v1 模板（回退用）──────────────────────────────────────────
+
 _QUESTION_TEMPLATES = [
-    # (中文关键词, [英文别名], [两问])
     (
         "规模",
         ["market", "sizing", "tam"],
-        ["该市场规模的口径（全球/中国/细分）与年份是什么？", "规模数字的来源与测算方法是否可复核？"],
+        [
+            "该市场规模的口径（全球/中国/细分）与年份是什么？",
+            "规模数字的来源与测算方法是否可复核？",
+        ],
     ),
-    ("增速", ["growth", "cagr"], ["增速是同比还是复合？基年是什么？", "增速与量价拆分是否自洽？"]),
-    ("毛利率", ["margin"], ["毛利率变化的主因是价格、成本结构还是产品组合？", "与可比公司同口径毛利率差异多少？"]),
-    ("竞争", ["competitive", "peer", "player"], ["主要玩家的份额与变化方向？", "竞争要素是价格、技术还是渠道？"]),
+    (
+        "增速",
+        ["growth", "cagr"],
+        [
+            "增速是同比还是复合？基年是什么？",
+            "增速与量价拆分是否自洽？",
+        ],
+    ),
+    (
+        "毛利率",
+        ["margin"],
+        [
+            "毛利率变化的主因是价格、成本结构还是产品组合？",
+            "与可比公司同口径毛利率差异多少？",
+        ],
+    ),
+    (
+        "竞争",
+        ["competitive", "peer", "player"],
+        [
+            "主要玩家的份额与变化方向？",
+            "竞争要素是价格、技术还是渠道？",
+        ],
+    ),
     (
         "估值",
         ["valuation", "dcf", "pe"],
-        ["估值锚（EPS/PE/DCF 假设）分别是什么？", "多方法结论是否一致，分歧来自哪个假设？"],
+        [
+            "估值锚（EPS/PE/DCF 假设）分别是什么？",
+            "多方法结论是否一致，分歧来自哪个假设？",
+        ],
     ),
 ]
 
 
 def question_tree(dims: list[str]) -> list[dict]:
-    """每维度 → 必答问题（中英文关键词命中 2 条；未命中共用通用 2 问）。"""
+    """v1 模板版。"""
     tree = []
     for dim in dims or []:
         d = str(dim).lower()
@@ -47,14 +75,102 @@ def question_tree(dims: list[str]) -> list[dict]:
     return tree
 
 
+# ── v2 LLM 问题生成 ──────────────────────────────────────────
+
+_LLM_QUESTION_PROMPT = """你是顶级卖方研究所的资深分析师。针对{asset}，为分析维度「{dim}」生成 2 个具体、非共识、可验证的研究问题。
+
+要求：
+1. 问题必须针对该公司的具体情况，不能是通用模板
+2. 问题应挑战市场一致预期，寻找预期差
+3. 问题必须可用公开数据验证
+4. 每个问题应导向一个可操作的投资洞察
+
+输出格式：恰好两行，每行一个问题，不要编号，不要解释。"""
+
+
+def _llm_generate_questions(
+    asset: str,
+    dim: str,
+    report_type: str,
+    data_context: dict,
+) -> list[str] | None:
+    """调用 LLM 为单维度生成研究问题。失败返回 None。"""
+    try:
+        from core.deepseek_client import call_deepseek
+
+        # 注入数据上下文摘要帮助 LLM 生成更精准的问题
+        cd_keys = []
+        chart_data = (data_context or {}).get("chart_data", {}) or {}
+        for k in sorted(chart_data.keys())[:8]:
+            cd_keys.append(k)
+
+        prompt = _LLM_QUESTION_PROMPT.format(asset=asset, dim=dim)
+        if cd_keys:
+            prompt += f"\n\n可用数据键：{', '.join(cd_keys)}"
+
+        r = call_deepseek(
+            [{"role": "user", "content": prompt}],
+            temperature=0.7,
+            max_tokens=200,
+        )
+        content = r["choices"][0]["message"]["content"].strip()
+        lines = [l.strip().lstrip("0123456789.、） ") for l in content.split("\n") if l.strip() and len(l.strip()) > 10]
+        return lines[:2] if len(lines) >= 2 else None
+    except Exception as e:
+        logger.debug("[RQ-LLM] %s", str(e)[:60])
+        return None
+
+
+def question_tree_v2(
+    dims: list[str],
+    asset: str = "",
+    report_type: str = "",
+    data_context: dict | None = None,
+    use_llm: bool = True,
+) -> list[dict]:
+    """v2 问题树：优先 LLM 生成，回退 v1 模板。
+
+    use_llm=False 或 LLM 失败时自动降级到模板版。
+    """
+    # 骨架模式或无 LLM key → 直接走模板
+    import os
+
+    if not use_llm or not os.environ.get("DEEPSEEK_API_KEY"):
+        return question_tree(dims)
+
+    tree = []
+    dc = data_context or {}
+    for dim in dims or []:
+        llm_qs = _llm_generate_questions(asset, dim, report_type, dc)
+        if llm_qs:
+            tree.append({"dim": dim, "questions": llm_qs, "source": "llm"})
+        else:
+            # 回退到模板
+            fallback = question_tree([dim])
+            if fallback:
+                tree.append(fallback[0])
+            else:
+                tree.append(
+                    {
+                        "dim": dim,
+                        "questions": [
+                            f"{dim}：当前事实与数据支撑是什么？",
+                            f"{dim}：市场共识与本报告的分歧点在哪？",
+                        ],
+                    }
+                )
+    return tree
+
+
+# ── 冲突检测（不变） ─────────────────────────────────────────
+
+
 def detect_conflicts(collected_data: dict) -> list[dict]:
-    """数据层冲突前移检测（复用 data_caliber）。"""
     try:
         from core.data_caliber import detect_value_conflicts
 
         dd = collected_data.get("data_dict") if isinstance(collected_data, dict) else None
         if not dd:
-            # 兜底：从 chart_data 展平一级数值
             cd = (collected_data or {}).get("chart_data", {}) or {}
             dd = {}
             for k, v in cd.items():
@@ -68,8 +184,6 @@ def detect_conflicts(collected_data: dict) -> list[dict]:
 
 
 def followup_queries(conflicts: list[dict], asset: str) -> list[str]:
-    """每个冲突生成一条定向仲裁查询。"""
-    # 最多 5 条，控制采集成本
     qs = []
     for c in (conflicts or [])[:5]:
         ind = c.get("indicator", "")
@@ -79,11 +193,23 @@ def followup_queries(conflicts: list[dict], asset: str) -> list[str]:
     return qs
 
 
-def plan(asset: str, dims: list[str], collected_data: dict) -> dict:
+# ── 主入口 ───────────────────────────────────────────────────
+
+
+def plan(
+    asset: str,
+    dims: list[str],
+    collected_data: dict,
+    report_type: str = "",
+    use_llm: bool = True,
+) -> dict:
+    """研究规划主入口。use_llm=True 时尝试 LLM 生成问题（成本可控）。"""
     conflicts = detect_conflicts(collected_data)
+    qt = question_tree_v2(dims, asset, report_type, collected_data, use_llm)
     return {
-        "question_tree": question_tree(dims),
+        "question_tree": qt,
         "conflicts": conflicts,
         "followup_queries": followup_queries(conflicts, asset),
         "n_conflicts": len(conflicts),
+        "llm_generated": any(n.get("source") == "llm" for n in qt),
     }

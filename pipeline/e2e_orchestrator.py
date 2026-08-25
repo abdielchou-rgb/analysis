@@ -427,6 +427,8 @@ class E2ENodes:
                 asset=context.get("asset", ""),
                 dims=dims,
                 collected_data=context.get("collected_data", {}) or {},
+                report_type=context.get("report_type", ""),
+                use_llm=True,
             )
             out = {
                 "research_plan": r,
