@@ -19,7 +19,8 @@ class LlmChecksMixin:
         避免同一模型"自采自校验"的同源偏见。
         """
         if "deepseek" in writing_provider.lower():
-            return "openrouter", ""
+            # T-11 升级：异源审查指定 Claude Sonnet 5（与 DeepSeek 零训练数据重叠）
+            return "openrouter", "anthropic/claude-sonnet-5"
         return "deepseek", "deepseek-reasoner"
 
     """llm_checks 类检查方法。"""
