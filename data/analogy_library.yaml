@@ -1,0 +1,90 @@
+# 跨行业类比案例库 — 按行业特征签名索引
+# 四元组: growth_bucket / concentration_bucket / capital_intensity / tech_cycle
+# 新增案例：追加条目即可自动参与匹配
+
+- industry: 光伏面板
+  period: "2010-2013（产能过剩洗牌期）"
+  growth_bucket: "中增长(10-30%)"
+  concentration_bucket: "分散(CR3<30%)"
+  capital_intensity: "重资产"
+  tech_cycle: "快速迭代"
+  related_keywords: [电池, 储能, 新能源, 组件]
+  key_lesson: >
+    产能过剩导致价格战，行业利润率从25%骤降至5%以下。
+    最终存活者不超过5家，且必须同时满足：成本曲线前25% + 现金流为正 + 技术代际领先。
+    当前位置类似的企业应重点检查现金跑道和成本竞争力。
+  caveats: >
+    光伏是To B基建，政策驱动明显；若当前行业有C端品牌溢价则不完全可比。
+    中国光伏的产能扩张速度在全球史上无先例，类比时需打折。
+
+- industry: 半导体存储
+  period: "2018-2019（存储周期下行）"
+  growth_bucket: "负增长"
+  concentration_bucket: "高集中(CR3>60%)"
+  capital_intensity: "超重资产"
+  tech_cycle: "摩尔定律驱动"
+  related_keywords: [芯片, 晶圆, 存储, 面板, 周期]
+  key_lesson: >
+    即使CR3>90%的高集中行业也会出现周期性亏损。
+    三星/海力士/美光在2019年全部亏损，但份额未变——说明集中度不能抗周期。
+    正确策略：下行周期保现金流+逆势扩产，上行周期收割。
+  caveats: >
+    存储是标准化大宗商品，如果当前行业产品差异化程度高则周期性弱于存储。
+
+- industry: 中国白酒
+  period: "2012-2015（三公消费+塑化剂双重冲击）"
+  growth_bucket: "低增长(0-10%)"
+  concentration_bucket: "中集中(CR3 30-60%)"
+  capital_intensity: "轻资产"
+  tech_cycle: "慢迭代"
+  related_keywords: [消费, 品牌, 高端, 渠道]
+  key_lesson: >
+    外部冲击（政策）+ 内部信任危机（品质）叠加时，高端品牌受冲击最大但恢复也最快。
+    茅台从2014年底部到2017年新高，涨了4倍——前提是品牌护城河真实存在且未被损害。
+    如果品牌力受损则是永久性而非周期性下跌。
+  caveats: >
+    白酒有社交货币属性和成瘾性，大多数消费品不具备这种复购刚性。
+
+- industry: 中国房地产
+  period: "2021-2024（信用收缩+需求下行）"
+  growth_bucket: "负增长"
+  concentration_bucket: "分散(CR3<30%)"
+  capital_intensity: "超重资产"
+  tech_cycle: "极慢迭代"
+  related_keywords: [地产, 建筑, 基建, 杠杆, 信用]
+  key_lesson: >
+    高杠杆+长回款周期+外部融资依赖 = 流动性危机三要素。
+    当三者同时满足时，即使资产质量良好也可能违约（融创/恒大均有优质资产）。
+    关键指标不是净利润而是现金短债比<1.0。
+  caveats: >
+    房地产的政策敏感性极高，一般制造业不太可能遇到同等级别的政策急转弯。
+
+- industry: 美国 SaaS
+  period: "2022-2023（加息估值压缩）"
+  growth_bucket: "高增长(>30%)"
+  concentration_bucket: "分散(CR3<30%)"
+  capital_intensity: "轻资产"
+  tech_cycle: "中等迭代"
+  related_keywords: [SaaS, 订阅, 软件, 云计算, 增长]
+  key_lesson: >
+    高增长不等于高估值——当利率从0升到5%，远期现金流折现值大幅下降。
+    SaaS公司收入增长30%但估值倍数从20x PS压缩到6x PS。
+    教训：增长质量（NRR、获客效率）比增速本身更重要。
+  caveats: >
+    利率环境是宏观变量，与行业基本面无关。类比适用于估值方法论参考，
+    不适用于基本面判断。
+
+- industry: 日本家电
+  period: "1990-2000（技术替代+中国竞争）"
+  growth_bucket: "低增长(0-10%)"
+  concentration_bucket: "高集中(CR3>60%)"
+  capital_intensity: "重资产"
+  tech_cycle: "中等迭代"
+  related_keywords: [家电, 制造, 出口, 竞争, 技术]
+  key_lesson: >
+    即使是全球龙头（索尼/松下/东芝），面对低成本竞争者和技术路线切换也会衰落。
+    龙头地位≠永续竞争优势。关键监测指标：毛利率是否持续被侵蚀。
+    毛利率连续3年下滑>1pp → 竞争优势正在流失。
+  caveats: >
+    日本案例的特殊性在于汇率升值（广场协议）加速了衰落。
+    如果没有汇率冲击，衰退会慢得多但仍不可避免。

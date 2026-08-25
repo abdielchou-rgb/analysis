@@ -203,7 +203,7 @@ def run_pipeline(
         except Exception as _cc_err:
             logger.warning("[CITATION] 溯源附录生成失败: %s", str(_cc_err)[:80])
     # P3-B：双声部分离——编辑声部段落归位到文末统一块
-    if os.environ.get("REPORT_VOICE_SEPARATION", "0") == "1":
+    if os.environ.get("REPORT_VOICE_SEPARATION", "1") != "0":
         try:
             from core.voice_separation import separate_voices
 

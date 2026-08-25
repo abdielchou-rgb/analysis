@@ -321,3 +321,31 @@ def _inj_market_seg_str(ctx):
     except Exception as e:
         logger.debug("[MKT-SEG] %s", e)
     return ""
+
+
+def _inj_analogy_str(ctx):
+    """P3-B：跨行业类比注入器——按行业特征签名匹配历史案例。"""
+    try:
+        from core.cross_industry import build_block
+
+        dc = ctx.get("data_context") or {}
+        biz = dc.get("biz_model") or {}
+        industry = ""
+        if isinstance(biz, dict):
+            tags = biz.get("industry_tags") or []
+            if tags:
+                industry = str(tags[0])
+        if not industry:
+            industry = ctx.get("asset", "")
+        growth = dc.get("industry_growth")
+        cr3 = dc.get("cr3")
+        return build_block(
+            industry,
+            growth_rate=growth,
+            cr3=cr3,
+            capital_intensity="重资产",
+            tech_cycle="中等迭代",
+        )
+    except Exception as e:
+        logger.debug("[ANALOGY] %s", e)
+    return ""

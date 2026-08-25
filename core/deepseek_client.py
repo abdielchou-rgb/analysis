@@ -300,6 +300,68 @@ def _t2_latency() -> int:
     return int((time.time() - _LLM_CALL_T0) * 1000)
 
 
+def _accumulate_openrouter_stream(lines) -> dict:
+    """R89（2026-08-25）：聚合 OpenRouter SSE 流式响应为 {content, reasoning, usage}。
+
+    背景：本机网络路径下非流式响应体在 ~7.8KB 处被中间设备确定性截断
+    （resp.json() 报 Expecting value），长写作调用 100% 失败；SSE 分块持续
+    有数据流动，可穿透该类静默超时。
+
+    协议要点：
+      - 注释行以 ":" 开头（如 ": OPENROUTER PROCESSING"）→ 忽略
+      - "data: [DONE]" → 结束
+      - "data: {...}" → choices[0].delta.content / .reasoning / .reasoning_content 累加
+      - usage 出现在任一 chunk（通常最后带 usage 的 chunk）→ 记录
+      - 垃圾行/半行 JSON → 容错跳过，不抛异常
+    """
+    content_parts: list = []
+    reasoning_parts: list = []
+    usage: dict = {}
+    done = False
+    try:
+        for raw in lines:
+            if done:
+                break
+            if raw is None:
+                continue
+            line = raw.strip() if isinstance(raw, str) else raw.decode("utf-8", "ignore").strip()
+            if not line or line.startswith(":"):
+                continue
+            if not line.startswith("data:"):
+                continue
+            payload_str = line[len("data:") :].strip()
+            if payload_str == "[DONE]":
+                done = True
+                continue
+            try:
+                chunk = json.loads(payload_str)
+            except (ValueError, TypeError):
+                continue
+            if not isinstance(chunk, dict):
+                continue
+            if isinstance(chunk.get("usage"), dict) and chunk["usage"]:
+                usage = chunk["usage"]
+            choices = chunk.get("choices") or []
+            if not choices:
+                continue
+            delta = (choices[0] or {}).get("delta") or {}
+            c = delta.get("content")
+            if isinstance(c, str) and c:
+                content_parts.append(c)
+            r = delta.get("reasoning") or delta.get("reasoning_content")
+            if isinstance(r, str) and r:
+                reasoning_parts.append(r)
+    except Exception as e:  # 迭代器网络中断：返回已聚合部分（调用方按内容判空）
+        logger.warning(
+            "[LLM-STREAM] 聚合中断（已收 content=%d chars）: %s", sum(len(p) for p in content_parts), str(e)[:80]
+        )
+    return {
+        "content": "".join(content_parts),
+        "reasoning": "".join(reasoning_parts),
+        "usage": usage,
+    }
+
+
 # ── 限流（P2-audit 2026-08-24：rate_limit_rpm 字段此前定义后零引用）──
 _rate_lock = threading.Lock()
 _rate_windows: dict = {}  # provider_name -> list[float] 最近请求时间戳
@@ -498,6 +560,60 @@ def call_llm(
         for attempt in range(2):
             try:
                 _t0 = time.perf_counter()  # P2-audit 2026-08-24: 单次调用真延迟
+                # R89（2026-08-25）：openrouter 走 SSE 流式——本机网络对非流式
+                # 长响应体在 ~7.8KB 处确定性截断，流式分块可穿透（OPENROUTER_STREAM=0 关闭）。
+                if pv.name == "openrouter" and os.environ.get("OPENROUTER_STREAM", "1") != "0":
+                    _stream_payload = dict(payload)
+                    _stream_payload["stream"] = True
+                    with requests.post(
+                        f"{pv.base_url}/chat/completions",
+                        headers=headers,
+                        json=_stream_payload,
+                        timeout=max(_settings.llm_http_timeout(), 300),
+                        stream=True,
+                    ) as _sresp:
+                        _sresp.raise_for_status()
+                        _acc = _accumulate_openrouter_stream(_sresp.iter_lines(decode_unicode=True))
+                    _latency_ms = int((time.perf_counter() - _t0) * 1000)
+                    _registry.record_success(pv.name)
+                    _resp = _normalize_llm_response(
+                        {
+                            "choices": [
+                                {
+                                    "message": {
+                                        "role": "assistant",
+                                        "content": _acc["content"],
+                                        "reasoning": _acc["reasoning"],
+                                    }
+                                }
+                            ],
+                            "id": f"stream-{int(_t0)}",
+                            "object": "chat.completion",
+                            "model": m,
+                            "usage": _acc.get("usage") or {},
+                        }
+                    )
+                    try:
+                        from core.metrics import ObservabilityDB
+
+                        _usage = _resp.get("usage", {})
+                        ObservabilityDB().log_llm_call_simple(
+                            module="call_llm_stream",
+                            section_id=m,
+                            prompt_tokens=_usage.get("prompt_tokens", 0),
+                            completion_tokens=_usage.get("completion_tokens", 0),
+                            latency_ms=_latency_ms,
+                            status="success",
+                            provider=getattr(pv, "name", "unknown"),
+                        )
+                    except Exception as _le:
+                        logger.debug("[COST-LOG] %s", str(_le)[:50])
+                    if _ck is not None:
+                        try:
+                            _response_cache_set(_ck, _resp)
+                        except Exception:
+                            pass
+                    return _resp
                 resp = requests.post(
                     f"{pv.base_url}/chat/completions",
                     headers=headers,

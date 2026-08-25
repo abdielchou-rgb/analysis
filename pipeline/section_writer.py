@@ -2019,6 +2019,7 @@ class SectionWriter:
         segment_rev_str = _inj["segment_rev_str"]
         consulting_str = _inj["consulting_str"]
         market_seg_str = _inj["market_seg_str"]
+        analogy_str = _inj["analogy_str"]
         mkb_str = _inj["mkb_str"]
 
         # 2. 各组并行写
@@ -2230,6 +2231,7 @@ class SectionWriter:
                     + (f"{segment_rev_str[:800]}\n\n" if segment_rev_str else "")
                     + (f"{consulting_str[:800]}\n\n" if consulting_str else "")
                     + (f"{market_seg_str[:800]}\n\n" if market_seg_str else "")
+                    + (f"{analogy_str[:1000]}\n\n" if analogy_str else "")
                     + (f"{kb_str[:1500]}\n\n" if kb_str else "")
                     + (f"{mkb_str[:2000]}\n\n" if mkb_str else "")
                     if _tm_str

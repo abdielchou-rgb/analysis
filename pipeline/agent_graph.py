@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import os
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -58,7 +59,7 @@ class AgentGraph:
         fn: Callable,
         deps: list[str] = None,
         validators: list[Callable] = None,
-        timeout_s: int = 300,
+        timeout_s: int = None,
         description: str = "",
         desc: str = "",
         output_contract: dict[str, dict] = None,
@@ -70,7 +71,15 @@ class AgentGraph:
           - required: True 表示该 key 必填 (None 则 warning)
           - severity: "warning" (默认, 记录日志不阻断) | "error" (阻断管线)
           - keys: 对 dict 类型进一步检查子 key 是否存在
+
+        R89（2026-08-25）：timeout_s=None 时解析 AGENT_GRAPH_NODE_TIMEOUT_S（默认300）——
+        免费推理模型串行写作下单节点可达20+分钟，全局可调防误杀。
         """
+        if timeout_s is None:
+            try:
+                timeout_s = int(os.environ.get("AGENT_GRAPH_NODE_TIMEOUT_S", "300"))
+            except (TypeError, ValueError):
+                timeout_s = 300
         self._nodes[node_id] = {
             "fn": fn,
             "deps": deps or [],

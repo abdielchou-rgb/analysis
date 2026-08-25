@@ -1564,6 +1564,9 @@ class E2EOrchestratorV2:
                     "scarcity",
                     "cross_validate",
                 ],
+                # R89（2026-08-25）：串行慢速 provider（免费/stealth 推理模型）下
+                # 一组 3 段写作可达 20+ 分钟，默认 300s 必超时。可用环境变量放宽。
+                timeout_s=int(os.environ.get("WRITE_NODE_TIMEOUT_S", "300")),
                 desc="write",
             )
             g.add_node("style", E2ENodes.style_compile, deps=["write_sections", "charts"], desc="style compile")
