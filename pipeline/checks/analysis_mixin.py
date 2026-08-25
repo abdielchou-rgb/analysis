@@ -1288,10 +1288,16 @@ class AnalysisChecksMixin:
                 pos = text.find(j, search_from)
                 if pos < 0:
                     pos = text.find(j)
-                tail = text[pos + len(j) : pos + len(j) + 150]
+                tail = text[pos + len(j) : pos + len(j) + 300]
                 has_implication = bool(
                     re.search(
-                        r"(?:因此|这意味着|所以|导致|从而|影响|So\s*What|数据表明|对投资者意味着|综合判断|证伪条件)",
+                        # P3-B 扩展：原列表只认 5 个触发词，LLM 用了语义等价但
+                        # 措辞不同的表述（如"核心矛盾将…转向""若…则…"）被漏判。
+                        # 现扩展到涵盖常见分析性推论模式。
+                        r"(?:因此|这意味着|所以|导致|从而|影响|So\s*What|数据表明"
+                        r"|对投资者意味着|综合判断|证伪条件"
+                        r"|核心矛盾|关键变量|核心变量|转向|取决于|关键在于"
+                        r"|若[^。]{2,30}(?:则|将)|上行空间|下行风险|触发变量)",
                         tail,
                     )
                 )
@@ -1537,8 +1543,11 @@ class AnalysisChecksMixin:
             elif has_bottleneck and has_chain:
                 passed = True  # 放宽：基础卡点已满足，稀缺性为增强项
         score = 1.0 if passed else 0.5
+        # P3-audit: earnings_notes（业绩快评）篇幅短、聚焦财报数据，
+        # 完整的瓶颈/卡位/稀缺层三要素非常规配置——降为 advisory。
+        _sev = "warning" if self.report_type == "earnings_notes" else "error"
         return GateCheckResult(
-            name="bottleneck_analysis", passed=passed, score=score, severity="error", details="; ".join(detail_parts)
+            name="bottleneck_analysis", passed=passed, score=score, severity=_sev, details="; ".join(detail_parts)
         )
 
     def _check_risk_layering(self) -> GateCheckResult:
