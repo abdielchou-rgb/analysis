@@ -1138,6 +1138,56 @@ def _record_predictions_safe(report_text: str, asset: str) -> int:
         return 0
 
 
+def _repro_snapshot(output_dir: str, asset: str) -> str | None:
+    """T-12：运行时配置快照——pin 全部影响因子供事后复现。"""
+    import hashlib
+    import json as _json
+    import os as _os
+    from datetime import datetime
+    from pathlib import Path as _P
+
+    def _file_hash(p):
+        try:
+            return hashlib.md5(_P(p).read_bytes()).hexdigest()[:12]
+        except Exception:
+            return None
+
+    root = _P(__file__).resolve().parent.parent
+    snapshot = {
+        "timestamp": datetime.now().isoformat(),
+        "asset": asset,
+        "env": {
+            k: v
+            for k, v in _os.environ.items()
+            if any(
+                kw in k
+                for kw in (
+                    "MAX_ATTEMPTS",
+                    "SEG_MAX_TOKENS",
+                    "LLM_",
+                    "REPORT_",
+                    "SKELETON",
+                    "EDITOR_",
+                    "CHART_PARALLEL",
+                    "DIM_PARALLEL",
+                )
+            )
+        },
+        "thresholds_hash": _file_hash(root / "benchmark" / "calibrated_thresholds.json"),
+        "methodology_rules_hash": _file_hash(root / "data" / "methodology_rules.json"),
+        "sac_listed_hash": _file_hash(root / "core" / "sacs" / "sac_listed_company.yaml"),
+        "model": _os.environ.get("DEEPSEEK_MODEL", "deepseek-chat"),
+        "python_version": sys.version[:20],
+    }
+    out = _P(output_dir) / f"{asset}_repro_env.json"
+    try:
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(_json.dumps(snapshot, ensure_ascii=False, indent=1), encoding="utf-8")
+        return str(out)
+    except Exception:
+        return None
+
+
 class E2EOrchestratorV2:
     # R48（2026-08-02）：迭代上限支持环境变量 MAX_ATTEMPTS
     # 性能模式默认 3（快速收敛）；训练模式可设 5-10（自迭代打磨）
@@ -1365,56 +1415,6 @@ class E2EOrchestratorV2:
             if self._cached_needs_agent:
                 ctx["needs_agent"] = True
         return ctx
-
-
-def _repro_snapshot(output_dir: str, asset: str) -> str | None:
-    """T-12：运行时配置快照——pin 全部影响因子供事后复现。"""
-    import hashlib
-    import json as _json
-    import os as _os
-    from datetime import datetime
-    from pathlib import Path as _P
-
-    def _file_hash(p):
-        try:
-            return hashlib.md5(_P(p).read_bytes()).hexdigest()[:12]
-        except Exception:
-            return None
-
-    root = _P(__file__).resolve().parent.parent
-    snapshot = {
-        "timestamp": datetime.now().isoformat(),
-        "asset": asset,
-        "env": {
-            k: v
-            for k, v in _os.environ.items()
-            if any(
-                kw in k
-                for kw in (
-                    "MAX_ATTEMPTS",
-                    "SEG_MAX_TOKENS",
-                    "LLM_",
-                    "REPORT_",
-                    "SKELETON",
-                    "EDITOR_",
-                    "CHART_PARALLEL",
-                    "DIM_PARALLEL",
-                )
-            )
-        },
-        "thresholds_hash": _file_hash(root / "benchmark" / "calibrated_thresholds.json"),
-        "methodology_rules_hash": _file_hash(root / "data" / "methodology_rules.json"),
-        "sac_listed_hash": _file_hash(root / "core" / "sacs" / "sac_listed_company.yaml"),
-        "model": _os.environ.get("DEEPSEEK_MODEL", "deepseek-chat"),
-        "python_version": sys.version[:20],
-    }
-    out = _P(output_dir) / f"{asset}_repro_env.json"
-    try:
-        out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(_json.dumps(snapshot, ensure_ascii=False, indent=1), encoding="utf-8")
-        return str(out)
-    except Exception:
-        return None
 
     def run(self):
         # R80 Phase5：token 预算制——防写改循环成本失控
