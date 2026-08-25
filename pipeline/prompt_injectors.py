@@ -645,12 +645,19 @@ def _inj_tm_str(ctx):
 
 # P3-B：追加注入器（方法论置信度 / [E#] 证据清单 / 研究问题树）从子模块挂载
 from pipeline.prompt_injectors_p3b import (  # noqa: E402
+    _inj_consulting_str,
+    _inj_esg_data_str,
     _inj_ev_str,
     _inj_kb_str,
+    _inj_ma_cases_str,
     _inj_macro_str,
+    _inj_market_seg_str,
     _inj_mc_str,
     _inj_mkb_str,
+    _inj_policy_str,
     _inj_rp_str,
+    _inj_segment_rev_str,
+    _inj_valuation_kb_str,
 )
 
 INJECTORS = [
@@ -690,6 +697,13 @@ INJECTORS = [
     ("kb_str", _inj_kb_str),
     ("mkb_str", _inj_mkb_str),
     ("macro_str", _inj_macro_str),
+    ("valuation_kb_str", _inj_valuation_kb_str),
+    ("policy_str", _inj_policy_str),
+    ("esg_data_str", _inj_esg_data_str),
+    ("ma_cases_str", _inj_ma_cases_str),
+    ("segment_rev_str", _inj_segment_rev_str),
+    ("consulting_str", _inj_consulting_str),
+    ("market_seg_str", _inj_market_seg_str),
 ]
 
 

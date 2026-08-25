@@ -1999,6 +1999,13 @@ class SectionWriter:
         rp_str = _inj["rp_str"]
         kb_str = _inj["kb_str"]
         macro_str = _inj["macro_str"]
+        valuation_kb_str = _inj["valuation_kb_str"]
+        policy_str = _inj["policy_str"]
+        esg_data_str = _inj["esg_data_str"]
+        ma_cases_str = _inj["ma_cases_str"]
+        segment_rev_str = _inj["segment_rev_str"]
+        consulting_str = _inj["consulting_str"]
+        market_seg_str = _inj["market_seg_str"]
         mkb_str = _inj["mkb_str"]
 
         # 2. 各组并行写
@@ -2203,6 +2210,13 @@ class SectionWriter:
                     + (f"{mc_str[:600]}\n\n" if mc_str else "")
                     + (f"{rp_str[:1200]}\n\n" if rp_str else "")
                     + (f"{macro_str[:400]}\n\n" if macro_str else "")
+                    + (f"{valuation_kb_str[:800]}\n\n" if valuation_kb_str else "")
+                    + (f"{policy_str[:800]}\n\n" if policy_str else "")
+                    + (f"{esg_data_str[:800]}\n\n" if esg_data_str else "")
+                    + (f"{ma_cases_str[:800]}\n\n" if ma_cases_str else "")
+                    + (f"{segment_rev_str[:800]}\n\n" if segment_rev_str else "")
+                    + (f"{consulting_str[:800]}\n\n" if consulting_str else "")
+                    + (f"{market_seg_str[:800]}\n\n" if market_seg_str else "")
                     + (f"{kb_str[:1500]}\n\n" if kb_str else "")
                     + (f"{mkb_str[:2000]}\n\n" if mkb_str else "")
                     if _tm_str
