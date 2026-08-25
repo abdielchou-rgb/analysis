@@ -2223,11 +2223,9 @@ class SectionWriter:
                 f"- [R99 图表嵌入] 已生成的每张图表必须在对应分析小节内以 "
                 f"[CHART:fig_xxx] 占位符引用（图表清单见上文），禁止全部堆在文末；"
                 f"确无对应内容的小节需说明原因。\n"
-                f"- [R100 框架三件套] 本组主用分析框架按三槽位输出（缺一即 Gate 拦截）：\n"
-                f"  [FW:<框架名>] 主框架应用：结论1/结论2/结论3\n"
-                f"  [FW-XCHECK] 与验证框架的交叉验证：一致 / 分歧点是什么\n"
-                f"  [FW-OPPOSE] 反方攻击：该结论最可能出错的两个原因+可观察信号\n"
-                f"  （评级/目标价等硬结论写在 [FW:] 标记之后，便于问责账本归因）\n"
+                f"- [R100 框架三件套·鼓励] 若本组使用了明确的分析框架，建议按以下结构组织：\n"
+                f"  先给主框架结论（含 [FW:框架名] 标记），再做交叉验证与反方攻击。\n"
+                f"  框架名用英文简写如 bottleneck、profit_pool、triangulation 等。\n"
                 f"- 本节约 {len(dims) * 800} 字，覆盖全部维度（对标国际投行深度报告篇幅）\n"
                 f"- 事实性断言必须有数据依据：若数据中【没有】公司简介/行业归属，"
                 f"禁止断言『主营XX/属于XX行业』，应写『公司主业待确认』并仅基于已有财务数据推断。"
@@ -2406,8 +2404,8 @@ class SectionWriter:
 
         if total <= _settings.editor_llm_merge_max_chars():
             logger.info("[EDITOR] 总量 %d 字 ≤ 阈值 → 确定性拼接（防 LLM 输出上限丢节）", total)
-            sections = [f"### 组{i + 1}输出\n{t}" for i, t in enumerate(group_texts)]
-            return "\n\n".join(sections)
+            # P3-B 修复：不加脚手架标题——直接拼正文，靠各组分内已有的 ## 标题分层
+            return "\n\n".join(group_texts)
 
         buckets: list[list[str]] = []
         cur: list[str] = []
