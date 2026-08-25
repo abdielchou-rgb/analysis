@@ -38,6 +38,15 @@ def _load() -> dict:
         return {}
 
 
+def _has_substantive_content(entry: dict) -> bool:
+    """过滤掉只有标题没有实质内容的条目。"""
+    methods = str(entry.get("methods", ""))
+    signals = str(entry.get("judgment_signals", ""))
+    summary = str(entry.get("summary", ""))
+    # 至少有一个字段包含 >80 字的实质内容
+    return len(methods) > 80 or len(signals) > 60 or len(summary) > 100
+
+
 def _score_entry(entry: dict, keywords: list[str]) -> float:
     """关键词命中评分：title 权重最高，topic 次之，methods/judgment_signals 再次。"""
     score = 0.0
@@ -103,6 +112,8 @@ def select_entries(
             continue
         for entry in entries:
             if not isinstance(entry, dict):
+                continue
+            if not _has_substantive_content(entry):
                 continue
             sc = _score_entry(entry, keywords)
             if sc > 0:

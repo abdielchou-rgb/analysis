@@ -139,6 +139,14 @@ def build_index(force: bool = False) -> int:
     return total
 
 
+def _indexed_categories(conn) -> list[str]:
+    """获取已索引的全部类别。"""
+    try:
+        return [r[0] for r in conn.execute("SELECT DISTINCT category FROM kb_chunks")]
+    except Exception:
+        return []
+
+
 def search(query: str, top_k: int = 5, category: str | None = None) -> list[dict]:
     """FTS5 全文搜索 → [{source, category, snippet, rank}]。"""
     if not DB_PATH.exists():
@@ -154,6 +162,15 @@ def search(query: str, top_k: int = 5, category: str | None = None) -> list[dict
     if category:
         where += " AND category = ?"
         params.append(category)
+    # V1-fix: 只搜研报相关类目，排除 Excel/PPT 教学
+    if not category:
+        relevant_cats = tuple(
+            c for c in _indexed_categories(conn) if any(kw in c for kw in ("观点", "行业", "估值", "回测", "原始"))
+        )
+        if relevant_cats:
+            placeholders = ",".join("?" for _ in relevant_cats)
+            where += f" AND category IN ({placeholders})"
+            params.extend(relevant_cats)
 
     try:
         rows = conn.execute(

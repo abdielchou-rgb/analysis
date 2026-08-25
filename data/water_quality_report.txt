@@ -1,0 +1,300 @@
+============================================================
+V1: KNOWLEDGE BASE SEARCH QUALITY
+============================================================
+
+[PASS] '毛利率 分析方法' — 3/5 relevant (60%)
+  ✓ [03-估值与测算\估值模型_part2.md] 是数字化企业、投资公司、广告公司优选的大数据产品，2015年至今累计服务客户数量400+。
+分析方法
+
+### 第 3 页
+2019/4/2
+3
+数据驱动精益成
+  ✗ [03-估值与测算\估值模型_part2.md] 入细致的科学分析，展示了人们对生活现状的态度和对美好未来的憧憬。
+——中国人民大学商学院吴武清副教授
+
+### 第 3 页
+2019/5/8
+3
+数据驱动精益成
+  ✗ [03-估值与测算\估值模型_part2.md] by Copyright Laws
+本产品保密并受到版权法保护
+下沉市场消费者网购趋势洞察2019
+
+### 第 2 页
+2019/4/2
+2
+数据驱动精益成长
+  ✓ [02-行业与公司研究\企业估值.md] 分析方法。通过对单只股票的收益率做相对于市场收益率进行回归
+分析，计算得到的回归方程斜率即是β 值。
+38
+
+
+### 第 44 页
+华 中 科 技 大 学 硕
+  ✓ [03-估值与测算\估值模型_part1.md] 分析方法。通过对单只股票的收益率做相对于市场收益率进行回归
+分析，计算得到的回归方程斜率即是β 值。
+38
+梧桐树下整理
+
+
+### 第 43 页
+华 中 科
+
+[PASS] '估值 DCF 敏感性' — 5/5 relevant (100%)
+  ✓ [03-估值与测算\估值模型_part1.md] 亿美元，估值已达760
+亿美元。
+目前Uber 正在冲刺IPO，主流机构对其估值1200 亿美元。
+Uber 主流机构估值方法
+成长时期初期： 主流机构采用收益
+  ✓ [03-估值与测算\估值模型_part1.md] 融资，成功概率较大，所以销售收入的增长趋势，可以作为估值的锚。建议使用PS 估值法
+对公司进行估值。
+成长时期后期：可采用收益法（未来现金流折现）和市场法（PS
+  ✓ [03-估值与测算\估值模型_part1.md] 号Lyft 公布招
+股说明书，计划于3 月29 日上市，目标价下限为62 美元，上限为68 美元。
+Lyft 主流估值方法
+成长时期初期：主流机构采用收益法（未
+  ✓ [03-估值与测算\估值模型_part2.md] 190401 08:53
+
+### 第 4 页
+策略研究/专题研究 | 2019 年03 月31 日
+谨请参阅尾页重要声明及华泰证券股票和行业评级标准
+4
+比亚
+  ✓ [03-估值与测算\估值模型_part1.md] 08:53
+梧桐树下整理
+
+### 第 4 页
+策略研究/专题研究 | 2019 年03 月31 日
+谨请参阅尾页重要声明及华泰证券股票和行业评级标准
+4
+比亚
+
+[PASS] '竞争格局 份额' — 4/5 relevant (80%)
+  ✗ [04-回测基线库\回测基线库_金牌_part02.md] 刘文正、郑紫舟、褚菁菁
+老铺黄金：秉持高端定位，中国古法手工金器
+专业第一品牌
+2024年1月22日
+
+### 第 2 页
+证券研究报告
+* 请务必阅读最后一页
+  ✓ [04-回测基线库\回测基线库_金牌_part08.md] 智能手机LCD DDIC 竞争格局
+
+资料来源：Omdia，中银证券
+资料来源：Omdia，中银证券
+图表23. 2020 年全球智能手机OLED DDIC 竞
+  ✓ [02-行业与公司研究\企业估值.md] tian Lacroix、CK 等均有意落户中国。未来中国内衣市场将
+会是一个竞争极为激烈的角逐场。
+竞争格局
+竞争格局
+竞争格局
+竞争格局
+
+目前安莉芳主要竞
+  ✓ [04-回测基线库\回测基线库_金牌_part04.md] 旋转卡包；向心卷曲
+缠绕
+3
+-
+不可回收
+2023
+竞争格局：竞争逐步加大，大浪淘沙优中选优
+57
+
+### 第 59 页
+竞争格局及产品对比：3. 取栓支架
+  ✓ [04-回测基线库\回测基线库_金牌_part08.md] 选60%份额，排名第二的供应商中选40%份额。供应商需完成芯片的备货、报关、
+物流、交付等相关服务。
+中兴独揽中国移动云化IP 短信网关三期工程新建设备集采
+据
+
+[FAIL] '催化剂 时间轴' — 1/5 relevant (20%)
+  ✗ [04-回测基线库\回测基线库_金牌_part03.md] 份额变化背后的原因
+3. 车企配套份额视角看动力电池竞争力
+4. 投资分析意见
+5. 风险提示
+15
+
+### 第 16 页
+www.swsresearch.c
+  ✓ [04-回测基线库\回测基线库_金牌_part08.md] 高主要系电堆催化剂主要为贵金属铂，成本较高，未来燃料电池降本方向主要为通过技
+术迭代降低铂金属含量。
+图表41：氢燃料电池成本拆分一览（%）
+
+图表42：燃料电
+  ✗ [04-回测基线库\回测基线库_金牌_part06.md] 号，天风证券研究所
+1.2 Figure创始人Brett访谈：AI能力是人形机器人成为可能的关键因素
+
+### 第 10 页
+10
+
+拥抱生成式AI成为英伟达
+  ✗ [04-回测基线库\回测基线库_金牌_part10.md] 14 页
+请务必阅读正文之后的免责条款部分
+14
+
+图表19：市场预期美联储最早或于11 月开启降息
+资料来源：CME，中邮证券研究所
+4.2 钴：整体供过于求
+  ✗ [02-行业与公司研究\行业分析方法和框架.md] ，是聚酯树脂与纤维的主要成分。
+
+
+### 第 103 页
+石油化工词典 2008 年1 月10 日
+UBS 103
+图85：PTA 生产过程
+对二甲
+苯（PX
+
+[FAIL] '供应链 瓶颈' — 1/5 relevant (20%)
+  ✗ [04-回测基线库\回测基线库_1阶段.md] 高位约381.59美元/股。
+【价值目录】网整理：
+https://www.valuelist.cn
+
+### 第 10 页
+6,444.23
+8,622.69
+  ✗ [04-回测基线库\回测基线库_金牌_part03.md] （单位：辆）
+2023年几何销7.0万辆
+2023年极氪销11.9万辆
+2023年银河销8.35万辆
+
+### 第 42 页
+www.swsresearch.c
+  ✗ [04-回测基线库\回测基线库_金牌_part06.md] 方向，我们认为氢发展进入2.0 时
+代。本篇报告从需求入手，分析需求如何推动产业化降本实现平价之路。
+与此同时新能源的持续降本更进一步增加绿氢平价的可能性，风机
+  ✓ [02-行业与公司研究\ifind研报.md] 美元，比Humira 每盒6,922 美元的目录价低超过85%。
+图表12：瓶颈点：重磅管线的接力
+来源：艾伯维官网，Wind，Insight，国金证券研究所
+
+  ✗ [04-回测基线库\回测基线库_金牌_part10.md] 连接示意图
+图17：RDMA(远程直接内存访问)技术解决了网络传
+输中客户端与服务器端数据处理的延迟
+
+### 第 21 页
+AI
+AI：存力
+：存力-存储
+存
+
+V1 SUMMARY: 3/5 queries pass
+
+============================================================
+V2: METHODOLOGY KB CONTENT QUALITY
+============================================================
+
+  [industry_research] 煤炭业...
+    title=False methods=False(len=53) signals=False(len=2) depth=False
+    score: 0/4
+
+  [industry_research] 申银万国-10化工的“驱动力”和“信号验证”机制：策略如何看化工...
+    title=True methods=False(len=50) signals=False(len=13) depth=False
+    score: 1/4
+
+  [valuation_methods] 国金证券-水泥行业2010年度报告：产能消化与估值提升-091113...
+    title=True methods=False(len=52) signals=False(len=45) depth=False
+    score: 1/4
+
+  [valuation_methods] 基于东软创投的风险投资公司价值评估研究...
+    title=True methods=False(len=48) signals=False(len=2) depth=False
+    score: 1/4
+
+  [research_reports] 2026-07-27_平安证券_T细胞衔接器TCE：从血液瘤走向实体瘤自免，技术演进与跨国出海迎来价...
+    title=True methods=False(len=50) signals=False(len=20) depth=False
+    score: 1/4
+
+  [research_reports] 2026-07-27_开源证券_综合行业深度报告：全球需求与技术共振，中国牙科从“替代”走向“定义”...
+    title=True methods=False(len=56) signals=True(len=60) depth=False
+    score: 2/4
+
+  [deep_reports] 地平线机器人招股说明书...
+    title=True methods=False(len=6) signals=False(len=2) depth=False
+    score: 1/4
+
+  [deep_reports] 如祺出行招股说明书...
+    title=False methods=False(len=31) signals=False(len=2) depth=False
+    score: 0/4
+
+  [valuation_models] 价值评估发展.PDF...
+    title=False methods=False(len=44) signals=False(len=2) depth=False
+    score: 0/4
+
+  [valuation_models] 企业价值的绝对估值与相对估值...
+    title=True methods=False(len=56) signals=False(len=2) depth=False
+    score: 1/4
+
+  [excel_models] 公司估值方法培训...
+    title=False methods=False(len=58) signals=False(len=21) depth=False
+    score: 0/4
+
+  [excel_models] 公司财务分析与估值...
+    title=False methods=False(len=58) signals=False(len=13) depth=False
+    score: 0/4
+
+  [backtest_baseline] A级\液冷AIDC_202607...
+    title=True methods=False(len=57) signals=True(len=47) depth=False
+    score: 2/4
+
+  [backtest_baseline] A级\盛屯矿业_202511...
+    title=True methods=False(len=58) signals=False(len=20) depth=False
+    score: 1/4
+
+  [backtest_gold] 金牌\战略投资股票池月度动态：2024年5月-240608-银河证券-11页...
+    title=True methods=False(len=49) signals=True(len=34) depth=False
+    score: 2/4
+
+  [backtest_gold] 金牌\战略深度研究-能源转型系列报告：氢能的2.0时代到来-240317-华泰证券-80页...
+    title=True methods=False(len=54) signals=True(len=66) depth=False
+    score: 2/4
+
+V2 SUMMARY: quality=15/64 (23%) → FAIL
+
+============================================================
+V3: INJECTOR TOKEN BUDGET AUDIT
+============================================================
+Total injectors: 44
+Non-empty injectors: 28
+Total chars: 13501
+Estimated tokens: ~7500
+Budget check: WARN
+
+Per-injector breakdown:
+                 mkb_str:  3025 chars (~1680 tokens)
+                  mr_str:  1495 chars (~ 830 tokens)
+                  kb_str:  1171 chars (~ 650 tokens)
+          consulting_str:   869 chars (~ 482 tokens)
+                 geo_str:   721 chars (~ 400 tokens)
+          market_seg_str:   665 chars (~ 369 tokens)
+                  bn_str:   634 chars (~ 352 tokens)
+             analogy_str:   521 chars (~ 289 tokens)
+                  ts_str:   480 chars (~ 266 tokens)
+                  hf_str:   399 chars (~ 221 tokens)
+               audit_str:   371 chars (~ 206 tokens)
+                 cat_str:   354 chars (~ 196 tokens)
+                  cf_str:   291 chars (~ 161 tokens)
+                  ss_str:   273 chars (~ 151 tokens)
+                  fc_str:   255 chars (~ 141 tokens)
+                 esg_str:   251 chars (~ 139 tokens)
+                  cc_str:   247 chars (~ 137 tokens)
+               macro_str:   241 chars (~ 133 tokens)
+                  bb_str:   213 chars (~ 118 tokens)
+                  sf_str:   204 chars (~ 113 tokens)
+         segment_rev_str:   155 chars (~  86 tokens)
+                 tri_str:   140 chars (~  77 tokens)
+                  pm_str:   129 chars (~  71 tokens)
+                  vc_str:    85 chars (~  47 tokens)
+                  tt_str:    84 chars (~  46 tokens)
+            ma_cases_str:    81 chars (~  45 tokens)
+                surp_str:    76 chars (~  42 tokens)
+                  bm_str:    71 chars (~  39 tokens)
+
+⚠ OVER-BUDGET injectors (>2000 chars): ['mkb_str']
+
+============================================================
+PIT: POINT-IN-TIME CORRECTNESS AUDIT
+============================================================
+financials.db tables: ['financials']
+  financials: cols=['code', 'quarter', 'table_name', 'field', 'value', 'source']... | PIT cols: NONE ⚠
+
+PIT assessment: financials.db needs disclosed_at column for proper backtesting
