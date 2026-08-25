@@ -644,7 +644,14 @@ def _inj_tm_str(ctx):
 # (变量名, 注入器)。section_writer 侧按变量名取回，下游 prompt 组装零改动。
 
 # P3-B：追加注入器（方法论置信度 / [E#] 证据清单 / 研究问题树）从子模块挂载
-from pipeline.prompt_injectors_p3b import _inj_ev_str, _inj_kb_str, _inj_mc_str, _inj_mkb_str, _inj_rp_str  # noqa: E402
+from pipeline.prompt_injectors_p3b import (  # noqa: E402
+    _inj_ev_str,
+    _inj_kb_str,
+    _inj_macro_str,
+    _inj_mc_str,
+    _inj_mkb_str,
+    _inj_rp_str,
+)
 
 INJECTORS = [
     ("fc_str", _inj_fc_str),
@@ -682,6 +689,7 @@ INJECTORS = [
     ("rp_str", _inj_rp_str),
     ("kb_str", _inj_kb_str),
     ("mkb_str", _inj_mkb_str),
+    ("macro_str", _inj_macro_str),
 ]
 
 

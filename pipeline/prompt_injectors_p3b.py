@@ -130,3 +130,14 @@ def _inj_mkb_str(ctx):
     except Exception as e:
         logger.debug("[MKB] %s", e)
     return ""
+
+
+def _inj_macro_str(ctx):
+    """K-10：宏观背景注入器——global_macro.json → Fed/CPI/GDP 快照。"""
+    try:
+        from core.macro_context import block
+
+        return block()
+    except Exception as e:
+        logger.debug("[MACRO] %s", e)
+    return ""

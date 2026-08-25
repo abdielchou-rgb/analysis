@@ -1998,6 +1998,7 @@ class SectionWriter:
         ev_str = _inj["ev_str"]
         rp_str = _inj["rp_str"]
         kb_str = _inj["kb_str"]
+        macro_str = _inj["macro_str"]
         mkb_str = _inj["mkb_str"]
 
         # 2. 各组并行写
@@ -2201,6 +2202,7 @@ class SectionWriter:
                     + (f"{ev_str[:1600]}\n\n" if ev_str else "")
                     + (f"{mc_str[:600]}\n\n" if mc_str else "")
                     + (f"{rp_str[:1200]}\n\n" if rp_str else "")
+                    + (f"{macro_str[:400]}\n\n" if macro_str else "")
                     + (f"{kb_str[:1500]}\n\n" if kb_str else "")
                     + (f"{mkb_str[:2000]}\n\n" if mkb_str else "")
                     if _tm_str

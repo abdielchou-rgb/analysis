@@ -93,6 +93,7 @@ def serialize_chart_data(data):
         ("thinking_models", "ThinkingModels"),
         ("page_models", "PageModels"),
         ("serenity", "Serenity"),
+        ("sensitivity_table", "SensitivityTable"),
         ("logic_audit", "LogicAudit"),
         ("liu_run", "LiuRun"),
         ("kelly", "Kelly"),
