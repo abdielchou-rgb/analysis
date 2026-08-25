@@ -16,12 +16,12 @@ Round3 P0-① 个股资金面同步 — capital_flow.db 加 stock_fund_flow 表
   python scripts/sync_stock_fund_flow.py --ticker 603662
   python scripts/sync_stock_fund_flow.py --dry-run      # 试跑不写库
 """
+
 from __future__ import annotations
 
 import argparse
 import os
 import sqlite3
-import sys
 import time
 from datetime import datetime, timedelta
 
@@ -67,7 +67,7 @@ def _retry(fn, times=5, base=1.5):
             return fn()
         except Exception as e:  # noqa: BLE001
             last = e
-            time.sleep(base * (2 ** i) + 0.5)
+            time.sleep(base * (2**i) + 0.5)
     raise last
 
 
@@ -97,7 +97,9 @@ def get_tickers(ticker: str | None) -> list:
             tickers.extend([c for c in codes if c not in tickers][:50])
     except Exception as e:  # noqa: BLE001
         print(f"[WARN] 获取沪深300成分失败，用兜底池: {e}")
-        tickers.extend(["600519", "000858", "601318", "600036", "000333", "300750", "600900", "601398", "600276", "000001"])
+        tickers.extend(
+            ["600519", "000858", "601318", "600036", "000333", "300750", "600900", "601398", "600276", "000001"]
+        )
     return list(dict.fromkeys(tickers))
 
 
@@ -190,7 +192,15 @@ def sync_margin(conn, dry_run=False, start=None):
                     conn.execute(
                         "INSERT OR REPLACE INTO stock_fund_flow (code, date, metric, value, extra, source, updated_at) "
                         "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                        (code, ds, "margin_balance", bal, f"margin_buy={buy or 0}", "akshare: stock_margin_detail_" + mkt, _now()),
+                        (
+                            code,
+                            ds,
+                            "margin_balance",
+                            bal,
+                            f"margin_buy={buy or 0}",
+                            "akshare: stock_margin_detail_" + mkt,
+                            _now(),
+                        ),
                     )
                 total += 1
             if not dry_run:
@@ -209,8 +219,10 @@ def sync_lhb(conn, dry_run=False):
     end = datetime.now()
     start = end - timedelta(days=7)
     try:
-        df = _retry(lambda: ak.stock_lhb_detail_em(
-            start_date=start.strftime("%Y%m%d"), end_date=end.strftime("%Y%m%d")), times=3)
+        df = _retry(
+            lambda: ak.stock_lhb_detail_em(start_date=start.strftime("%Y%m%d"), end_date=end.strftime("%Y%m%d")),
+            times=3,
+        )
     except Exception as e:
         print(f"[FAIL] 龙虎榜: {e}")
         return 0

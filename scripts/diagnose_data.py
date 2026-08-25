@@ -6,6 +6,7 @@
 
 只测试数据采集部分（不跑全管线），30 秒定位接口异常。
 """
+
 import sys
 import traceback
 from pathlib import Path
@@ -37,6 +38,7 @@ def main():
     print(f"Python: {sys.version}")
     try:
         import akshare as ak
+
         print(f"AkShare 版本: {ak.__version__}")
     except ImportError as e:
         print(f"[!!] akshare 未安装: {e}")
@@ -44,15 +46,16 @@ def main():
 
     # 提取股票代码
     import re
+
     code_match = re.search(r"(\d{6})", asset)
     code = code_match.group(1) if code_match else ""
     if not code:
         # 尝试用名字解析
         try:
             df = ak.stock_info_a_code_name()
-            m = df[df['name'].str.contains(asset[:4], na=False)]
+            m = df[df["name"].str.contains(asset[:4], na=False)]
             if not m.empty:
-                code = str(m.iloc[0]['code']).zfill(6)
+                code = str(m.iloc[0]["code"]).zfill(6)
                 print(f"  解析代码: {asset} -> {code}")
         except Exception as e:
             print(f"[!!] 代码解析失败: {e}")
@@ -61,14 +64,20 @@ def main():
         return 1
 
     # 1. 年度财务（已知可用）
-    test_block("1. 年度财务 stock_financial_abstract_ths", lambda: ak.stock_financial_abstract_ths(symbol=code, indicator='按年度'))
+    test_block(
+        "1. 年度财务 stock_financial_abstract_ths",
+        lambda: ak.stock_financial_abstract_ths(symbol=code, indicator="按年度"),
+    )
 
     # 2. 主营构成（新）
     test_block("2. 主营构成 stock_zygc_em", lambda: ak.stock_zygc_em(symbol=code))
 
     # 3. 资金流（新）
     market = "sh" if code.startswith("6") else "sz"
-    test_block(f"3. 个股资金流 stock_individual_fund_flow({market})", lambda: ak.stock_individual_fund_flow(stock=code, market=market))
+    test_block(
+        f"3. 个股资金流 stock_individual_fund_flow({market})",
+        lambda: ak.stock_individual_fund_flow(stock=code, market=market),
+    )
 
     # 4. 行业板块列表（新，同业第一步）
     test_block("4. 行业板块列表 stock_board_industry_name_em", lambda: ak.stock_board_industry_name_em())
@@ -89,6 +98,7 @@ def main():
             except Exception:
                 continue
         return None
+
     test_block("5. 定位所属行业", locate_industry)
 
     # 6. 全市场行情（同业数据源）

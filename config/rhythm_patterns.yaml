@@ -1,0 +1,20 @@
+# S4 节奏模板 — 章节类型 → 写作节奏指令（首条命中生效）
+- match_keywords: [决策门, Bold Call, 核心判断, bold_call]
+  directive: >
+    节奏【短句高密度】：每句 ≤30 字；连续三句排比收束；
+    本节判断动词密度全篇最高；禁止超过 40 字的长句。
+- match_keywords: [财务验证, 财务分析, 盈利预测, financial]
+  directive: >
+    节奏【数字链式】：每个判断必须带分子/分母或表格；
+    数字与单位紧邻；禁止无数字的纯定性段落。
+- match_keywords: [竞争格局, 竞争, peer]
+  directive: >
+    节奏【点名制】：每段至少给出 N=3 个具名玩家及份额/威胁等级；
+    禁止"竞争激烈/格局清晰"类空泛表述。
+- match_keywords: [风险, 证伪, falsification]
+  directive: >
+    节奏【条件句式】：统一使用『若 X（可观察信号）则 Y（影响量级）』结构。
+- match_keywords: [估值, valuation, 目标价]
+  directive: >
+    节奏【锚定式】：每个估值结论前先复述锚（EPS×PE 或 DCF 关键假设），
+    再给区间与中值；区间中值必须=(下沿+上沿)/2。

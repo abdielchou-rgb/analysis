@@ -1,5 +1,7 @@
 """全量验证 Phase E 新模块"""
+
 import sys
+
 sys.path.insert(0, ".")
 
 print("=== Phase E: 新计算模块全量验证 ===\n")
@@ -9,6 +11,7 @@ n = 0
 # 1 Monte Carlo
 try:
     from core.compute.valuation.monte_carlo import MonteCarloValuation
+
     mc = MonteCarloValuation(0.10, 0.01, 5e8, 0.5e8)
     r = mc.simulate(5000)
     assert r.mean_ev > 0
@@ -19,7 +22,8 @@ except Exception as e:
 
 # 2 EVA
 try:
-    from core.compute.valuation.eva import EVAModel, AltmanZScore
+    from core.compute.valuation.eva import AltmanZScore, EVAModel
+
     eva = EVAModel(nopat=10e8, invested_capital=80e8, wacc=0.10)
     er = eva.calculate()
     assert er.eva == 2e8
@@ -41,6 +45,7 @@ except Exception as e:
 # 4 Reverse DCF
 try:
     from core.compute.valuation.reverse_dcf import ReverseDCF
+
     rd = ReverseDCF(150e8, 10e8, 5e8, wacc=0.10)
     rr = rd.solve_implied_growth()
     assert abs(rr.implied_growth_pct - 6.67) < 0.1
@@ -52,6 +57,7 @@ except Exception as e:
 # 5 PEG
 try:
     from core.compute.valuation.peg import PEGValuation
+
     peg = PEGValuation(25, 20)
     pr = peg.analyze()
     assert abs(pr.peg_ratio - 1.25) < 0.01
@@ -63,6 +69,7 @@ except Exception as e:
 # 6 Dupont
 try:
     from core.compute.financial.dupont import DupontAnalysis
+
     da = DupontAnalysis(10, 100, 200, 120)
     dr = da.decompose()
     assert abs(dr.roe_pct - 8.33) < 0.01
@@ -75,4 +82,4 @@ print(f"\n=== 全量验证通过: {n}/6 ===")
 if n == 6:
     print("[RESULT] 全部通过，Phase E 交付完成")
 else:
-    print(f"[RESULT] {6-n} 项未通过，需排查")
+    print(f"[RESULT] {6 - n} 项未通过，需排查")

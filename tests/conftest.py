@@ -7,6 +7,7 @@ P1-audit 2026-08-24：此前全项目 0 个 conftest——sys.path 样板在 70 
 2. .env 加载（仅当未注入时；CI 通过 secrets 注入，不读盘）
 3. 网络隔离 fixture（offline guard，防止意外真实 LLM 调用烧钱）
 """
+
 import os
 import sys
 from pathlib import Path
@@ -55,16 +56,19 @@ def no_llm_calls(monkeypatch):
     对 deepseek_client 与 section_writer 两处绑定同时打桩——
     from-import 持引用副本，只 patch 一处会漏（见 test_engineering_plan.py 注释）。
     """
+
     def _deny(*args, **kwargs):
         raise RuntimeError("测试尝试发起真实 LLM 调用（被 no_llm_calls fixture 拦截）")
 
     try:
         import core.deepseek_client as dsc
+
         monkeypatch.setattr(dsc, "call_deepseek", _deny, raising=False)
     except Exception:
         pass
     try:
         import pipeline.section_writer as sw
+
         if hasattr(sw, "call_deepseek"):
             monkeypatch.setattr(sw, "call_deepseek", _deny, raising=False)
     except Exception:

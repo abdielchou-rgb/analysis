@@ -5,7 +5,12 @@ train 模式下写作端经 agent_provider 落盘队列等待 agent 兜底响应
 本脚本以 DeepSeek 为能力后端持续消费新请求，写回 response.json，
 供 agent_provider 轮询取回（合规：响应仅为 LLM 调用返回值，仍走完整管线）。
 """
-import sys, os, json, time, glob, threading
+
+import json
+import os
+import sys
+import threading
+import time
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
@@ -17,13 +22,18 @@ QUEUE_DIR = _ROOT / "data" / "agent_llm_queue"
 # 读注册表注入 key（独立进程时父进程可能无 key）
 try:
     import subprocess as _sp
+
     _k = _sp.run(
-        ['powershell', '-NoProfile', '-Command',
-         "[Environment]::GetEnvironmentVariable('DEEPSEEK_API_KEY','User')"],
-        capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=30)
+        ["powershell", "-NoProfile", "-Command", "[Environment]::GetEnvironmentVariable('DEEPSEEK_API_KEY','User')"],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        timeout=30,
+    )
     _key = _k.stdout.strip()
     if _key:
-        os.environ['DEEPSEEK_API_KEY'] = _key
+        os.environ["DEEPSEEK_API_KEY"] = _key
 except Exception:
     pass
 
@@ -31,7 +41,7 @@ from core.deepseek_client import call_llm
 
 
 def respond(req_path: Path):
-    req_id = req_path.name.replace('_request.json', '')
+    req_id = req_path.name.replace("_request.json", "")
     resp_path = QUEUE_DIR / f"{req_id}_response.json"
     if resp_path.exists():
         return
@@ -48,26 +58,38 @@ def respond(req_path: Path):
     mt = r.get("max_tokens") or 4096
     for temp in (0.35, 0.6):
         try:
-            resp = call_llm(msgs, model="deepseek-chat", temperature=temp,
-                            max_tokens=mt, provider="deepseek")
+            resp = call_llm(msgs, model="deepseek-chat", temperature=temp, max_tokens=mt, provider="deepseek")
             content = (resp.get("choices") or [{}])[0].get("message", {}).get("content", "") or ""
             if len(content.strip()) < 150:
                 print(f"[SHORT] {req_id} len={len(content.strip())}, retry temp={temp}")
                 continue
-            payload = {"id": req_id, "status": "completed", "content": content,
-                       "responded_at": time.time(), "responded_by": "marvis-deepseek"}
-            resp_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2),
-                                 encoding="utf-8")
+            payload = {
+                "id": req_id,
+                "status": "completed",
+                "content": content,
+                "responded_at": time.time(),
+                "responded_by": "marvis-deepseek",
+            }
+            resp_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
             print(f"[OK] {req_id} {len(content)} chars temp={temp}")
             return
         except Exception as e:
             print(f"[FAIL] {req_id} {str(e)[:150]}")
     # 双温度都失败：写 failed 让 provider 快速失败
     try:
-        resp_path.write_text(json.dumps(
-            {"id": req_id, "status": "failed", "error": "deepseek backfill failed",
-             "responded_at": time.time(), "responded_by": "marvis-deepseek"},
-            ensure_ascii=False), encoding="utf-8")
+        resp_path.write_text(
+            json.dumps(
+                {
+                    "id": req_id,
+                    "status": "failed",
+                    "error": "deepseek backfill failed",
+                    "responded_at": time.time(),
+                    "responded_by": "marvis-deepseek",
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
     except Exception:
         pass
 

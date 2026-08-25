@@ -6,6 +6,7 @@
     python scripts/diag_em_financials.py 000001     # 单只诊断
     python scripts/diag_em_financials.py 300750
 """
+
 import sys
 from pathlib import Path
 
@@ -69,6 +70,7 @@ def main():
     print("\n--- 4. 模拟 sync 链路 ---")
     try:
         from scripts.sync_akshare_financials import fetch_quarterly
+
         data = fetch_quarterly(code)
         print(f"  fetch_quarterly 返回 {len(data)} 个报告期")
         for period in sorted(data.keys())[-3:]:

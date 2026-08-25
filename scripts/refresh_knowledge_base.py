@@ -11,11 +11,10 @@ R58（2026-08-03）：知识库吸收固化成流程——
   python scripts/refresh_knowledge_base.py           # 检测+吸收
   python scripts/refresh_knowledge_base.py --dry-run # 只检测不写
 """
+
 import argparse
 import json
-import os
 import sys
-import time
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
@@ -112,8 +111,10 @@ def main():
     # 重跑规则式吸收
     print("[ABSORB] 重跑规则式吸收...")
     import subprocess
-    r = subprocess.run([sys.executable, str(_ROOT / "scripts" / "absorb_knowledge_base.py")],
-                       capture_output=True, text=True)
+
+    r = subprocess.run(
+        [sys.executable, str(_ROOT / "scripts" / "absorb_knowledge_base.py")], capture_output=True, text=True
+    )
     print(r.stdout[-500:] if r.stdout else r.stderr[-500:])
 
     # 更新状态

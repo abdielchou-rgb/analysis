@@ -7,8 +7,8 @@
 
 用法: python scripts/diagnose_cyb.py
 """
+
 import akshare as ak
-import traceback
 
 # 测试：同花顺接口对多个创业板代码
 ths_codes = ["300001", "300003", "300750", "300059", "301236", "300999"]
@@ -18,9 +18,9 @@ for code in ths_codes:
         df = ak.stock_financial_abstract_ths(symbol=code, indicator="按报告期")
         n = len(df) if df is not None else 0
         cols = list(df.columns)[:8] if n else []
-        print(f"  [{'✓' if n>0 else '✗'}] {code}: {n} 行, 列={cols}")
+        print(f"  [{'✓' if n > 0 else '✗'}] {code}: {n} 行, 列={cols}")
         if n == 0 and df is not None:
-            print(f"        空 DataFrame，但无异常")
+            print("        空 DataFrame，但无异常")
     except Exception as e:
         print(f"  [✗] {code}: {type(e).__name__}: {str(e)[:80]}")
 
@@ -29,7 +29,7 @@ for code in ths_codes[:3]:
     try:
         df = ak.stock_financial_abstract_ths(symbol=code, indicator="按年度")
         n = len(df) if df is not None else 0
-        print(f"  [{'✓' if n>0 else '✗'}] {code}: {n} 行")
+        print(f"  [{'✓' if n > 0 else '✗'}] {code}: {n} 行")
     except Exception as e:
         print(f"  [✗] {code}: {type(e).__name__}: {str(e)[:80]}")
 
@@ -39,7 +39,7 @@ for code in ths_codes[:3]:
         df = ak.stock_financial_abstract(symbol=code)
         n = len(df) if df is not None else 0
         cols = list(df.columns)[:8] if n else []
-        print(f"  [{'✓' if n>0 else '✗'}] {code}: {n} 行, 列={cols}")
+        print(f"  [{'✓' if n > 0 else '✗'}] {code}: {n} 行, 列={cols}")
         if n:
             # 打印最新一行的关键字段
             last = df.iloc[-1]
@@ -52,7 +52,7 @@ for code in ["000001", "000002", "002594"]:
     try:
         df = ak.stock_financial_abstract_ths(symbol=code, indicator="按报告期")
         n = len(df) if df is not None else 0
-        print(f"  [{'✓' if n>0 else '✗'}] {code}: {n} 行")
+        print(f"  [{'✓' if n > 0 else '✗'}] {code}: {n} 行")
     except Exception as e:
         print(f"  [✗] {code}: {type(e).__name__}: {str(e)[:80]}")
 

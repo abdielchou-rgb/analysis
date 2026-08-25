@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 """生成 tornado 敏感性表 + 风险矩阵 + 期权定价（接入油位报告）"""
-import json
+
 import matplotlib
+
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-import matplotlib.font_manager as fm
 from pathlib import Path
+
+import matplotlib.pyplot as plt
 
 plt.rcParams["font.sans-serif"] = ["Noto Sans CJK JP", "SimHei", "DejaVu Sans"]
 plt.rcParams["axes.unicode_minus"] = False
@@ -42,12 +43,25 @@ def tornado_chart():
     ax.set_xlabel("NPV 变化（万元）", fontsize=15)
     ax.set_title("关键变量敏感性 Tornado（基准 NPV +3,116 万元）", fontsize=19, fontweight="bold", pad=15)
     for i, v in enumerate(vals):
-        ax.text(v + (60 if v > 0 else -60), i, f"{v:+d}", va="center",
-                ha="left" if v > 0 else "right", fontsize=13, fontweight="bold")
-    ax.text(0.5, -0.15,
-            "毛利率 + 罐箱渗透率 两项驱动项目价值约80%——须季度复核 + 压力测试(±30%)",
-            transform=ax.transAxes, ha="center", fontsize=14, color="#7b1fa2",
-            bbox=dict(boxstyle="round", facecolor="#f3e5f5", edgecolor="#7b1fa2"))
+        ax.text(
+            v + (60 if v > 0 else -60),
+            i,
+            f"{v:+d}",
+            va="center",
+            ha="left" if v > 0 else "right",
+            fontsize=13,
+            fontweight="bold",
+        )
+    ax.text(
+        0.5,
+        -0.15,
+        "毛利率 + 罐箱渗透率 两项驱动项目价值约80%——须季度复核 + 压力测试(±30%)",
+        transform=ax.transAxes,
+        ha="center",
+        fontsize=14,
+        color="#7b1fa2",
+        bbox=dict(boxstyle="round", facecolor="#f3e5f5", edgecolor="#7b1fa2"),
+    )
     plt.tight_layout()
     out = OUT / "fig_tornado_sensitivity.png"
     plt.savefig(out, dpi=200, bbox_inches="tight", facecolor="white")
@@ -105,12 +119,19 @@ def option_pricing():
     ax.set_ylabel("期权价值（万元）", fontsize=14)
     ax.set_title("四重战略期权价值（粗糙量化）", fontsize=19, fontweight="bold", pad=15)
     for i, (bar, o) in enumerate(zip(bars, options)):
-        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 50,
-                f"{o[2]:,}万\n{o[3]}", ha="center", fontsize=12)
-    ax.text(0.5, -0.15,
-            "总期权价值约 +5,900 万元 ≈ 经营期NPV(3,116万) 的 1.9 倍——期权属性强于当期利润",
-            transform=ax.transAxes, ha="center", fontsize=14, color="#7b1fa2",
-            bbox=dict(boxstyle="round", facecolor="#f3e5f5", edgecolor="#7b1fa2"))
+        ax.text(
+            bar.get_x() + bar.get_width() / 2, bar.get_height() + 50, f"{o[2]:,}万\n{o[3]}", ha="center", fontsize=12
+        )
+    ax.text(
+        0.5,
+        -0.15,
+        "总期权价值约 +5,900 万元 ≈ 经营期NPV(3,116万) 的 1.9 倍——期权属性强于当期利润",
+        transform=ax.transAxes,
+        ha="center",
+        fontsize=14,
+        color="#7b1fa2",
+        bbox=dict(boxstyle="round", facecolor="#f3e5f5", edgecolor="#7b1fa2"),
+    )
     ax.set_ylim(0, 3500)
     plt.tight_layout()
     out = OUT / "fig_option_pricing.png"

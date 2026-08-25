@@ -6,10 +6,13 @@
 2. 组织差距（①技术栈②产线③团队④体系）→ 表格
 3. 切换门槛（三个信号gate）→ 保留文字（3项不适合表格，加紧凑）
 """
+
+import logging
+import shutil
+
 from docx import Document
-from docx.shared import Inches, Pt
-from docx.enum.text import WD_ALIGN_PARAGRAPH
-import logging, shutil
+from docx.shared import Inches
+
 logging.basicConfig(level=logging.INFO)
 
 REPORT = "output/油位传感器_行业调研与承接久通生产可行性报告_v4.7.docx"
@@ -61,10 +64,12 @@ def main():
     p_cp = find_para(doc, "波导丝卡点评分")
     if p_cp:
         # 替换原文字段为简短结论
-        replace_para_text(p_cp,
+        replace_para_text(
+            p_cp,
             "波导丝卡点评分（10问20分制）如下表，合计10/20分，评级「中等偏弱」。"
             "波导丝是行业卡点但非不可突破（国产替代已出现），"
-            "柯力进入油位须将「波导丝自研」列为中期战略。")
+            "柯力进入油位须将「波导丝自研」列为中期战略。",
+        )
         # 插入表格
         headers = ["评估维度", "得分", "依据"]
         rows = [

@@ -1,8 +1,15 @@
 # -*- coding: utf-8 -*-
 """Round5 F: 补抓美股市值/PE/PB (stockanalysis.com 页面内嵌JSON)"""
-import requests, re, sqlite3, sys, time
+
+import re
+import sqlite3
+import sys
+import time
+
+import requests
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36"}
+
 
 def fetch_quote(ticker):
     url = f"https://stockanalysis.com/stocks/{ticker}/"
@@ -11,31 +18,39 @@ def fetch_quote(ticker):
         if r.status_code != 200:
             return None
         text = r.text
+
         def num(key):
             m = re.search(key + r':"([\d,\.]+)([TBM]?)"', text)
             if not m:
                 return None
             v = float(m.group(1).replace(",", ""))
             u = m.group(2)
-            if u == "T": v *= 1e12
-            elif u == "B": v *= 1e9
-            elif u == "M": v *= 1e6
+            if u == "T":
+                v *= 1e12
+            elif u == "B":
+                v *= 1e9
+            elif u == "M":
+                v *= 1e6
             return v
-        mc = num(r'marketCap')
-        pe = num(r'peRatio')
+
+        mc = num(r"marketCap")
+        pe = num(r"peRatio")
         # pbRatio 不一定存在
-        pb = num(r'pbRatio')
+        pb = num(r"pbRatio")
         if mc:
             mc = mc / 1e6  # 统一百万美元
         return (mc, pe, pb)
     except Exception:
         return None
 
+
 def main():
     dry = "--dry-run" in sys.argv
     conn = sqlite3.connect(r"D:\2hao-analyst\data\us_stocks.db")
     cur = conn.cursor()
-    rows = cur.execute("SELECT ticker FROM us_stocks WHERE market_cap IS NULL OR pe_ttm IS NULL OR pb IS NULL").fetchall()
+    rows = cur.execute(
+        "SELECT ticker FROM us_stocks WHERE market_cap IS NULL OR pe_ttm IS NULL OR pb IS NULL"
+    ).fetchall()
     print(f"待补 {len(rows)} 只")
     ok = 0
     fails = []
@@ -54,6 +69,7 @@ def main():
     print(f"成功 {ok}/{len(rows)}")
     if fails:
         print("失败:", fails[:30])
+
 
 if __name__ == "__main__":
     main()

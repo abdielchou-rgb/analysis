@@ -8,10 +8,14 @@
 4. 图5 收入预测三情景 → 嵌入 fig_fin_revenue_scenarios.png
 5. 图13/14/15 → 检查并重新嵌入
 """
+
+import logging
+import shutil
+
 from docx import Document
-from docx.shared import Inches, Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-import logging, shutil
+from docx.shared import Inches, Pt
+
 logging.basicConfig(level=logging.INFO)
 
 REPORT = "output/油位传感器_行业调研与承接久通生产可行性报告_v4.1.docx"
@@ -64,38 +68,38 @@ def main():
     # ========== 1. 恢复截断段落 ==========
     p_ca = find_para(doc, "上述「踩踏」风险")
     if p_ca and len(p_ca.text.strip()) < 30:
-        replace_para_text(p_ca,
+        replace_para_text(
+            p_ca,
             "上述「踩踏」风险应纳入财务测算：悲观情景假设2028年后政策红利回落，"
             "加油站防渗替换与SIS改造需求增速降至零甚至小幅收缩，对应悲观NPV约-1,100万元。"
-            "产能规划保持弹性、不做重资产投入即是为该情景预留缓冲。")
+            "产能规划保持弹性、不做重资产投入即是为该情景预留缓冲。",
+        )
         logging.info("✅ 恢复「踩踏」风险段")
 
     p_rate = find_para(doc, "加油站执行率")
     if p_rate and len(p_rate.text.strip()) < 30:
-        replace_para_text(p_rate,
+        replace_para_text(
+            p_rate,
             "加油站执行率（全国尚有5%-8%未完成）、单站价值5-10万元、SIS改造43-52亿元均为行业测算口径估算值(E)，"
-            "待客户访谈与供应商尽调验证后升级为实际值。波导丝国产化率25%-30%同样为估算值(E)。")
+            "待客户访谈与供应商尽调验证后升级为实际值。波导丝国产化率25%-30%同样为估算值(E)。",
+        )
         logging.info("✅ 恢复「加油站执行率」段")
 
     # ========== 2. 嵌入图1 竞争格局矩阵 ==========
     p_fig1 = find_para(doc, "图1 油位传感器竞争格局矩阵")
     if p_fig1:
         # 检查后段是否有图
-        has_img = len(p_fig1._element.findall(
-            './/{http://schemas.openxmlformats.org/drawingml/2006/main}blip')) > 0
+        has_img = len(p_fig1._element.findall(".//{http://schemas.openxmlformats.org/drawingml/2006/main}blip")) > 0
         if not has_img:
-            insert_img_after(p_fig1, "output/charts/fig_bcg_competitive.png",
-                             "图1 油位传感器竞争格局矩阵")
+            insert_img_after(p_fig1, "output/charts/fig_bcg_competitive.png", "图1 油位传感器竞争格局矩阵")
             logging.info("✅ 嵌入图1")
 
     # ========== 3. 嵌入图5 收入三情景 ==========
     p_fig5 = find_para(doc, "图5 收入预测三情景")
     if p_fig5:
-        has_img = len(p_fig5._element.findall(
-            './/{http://schemas.openxmlformats.org/drawingml/2006/main}blip')) > 0
+        has_img = len(p_fig5._element.findall(".//{http://schemas.openxmlformats.org/drawingml/2006/main}blip")) > 0
         if not has_img:
-            insert_img_after(p_fig5, "output/charts/fig_fin_revenue_scenarios.png",
-                             "图5 收入预测三情景")
+            insert_img_after(p_fig5, "output/charts/fig_fin_revenue_scenarios.png", "图5 收入预测三情景")
             logging.info("✅ 嵌入图5")
 
     # ========== 4. 检查并嵌入图13/14/15 ==========
@@ -107,8 +111,7 @@ def main():
     for frag, path in fig_map:
         p = find_para(doc, frag)
         if p:
-            has_img = len(p._element.findall(
-                './/{http://schemas.openxmlformats.org/drawingml/2006/main}blip')) > 0
+            has_img = len(p._element.findall(".//{http://schemas.openxmlformats.org/drawingml/2006/main}blip")) > 0
             if not has_img:
                 insert_img_after(p, path, p.text.strip(), width=6.0)
                 logging.info("✅ 嵌入 %s", frag[:20])

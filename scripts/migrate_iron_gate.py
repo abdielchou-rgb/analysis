@@ -14,10 +14,9 @@ R61（2026-08-03）：按 Effective Python mixin 打法拆分 iron_gate.py（353
   python scripts/migrate_iron_gate.py          # 执行迁移（生成 mixin + 改 iron_gate）
   python scripts/migrate_iron_gate.py --dry-run  # 预览
 """
+
 import argparse
 import ast
-import re
-import sys
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
@@ -28,41 +27,81 @@ CHECKS_DIR = _ROOT / "pipeline" / "checks"
 _GROUP_MAP = {
     # 内容与格式
     "content_format": [
-        "_check_content_volume", "_check_content_density", "_check_judgment_density",
-        "_check_aigc_fingerprint", "_check_human_sense", "_check_format_consistency",
-        "_check_layout_quality", "_check_completeness_scan", "_check_template_repeat",
-        "_check_semantic_repeat", "_check_forbidden_patterns", "_check_markdown_artifacts",
-        "_check_personal_narrative", "_check_section_continuity", "_check_table_quality_md",
+        "_check_content_volume",
+        "_check_content_density",
+        "_check_judgment_density",
+        "_check_aigc_fingerprint",
+        "_check_human_sense",
+        "_check_format_consistency",
+        "_check_layout_quality",
+        "_check_completeness_scan",
+        "_check_template_repeat",
+        "_check_semantic_repeat",
+        "_check_forbidden_patterns",
+        "_check_markdown_artifacts",
+        "_check_personal_narrative",
+        "_check_section_continuity",
+        "_check_table_quality_md",
     ],
     # 数据与质量
     "data_quality": [
-        "_check_data_traceability", "_check_annotation_types", "_check_data_type_annotation",
-        "_check_data_fidelity", "_check_data_source_accuracy", "_check_data_dict_refs",
-        "_check_data_conflicts", "_check_arithmetic_audit", "_check_invariant_audit",
-        "_check_valuation_integrity", "_check_financial_value_consistency",
-        "_check_financial_fraud_signals", "_check_rating_target_consistency",
-        "_check_cross_section_consistency", "_check_synthesis_consistency",
+        "_check_data_traceability",
+        "_check_annotation_types",
+        "_check_data_type_annotation",
+        "_check_data_fidelity",
+        "_check_data_source_accuracy",
+        "_check_data_dict_refs",
+        "_check_data_conflicts",
+        "_check_arithmetic_audit",
+        "_check_invariant_audit",
+        "_check_valuation_integrity",
+        "_check_financial_value_consistency",
+        "_check_financial_fraud_signals",
+        "_check_rating_target_consistency",
+        "_check_cross_section_consistency",
+        "_check_synthesis_consistency",
         "_check_evidence_layer",
     ],
     # 分析与框架
     "analysis": [
-        "_check_sac_coverage", "_check_chart_density", "_check_chart_completeness",
-        "_check_global_perspective", "_check_financial_statements_coverage",
-        "_check_persuasion_architecture", "_check_table_density", "_check_moat_analysis",
-        "_check_multi_model", "_check_decision_gate", "_check_dcf_sensitivity",
-        "_check_so_what_chain", "_check_explicit_conclusion", "_check_attribution_depth",
-        "_check_falsification_conditions", "_check_template_leak", "_check_meta_cognition",
-        "_check_so_what_per_judgment", "_check_subjective_scoring", "_check_bold_call",
-        "_check_chart_analysis_quality", "_check_forecast_presence",
-        "_check_bottleneck_analysis", "_check_risk_layering",
-        "_check_stock_pick_chain", "_check_unlisted_threat", "_check_tam_bottomup",
-        "_check_regional_penetration", "_check_industry_consolidation",
-        "_check_core_hypothesis", "_check_esg_materiality", "_check_evidence_chain",
+        "_check_sac_coverage",
+        "_check_chart_density",
+        "_check_chart_completeness",
+        "_check_global_perspective",
+        "_check_financial_statements_coverage",
+        "_check_persuasion_architecture",
+        "_check_table_density",
+        "_check_moat_analysis",
+        "_check_multi_model",
+        "_check_decision_gate",
+        "_check_dcf_sensitivity",
+        "_check_so_what_chain",
+        "_check_explicit_conclusion",
+        "_check_attribution_depth",
+        "_check_falsification_conditions",
+        "_check_template_leak",
+        "_check_meta_cognition",
+        "_check_so_what_per_judgment",
+        "_check_subjective_scoring",
+        "_check_bold_call",
+        "_check_chart_analysis_quality",
+        "_check_forecast_presence",
+        "_check_bottleneck_analysis",
+        "_check_risk_layering",
+        "_check_stock_pick_chain",
+        "_check_unlisted_threat",
+        "_check_tam_bottomup",
+        "_check_regional_penetration",
+        "_check_industry_consolidation",
+        "_check_core_hypothesis",
+        "_check_esg_materiality",
+        "_check_evidence_chain",
         "_check_placeholder_charts",
     ],
     # LLM 类
     "llm_checks": [
-        "_check_ai_tone_by_llm", "_check_human_impossible_dimension",
+        "_check_ai_tone_by_llm",
+        "_check_human_impossible_dimension",
         "_check_llm_data_verification",
     ],
 }
@@ -100,9 +139,11 @@ def find_methods_in_class(src: str) -> list[str]:
     tree = ast.parse(src)
     for node in tree.body:
         if isinstance(node, ast.ClassDef) and node.name == "IronGate":
-            return [n.name for n in node.body
-                    if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
-                    and n.name.startswith("_check_")]
+            return [
+                n.name
+                for n in node.body
+                if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n.name.startswith("_check_")
+            ]
     return []
 
 

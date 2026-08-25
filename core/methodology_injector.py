@@ -112,11 +112,13 @@ SECTOR_SPECIFIC_VALUATION = {
     "科技": "科技股估值面临的核心挑战是: 高增长、多变的护城河、不确定的终局。\n参考UBS PE/PEG框架: 不能只看当期PE。\n如果增长驱动来自技术代差而不是资本投入,\n用PEG或EV/Sales替代PE可能更合理。\n参考Goldman Sachs回报分析: 高ROIC的科技公司应该享有估值溢价。",
     "医药": "医药股估值的特殊之处在于管线价值远大于当前利润。\n参考BOA iQmethod的阶段分析法: 不同临床阶段的管线需要不同的折现率。\nPipeline的DCF和现有业务的DCF应该分开计算再合并。\n关键假设: 各阶段成功率(临床I/II/III期各有不同)。",
     "消费": "消费股估值的锚不是增长——是稳定性和品牌溢价。\n参考中金方法论: 消费品适用DCF(因为现金流稳定可预测)。\n但也需警惕: 品牌价值在DCF中不直接体现,\n需要结合可比PE法中的品牌溢价倍数调整。",
-    "周期": ('周期股在行业低谷时PE是"假高", 在行业高峰时PE是"假低"。\n'
-             '正确做法: 使用正常化利润(normalized earnings)替代当前利润。\n'
-             '参考中信金通方法论: 周期股适合EV/EBITDA、P/B和P/NAV,\n'
-             '不适合当期PE。\n'
-             'DCF在周期底部最有用(因为市场过度悲观时DCF给出理性基准)。'),
+    "周期": (
+        '周期股在行业低谷时PE是"假高", 在行业高峰时PE是"假低"。\n'
+        "正确做法: 使用正常化利润(normalized earnings)替代当前利润。\n"
+        "参考中信金通方法论: 周期股适合EV/EBITDA、P/B和P/NAV,\n"
+        "不适合当期PE。\n"
+        "DCF在周期底部最有用(因为市场过度悲观时DCF给出理性基准)。"
+    ),
     "房地产": "地产股估值的行业特定方法: NAV(净资产价值估值)。\n每块土地的开发价值 + 已建成物业的租金价值 - 净负债。\nNAV折价/溢价是市场对管理层的信任投票。\n参考Goldman Sachs回报分析: 地产股的ROE主要来自杠杆, 需关注杠杆质量。",
 }
 
@@ -197,7 +199,9 @@ def inject_into_protocol(protocol_text: str, sector: str = "", depth: str = "sta
 
     if depth in ("deep", "standard"):
         lines.append("**估值方法论:**")
-        lines.append("- BOA iQmethod: Business Understanding → Financial Analysis → Forecasting → Valuation → Conclusion")
+        lines.append(
+            "- BOA iQmethod: Business Understanding → Financial Analysis → Forecasting → Valuation → Conclusion"
+        )
         lines.append("- UBS: DCF是假设显性化的工具，不是精确值。敏感性矩阵比单一目标价重要。")
         lines.append("- UBS: PE是growth, risk, ROE三个变量的函数——不要跨行业比较PE。")
         lines.append("- Goldman Sachs: Returns/Multiple/DCF是同一件事的三种视角——冲突时反思假设而非丢弃方法。")

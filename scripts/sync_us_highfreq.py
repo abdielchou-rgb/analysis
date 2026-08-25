@@ -5,6 +5,7 @@ CFNAI（芝加哥联储全国活动指数，月频）、WEI（纽约联储周度
 5y5y 盈亏平衡通胀率（FRED T5YIFR；缺失时用 T10YIE 近似）。
 数据源：FRED fredgraph.csv 免 key 端点（https://fred.stlouisfed.org/graph/fredgraph.csv?id=XXX）
 """
+
 from __future__ import annotations
 
 import json
@@ -28,7 +29,7 @@ def _fetch(series_id: str, max_tries: int = 6) -> str:
             return r.text
         except Exception as e:  # noqa: BLE001
             last = e
-            time.sleep(1.5 * (2 ** i))
+            time.sleep(1.5 * (2**i))
     raise last
 
 

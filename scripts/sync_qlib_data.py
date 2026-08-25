@@ -18,9 +18,7 @@
 """
 
 import argparse
-import json
 import logging
-import os
 import re
 import sys
 import threading
@@ -45,6 +43,7 @@ logger = logging.getLogger("sync_qlib")
 _HAS_AKSHARE = False
 try:
     import akshare as ak
+
     _HAS_AKSHARE = True
 except ImportError:
     logger.warning("akshare 未安装，只能检查已有数据状态")
@@ -53,6 +52,7 @@ except ImportError:
 # ──────────────────────────────────────────────────────────────
 # Qlib bin 读写
 # ──────────────────────────────────────────────────────────────
+
 
 def load_calendar() -> list[str]:
     """加载交易日历，返回日期列表。"""
@@ -116,8 +116,7 @@ def update_calendar(force: bool = False) -> list[str]:
 
     updated = sorted(set(cal + list(new_dates)))
     save_calendar(updated)
-    logger.info("日历已更新: %s -> %s (%d -> %d 天)",
-                last, updated[-1], len(cal), len(updated))
+    logger.info("日历已更新: %s -> %s (%d -> %d 天)", last, updated[-1], len(cal), len(updated))
     return updated
 
 
@@ -201,6 +200,7 @@ def update_instrument(instrument: str, start_date: str, end_date: str) -> None:
 _HAS_BAOSTOCK = False
 try:
     import baostock as bs
+
     _HAS_BAOSTOCK = True
 except ImportError:
     logger.warning("baostock 未安装，将使用 akshare")
@@ -242,19 +242,27 @@ def fetch_history_baostock(code: str, start: str, end: str) -> list[dict]:
         rs = bs.query_history_k_data_plus(
             bs_code,
             "date,open,high,low,close,volume,amount",
-            start_date=start, end_date=end,
-            frequency="d", adjustflag="2",  # 2=前复权
+            start_date=start,
+            end_date=end,
+            frequency="d",
+            adjustflag="2",  # 2=前复权
         )
         rows = []
         while (rs.error_code == "0") and rs.next():
             r = rs.get_row_data()
             if len(r) >= 7:
-                rows.append({
-                    "date": r[0], "open": _safe(r[1]), "high": _safe(r[2]),
-                    "low": _safe(r[3]), "close": _safe(r[4]),
-                    "volume": _safe(r[5]), "amount": _safe(r[6]),
-                    "change": float("nan"),
-                })
+                rows.append(
+                    {
+                        "date": r[0],
+                        "open": _safe(r[1]),
+                        "high": _safe(r[2]),
+                        "low": _safe(r[3]),
+                        "close": _safe(r[4]),
+                        "volume": _safe(r[5]),
+                        "amount": _safe(r[6]),
+                        "change": float("nan"),
+                    }
+                )
         return rows
     except Exception as e:
         logger.warning("baostock fetch %s failed: %s", code, e)
@@ -265,8 +273,7 @@ def fetch_history_baostock(code: str, start: str, end: str) -> list[dict]:
 _AKSHARE_SEM = threading.Semaphore(2)
 
 
-def fetch_history(code: str, start: str = "20000101", end: str = "20261231",
-                  max_retries: int = 3) -> list[dict]:
+def fetch_history(code: str, start: str = "20000101", end: str = "20261231", max_retries: int = 3) -> list[dict]:
     """拉取单只股票日线。Baostock 优先，akshare 兜底。
 
     code 接受 qlib instrument 格式（sh600519 / bj430017）。
@@ -290,24 +297,28 @@ def fetch_history(code: str, start: str = "20000101", end: str = "20261231",
         with _AKSHARE_SEM:
             try:
                 df = ak.stock_zh_a_hist(
-                    symbol=akshare_code, period="daily",
-                    start_date=start.replace("-", ""), end_date=end.replace("-", ""),
+                    symbol=akshare_code,
+                    period="daily",
+                    start_date=start.replace("-", ""),
+                    end_date=end.replace("-", ""),
                     adjust="qfq",
                 )
                 if df is None or df.empty:
                     return []
                 rows = []
                 for _, row in df.iterrows():
-                    rows.append({
-                        "date": str(row.get("日期", "")),
-                        "open": _safe(row.get("开盘")),
-                        "high": _safe(row.get("最高")),
-                        "low": _safe(row.get("最低")),
-                        "close": _safe(row.get("收盘")),
-                        "volume": _safe(row.get("成交量")),
-                        "amount": _safe(row.get("成交额")),
-                        "change": _safe(row.get("涨跌幅")),
-                    })
+                    rows.append(
+                        {
+                            "date": str(row.get("日期", "")),
+                            "open": _safe(row.get("开盘")),
+                            "high": _safe(row.get("最高")),
+                            "low": _safe(row.get("最低")),
+                            "close": _safe(row.get("收盘")),
+                            "volume": _safe(row.get("成交量")),
+                            "amount": _safe(row.get("成交额")),
+                            "change": _safe(row.get("涨跌幅")),
+                        }
+                    )
                 return rows
             except Exception as e:
                 logger.warning("fetch %s attempt %d/%d failed: %s", code, attempt + 1, max_retries, e)
@@ -327,6 +338,7 @@ def _safe(v):
 # ──────────────────────────────────────────────────────────────
 # 核心同步
 # ──────────────────────────────────────────────────────────────
+
 
 def sync_instrument(asset: str, incremental: bool = False) -> bool:
     """同步单只股票到 qlib_bin。返回是否成功。"""
@@ -381,7 +393,11 @@ def sync_instrument(asset: str, incremental: bool = False) -> bool:
         fields_data["close"][i] = r.get("close", np.nan)
         fields_data["volume"][i] = r.get("volume", np.nan)
         fields_data["amount"][i] = r.get("amount", np.nan)
-        fields_data["change"][i] = r.get("change", np.nan) / 100.0 if r.get("change") is not None and not np.isnan(r.get("change", np.nan)) else np.nan
+        fields_data["change"][i] = (
+            r.get("change", np.nan) / 100.0
+            if r.get("change") is not None and not np.isnan(r.get("change", np.nan))
+            else np.nan
+        )
         fields_data["vwap"][i] = (r.get("amount", 0) / r.get("volume", 1)) if r.get("volume") else np.nan
 
     # 归一化：close 首日=1.0（Qlib 约定）
@@ -447,7 +463,7 @@ def main():
         targets = [i for i, _, _ in insts]
         logger.info("全量模式：共 %d 只标的", len(targets))
     elif args.batch:
-        insts = read_instruments()[:args.batch]
+        insts = read_instruments()[: args.batch]
         targets = [i for i, _, _ in insts]
     elif args.asset:
         targets = [args.asset]

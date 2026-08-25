@@ -5,6 +5,7 @@
 用法: python scripts/diagnose_akshare_format.py
 确认深市正确格式后，我再据此修复 sync_akshare_financials.py。
 """
+
 import akshare as ak
 
 test_cases = [

@@ -704,12 +704,15 @@ def build_injections(
     asset_code: str = "",
     data_dict: dict = None,
     skeleton: bool = False,
+    injector_skip: set | None = None,
 ) -> dict:
     """运行全部注入器，返回 {变量名: 内容}。
 
     skeleton=True 时跳过重注入（对应 settings.skeleton_mode 冒烟档）。
+    injector_skip：M2 路由器给出的行业级禁用集合。
     单个注入器异常已在内部降级为空串；本层再兜一层保证永不中断写作。
     """
+    _skip = injector_skip or set()
     ctx = {
         "asset": asset,
         "report_type": report_type,
@@ -720,6 +723,9 @@ def build_injections(
     out = {}
     for name, fn in INJECTORS:
         if skeleton and name in SKELETON_SKIP:
+            out[name] = ""
+            continue
+        if name in _skip:
             out[name] = ""
             continue
         try:

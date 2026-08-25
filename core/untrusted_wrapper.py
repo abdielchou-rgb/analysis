@@ -15,6 +15,7 @@ hierarchy arXiv:2404.13208 / Google CaMeL）：无模型级银弹，只能纵深
     from core.untrusted_wrapper import spotlight_untrusted
     safe_block = spotlight_untrusted(raw_web_text, source_label="tavily")
 """
+
 from __future__ import annotations
 
 import re

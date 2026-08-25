@@ -7,9 +7,9 @@ R61（2026-08-03）：在 migrate_iron_gate.py 生成 mixin 后，本脚本：
   2. 从 IronGate 删除已迁移到 mixin 的检查方法（避免 MRO 重复定义）
   3. GateCheckResult/GateReport 改为从 checks.base 导入
 """
+
 import ast
 import re
-import sys
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
@@ -42,33 +42,33 @@ def patch_iron_gate():
     # 1. 改 import：GateCheckResult/GateReport 从 base 导入
     # 原: from dataclasses import dataclass, field, asdict 等
     # 需加: from pipeline.checks.base import GateCheckResult, GateReport, detect_value_conflicts, logger
-    base_import = ("from pipeline.checks.base import GateCheckResult, GateReport, "
-                   "detect_value_conflicts, logger\n")
+    base_import = "from pipeline.checks.base import GateCheckResult, GateReport, detect_value_conflicts, logger\n"
     if "from pipeline.checks.base" not in src:
         # 在 IronGate class 定义前插入
         m = re.search(r"^class IronGate:", src, re.MULTILINE)
         if m:
-            src = src[:m.start()] + base_import + "\n" + src[m.start():]
+            src = src[: m.start()] + base_import + "\n" + src[m.start() :]
             print("已插入 checks.base import")
 
     # 2. IronGate 继承 mixin
-    mixin_names = ["ContentFormatChecksMixin", "DataQualityChecksMixin",
-                   "AnalysisChecksMixin", "LlmChecksMixin"]
+    mixin_names = ["ContentFormatChecksMixin", "DataQualityChecksMixin", "AnalysisChecksMixin", "LlmChecksMixin"]
     # 先加 import mixin
-    mixin_import = ("from pipeline.checks.content_format_mixin import ContentFormatChecksMixin\n"
-                    "from pipeline.checks.data_quality_mixin import DataQualityChecksMixin\n"
-                    "from pipeline.checks.analysis_mixin import AnalysisChecksMixin\n"
-                    "from pipeline.checks.llm_checks_mixin import LlmChecksMixin\n")
+    mixin_import = (
+        "from pipeline.checks.content_format_mixin import ContentFormatChecksMixin\n"
+        "from pipeline.checks.data_quality_mixin import DataQualityChecksMixin\n"
+        "from pipeline.checks.analysis_mixin import AnalysisChecksMixin\n"
+        "from pipeline.checks.llm_checks_mixin import LlmChecksMixin\n"
+    )
     if "content_format_mixin" not in src:
         m = re.search(r"^class IronGate:", src, re.MULTILINE)
         if m:
-            src = src[:m.start()] + mixin_import + "\n" + src[m.start():]
+            src = src[: m.start()] + mixin_import + "\n" + src[m.start() :]
             print("已插入 mixin imports")
 
     # 改 class IronGate: → class IronGate(...)
     m = re.search(r"^class IronGate:", src, re.MULTILINE)
     if m:
-        src = src[:m.start()] + "class IronGate(" + ", ".join(mixin_names) + "):" + src[m.end():]
+        src = src[: m.start()] + "class IronGate(" + ", ".join(mixin_names) + "):" + src[m.end() :]
         print("IronGate 已继承 4 个 mixin")
 
     # 3. 删除已迁移的方法（保留未迁移的）

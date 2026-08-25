@@ -17,6 +17,7 @@ Round3 P1-③ 治理/ESG 同步 — company_events.db 加 governance 表
   python scripts/sync_governance.py --ticker 603662
   python scripts/sync_governance.py --dry-run
 """
+
 from __future__ import annotations
 
 import argparse
@@ -67,7 +68,7 @@ def _retry(fn, times=5, base=1.5):
             return fn()
         except Exception as e:  # noqa: BLE001
             last = e
-            time.sleep(base * (2 ** i) + 0.5)
+            time.sleep(base * (2**i) + 0.5)
     raise last
 
 
@@ -97,7 +98,9 @@ def get_tickers(ticker: str | None) -> list:
             tickers.extend([c for c in codes if c not in tickers][:50])
     except Exception as e:  # noqa: BLE001
         print(f"[WARN] 获取沪深300成分失败，用兜底池: {e}")
-        tickers.extend(["600519", "000858", "601318", "600036", "000333", "300750", "600900", "601398", "600276", "000001"])
+        tickers.extend(
+            ["600519", "000858", "601318", "600036", "000333", "300750", "600900", "601398", "600276", "000001"]
+        )
     return list(dict.fromkeys(tickers))
 
 
@@ -115,8 +118,9 @@ def sync_gdhs(conn, tickers, dry_run=False):
             skipped += 1
             continue
         date_col = next((c for c in df.columns if "统计截止日" in str(c) or "日期" in str(c)), None)
-        cnt_col = next((c for c in df.columns if "股东户数-本次" in str(c)), None) or \
-                  next((c for c in df.columns if "股东户数" in str(c) and "截止日" not in str(c)), None)
+        cnt_col = next((c for c in df.columns if "股东户数-本次" in str(c)), None) or next(
+            (c for c in df.columns if "股东户数" in str(c) and "截止日" not in str(c)), None
+        )
         if not date_col or not cnt_col:
             skipped += 1
             continue

@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 """刷新 us_stocks.db 300 只美股财务（stockanalysis.com），yfinance 限流时的替代源"""
+
 import re
 import sqlite3
 import sys
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36"}
 DB_PATH = r"D:\Claude\projects\2hao-analyst\data\us_stocks.db"
-AS_OF = "2026-08-21"  # 美股 8/21 收盘后（Marvis 定时刷新）
+AS_OF = "2026-08-24"  # 美股 8/24 收盘后（Marvis 定时刷新）
 
 
 def fetch_quote(ticker: str):
@@ -23,12 +23,13 @@ def fetch_quote(ticker: str):
             if r.status_code == 200:
                 break
             if r.status_code == 429:
-                time.sleep(1.5 * (2 ** attempt))
+                time.sleep(1.5 * (2**attempt))
                 continue
             return None
         if r is None or r.status_code != 200:
             return None
         txt = r.text
+
         # marketCap/peRatio 形如 "marketCap":"4.54T" 或 "marketCap":"4.54T",
         def num(key):
             m = re.search(key + r'[:"]+"?([\d,\.]+)([TBM]?)"', txt)
@@ -43,6 +44,7 @@ def fetch_quote(ticker: str):
             elif u == "M":
                 v *= 1e6
             return v
+
         mc = num(r"marketCap")
         pe = num(r"peRatio")
         rev = num(r"totalRevenue")
@@ -61,8 +63,9 @@ def fetch_quote(ticker: str):
 def main():
     con = sqlite3.connect(DB_PATH)
     # 只处理 as_of 旧于目标日的行（幂等增量）
-    tickers = [t[0] for t in con.execute(
-        "SELECT ticker FROM us_stocks WHERE as_of < ? ORDER BY ticker", (AS_OF,)).fetchall()]
+    tickers = [
+        t[0] for t in con.execute("SELECT ticker FROM us_stocks WHERE as_of < ? ORDER BY ticker", (AS_OF,)).fetchall()
+    ]
     # --limit 分批（防止单次超时）
     limit = None
     if "--limit" in sys.argv:
@@ -92,7 +95,8 @@ def main():
         cur = con.execute(
             "UPDATE us_stocks SET as_of=?, revenue=COALESCE(?, revenue), net_profit=COALESCE(?, net_profit), "
             "market_cap=COALESCE(?, market_cap), pe_ttm=COALESCE(?, pe_ttm), source=? WHERE ticker=?",
-            (now, q["rev"], q["ni"], q["mc"], q["pe"], f"stockanalysis.com (Marvis refresh {now})", t))
+            (now, q["rev"], q["ni"], q["mc"], q["pe"], f"stockanalysis.com (Marvis refresh {now})", t),
+        )
         if cur.rowcount:
             updated += 1
     con.commit()

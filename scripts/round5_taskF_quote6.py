@@ -1,10 +1,17 @@
 # -*- coding: utf-8 -*-
 """Round5 F: 优先补齐 market_cap NULL 行"""
-import requests, re, sqlite3, sys, time
+
+import re
+import sqlite3
+import sys
+import time
+
+import requests
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36"}
 SESSION = requests.Session()
 SESSION.headers.update(HEADERS)
+
 
 def fetch_quote(ticker):
     url = f"https://stockanalysis.com/stocks/{ticker}/"
@@ -13,27 +20,33 @@ def fetch_quote(ticker):
         if r.status_code != 200:
             return None
         text = r.text
+
         def num(key):
             m = re.search(key + r':"([\d,\.]+)([TBM]?)"', text)
             if not m:
                 return None
             v = float(m.group(1).replace(",", ""))
             u = m.group(2)
-            if u == "T": v *= 1e12
-            elif u == "B": v *= 1e9
-            elif u == "M": v *= 1e6
+            if u == "T":
+                v *= 1e12
+            elif u == "B":
+                v *= 1e9
+            elif u == "M":
+                v *= 1e6
             return v
-        mc = num(r'marketCap')
-        pe = num(r'peRatio')
-        pb = num(r'pbRatio')
+
+        mc = num(r"marketCap")
+        pe = num(r"peRatio")
+        pb = num(r"pbRatio")
         if mc:
             mc = mc / 1e6
         return (mc, pe, pb)
     except Exception:
         return None
 
+
 def main():
-    limit = int(sys.argv[sys.argv.index("--limit")+1]) if "--limit" in sys.argv else 60
+    limit = int(sys.argv[sys.argv.index("--limit") + 1]) if "--limit" in sys.argv else 60
     conn = sqlite3.connect(r"D:\2hao-analyst\data\us_stocks.db")
     cur = conn.cursor()
     # 优先补 mc NULL
@@ -60,6 +73,7 @@ def main():
     print(f"成功 {ok}/{len(tickers)}, mc: {mc_ok}/202, pe: {pe_ok}/202")
     if fails:
         print("失败:", fails)
+
 
 if __name__ == "__main__":
     main()

@@ -3,6 +3,7 @@
 
 用法: python scripts/diagnose_baostock_fin.py "600519"
 """
+
 import sys
 from pathlib import Path
 

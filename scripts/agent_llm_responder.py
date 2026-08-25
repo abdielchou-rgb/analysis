@@ -17,7 +17,11 @@
 严禁绕过管线直接产出报告正文/MD/DOCX。
 """
 
-import argparse, json, os, sys, time
+import argparse
+import json
+import os
+import sys
+import time
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
@@ -41,7 +45,7 @@ def cmd_list() -> int:
         try:
             r = json.loads(f.read_text(encoding="utf-8"))
             created = time.strftime("%H:%M:%S", time.localtime(r.get("created_at", 0)))
-            print(f"{r.get('id',''):<16} {r.get('model',''):<20} {created:<20} {len(r.get('user_prompt',''))}")
+            print(f"{r.get('id', ''):<16} {r.get('model', ''):<20} {created:<20} {len(r.get('user_prompt', ''))}")
         except Exception:
             print(f"{f.stem:<16} (解析失败)")
     print(f"\n{len(reqs)} 个待处理。处理: python scripts/agent_llm_responder.py respond <id>")
@@ -70,11 +74,11 @@ def _respond(req_id: str, content: str = None, agent: str = None) -> int:
         print("=" * 60)
         print(f"[AGENT-LLM] 请求 {req_id} 需要你兜底写作")
         print(f"  模型: {r.get('model')}")
-        print(f"  System: {r.get('system_prompt','')[:200]}")
-        print(f"  User: {r.get('user_prompt','')[:500]}")
+        print(f"  System: {r.get('system_prompt', '')[:200]}")
+        print(f"  User: {r.get('user_prompt', '')[:500]}")
         print("=" * 60)
         print("\n请用你的分析能力生成正文（作为 LLM 返回值），然后运行：")
-        print(f"  python scripts/agent_llm_responder.py respond {req_id} --content \"<你的正文>\" --agent marvis")
+        print(f'  python scripts/agent_llm_responder.py respond {req_id} --content "<你的正文>" --agent marvis')
         print("  或把正文写入文件后：")
         print(f"  python scripts/agent_llm_responder.py respond {req_id} --file <path> --agent marvis")
         return 2  # 需要 agent 介入
@@ -87,14 +91,12 @@ def _respond(req_id: str, content: str = None, agent: str = None) -> int:
         "responded_at": time.time(),
         "responded_by": agent_name,
     }
-    resp_path.write_text(json.dumps(response, ensure_ascii=False, indent=2),
-                         encoding="utf-8")
+    resp_path.write_text(json.dumps(response, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"[✓] 请求 {req_id} 已回复 ({len(content)} chars) by {agent_name}")
     return 0
 
 
-def cmd_respond(req_id: str, content: str = None, file: str = None,
-                agent: str = None) -> int:
+def cmd_respond(req_id: str, content: str = None, file: str = None, agent: str = None) -> int:
     if file:
         content = Path(file).read_text(encoding="utf-8")
     return _respond(req_id, content, agent)
@@ -106,6 +108,7 @@ def _auto_respond(req_id: str, r: dict, ollama_model: str = "qwen3:14b") -> bool
     返回 True 表示已响应；False 表示需人工处理。
     """
     import requests
+
     try:
         messages = []
         sys_p = (r.get("system_prompt") or "").strip()
@@ -116,11 +119,16 @@ def _auto_respond(req_id: str, r: dict, ollama_model: str = "qwen3:14b") -> bool
             messages.append({"role": "user", "content": usr_p})
         if not messages:
             messages = r.get("messages") or [{"role": "user", "content": "继续"}]
-        resp = requests.post("http://localhost:11434/api/chat",
-                             json={"model": ollama_model, "messages": messages,
-                                   "stream": False,
-                                   "options": {"temperature": 0.3, "num_predict": 3000}},
-                             timeout=180)
+        resp = requests.post(
+            "http://localhost:11434/api/chat",
+            json={
+                "model": ollama_model,
+                "messages": messages,
+                "stream": False,
+                "options": {"temperature": 0.3, "num_predict": 3000},
+            },
+            timeout=180,
+        )
         if resp.status_code == 200:
             content = resp.json().get("message", {}).get("content", "")
             if content:
@@ -132,8 +140,9 @@ def _auto_respond(req_id: str, r: dict, ollama_model: str = "qwen3:14b") -> bool
     return False
 
 
-def cmd_watch(poll: float = 3.0, auto_ollama: bool = False, ollama_model: str = "qwen3:14b",
-              max_workers: int = 4) -> int:
+def cmd_watch(
+    poll: float = 3.0, auto_ollama: bool = False, ollama_model: str = "qwen3:14b", max_workers: int = 4
+) -> int:
     """持续监听队列。
 
     auto_ollama=True: 用本地 Ollama 并发生成响应（2026-08-01 优化）。
@@ -145,9 +154,13 @@ def cmd_watch(poll: float = 3.0, auto_ollama: bool = False, ollama_model: str = 
     provider 快速失败回退 DeepSeek，不再空等 MAX_WAIT_SEC。
     """
     import threading
+
     print(f"[WATCH] 监听 {QUEUE_DIR} (每 {poll}s)... Ctrl+C 退出")
-    print(f"  auto_ollama={auto_ollama} model={ollama_model} workers={max_workers}" if auto_ollama
-          else "  (人工模式：看到新请求用 respond 命令处理)")
+    print(
+        f"  auto_ollama={auto_ollama} model={ollama_model} workers={max_workers}"
+        if auto_ollama
+        else "  (人工模式：看到新请求用 respond 命令处理)"
+    )
     seen = set()
     lock = threading.Lock()
 
@@ -156,7 +169,8 @@ def cmd_watch(poll: float = 3.0, auto_ollama: bool = False, ollama_model: str = 
             # R77：心跳——标记 responder 活跃
             try:
                 (QUEUE_DIR / ".heartbeat").write_text(
-                    json.dumps({"ts": time.time(), "pid": os.getpid()}), encoding="utf-8")
+                    json.dumps({"ts": time.time(), "pid": os.getpid()}), encoding="utf-8"
+                )
             except OSError:
                 pass
             pending = _pending_requests()
@@ -172,8 +186,7 @@ def cmd_watch(poll: float = 3.0, auto_ollama: bool = False, ollama_model: str = 
                     except Exception:
                         continue
                     # 并发提交 Ollama 生成
-                    threading.Thread(target=_auto_respond, args=(req_id, r, ollama_model),
-                                     daemon=True).start()
+                    threading.Thread(target=_auto_respond, args=(req_id, r, ollama_model), daemon=True).start()
                 else:
                     print(f"\n[新请求] {req_id} — 用以下命令处理:")
                     print(f"  python scripts/agent_llm_responder.py respond {req_id}")
@@ -189,8 +202,9 @@ def main():
     p_watch = sub.add_parser("watch", help="持续监听队列")
     p_watch.add_argument("--agent", default=None, help="兜底 agent 名（默认 marvis）")
     p_watch.add_argument("--poll", type=float, default=3.0, help="轮询间隔（秒）")
-    p_watch.add_argument("--auto-ollama", action="store_true",
-                         help="用本地 Ollama 并发生成响应（2026-08-01 优化，免费）")
+    p_watch.add_argument(
+        "--auto-ollama", action="store_true", help="用本地 Ollama 并发生成响应（2026-08-01 优化，免费）"
+    )
     p_watch.add_argument("--ollama-model", default="qwen3:14b", help="Ollama 模型")
     p_watch.add_argument("--max-workers", type=int, default=4, help="并发上限")
     sub.add_parser("list", help="查看待处理请求")
@@ -202,8 +216,9 @@ def main():
     args = parser.parse_args()
 
     if args.cmd == "watch":
-        return cmd_watch(poll=args.poll, auto_ollama=args.auto_ollama,
-                         ollama_model=args.ollama_model, max_workers=args.max_workers)
+        return cmd_watch(
+            poll=args.poll, auto_ollama=args.auto_ollama, ollama_model=args.ollama_model, max_workers=args.max_workers
+        )
     if args.cmd == "list":
         return cmd_list()
     if args.cmd == "respond":

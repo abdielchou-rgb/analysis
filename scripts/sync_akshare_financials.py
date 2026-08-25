@@ -36,21 +36,21 @@ import os
 import sqlite3
 import sys
 import time
-from concurrent.futures import ProcessPoolExecutor, as_completed, TimeoutError as concurrent_futures_timeout
-from datetime import datetime
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import TimeoutError as concurrent_futures_timeout
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
 DB_PATH = _ROOT / "data" / "financials.db"
 INSTRUMENTS = _ROOT / "data" / "qlib_bin" / "instruments" / "all.txt"
 
-logging.basicConfig(level=logging.INFO,
-                    format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
 logger = logging.getLogger("sync_ak")
 
 _HAS_AKSHARE = False
 try:
     import akshare as ak
+
     _HAS_AKSHARE = True
 except ImportError:
     logger.warning("akshare 未安装")
@@ -60,24 +60,24 @@ except ImportError:
 # R27（2026-08-02 全量明细）：扩展三表明细到 30+ 字段
 # ──────────────────────────────────────────────────────────────
 PROFIT_MAP = {
-    "营业总收入": ("profit", "MBRevenue", lambda v: v),          # 元
+    "营业总收入": ("profit", "MBRevenue", lambda v: v),  # 元
     "营业收入": ("profit", "MBRevenue", lambda v: v),
-    "净利润": ("profit", "netProfit", lambda v: v),              # 元
-    "销售毛利率": ("profit", "gpMargin", lambda v: v / 100),      # % → 比值
-    "净资产收益率": ("profit", "roeAvg", lambda v: v / 100),      # % → 比值
-    "基本每股收益": ("profit", "epsTTM", lambda v: v),           # 元
-    "资产负债率": ("balance", "totalLiab", None),                # 占位，见下
+    "净利润": ("profit", "netProfit", lambda v: v),  # 元
+    "销售毛利率": ("profit", "gpMargin", lambda v: v / 100),  # % → 比值
+    "净资产收益率": ("profit", "roeAvg", lambda v: v / 100),  # % → 比值
+    "基本每股收益": ("profit", "epsTTM", lambda v: v),  # 元
+    "资产负债率": ("balance", "totalLiab", None),  # 占位，见下
     # R27 新增：利润表明细
-    "营业成本": ("profit", "operatingCost", lambda v: v),         # 元
+    "营业成本": ("profit", "operatingCost", lambda v: v),  # 元
     "营业总成本": ("profit", "operatingCost", lambda v: v),
-    "研发费用": ("profit", "RD", lambda v: v),                  # 元（R53 字段名规范为 RD）
-    "销售费用": ("profit", "sellExpense", lambda v: v),           # 元
-    "管理费用": ("profit", "manageExpense", lambda v: v),         # 元
-    "财务费用": ("profit", "financeExpense", lambda v: v),        # 元
-    "营业利润": ("profit", "operateProfit", lambda v: v),         # 元
-    "利润总额": ("profit", "totalProfit", lambda v: v),           # 元
-    "所得税费用": ("profit", "incomeTax", lambda v: v),           # 元
-    "扣非净利润": ("profit", "deductNetProfit", lambda v: v),     # 元
+    "研发费用": ("profit", "RD", lambda v: v),  # 元（R53 字段名规范为 RD）
+    "销售费用": ("profit", "sellExpense", lambda v: v),  # 元
+    "管理费用": ("profit", "manageExpense", lambda v: v),  # 元
+    "财务费用": ("profit", "financeExpense", lambda v: v),  # 元
+    "营业利润": ("profit", "operateProfit", lambda v: v),  # 元
+    "利润总额": ("profit", "totalProfit", lambda v: v),  # 元
+    "所得税费用": ("profit", "incomeTax", lambda v: v),  # 元
+    "扣非净利润": ("profit", "deductNetProfit", lambda v: v),  # 元
 }
 # 从按报告期数据可获得的资产负债表字段（若有）
 BALANCE_MAP = {
@@ -86,17 +86,17 @@ BALANCE_MAP = {
     "股东权益合计": ("balance", "totalEquity", lambda v: v),
     "货币资金": ("balance", "cashAssets", lambda v: v),
     # R27 新增：资产负债表明细
-    "应收账款": ("balance", "accountsReceivable", lambda v: v),    # 元
+    "应收账款": ("balance", "accountsReceivable", lambda v: v),  # 元
     "应收票据": ("balance", "notesReceivable", lambda v: v),
-    "存货": ("balance", "inventory", lambda v: v),                 # 元
-    "商誉": ("balance", "goodwill", lambda v: v),                  # 元
-    "固定资产": ("balance", "fixedAssets", lambda v: v),           # 元
-    "无形资产": ("balance", "intangibleAssets", lambda v: v),      # 元
-    "短期借款": ("balance", "shortLoan", lambda v: v),             # 元
-    "长期借款": ("balance", "longLoan", lambda v: v),              # 元
-    "应付账款": ("balance", "accountsPayable", lambda v: v),       # 元
-    "应付债券": ("balance", "bondPayable", lambda v: v),          # 元（R53 新增）
-    "预收款项": ("balance", "advanceReceived", lambda v: v),       # 元
+    "存货": ("balance", "inventory", lambda v: v),  # 元
+    "商誉": ("balance", "goodwill", lambda v: v),  # 元
+    "固定资产": ("balance", "fixedAssets", lambda v: v),  # 元
+    "无形资产": ("balance", "intangibleAssets", lambda v: v),  # 元
+    "短期借款": ("balance", "shortLoan", lambda v: v),  # 元
+    "长期借款": ("balance", "longLoan", lambda v: v),  # 元
+    "应付账款": ("balance", "accountsPayable", lambda v: v),  # 元
+    "应付债券": ("balance", "bondPayable", lambda v: v),  # 元（R53 新增）
+    "预收款项": ("balance", "advanceReceived", lambda v: v),  # 元
     "流动负债合计": ("balance", "totalCurrentLiab", lambda v: v),  # 元
     "非流动负债合计": ("balance", "totalNonCurrentLiab", lambda v: v),
 }
@@ -206,8 +206,7 @@ def _latest_quarters(code: str) -> set:
     """
     try:
         conn = sqlite3.connect(str(DB_PATH))
-        rows = conn.execute(
-            "SELECT DISTINCT quarter FROM financials WHERE code=?", (code,)).fetchall()
+        rows = conn.execute("SELECT DISTINCT quarter FROM financials WHERE code=?", (code,)).fetchall()
         conn.close()
         return {r[0] for r in rows}
     except Exception:
@@ -223,9 +222,7 @@ def _latest_quarters_by_table(code: str) -> dict:
     out = {"profit": set(), "balance": set(), "cashflow": set()}
     try:
         conn = sqlite3.connect(str(DB_PATH))
-        rows = conn.execute(
-            "SELECT DISTINCT table_name, quarter FROM financials WHERE code=?",
-            (code,)).fetchall()
+        rows = conn.execute("SELECT DISTINCT table_name, quarter FROM financials WHERE code=?", (code,)).fetchall()
         conn.close()
         for t, q in rows:
             if t in out:
@@ -260,7 +257,7 @@ def _parse_cn_num(val) -> float | None:
         multiplier = 1e4
         s = s[:-1]
     elif s.endswith("%"):
-        return float(s[:-1]) if s[:-1].replace('.','').replace('-','').isdigit() else None
+        return float(s[:-1]) if s[:-1].replace(".", "").replace("-", "").isdigit() else None
     try:
         return float(s) * multiplier
     except (ValueError, TypeError):
@@ -342,9 +339,18 @@ def _fetch_ths(code: str) -> dict:
             if not period or not period[:4].isdigit():
                 continue
             entry = {}
-            for col in ["营业总收入", "净利润", "销售毛利率", "净资产收益率",
-                        "基本每股收益", "资产负债率", "总资产", "总负债",
-                        "股东权益合计", "货币资金"]:
+            for col in [
+                "营业总收入",
+                "净利润",
+                "销售毛利率",
+                "净资产收益率",
+                "基本每股收益",
+                "资产负债率",
+                "总资产",
+                "总负债",
+                "股东权益合计",
+                "货币资金",
+            ]:
                 val = row.get(col)
                 if val is not None:
                     parsed = _parse_cn_num(val)
@@ -455,6 +461,7 @@ def _em_http_fetch(code: str, report_name: str, page_size: int = 30) -> list:
     改用 requests 直连东财 datacenter API。
     """
     import requests as _req
+
     params = {
         "reportName": report_name,
         "columns": "ALL",
@@ -489,18 +496,18 @@ def _fetch_em_balance(code: str) -> dict:
         ("TOTAL_LIABILITIES", "总负债"),
         ("TOTAL_EQUITY", "股东权益合计"),
         ("MONETARYFUNDS", "货币资金"),
-        ("ACCOUNTS_RECE", "应收账款"),          # 应收账款
-        ("NOTE_RECE", "应收票据"),              # 应收票据
-        ("INVENTORY", "存货"),                  # 存货
-        ("GOODWILL", "商誉"),                   # 商誉
-        ("FIXED_ASSET", "固定资产"),            # 固定资产
-        ("INTANGIBLE_ASSET", "无形资产"),       # 无形资产
-        ("SHORT_LOAN", "短期借款"),             # 短期借款
-        ("LONG_LOAN", "长期借款"),              # 长期借款
-        ("ACCOUNTS_PAYABLE", "应付账款"),       # 应付账款
-        ("BOND_PAYABLE", "应付债券"),            # 应付债券（R53 新增）
-        ("ADVANCE_RECE", "预收款项"),           # 预收款项
-        ("TOTAL_CURRENT_LIAB", "流动负债合计"), # 流动负债合计
+        ("ACCOUNTS_RECE", "应收账款"),  # 应收账款
+        ("NOTE_RECE", "应收票据"),  # 应收票据
+        ("INVENTORY", "存货"),  # 存货
+        ("GOODWILL", "商誉"),  # 商誉
+        ("FIXED_ASSET", "固定资产"),  # 固定资产
+        ("INTANGIBLE_ASSET", "无形资产"),  # 无形资产
+        ("SHORT_LOAN", "短期借款"),  # 短期借款
+        ("LONG_LOAN", "长期借款"),  # 长期借款
+        ("ACCOUNTS_PAYABLE", "应付账款"),  # 应付账款
+        ("BOND_PAYABLE", "应付债券"),  # 应付债券（R53 新增）
+        ("ADVANCE_RECE", "预收款项"),  # 预收款项
+        ("TOTAL_CURRENT_LIAB", "流动负债合计"),  # 流动负债合计
         ("TOTAL_NONCURRENT_LIAB", "非流动负债合计"),
     ]
     for row in rows:
@@ -538,7 +545,7 @@ def _fetch_em_cashflow(code: str) -> dict:
         ("NETCASH_FINANCE", "筹资活动产生的现金流量净额"),
         ("CASH_RECV_SG_RS", "销售商品、提供劳务收到的现金"),
         ("CONSTRUCT_LONG_ASSET", "购建固定资产、无形资产和其他长期资产支付的现金"),
-        ("FA_IR_DEPR", "折旧摊销"),              # 折旧摊销（R53 新增，年报/中报披露）
+        ("FA_IR_DEPR", "折旧摊销"),  # 折旧摊销（R53 新增，年报/中报披露）
     ]
     for row in rows:
         period_raw = str(row.get("REPORT_DATE", "")).strip()
@@ -577,7 +584,7 @@ def _fetch_em_profit(code: str) -> dict:
         ("OPERATE_INCOME", "营业收入"),
         ("TOTAL_OPERATE_COST", "营业总成本"),
         ("OPERATE_COST", "营业成本"),
-        ("RESEARCH_EXPENSE", "研发费用"),       # 研发费用（R53 修复：实测字段名，原 R_D_EXPENSE 取不到值）
+        ("RESEARCH_EXPENSE", "研发费用"),  # 研发费用（R53 修复：实测字段名，原 R_D_EXPENSE 取不到值）
         ("SALE_EXPENSE", "销售费用"),
         ("MANAGE_EXPENSE", "管理费用"),
         ("FINANCE_EXPENSE", "财务费用"),
@@ -630,10 +637,9 @@ def _existing_fields_by_table(code: str) -> dict:
     out = {"profit": {}, "balance": {}, "cashflow": {}}
     try:
         import sqlite3 as _sql
+
         conn = _sql.connect(str(DB_PATH))
-        rows = conn.execute(
-            "SELECT table_name, quarter, field FROM financials WHERE code=?",
-            (code,)).fetchall()
+        rows = conn.execute("SELECT table_name, quarter, field FROM financials WHERE code=?", (code,)).fetchall()
         conn.close()
         for t, q, f in rows:
             if t in out:
@@ -693,8 +699,7 @@ def sync_code(code: str, dry_run: bool = False) -> dict:
     filtered = {q: data[q] for q in sorted(missing_periods)}
     rows = rows_from_data(code_clean, filtered)
     if dry_run:
-        return {"code": code_clean, "added": len(rows),
-                "new_quarters": sorted(missing_periods)}
+        return {"code": code_clean, "added": len(rows), "new_quarters": sorted(missing_periods)}
     n = save_rows(code_clean, rows)
     return {"code": code_clean, "added": n, "new_quarters": sorted(missing_periods)}
 
@@ -732,6 +737,7 @@ def get_index_constituents(index_code: str = "000300") -> list[str]:
     """
     try:
         import akshare as ak
+
         df = ak.index_stock_cons_csindex(symbol=index_code)
         if df is not None and not df.empty:
             return [str(c).zfill(6) for c in df["成分券代码"].tolist()]
@@ -760,18 +766,18 @@ def read_instruments() -> list[str]:
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="财务层查漏补缺（akshare → SQLite），配合 Baostock 历史层")
+    parser = argparse.ArgumentParser(description="财务层查漏补缺（akshare → SQLite），配合 Baostock 历史层")
     parser.add_argument("asset", nargs="?", help="股票代码，如 600519")
     parser.add_argument("--all", action="store_true", help="全量同步所有过滤后标的")
     parser.add_argument("--batch", type=int, metavar="N", help="批量同步前 N 只")
-    parser.add_argument("--market", choices=["sh", "sz", "all"], default="all",
-                        help="只同步某市场（sz=深市 000/002/300/301，sh=沪市）")
-    parser.add_argument("--code-prefix", default=None,
-                        help="只同步指定代码前缀（如 300/301=创业板，002=中小板）")
+    parser.add_argument(
+        "--market", choices=["sh", "sz", "all"], default="all", help="只同步某市场（sz=深市 000/002/300/301，sh=沪市）"
+    )
+    parser.add_argument("--code-prefix", default=None, help="只同步指定代码前缀（如 300/301=创业板，002=中小板）")
     parser.add_argument("--workers", type=int, default=2, help="并发数（akshare 源有限流，建议 2-4）")
-    parser.add_argument("--index", default=None,
-                        help="按指数成分同步：000300=沪深300, 000852=中证1000（可逗号分隔多指数）")
+    parser.add_argument(
+        "--index", default=None, help="按指数成分同步：000300=沪深300, 000852=中证1000（可逗号分隔多指数）"
+    )
     parser.add_argument("--dry-run", action="store_true", help="只预览要补什么，不写入")
     parser.add_argument("--status", action="store_true", help="查看库状态")
     args = parser.parse_args()
@@ -781,8 +787,7 @@ def main():
         n_codes = conn.execute("SELECT COUNT(DISTINCT code) FROM financials").fetchone()[0]
         n_rows = conn.execute("SELECT COUNT(*) FROM financials").fetchone()[0]
         latest = conn.execute("SELECT MAX(quarter) FROM financials").fetchone()[0]
-        src = conn.execute(
-            "SELECT source, COUNT(*) FROM financials GROUP BY source").fetchall()
+        src = conn.execute("SELECT source, COUNT(*) FROM financials GROUP BY source").fetchall()
         conn.close()
         print(f"财务库: {n_codes} 只, {n_rows} 条, 最新季度 {latest}")
         print(f"来源分布: {dict(src)}")
@@ -806,8 +811,7 @@ def main():
                 logger.info("指数 %s 成分股: %d 只", idx, len(members))
         if index_codes:
             # 保留指数成分（不应用市场/前缀过滤，指数已限定范围）
-            all_instruments = [t for t in all_instruments
-                               if t[2:].zfill(6) in index_codes]
+            all_instruments = [t for t in all_instruments if t[2:].zfill(6) in index_codes]
             logger.info("指数成分过滤: %d 只", len(all_instruments))
 
     # 按市场过滤
@@ -821,23 +825,21 @@ def main():
     if args.code_prefix:
         # 代码格式是 SZ300750 / SH600000，前缀匹配代码的数字部分开头
         prefixes = tuple(p.strip() for p in args.code_prefix.split(",") if p.strip())
-        all_instruments = [t for t in all_instruments
-                           if any(t[2:].startswith(p) for p in prefixes)]
+        all_instruments = [t for t in all_instruments if any(t[2:].startswith(p) for p in prefixes)]
         logger.info("代码前缀过滤 %s: %d 只", args.code_prefix, len(all_instruments))
 
     if args.all:
         targets = all_instruments
         logger.info("全量模式：%d 只（已过滤指数/北交所/退市）", len(targets))
     elif args.batch:
-        targets = all_instruments[:args.batch]
+        targets = all_instruments[: args.batch]
     elif args.asset:
         targets = [args.asset]
     else:
         parser.print_help()
         return 1
 
-    print(f"[SYNC] {len(targets)} 只 {'预览' if args.dry_run else '同步'}"
-          f"（akshare 查漏补缺, workers={args.workers}）")
+    print(f"[SYNC] {len(targets)} 只 {'预览' if args.dry_run else '同步'}（akshare 查漏补缺, workers={args.workers}）")
     total_added = 0
     total_fixed = 0
     total_failed = 0
@@ -854,9 +856,8 @@ def main():
 
     done = 0
     for start in range(0, len(targets), BATCH):
-        batch = targets[start:start + BATCH]
-        with ProcessPoolExecutor(max_workers=args.workers,
-                                 initializer=_worker_init) as pool:
+        batch = targets[start : start + BATCH]
+        with ProcessPoolExecutor(max_workers=args.workers, initializer=_worker_init) as pool:
             futures = {pool.submit(_worker_sync, (t, args.dry_run)): t for t in batch}
             for fut in as_completed(futures):
                 code = futures[fut]
@@ -881,18 +882,24 @@ def main():
                 if r["added"]:
                     total_added += r["added"]
                     total_fixed += 1
-                    logger.info("[补] %s: +%d 条 %s%s", r["code"], r["added"],
-                                r["new_quarters"], " (预览)" if args.dry_run else "")
+                    logger.info(
+                        "[补] %s: +%d 条 %s%s",
+                        r["code"],
+                        r["added"],
+                        r["new_quarters"],
+                        " (预览)" if args.dry_run else "",
+                    )
                 else:
                     logger.debug("%s 无缺失", r["code"])
         done += len(batch)
-        logger.info("[进度] %d/%d 只（累计 +%d 条, 失败 %d）",
-                    done, len(targets), total_added, total_failed)
+        logger.info("[进度] %d/%d 只（累计 +%d 条, 失败 %d）", done, len(targets), total_added, total_failed)
         # 批间喘息，降低对 akshare 源的瞬时压力
         time.sleep(0.5)
 
-    print(f"\n[完成] {total_fixed} 只补数据，共 +{total_added} 条，失败 {total_failed}"
-          f"{'（预览，未写入）' if args.dry_run else ''}")
+    print(
+        f"\n[完成] {total_fixed} 只补数据，共 +{total_added} 条，失败 {total_failed}"
+        f"{'（预览，未写入）' if args.dry_run else ''}"
+    )
     if total_failed:
         print("提示：失败标的可用 --batch 或单只代码重跑（akshare 源限流属预期）")
     return 0

@@ -7,7 +7,10 @@
     python scripts/extract_valuation_models.py --resume      # 续跑未完成的
     python scripts/extract_valuation_models.py --status      # 查看进度
 """
-import sys, json, logging
+
+import json
+import logging
+import sys
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
@@ -18,7 +21,10 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelna
 logger = logging.getLogger("extract_val")
 
 from core.valuation_model_extractor import (
-    extract_model, load_knowledge, save_knowledge, MODELS_DIR,
+    MODELS_DIR,
+    extract_model,
+    load_knowledge,
+    save_knowledge,
 )
 
 STATE_FILE = _ROOT / "data" / "valuation_extract_state.json"
@@ -39,9 +45,7 @@ def _save_state(state: dict):
 
 def _all_excels():
     files = list(MODELS_DIR.rglob("*.xlsx")) + list(MODELS_DIR.rglob("*.xls"))
-    files = [f for f in files if not any(
-        k in f.name for k in ["使用帮助", "速算", "资源包", "工具包"])
-    ]
+    files = [f for f in files if not any(k in f.name for k in ["使用帮助", "速算", "资源包", "工具包"])]
     return files
 
 
@@ -105,6 +109,7 @@ def status():
 
 if __name__ == "__main__":
     import argparse
+
     p = argparse.ArgumentParser()
     p.add_argument("--limit", type=int, default=30)
     p.add_argument("--resume", action="store_true")

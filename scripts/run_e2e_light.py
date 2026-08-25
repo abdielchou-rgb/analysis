@@ -18,15 +18,16 @@
     python scripts/run_e2e_light.py "思必驰" --type unlisted_company --style cicc
 """
 
-import sys, os, json, logging
+import logging
+import os
+import sys
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-logging.basicConfig(level=logging.INFO,
-                    format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
 logger = logging.getLogger("2hao.e2e_light")
 
 
@@ -39,7 +40,8 @@ def _load_env_file() -> None:
         if not line or line.startswith("#") or "=" not in line:
             continue
         k, v = line.split("=", 1)
-        k = k.strip(); v = v.strip().strip('"').strip("'")
+        k = k.strip()
+        v = v.strip().strip('"').strip("'")
         if k and k not in os.environ:
             os.environ[k] = v
 
@@ -55,9 +57,14 @@ def _light_check(self=None):
     """轻量 import 自检，替代 check_all 的全量语法编译"""
     ok = True
     for mod in [
-        "core.sacs", "core.deepseek_client", "pipeline.iron_gate",
-        "pipeline.section_writer", "pipeline.chart_runner",
-        "pipeline.e2e_orchestrator", "pipeline.data_collector", "core.style",
+        "core.sacs",
+        "core.deepseek_client",
+        "pipeline.iron_gate",
+        "pipeline.section_writer",
+        "pipeline.chart_runner",
+        "pipeline.e2e_orchestrator",
+        "pipeline.data_collector",
+        "core.style",
     ]:
         try:
             __import__(mod)
@@ -66,8 +73,12 @@ def _light_check(self=None):
             ok = False
     # 检查 SAC 文件
     sac_dir = _ROOT / "core" / "sacs"
-    for f in ["sac_industry_deep.yaml", "sac_listed_company.yaml",
-              "sac_unlisted_company.yaml", "sac_earnings_notes.yaml"]:
+    for f in [
+        "sac_industry_deep.yaml",
+        "sac_listed_company.yaml",
+        "sac_unlisted_company.yaml",
+        "sac_earnings_notes.yaml",
+    ]:
         if not (sac_dir / f).exists():
             logger.warning("[ENV] SAC 文件缺失: %s", f)
             ok = False
@@ -80,26 +91,32 @@ _rg.RuntimeGate.check_all = _light_check  # 替换为轻量版
 
 def main():
     import argparse
+
     parser = argparse.ArgumentParser(description="轻量启动器 — 驱动 E2EOrchestratorV2")
     parser.add_argument("asset", help="分析标的（股票代码或公司名）")
-    parser.add_argument("--type", "-t", default="unlisted_company",
-                        choices=["industry_deep", "listed_company", "unlisted_company", "earnings_notes"])
+    parser.add_argument(
+        "--type",
+        "-t",
+        default="unlisted_company",
+        choices=["industry_deep", "listed_company", "unlisted_company", "earnings_notes"],
+    )
     parser.add_argument("--style", "-s", default="cicc")
     parser.add_argument("--output", "-o", default="output")
     parser.add_argument("--enrich-file", "-e", default=None)
     args = parser.parse_args()
 
-    print(f"\n{'='*60}")
-    print(f"  2号分析师 E2E 轻量启动（完整管线，跳过慢 preflight 编译）")
-    print(f"{'='*60}")
+    print(f"\n{'=' * 60}")
+    print("  2号分析师 E2E 轻量启动（完整管线，跳过慢 preflight 编译）")
+    print(f"{'=' * 60}")
     print(f"  标的: {args.asset}")
     print(f"  类型: {args.type}")
     print(f"  风格: {args.style}")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     # SAC 框架
     try:
         from core.sacs import SACLoader
+
         sac = SACLoader(args.type)
         print(f"  SAC: {sac._data.get('name', args.type)}")
         print(f"  维度: {len(sac.get_dimension_ids())} 个")
@@ -108,6 +125,7 @@ def main():
 
     # 核心：E2EOrchestratorV2 完整管线（21 节点图 + 契约 + 写改 + IronGate + 指纹导出）
     from pipeline.e2e_orchestrator import E2EOrchestratorV2
+
     orch = E2EOrchestratorV2(
         asset=args.asset,
         report_type=args.type,
@@ -117,9 +135,9 @@ def main():
     )
     result = orch.run()
 
-    print(f"\n{'='*60}")
-    print(f"  管线结果")
-    print(f"{'='*60}")
+    print(f"\n{'=' * 60}")
+    print("  管线结果")
+    print(f"{'=' * 60}")
     if result.get("passed"):
         print(f"  [✓] PASSED (attempt {result.get('attempt')})")
         for fmt, path in result.items():

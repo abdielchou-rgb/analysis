@@ -1,4 +1,3 @@
-import sys
 p = "/sessions/hopeful-awesome-curie/mnt/2hao-analyst/pipeline/iron_gate.py"
 t = open(p).read()
 marker = "self._check_source_reliability"

@@ -80,6 +80,7 @@ def sync_northbound(conn: sqlite3.Connection, days: int = 90):
     """同步北向资金日度数据。"""
     try:
         import akshare as ak
+
         end_date = datetime.now().strftime("%Y%m%d")
         start_date = (datetime.now() - timedelta(days=days)).strftime("%Y%m%d")
 
@@ -88,9 +89,10 @@ def sync_northbound(conn: sqlite3.Connection, days: int = 90):
         now = datetime.now().isoformat()
         df_h = ak.stock_hsgt_hist_em(symbol="沪股通")
         df_s = ak.stock_hsgt_hist_em(symbol="深股通")
-        
+
         # 按日期合并（最外层 net_flow = 沪+深）
         from collections import defaultdict
+
         date_map = defaultdict(lambda: {"net": 0, "buy": 0, "sell": 0, "balance": 0})
         for df_src in [df_h, df_s]:
             if df_src is None or df_src.empty:
@@ -136,9 +138,14 @@ def sync_margin(conn: sqlite3.Connection, days: int = 90):
         # 分别获取上交所和深交所两融数据
         count = 0
         now = datetime.now().isoformat()
+        today = datetime.now().strftime("%Y%m%d")
         for exchange, func in [("sse", ak.stock_margin_sse), ("szse", ak.stock_margin_szse)]:
             try:
-                df = func()
+                # akshare 默认 end_date 硬编码在历史日期，必须显式传入当前日期才能取到最新数据
+                if exchange == "sse":
+                    df = func(start_date="20010106", end_date=today)
+                else:
+                    df = func()
                 if df is None or df.empty:
                     continue
                 for _, row in df.iterrows():

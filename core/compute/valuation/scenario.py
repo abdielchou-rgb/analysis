@@ -21,33 +21,35 @@ logger = logging.getLogger("v30.valuation.scenario")
 @dataclass
 class ScenarioDetail:
     """单情景的假设和结果。"""
+
     name: str
-    probability: float                     # 概率 (0~1)
-    revenue_growth_rates: list[float]      # 预测期逐年增速
-    operating_margin: float                # 稳态营业利润率
-    terminal_growth: float                 # 终值增长率
-    pe_multiple: Optional[float] = None    # 可比 PE（可选，用于交叉验证）
-    target_price: float = 0.0              # 该情景下的目标价
-    description: str = ""                  # 情景描述
+    probability: float  # 概率 (0~1)
+    revenue_growth_rates: list[float]  # 预测期逐年增速
+    operating_margin: float  # 稳态营业利润率
+    terminal_growth: float  # 终值增长率
+    pe_multiple: Optional[float] = None  # 可比 PE（可选，用于交叉验证）
+    target_price: float = 0.0  # 该情景下的目标价
+    description: str = ""  # 情景描述
 
 
 @dataclass
 class ScenarioResult:
     """三情景分析结果。"""
+
     company: str
     stock_code: str
     scenarios: dict[str, dict] = field(default_factory=dict)
-    weighted_target_price: float = 0.0         # 概率加权目标价
-    risk_reward_ratio: Optional[float] = None   # (上行空间*概率) / (下行空间*概率)
-    upside: Optional[float] = None              # 上行空间 %
-    downside: Optional[float] = None            # 下行空间 %
+    weighted_target_price: float = 0.0  # 概率加权目标价
+    risk_reward_ratio: Optional[float] = None  # (上行空间*概率) / (下行空间*概率)
+    upside: Optional[float] = None  # 上行空间 %
+    downside: Optional[float] = None  # 下行空间 %
     warnings: list[str] = field(default_factory=list)
 
 
 def compute_scenario(
     company: str,
     stock_code: str,
-    base_price: float,           # 当前股价（用于计算风险收益比）
+    base_price: float,  # 当前股价（用于计算风险收益比）
     base_scenario: ScenarioDetail,
     bull_scenario: ScenarioDetail,
     bear_scenario: ScenarioDetail,
@@ -90,11 +92,13 @@ def compute_scenario(
     """
     scenarios = {}
     warnings = []
-    probability_sum = sum([
-        base_scenario.probability,
-        bull_scenario.probability,
-        bear_scenario.probability,
-    ])
+    probability_sum = sum(
+        [
+            base_scenario.probability,
+            bull_scenario.probability,
+            bear_scenario.probability,
+        ]
+    )
 
     if abs(probability_sum - 1.0) > 0.01:
         warnings.append(f"概率和={probability_sum:.2f}，不等于1，将归一化")
@@ -147,9 +151,7 @@ def compute_scenario(
         }
 
     # ── 概率加权目标价 ──
-    weighted_price = sum(
-        s["target_price"] * s["probability"] for s in scenarios.values()
-    )
+    weighted_price = sum(s["target_price"] * s["probability"] for s in scenarios.values())
 
     # ── 风险收益比 ──
     base_tp = scenarios["base"]["target_price"]
@@ -272,7 +274,7 @@ def _run_scenario_dcf(
     current_rev = base_revenue
 
     for i in range(min(len(growth_rates), projection_years)):
-        current_rev *= (1 + growth_rates[i])
+        current_rev *= 1 + growth_rates[i]
 
     # 用最后一年的营收做终值计算
     terminal_revenue = current_rev
@@ -332,11 +334,13 @@ def format_scenario_for_report(sr: ScenarioResult) -> str:
     scenario_order = ["base", "bull", "bear"]
     for key in scenario_order:
         s = sr.scenarios.get(key, {})
-        growth_str = f"{s.get('revenue_growth_rates', [0])[0]*100:.0f}%→{s.get('revenue_growth_rates', [0])[-1]*100:.0f}%"
+        growth_str = (
+            f"{s.get('revenue_growth_rates', [0])[0] * 100:.0f}%→{s.get('revenue_growth_rates', [0])[-1] * 100:.0f}%"
+        )
         lines.append(
-            f"| {s.get('name', key)} | {s.get('probability', 0)*100:.0f}% | "
-            f"{growth_str} | {s.get('operating_margin', 0)*100:.0f}% | "
-            f"{s.get('terminal_growth', 0)*100:.0f}% | "
+            f"| {s.get('name', key)} | {s.get('probability', 0) * 100:.0f}% | "
+            f"{growth_str} | {s.get('operating_margin', 0) * 100:.0f}% | "
+            f"{s.get('terminal_growth', 0) * 100:.0f}% | "
             f"{s.get('target_price', 0):.2f} | {s.get('description', '')} |"
         )
     lines.append("")

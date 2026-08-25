@@ -12,6 +12,7 @@ R60（2026-08-03）：Marvis R55 快照写入了 12 条预测，但 CSV 列名
   python scripts/import_forward_picks.py            # 导入 CSV → DB
   python scripts/import_forward_picks.py --dry-run  # 预览
 """
+
 import argparse
 import csv
 import sys
@@ -27,7 +28,7 @@ def main():
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
-    from core.forward_picks import ForwardPicksDB, ForwardPick
+    from core.forward_picks import ForwardPick, ForwardPicksDB
 
     csv_path = _ROOT / "data" / "forward_picks.csv"
     if not csv_path.exists():
@@ -59,6 +60,7 @@ def main():
         if r.get("code"):
             try:
                 from core.data_backends import _query_local_qlib_price
+
                 q = _query_local_qlib_price(str(r["code"]).strip())
                 if q and q.get("prices") and q.get("dates"):
                     target = (created_at or "9999-99")[:7]
@@ -115,6 +117,7 @@ def main():
     # 验证
     if not args.dry_run:
         from core.forward_picks import ScoreTracker
+
         tracker = ScoreTracker()
         print("\n=== 导入后评分卡 ===")
         print(tracker.report())

@@ -405,6 +405,46 @@ class E2ENodes:
         return {"scarcity_signals": context.get("scarcity_signals", [])}
 
     @staticmethod
+    def research_plan(node_id, context):
+        """P3-B: research_planner v1——确定性研究规划（问题树/冲突前移/追问）。
+
+        输出写入 ctx：research_plan / followup_queries（写作侧可引用）。
+        冲突同时前移暴露：让 enrich 修订轮优先解决数据口径矛盾，
+        而不是等 Gate 在写作后拦截。
+        """
+        try:
+            from pipeline.research_planner import plan
+
+            dims = []
+            try:
+                sac = context.get("analysis_plan")
+                from core.sacs import SACLoader
+
+                dims = SACLoader(context.get("report_type", "industry_deep")).get_dimension_ids()
+            except Exception:
+                dims = []
+            r = plan(
+                asset=context.get("asset", ""),
+                dims=dims,
+                collected_data=context.get("collected_data", {}) or {},
+            )
+            out = {
+                "research_plan": r,
+                "followup_queries": r.get("followup_queries", []),
+            }
+            if r.get("n_conflicts"):
+                import logging
+
+                logging.getLogger("2hao.e2e").warning(
+                    "[RESEARCH-PLAN] 数据层冲突 %d 处（已前移暴露，追问 %d 条）",
+                    r["n_conflicts"],
+                    len(r["followup_queries"]),
+                )
+            return out
+        except Exception as e:
+            return {"research_plan": None, "note": f"planner failed: {str(e)[:60]}"}
+
+    @staticmethod
     def cross_validate(node_id, context):
         """CrossValidator — multi-source cross-validation + data credibility (FP2a)"""
         if not _HAS_CROSSVALIDATE:
@@ -1435,6 +1475,13 @@ class E2EOrchestratorV2:
                 desc="data sufficiency + local/agent backfill",
             )
             g.add_node("scarcity", E2ENodes.scarcity_signals, deps=["enrich"], desc="scarcity signals")
+            # P3-B: research_planner v1——问题树+冲突前移（零 LLM）
+            g.add_node(
+                "research_planner",
+                E2ENodes.research_plan,
+                deps=["enrich"],
+                desc="question tree + conflict early-warning + followup queries",
+            )
             g.add_node("cross_validate", E2ENodes.cross_validate, deps=["enrich"], desc="cross validate")
             g.add_node("argument", E2ENodes.argument_engine, deps=["enrich"], desc="argument engine")
             g.add_node("learning", E2ENodes.learning, deps=[], desc="learning loop")

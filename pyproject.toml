@@ -27,7 +27,7 @@ dependencies = [
 line-length = 120
 target-version = "py311"
 # P3-audit: 仓库根 .ruff_cache 写入被拒（权限）→ 指到用户可写临时区
-cache-dir = "D:/Temp/opencode/ruff_cache"
+cache-dir = "D:/Cache/ruff_cache_2hao"
 # 冻结归档区（V50~V56 数据平台）整体排除在 lint/format 之外
 extend-exclude = ["legacy"]
 

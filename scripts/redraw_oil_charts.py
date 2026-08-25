@@ -2,11 +2,13 @@
 """重画油位报告图表：图0a市场总览 + 图0b机会逻辑链 + 图12推导总桥
 全幅大字（字号≥9pt），留白充足，解决"字体小/排版紧凑/看不清"。
 """
+
 import matplotlib
+
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-import matplotlib.font_manager as fm
 from pathlib import Path
+
+import matplotlib.pyplot as plt
 
 # 中文字体
 plt.rcParams["font.sans-serif"] = ["Noto Sans CJK JP", "SimHei", "DejaVu Sans"]
@@ -15,8 +17,8 @@ OUT = Path("output/charts")
 OUT.mkdir(parents=True, exist_ok=True)
 
 # 配色
-C_MAIN = "#1f4e79"      # 深蓝
-C_ACCENT = "#c0504d"    # 红
+C_MAIN = "#1f4e79"  # 深蓝
+C_ACCENT = "#c0504d"  # 红
 C_GREEN = "#2e7d32"
 C_GRAY = "#808080"
 C_LIGHT = "#dbe5f1"
@@ -44,15 +46,21 @@ def fig0a_market_overview():
         ax1.text(i - 0.2, v + 1, f"{v}", ha="center", fontsize=16, fontweight="bold", color=C_MAIN)
     for i, v in enumerate(china_v):
         ax1.text(i + 0.2, v + 1, f"{v}", ha="center", fontsize=16, fontweight="bold", color=C_ACCENT)
-    ax1.text(0.02, 0.95, "全球CAGR≈5%", transform=ax1.transAxes, fontsize=15,
-             color=C_MAIN, fontweight="bold", va="top")
+    ax1.text(0.02, 0.95, "全球CAGR≈5%", transform=ax1.transAxes, fontsize=15, color=C_MAIN, fontweight="bold", va="top")
 
     # 右：细分结构（饼）
     seg = [15, 20, 65]
     labels = ["罐箱监测\n6-9亿美元\n增速10-15%", "其他中端\n(ATG/危化品)", "外资高端大项目"]
     colors = [C_GREEN, C_ACCENT, C_GRAY]
-    ax2.pie(seg, labels=labels, colors=colors, autopct="%d%%",
-            startangle=90, textprops={"fontsize": 15}, explode=(0.05, 0, 0))
+    ax2.pie(
+        seg,
+        labels=labels,
+        colors=colors,
+        autopct="%d%%",
+        startangle=90,
+        textprops={"fontsize": 15},
+        explode=(0.05, 0, 0),
+    )
     ax2.set_title("全球油位细分结构（约）", fontsize=20, fontweight="bold", pad=15)
 
     plt.tight_layout()
@@ -79,16 +87,25 @@ def fig0b_opportunity_chain():
     y = 0.5
     for i, (label, color) in enumerate(steps):
         x0 = 0.03 + i * 0.19
-        ax.add_patch(plt.Rectangle((x0, y - box_h / 2), box_w, box_h,
-                                   facecolor=color, edgecolor="white", alpha=0.9))
-        ax.text(x0 + box_w / 2, y, label, ha="center", va="center",
-                fontsize=15, color="white", fontweight="bold")
+        ax.add_patch(plt.Rectangle((x0, y - box_h / 2), box_w, box_h, facecolor=color, edgecolor="white", alpha=0.9))
+        ax.text(x0 + box_w / 2, y, label, ha="center", va="center", fontsize=15, color="white", fontweight="bold")
         if i < len(steps) - 1:
-            ax.annotate("", xy=(x0 + box_w + 0.01, y), xytext=(x0 + box_w - 0.005, y),
-                        arrowprops=dict(arrowstyle="->", color="black", lw=2.5))
+            ax.annotate(
+                "",
+                xy=(x0 + box_w + 0.01, y),
+                xytext=(x0 + box_w - 0.005, y),
+                arrowprops=dict(arrowstyle="->", color="black", lw=2.5),
+            )
 
-    ax.text(0.5, 0.06, "承接久通生产 = 以代工为起点，换取「制造+渠道」协同的战略入口",
-            ha="center", fontsize=17, color=C_MAIN, fontweight="bold")
+    ax.text(
+        0.5,
+        0.06,
+        "承接久通生产 = 以代工为起点，换取「制造+渠道」协同的战略入口",
+        ha="center",
+        fontsize=17,
+        color=C_MAIN,
+        fontweight="bold",
+    )
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     plt.tight_layout()
@@ -118,20 +135,35 @@ def fig12_bridge():
     y = 0.62
     for i, (label, color) in enumerate(steps):
         x0 = 0.02 + i * (0.96 - box_w) / (n - 1)
-        ax.add_patch(plt.Rectangle((x0, y - box_h / 2), box_w, box_h,
-                                   facecolor=color, edgecolor="white", alpha=0.92))
-        ax.text(x0 + box_w / 2, y, label, ha="center", va="center",
-                fontsize=12.5, color="white", fontweight="bold")
+        ax.add_patch(plt.Rectangle((x0, y - box_h / 2), box_w, box_h, facecolor=color, edgecolor="white", alpha=0.92))
+        ax.text(x0 + box_w / 2, y, label, ha="center", va="center", fontsize=12.5, color="white", fontweight="bold")
         if i < n - 1:
-            ax.annotate("", xy=(x0 + box_w + 0.005, y), xytext=(x0 + box_w - 0.002, y),
-                        arrowprops=dict(arrowstyle="->", color="black", lw=2))
+            ax.annotate(
+                "",
+                xy=(x0 + box_w + 0.005, y),
+                xytext=(x0 + box_w - 0.002, y),
+                arrowprops=dict(arrowstyle="->", color="black", lw=2),
+            )
 
     # 底部敏感性注记
-    ax.text(0.5, 0.22, "关键变量敏感性：毛利率 + 罐箱渗透率 驱动项目价值约80%",
-            ha="center", fontsize=16, color="#7b1fa2", fontweight="bold",
-            bbox=dict(boxstyle="round,pad=0.4", facecolor="#f3e5f5", edgecolor="#7b1fa2"))
-    ax.text(0.5, 0.08, "三情景加权NPV ≈ +3,200万元  |  最坏敞口 ≈ 2,100万元  |  止损线 2,450万元",
-            ha="center", fontsize=13, color=C_GRAY)
+    ax.text(
+        0.5,
+        0.22,
+        "关键变量敏感性：毛利率 + 罐箱渗透率 驱动项目价值约80%",
+        ha="center",
+        fontsize=16,
+        color="#7b1fa2",
+        fontweight="bold",
+        bbox=dict(boxstyle="round,pad=0.4", facecolor="#f3e5f5", edgecolor="#7b1fa2"),
+    )
+    ax.text(
+        0.5,
+        0.08,
+        "三情景加权NPV ≈ +3,200万元  |  最坏敞口 ≈ 2,100万元  |  止损线 2,450万元",
+        ha="center",
+        fontsize=13,
+        color=C_GRAY,
+    )
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     plt.tight_layout()

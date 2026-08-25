@@ -13,6 +13,7 @@ R65（2026-08-04）FP8 元认知选择：当用户/Agent 提出新分析框架�
 
   # 或从 YAML/MD 方法文档读取（待扩展）
 """
+
 import argparse
 import json
 import sys
@@ -32,9 +33,17 @@ def save_registry(reg: dict) -> None:
     REGISTRY.write_text(json.dumps(reg, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def absorb(fw_id: str, name: str, report_types: list[str], data_req: str,
-           sac_dims: list[str], inject: str, note: str, when: str = "",
-           exclude: str = "") -> bool:
+def absorb(
+    fw_id: str,
+    name: str,
+    report_types: list[str],
+    data_req: str,
+    sac_dims: list[str],
+    inject: str,
+    note: str,
+    when: str = "",
+    exclude: str = "",
+) -> bool:
     reg = load_registry()
     frameworks = reg.get("frameworks", [])
 
@@ -43,20 +52,22 @@ def absorb(fw_id: str, name: str, report_types: list[str], data_req: str,
         print(f"[SKIP] 框架 {fw_id} 已存在，如需更新请手动编辑 {REGISTRY}")
         return False
 
-    frameworks.append({
-        "id": fw_id,
-        "名称": name,
-        "适用条件": {
-            "report_types": report_types,
-            "data_requirement": data_req,
-            "when": when or f"需应用{name}方法",
-            "exclude": exclude or "无数据/不适用",
-        },
-        "映射SAC": sac_dims,
-        "注入方式": inject,
-        "效果": {"已用次数": 0, "平均Gate分": 0.5, "评分": "unverified"},
-        "备注": note,
-    })
+    frameworks.append(
+        {
+            "id": fw_id,
+            "名称": name,
+            "适用条件": {
+                "report_types": report_types,
+                "data_requirement": data_req,
+                "when": when or f"需应用{name}方法",
+                "exclude": exclude or "无数据/不适用",
+            },
+            "映射SAC": sac_dims,
+            "注入方式": inject,
+            "效果": {"已用次数": 0, "平均Gate分": 0.5, "评分": "unverified"},
+            "备注": note,
+        }
+    )
     reg["frameworks"] = frameworks
     save_registry(reg)
     print(f"[OK] 框架 {fw_id}（{name}）已注册，共 {len(frameworks)} 个框架")
@@ -77,12 +88,15 @@ def main():
     args = ap.parse_args()
 
     ok = absorb(
-        fw_id=args.id, name=args.名称,
+        fw_id=args.id,
+        name=args.名称,
         report_types=[t.strip() for t in args.report_types.split(",")],
         data_req=args.data_req,
         sac_dims=[d.strip() for d in args.sac.split(",")],
-        inject=args.inject, note=args.note,
-        when=args.when, exclude=args.exclude,
+        inject=args.inject,
+        note=args.note,
+        when=args.when,
+        exclude=args.exclude,
     )
     return 0 if ok else 1
 

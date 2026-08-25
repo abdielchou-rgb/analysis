@@ -9,8 +9,15 @@ Gate 轮次 / 重写次数，输出 benchmark/baseline_*.json 作为后续 P0/P1
   python scripts/bench_baseline.py --asset "柯力传感" --type listed_company
   python scripts/bench_baseline.py --asset "思必驰" --type unlisted_company
 """
+
 from __future__ import annotations
-import os, sys, json, time, argparse, logging
+
+import argparse
+import json
+import logging
+import os
+import sys
+import time
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
@@ -24,8 +31,11 @@ logger = logging.getLogger("bench_baseline")
 def main():
     ap = argparse.ArgumentParser(description="2hao 基线测量")
     ap.add_argument("--asset", required=True, help="标的名称")
-    ap.add_argument("--type", default="listed_company",
-                    choices=["listed_company", "unlisted_company", "industry_deep", "decision_memo"])
+    ap.add_argument(
+        "--type",
+        default="listed_company",
+        choices=["listed_company", "unlisted_company", "industry_deep", "decision_memo"],
+    )
     ap.add_argument("--outdir", default="benchmark", help="基线输出目录")
     args = ap.parse_args()
 
@@ -67,8 +77,9 @@ def main():
     out_path.write_text(json.dumps(base, ensure_ascii=False, indent=2), encoding="utf-8")
 
     logger.info("Baseline written: %s", out_path)
-    logger.info("elapsed=%.1fs passed=%s attempt=%s gate_score=%s",
-                elapsed, base["passed"], base["attempt"], base["gate_score"])
+    logger.info(
+        "elapsed=%.1fs passed=%s attempt=%s gate_score=%s", elapsed, base["passed"], base["attempt"], base["gate_score"]
+    )
     return 0
 
 

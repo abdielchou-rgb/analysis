@@ -19,7 +19,14 @@ Resume Driver — 把 E2EOrchestratorV2 的 AgentGraph 拆成可恢复的多个�
     python scripts/resume_driver.py gate        # Iron Gate + export
     python scripts/resume_driver.py status      # 查看进度
 """
-import sys, os, pickle, json, logging, time, re
+
+import json
+import logging
+import os
+import pickle
+import re
+import sys
+import time
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
@@ -86,8 +93,8 @@ def load_state():
 
 def build_orch():
     from pipeline.e2e_orchestrator import E2EOrchestratorV2
-    return E2EOrchestratorV2(ASSET, REPORT_TYPE, STYLE, str(_ROOT / "output"),
-                             enrich_file=ENRICH)
+
+    return E2EOrchestratorV2(ASSET, REPORT_TYPE, STYLE, str(_ROOT / "output"), enrich_file=ENRICH)
 
 
 FAST_NODES = [
@@ -121,6 +128,7 @@ def cmd_next():
     if ctx is None:
         ctx = _ensure_ctx()
     from pipeline.e2e_orchestrator import E2ENodes
+
     done = ctx.get("_fast_done", [])
     for nid, fn_name, _deps in FAST_NODES:
         if nid in done:
@@ -135,9 +143,12 @@ def cmd_next():
             ctx["_fast_done"] = done
             save_ctx(ctx)
             save_state({"stage": "fast", "next": nid, "done_nodes": done})
-            logger.info("[%s] passed (%.0fms)", nid, (time.time()-t0)*1000)
-            print(json.dumps({"node": nid, "status": "passed",
-                              "elapsed_ms": int((time.time()-t0)*1000)}, ensure_ascii=False))
+            logger.info("[%s] passed (%.0fms)", nid, (time.time() - t0) * 1000)
+            print(
+                json.dumps(
+                    {"node": nid, "status": "passed", "elapsed_ms": int((time.time() - t0) * 1000)}, ensure_ascii=False
+                )
+            )
             return 0
         except Exception as e:
             done.append(nid)  # 记录失败避免死循环
@@ -167,7 +178,7 @@ def cmd_init():
             if isinstance(out, dict):
                 ctx.update(out)
             results[nid] = {"status": "passed"}
-            logger.info("[%s] passed (%.0fms)", nid, (time.time()-t0)*1000)
+            logger.info("[%s] passed (%.0fms)", nid, (time.time() - t0) * 1000)
         except Exception as e:
             results[nid] = {"status": "failed", "error": str(e)[:200]}
             logger.error("[%s] FAILED: %s", nid, e)
@@ -189,16 +200,18 @@ def _run_write_seg(seg_idx):
     max_tokens = int(os.environ.get("SEG_MAX_TOKENS", "2000"))
     try:
         import pipeline.section_writer as _sw_mod
+
         _orig = _sw_mod.call_deepseek
-        def _capped(messages, model="deepseek-chat", temperature=0.35,
-                    max_tokens=8192, api_key="", stream=False):
+
+        def _capped(messages, model="deepseek-chat", temperature=0.35, max_tokens=8192, api_key="", stream=False):
             mt = min(max_tokens, int(os.environ.get("SEG_MAX_TOKENS", "2000")))
-            return _orig(messages, model=model, temperature=temperature,
-                         max_tokens=mt, api_key=api_key, stream=stream)
+            return _orig(messages, model=model, temperature=temperature, max_tokens=mt, api_key=api_key, stream=stream)
+
         _sw_mod.call_deepseek = _capped
     except Exception as e:
         logger.warning("monkeypatch call_deepseek failed: %s", e)
     from pipeline.section_writer import SectionWriter
+
     sw = SectionWriter(REPORT_TYPE, STYLE)
     sw._chart_paths = ctx.get("chart_paths", {})
     sw._last_data_context = ctx.get("collected_data", {})
@@ -206,7 +219,7 @@ def _run_write_seg(seg_idx):
     data_str = sw._serialize_data(ctx.get("collected_data", {}))
     chart_md = sw._build_chart_md(ASSET)
     seg = sw.segments[seg_idx]
-    logger.info("Writing seg %d/3: %s (max_tokens=%d)", seg_idx+1, seg["label"][:40], max_tokens)
+    logger.info("Writing seg %d/3: %s (max_tokens=%d)", seg_idx + 1, seg["label"][:40], max_tokens)
     dim_defs = sw._build_dimension_defs_full(seg["dimension_ids"])
     texts = ctx.get("_seg_texts", [])
     summaries = ctx.get("_seg_summaries", [])
@@ -221,22 +234,31 @@ def _run_write_seg(seg_idx):
             summaries.append(sw._extract_summary(debate))
             ctx["_seg_texts"] = texts
             ctx["_seg_summaries"] = summaries
-            ctx["_stage_done"] = (ctx.get("_stage_done", []) or []) + [f"write{seg_idx+1}"]
+            ctx["_stage_done"] = (ctx.get("_stage_done", []) or []) + [f"write{seg_idx + 1}"]
             save_ctx(ctx)
-            print(json.dumps({"stage": f"write{seg_idx+1}", "debate_len": len(debate)}, ensure_ascii=False))
+            print(json.dumps({"stage": f"write{seg_idx + 1}", "debate_len": len(debate)}, ensure_ascii=False))
             return 0
-    prompt = sw._build_prompt_v4(seg_idx, seg, ASSET, dim_defs, data_str, chart_md, prev_s,
-                                 ctx.get("gate_feedback", ""), ctx.get("learning_findings", ""),
-                                 state_anchor=ctx.get("state_anchor", None))
+    prompt = sw._build_prompt_v4(
+        seg_idx,
+        seg,
+        ASSET,
+        dim_defs,
+        data_str,
+        chart_md,
+        prev_s,
+        ctx.get("gate_feedback", ""),
+        ctx.get("learning_findings", ""),
+        state_anchor=ctx.get("state_anchor", None),
+    )
     text = sw._call_llm(prompt, seg_idx, ctx.get("learning_findings", ""), "", "")
     text = sw._clean(text)
     texts.append(text)
     summaries.append(sw._extract_summary(text))
     ctx["_seg_texts"] = texts
     ctx["_seg_summaries"] = summaries
-    ctx["_stage_done"] = (ctx.get("_stage_done", []) or []) + [f"write{seg_idx+1}"]
+    ctx["_stage_done"] = (ctx.get("_stage_done", []) or []) + [f"write{seg_idx + 1}"]
     save_ctx(ctx)
-    print(json.dumps({"stage": f"write{seg_idx+1}", "len": len(text)}, ensure_ascii=False))
+    print(json.dumps({"stage": f"write{seg_idx + 1}", "len": len(text)}, ensure_ascii=False))
     return 0
 
 
@@ -260,16 +282,18 @@ def cmd_debate():
         return 1
     try:
         import pipeline.section_writer as _sw_mod
+
         _orig = _sw_mod.call_deepseek
-        def _capped(messages, model="deepseek-chat", temperature=0.35,
-                    max_tokens=8192, api_key="", stream=False):
+
+        def _capped(messages, model="deepseek-chat", temperature=0.35, max_tokens=8192, api_key="", stream=False):
             mt = min(800, int(os.environ.get("SEG_MAX_TOKENS", "800")))
-            return _orig(messages, model=model, temperature=temperature,
-                         max_tokens=mt, api_key=api_key, stream=stream)
+            return _orig(messages, model=model, temperature=temperature, max_tokens=mt, api_key=api_key, stream=stream)
+
         _sw_mod.call_deepseek = _capped
     except Exception as e:
         logger.warning("monkeypatch call_deepseek failed: %s", e)
     from pipeline.section_writer import SectionWriter
+
     sw = SectionWriter(REPORT_TYPE, STYLE)
     data_str = sw._serialize_data(ctx.get("collected_data", {}))
     debate = sw._debate_bold_call(ASSET, data_str)
@@ -290,6 +314,7 @@ def cmd_assemble():
         print("ERROR: 先运行 init")
         return 1
     from pipeline.section_writer import SectionWriter
+
     sw = SectionWriter(REPORT_TYPE, STYLE)
     texts = ctx.get("_seg_texts", [])
     report = sw._assemble(ASSET, texts)
@@ -297,13 +322,15 @@ def cmd_assemble():
     report = sw._remove_md_artifacts(report)
     ctx["report_text"] = report
     try:
-        from pipeline.e2e_orchestrator import E2ENodes
         # 关键：在 StyleCompiler 之前先把 [CHART:...] 占位符解析为真实图表路径。
         # StyleCompiler 会剥离未知的 {[CHART:...]} 标记，导致 assemble 无法注入。
         from pipeline.chart_assembler import ChartAssembler
+        from pipeline.e2e_orchestrator import E2ENodes
+
         ca = ChartAssembler(REPORT_TYPE, STYLE)
         chart_map = ctx.get("chart_paths", {})
         injected = ca.inject_charts_postprocess(report, chart_map)
+
         # 修复：把相对路径转成绝对路径，使 export_report 的 ChartCheck 能解析到文件
         def _abs_path(m):
             alt = m.group(1)
@@ -314,7 +341,8 @@ def cmd_assemble():
             if full.exists():
                 return "![" + alt + "](" + str(full) + ")"
             return m.group(0)
-        injected = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', _abs_path, injected)
+
+        injected = re.sub(r"!\[([^\]]*)\]\(([^)]+)\)", _abs_path, injected)
         ctx["report_text"] = injected
         # 再跑 style_compile（写回 report_text）
         out = E2ENodes.style_compile("style", ctx)
@@ -329,6 +357,7 @@ def cmd_assemble():
         final = ctx.get("final_text", "")
         if final:
             out_root = Path(_ROOT) / "output"
+
             def _abs(m):
                 alt, path = m.group(1), m.group(2)
                 if path.startswith(("http", "data:")) or os.path.isabs(path):
@@ -337,7 +366,8 @@ def cmd_assemble():
                 if full.exists():
                     return "![" + alt + "](" + str(full) + ")"
                 return m.group(0)
-            final2 = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', _abs, final)
+
+            final2 = re.sub(r"!\[([^\]]*)\]\(([^)]+)\)", _abs, final)
             ctx["final_text"] = final2
     except Exception as e:
         logger.warning("[STYLE/ASSEMBLE] failed: %s", e)
@@ -354,6 +384,7 @@ def cmd_gate():
         print("ERROR: 先运行 init")
         return 1
     from pipeline.iron_gate import IronGate
+
     text = ctx.get("final_text", "") or ctx.get("report_text", "")
     # 与 E2ENodes.validate 一致的降级判定：图表不足时设置 degradation_level=1，
     # IronGate 据此放宽图表密度类检查（真实数据缺失属预期，见 FP7b）
@@ -366,10 +397,17 @@ def cmd_gate():
     gate.degradation_level = dl
     gate._allow_placeholder_degradation = dl >= 1
     gr = gate.run_all()
-    ctx["gate_result"] = {"passed": gr.passed, "score": gr.overall_score,
-                          "failures": [str(f) for f in gr.failures[:10]]}
-    print(json.dumps({"gate_passed": gr.passed, "score": round(gr.overall_score, 3),
-                      "failures": ctx["gate_result"]["failures"]}, ensure_ascii=False))
+    ctx["gate_result"] = {
+        "passed": gr.passed,
+        "score": gr.overall_score,
+        "failures": [str(f) for f in gr.failures[:10]],
+    }
+    print(
+        json.dumps(
+            {"gate_passed": gr.passed, "score": round(gr.overall_score, 3), "failures": ctx["gate_result"]["failures"]},
+            ensure_ascii=False,
+        )
+    )
     safe = "传感器行业"
     md_path = Path(_ROOT) / "output" / f"{safe}_{STYLE}.md"
     md_path.write_text(text, encoding="utf-8")
@@ -377,11 +415,18 @@ def cmd_gate():
     if gr.passed:
         try:
             from export.report_gate import export_report
+
             orch = build_orch()
             orch._write_pipeline_fingerprint(ctx, ctx["gate_result"])
             docx_path = Path(_ROOT) / "output" / f"{safe}_{STYLE}.docx"
-            exported = export_report(text, str(docx_path), report_type=REPORT_TYPE,
-                                     style=STYLE, company_name=ASSET, title="传感器行业深度报告")
+            exported = export_report(
+                text,
+                str(docx_path),
+                report_type=REPORT_TYPE,
+                style=STYLE,
+                company_name=ASSET,
+                title="传感器行业深度报告",
+            )
             ctx["_docx_path"] = exported
             print("DOCX:", exported)
         except Exception as e:
@@ -389,8 +434,7 @@ def cmd_gate():
             print("DOCX_ERROR:", str(e)[:300])
     ctx["_stage_done"] = (ctx.get("_stage_done", []) or []) + ["gate"]
     save_ctx(ctx)
-    save_state({"stage": "gate", "done": True, "gate_passed": gr.passed,
-                "score": gr.overall_score})
+    save_state({"stage": "gate", "done": True, "gate_passed": gr.passed, "score": gr.overall_score})
     return 0
 
 
@@ -401,6 +445,7 @@ def cmd_rerun_node(nid):
         print("ERROR: 先运行 init")
         return 1
     from pipeline.e2e_orchestrator import E2ENodes
+
     fn_map = {
         "enrich": E2ENodes.enrich_data,
         "charts": E2ENodes.charts,
@@ -422,8 +467,11 @@ def cmd_rerun_node(nid):
                 pass
         save_ctx(ctx)
         save_state({"stage": f"rerun_{nid}", "done": True})
-        print(json.dumps({"node": nid, "status": "passed",
-                          "elapsed_ms": int((time.time()-t0)*1000)}, ensure_ascii=False))
+        print(
+            json.dumps(
+                {"node": nid, "status": "passed", "elapsed_ms": int((time.time() - t0) * 1000)}, ensure_ascii=False
+            )
+        )
     except Exception as e:
         print(json.dumps({"node": nid, "status": "failed", "error": str(e)[:200]}, ensure_ascii=False))
     return 0
@@ -440,11 +488,17 @@ def cmd_reset_writes():
     ctx["_debate_text"] = ""
     failures = ctx.get("gate_result", {}).get("failures", [])
     if failures:
-        ctx["gate_feedback"] = "上一轮质量门禁未通过，请针对以下问题修订：\n- " + "\n- ".join(f[:150] for f in failures[:6])
+        ctx["gate_feedback"] = "上一轮质量门禁未通过，请针对以下问题修订：\n- " + "\n- ".join(
+            f[:150] for f in failures[:6]
+        )
     ctx["_revise_round"] = ctx.get("_revise_round", 0) + 1
     save_ctx(ctx)
-    print(json.dumps({"stage": "reset_writes", "round": ctx["_revise_round"],
-                      "gate_feedback": ctx["gate_feedback"][:200]}, ensure_ascii=False))
+    print(
+        json.dumps(
+            {"stage": "reset_writes", "round": ctx["_revise_round"], "gate_feedback": ctx["gate_feedback"][:200]},
+            ensure_ascii=False,
+        )
+    )
     return 0
 
 
@@ -458,7 +512,8 @@ def cmd_merge_charts():
     merged = dict(ctx.get("chart_paths", {}))
     try:
         from pipeline.chart_planner import ChartPlanner
-        planner = ChartPlanner(REPORT_TYPE, STYLE, 'output/charts2', industry=ASSET)
+
+        planner = ChartPlanner(REPORT_TYPE, STYLE, "output/charts2", industry=ASSET)
         paths2 = planner.generate_all(ctx.get("collected_data", {}))
         paths2.pop("__meta", None)
         merged.update(paths2)
@@ -485,6 +540,7 @@ def cmd_polish():
         print("ERROR: final_text 过短")
         return 1
     from core.deepseek_client import call_deepseek
+
     # 提取前 2500 字作参考
     head = text[:2500]
     prompt = (
@@ -500,10 +556,14 @@ def cmd_polish():
     )
     sp = "你是资深行业分析师，输出专业Markdown正文。直接输出内容。"
     try:
-        r = call_deepseek([
-            {"role": "system", "content": sp},
-            {"role": "user", "content": prompt},
-        ], temperature=0.35, max_tokens=1200)
+        r = call_deepseek(
+            [
+                {"role": "system", "content": sp},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.35,
+            max_tokens=1200,
+        )
         summary = r["choices"][0]["message"]["content"].strip()
     except Exception as e:
         logger.error("polish LLM failed: %s", e)
@@ -524,7 +584,7 @@ def cmd_polish():
     if text.startswith("#"):
         nl = text.find("\n")
         if nl > 0:
-            text = text[:nl] + "\n\n" + summary + "\n\n" + text[nl+1:]
+            text = text[:nl] + "\n\n" + summary + "\n\n" + text[nl + 1 :]
         else:
             text = summary + "\n\n" + text
     elif header_end > 0:
@@ -552,9 +612,11 @@ def cmd_supplement():
         return 1
     final = ctx.get("final_text", "") or ctx.get("report_text", "")
     from core.deepseek_client import call_deepseek
+
     data_str = ""
     try:
         from pipeline.section_writer import SectionWriter
+
         sw = SectionWriter(REPORT_TYPE, STYLE)
         data_str = sw._serialize_data(ctx.get("collected_data", {}))[:1500]
     except Exception:
@@ -576,10 +638,14 @@ def cmd_supplement():
     )
     sp = "你是资深行业分析师，输出专业Markdown正文，每个判断带数据支撑和反方论证。"
     try:
-        r = call_deepseek([
-            {"role": "system", "content": sp},
-            {"role": "user", "content": prompt},
-        ], temperature=0.35, max_tokens=2500)
+        r = call_deepseek(
+            [
+                {"role": "system", "content": sp},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.35,
+            max_tokens=2500,
+        )
         supplement = r["choices"][0]["message"]["content"].strip()
     except Exception as e:
         logger.error("supplement LLM failed: %s", e)
@@ -613,9 +679,15 @@ def cmd_status():
 def main():
     cmd = sys.argv[1] if len(sys.argv) > 1 else "status"
     fns = {
-        "init": cmd_init, "next": cmd_next, "write1": cmd_write1,
-        "write2": cmd_write2, "write3": cmd_write3, "debate": cmd_debate,
-        "assemble": cmd_assemble, "gate": cmd_gate, "status": cmd_status,
+        "init": cmd_init,
+        "next": cmd_next,
+        "write1": cmd_write1,
+        "write2": cmd_write2,
+        "write3": cmd_write3,
+        "debate": cmd_debate,
+        "assemble": cmd_assemble,
+        "gate": cmd_gate,
+        "status": cmd_status,
         "rerun": cmd_rerun_node,
     }
     if cmd == "rerun" and len(sys.argv) > 2:
@@ -633,6 +705,7 @@ def main():
         print("未知命令:", cmd)
         return 1
     return fn()
+
 
 if __name__ == "__main__":
     sys.exit(main())

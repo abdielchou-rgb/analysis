@@ -18,51 +18,79 @@ STYLES_DIR = Path(__file__).resolve().parent
 
 BUILTIN_PROFILES = {
     "cicc": {
-        "name": "中金公司", "primary": "#003366", "accent": "#C41E3A",
-        "heading_font": "SimHei", "body_font": "SimSun",
-        "conclusion_first": True, "min_judgment_density": 1.2,
+        "name": "中金公司",
+        "primary": "#003366",
+        "accent": "#C41E3A",
+        "heading_font": "SimHei",
+        "body_font": "SimSun",
+        "conclusion_first": True,
+        "min_judgment_density": 1.2,
         "forbidden_terms": ["值得注意的是", "从某种程度上说"],
         "signature_terms": ["我们认为", "我们判断"],
     },
     "goldman_sachs": {
-        "name": "Goldman Sachs", "primary": "#051C2C", "accent": "#009688",
-        "heading_font": "Calibri", "body_font": "Calibri",
-        "conclusion_first": True, "min_judgment_density": 1.5,
+        "name": "Goldman Sachs",
+        "primary": "#051C2C",
+        "accent": "#009688",
+        "heading_font": "Calibri",
+        "body_font": "Calibri",
+        "conclusion_first": True,
+        "min_judgment_density": 1.5,
         "forbidden_terms": ["arguably", "it is worth noting", "notably"],
         "signature_terms": ["we believe", "our analysis suggests"],
     },
     "morgan_stanley": {
-        "name": "Morgan Stanley", "primary": "#000066", "accent": "#D4AF37",
-        "heading_font": "Arial", "body_font": "Arial",
-        "conclusion_first": True, "min_judgment_density": 1.4,
+        "name": "Morgan Stanley",
+        "primary": "#000066",
+        "accent": "#D4AF37",
+        "heading_font": "Arial",
+        "body_font": "Arial",
+        "conclusion_first": True,
+        "min_judgment_density": 1.4,
         "forbidden_terms": ["值得注意的是", "不可否认的是"],
         "signature_terms": ["we believe", "our analysis suggests"],
     },
     "mckinsey": {
-        "name": "McKinsey & Company", "primary": "#003A70", "accent": "#00A3E0",
-        "heading_font": "Arial", "body_font": "Times New Roman",
-        "conclusion_first": True, "min_judgment_density": 1.8,
+        "name": "McKinsey & Company",
+        "primary": "#003A70",
+        "accent": "#00A3E0",
+        "heading_font": "Arial",
+        "body_font": "Times New Roman",
+        "conclusion_first": True,
+        "min_judgment_density": 1.8,
         "forbidden_terms": ["值得注意的是", "让我们来看看"],
         "signature_terms": ["our analysis indicates", "we find"],
     },
     "bcg": {
-        "name": "Boston Consulting Group", "primary": "#000000", "accent": "#00684E",
-        "heading_font": "Georgia", "body_font": "Georgia",
-        "conclusion_first": True, "min_judgment_density": 1.3,
+        "name": "Boston Consulting Group",
+        "primary": "#000000",
+        "accent": "#00684E",
+        "heading_font": "Georgia",
+        "body_font": "Georgia",
+        "conclusion_first": True,
+        "min_judgment_density": 1.3,
         "forbidden_terms": ["综上所述", "总而言之"],
         "signature_terms": ["the evidence suggests", "we see"],
     },
     "citic": {
-        "name": "中信证券", "primary": "#8B0000", "accent": "#D4A000",
-        "heading_font": "SimHei", "body_font": "SimSun",
-        "conclusion_first": True, "min_judgment_density": 1.2,
+        "name": "中信证券",
+        "primary": "#8B0000",
+        "accent": "#D4A000",
+        "heading_font": "SimHei",
+        "body_font": "SimSun",
+        "conclusion_first": True,
+        "min_judgment_density": 1.2,
         "forbidden_terms": ["值得注意的是", "从某种程度上说"],
         "signature_terms": ["我们认为", "核心风险在于"],
     },
     "academic": {
-        "name": "学术论文", "primary": "#1A1A1A", "accent": "#2C5282",
-        "heading_font": "Times New Roman", "body_font": "Times New Roman",
-        "conclusion_first": False, "min_judgment_density": 0.8,
+        "name": "学术论文",
+        "primary": "#1A1A1A",
+        "accent": "#2C5282",
+        "heading_font": "Times New Roman",
+        "body_font": "Times New Roman",
+        "conclusion_first": False,
+        "min_judgment_density": 0.8,
         "forbidden_terms": ["AI生成", "本报告由系统生成"],
         "signature_terms": ["本文认为", "研究表明"],
     },
@@ -71,6 +99,7 @@ BUILTIN_PROFILES = {
 
 # ── YAML loader ──
 
+
 def _load_yaml_profile(style_id: str) -> Optional[dict]:
     """Load a style profile from YAML file if it exists."""
     yaml_path = STYLES_DIR / f"{style_id}.yaml"
@@ -78,6 +107,7 @@ def _load_yaml_profile(style_id: str) -> Optional[dict]:
         return None
     try:
         import yaml
+
         with open(yaml_path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
         if not data:

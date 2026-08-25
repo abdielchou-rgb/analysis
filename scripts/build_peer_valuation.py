@@ -19,10 +19,11 @@ import argparse
 import json
 import sys
 import time
-import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
+
+import requests
 
 _HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -40,16 +41,20 @@ _SPOT_CACHE = None
 _BOARD_CACHE = {}
 
 
-def _em_spot_pages(fs: str = "m:0 t:6,m:0 t:80,m:1 t:2,m:1 t:23,m:0 t:81 s:2048",
-                   max_pages: int = 120) -> list:
+def _em_spot_pages(fs: str = "m:0 t:6,m:0 t:80,m:1 t:2,m:1 t:23,m:0 t:81 s:2048", max_pages: int = 120) -> list:
     """东财行情分页拉取（绕过 akshare 被风控的 UA）。返回 dict 列表。"""
     rows = []
     url = "https://push2delay.eastmoney.com/api/qt/clist/get"
     for pn in range(1, max_pages + 1):
         params = {
-            "pn": pn, "pz": 100, "po": 1, "np": 1,
+            "pn": pn,
+            "pz": 100,
+            "po": 1,
+            "np": 1,
             "ut": "bd1d9ddb04089700cf9c27f6f7426281",
-            "fltt": 2, "invt": 2, "fid": "f3",
+            "fltt": 2,
+            "invt": 2,
+            "fid": "f3",
             "fs": fs,
             "fields": "f2,f3,f5,f6,f8,f9,f10,f12,f14,f20,f21,f100",
         }
@@ -81,11 +86,9 @@ def _em_spot_pages(fs: str = "m:0 t:6,m:0 t:80,m:1 t:2,m:1 t:23,m:0 t:81 s:2048"
 def _sina_sector_cons(label: str, max_pages: int = 10) -> list:
     """新浪行业板块成分（直连，含 PE/PB/市值）。"""
     rows = []
-    url = ("https://vip.stock.finance.sina.com.cn/quotes_service/api/"
-           "json_v2.php/Market_Center.getHQNodeData")
+    url = "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeData"
     for page in range(1, max_pages + 1):
-        params = {"page": page, "num": 100, "sort": "symbol",
-                  "asc": 1, "node": label}
+        params = {"page": page, "num": 100, "sort": "symbol", "asc": 1, "node": label}
         try:
             r = requests.get(url, params=params, headers=_HEADERS, timeout=15)
             data = r.json()
@@ -131,14 +134,14 @@ def _get_spot_map():
     if len(spot) < 3000:
         print("[全市场行情] 东财覆盖不足，尝试新浪兜底")
         try:
-            r = requests.get("https://vip.stock.finance.sina.com.cn/q/view/newSinaHy.php",
-                             headers=_HEADERS, timeout=15)
+            r = requests.get("https://vip.stock.finance.sina.com.cn/q/view/newSinaHy.php", headers=_HEADERS, timeout=15)
             r.encoding = "gbk"
             text = r.text
             start = text.find("{")
             end = text.rfind("}")
             import json as _json
-            data = _json.loads(text[start:end + 1])
+
+            data = _json.loads(text[start : end + 1])
             for label, val in data.items():
                 parts = str(val).split(",")
                 if len(parts) < 2:
@@ -209,11 +212,15 @@ def build_for_ticker(code: str, spot_map: dict) -> dict | None:
     for pc in peers_codes[:15]:  # 最多取15家
         if pc in spot_map:
             p = spot_map[pc]
-            peers.append({
-                "name": p["name"], "code": pc,
-                "pe_ttm": p["pe"], "pb": p["pb"],
-                "mcap_b": round(p["mcap"], 1) if p["mcap"] else None,
-            })
+            peers.append(
+                {
+                    "name": p["name"],
+                    "code": pc,
+                    "pe_ttm": p["pe"],
+                    "pb": p["pb"],
+                    "mcap_b": round(p["mcap"], 1) if p["mcap"] else None,
+                }
+            )
 
     # 行业 PE 均值/中位数
     pe_vals = [p["pe_ttm"] for p in peers if p["pe_ttm"]]
@@ -221,8 +228,11 @@ def build_for_ticker(code: str, spot_map: dict) -> dict | None:
         return None
     pe_vals.sort()
     avg_pe = sum(pe_vals) / len(pe_vals)
-    median_pe = pe_vals[len(pe_vals) // 2] if len(pe_vals) % 2 == 1 else (
-        (pe_vals[len(pe_vals)//2-1] + pe_vals[len(pe_vals)//2]) / 2)
+    median_pe = (
+        pe_vals[len(pe_vals) // 2]
+        if len(pe_vals) % 2 == 1
+        else ((pe_vals[len(pe_vals) // 2 - 1] + pe_vals[len(pe_vals) // 2]) / 2)
+    )
 
     return {
         "industry": industry,
@@ -238,6 +248,7 @@ def build_index(index: str, workers: int) -> dict:
     """为指数成分全量构建可比估值。"""
     try:
         import akshare as ak
+
         df = ak.index_stock_cons_csindex(symbol=index)
         if df is None or df.empty:
             print(f"[{index}] 成分获取失败")
@@ -287,8 +298,7 @@ def main():
             result.update(build_index(idx, args.workers))
             time.sleep(1)  # 指数间间隔
 
-    OUTPUT.write_text(json.dumps(result, ensure_ascii=False, indent=1),
-                      encoding="utf-8")
+    OUTPUT.write_text(json.dumps(result, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"[完成] 可比估值库: {len(result)} 只 → {OUTPUT}")
 
     # 验证

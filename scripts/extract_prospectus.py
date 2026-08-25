@@ -48,15 +48,15 @@ def extract_company_profile(text: str) -> dict:
     """提取公司核心信息"""
     result = {}
     # 公司简介（通常"是一家...公司，专注于..."）
-    intro = re.search(r'(?:本公司|发行人|公司)(?:是一家|主要从事|专注于)[^。]{20,200}', text)
+    intro = re.search(r"(?:本公司|发行人|公司)(?:是一家|主要从事|专注于)[^。]{20,200}", text)
     if intro:
         result["intro"] = intro.group(0)[:300]
     # 行业
-    industry = re.search(r'(?:所属行业|行业分类)[：:]\s*([^\n]+)', text)
+    industry = re.search(r"(?:所属行业|行业分类)[：:]\s*([^\n]+)", text)
     if industry:
         result["industry"] = industry.group(1).strip()[:50]
     # 主营
-    main_biz = re.search(r'(?:主营业务|主营)[：:]\s*([^\n]+)', text)
+    main_biz = re.search(r"(?:主营业务|主营)[：:]\s*([^\n]+)", text)
     if main_biz:
         result["main_business"] = main_biz.group(1).strip()[:100]
     return result
@@ -67,12 +67,14 @@ def extract_financials(text: str) -> dict:
     result = {}
     # 营收趋势：年份 + 营业收入 + 金额
     rev_by_year = {}
-    for m in re.finditer(r'(20\d{2})[年]?[^0-9]{0,25}(?:营业收入|营收)[^0-9]{0,20}(\d[\d,]*\.?\d*)\s*(亿元|万元|元)', text):
+    for m in re.finditer(
+        r"(20\d{2})[年]?[^0-9]{0,25}(?:营业收入|营收)[^0-9]{0,20}(\d[\d,]*\.?\d*)\s*(亿元|万元|元)", text
+    ):
         year, val, unit = m.group(1), m.group(2), m.group(3)
         rev_by_year.setdefault(year, []).append({"value": float(val.replace(",", "")), "unit": unit})
     # 也匹配 "营业收入 xx万元" 不带年份（取最近几年）
     if not rev_by_year:
-        revs = re.findall(r'营业收入[^0-9]{0,10}(\d[\d,]*\.?\d*)\s*(亿元|万元|元)', text[:30000])
+        revs = re.findall(r"营业收入[^0-9]{0,10}(\d[\d,]*\.?\d*)\s*(亿元|万元|元)", text[:30000])
         if revs:
             result["revenues"] = [{"value": float(r[0].replace(",", "")), "unit": r[1]} for r in revs[:5]]
     else:
@@ -80,11 +82,13 @@ def extract_financials(text: str) -> dict:
 
     # 净利趋势
     prof_by_year = {}
-    for m in re.finditer(r'(20\d{2})[年]?[^0-9]{0,25}(?:净利润|归母净利润)[^0-9]{0,20}([-\d][\d,]*\.?\d*)\s*(亿元|万元|元)', text):
+    for m in re.finditer(
+        r"(20\d{2})[年]?[^0-9]{0,25}(?:净利润|归母净利润)[^0-9]{0,20}([-\d][\d,]*\.?\d*)\s*(亿元|万元|元)", text
+    ):
         year, val, unit = m.group(1), m.group(2), m.group(3)
         prof_by_year.setdefault(year, []).append({"value": float(val.replace(",", "")), "unit": unit})
     if not prof_by_year:
-        profits = re.findall(r'净利润[^0-9]{0,10}([-\d][\d,]*\.?\d*)\s*(亿元|万元|元)', text[:30000])
+        profits = re.findall(r"净利润[^0-9]{0,10}([-\d][\d,]*\.?\d*)\s*(亿元|万元|元)", text[:30000])
         if profits:
             result["profits"] = [{"value": float(p[0].replace(",", "")), "unit": p[1]} for p in profits[:5]]
     else:
@@ -96,11 +100,11 @@ def extract_structure(text: str) -> dict:
     """提取股权/控股信息"""
     result = {}
     # 控股股东
-    holder = re.search(r'(?:控股股东|实际控制人)[：:]?\s*([^\n]{2,30})', text)
+    holder = re.search(r"(?:控股股东|实际控制人)[：:]?\s*([^\n]{2,30})", text)
     if holder:
         result["controlling_holder"] = holder.group(1).strip()[:30]
     # 持股比例
-    pct = re.search(r'(?:实际控制人|控股股东)[^%]{0,50}?(\d+\.?\d*)%', text)
+    pct = re.search(r"(?:实际控制人|控股股东)[^%]{0,50}?(\d+\.?\d*)%", text)
     if pct:
         result["holder_pct"] = pct.group(1) + "%"
     return result
@@ -151,7 +155,7 @@ def main():
             data = json.loads(OUTPUT.read_text(encoding="utf-8"))
             print(f"已提取 {len(data)} 份招股书")
             for k, v in data.items():
-                print(f"  {k}: {v.get('industry','?')} | {v.get('intro','')[:40]}")
+                print(f"  {k}: {v.get('industry', '?')} | {v.get('intro', '')[:40]}")
         else:
             print("尚未提取")
         return 0

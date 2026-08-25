@@ -21,6 +21,7 @@ logger = logging.getLogger("v50.exporter")
 _HAS_EXPORTER = False
 try:
     from export.exporter import ReportExporter
+
     _HAS_EXPORTER = True
 except ImportError as e:
     logger.warning("V30 exporter not available: %s", e)
@@ -49,9 +50,7 @@ class ExportAdapter:
         # .docx + others — via V30 exporter
         if _HAS_EXPORTER and deliverable.report_md:
             try:
-                exporter = ReportExporter(
-                    company_name=deliverable.brief.asset if deliverable.brief else ""
-                )
+                exporter = ReportExporter(company_name=deliverable.brief.asset if deliverable.brief else "")
                 docx_path = str(self.output_dir / f"{deliverable.version.version_id}.docx")
                 result = exporter.to_docx(
                     markdown_text=deliverable.report_md,

@@ -21,7 +21,6 @@ import logging
 import sqlite3
 import sys
 import time
-from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime
 from pathlib import Path
 
@@ -35,6 +34,7 @@ logger = logging.getLogger("sync_fin")
 _HAS_BAOSTOCK = False
 try:
     import baostock as bs
+
     _HAS_BAOSTOCK = True
 except ImportError:
     logger.warning("baostock 未安装")
@@ -45,6 +45,7 @@ _BS_LOGGED_IN = False
 # ──────────────────────────────────────────────────────────────
 # Baostock 连接
 # ──────────────────────────────────────────────────────────────
+
 
 def _bs_login():
     global _BS_LOGGED_IN
@@ -113,6 +114,7 @@ def read_instruments(include_inactive: bool = False) -> list[str]:
 # SQLite 存储
 # ──────────────────────────────────────────────────────────────
 
+
 def _connect():
     conn = sqlite3.connect(str(DB_PATH))
     conn.execute("""
@@ -153,8 +155,8 @@ def _get_table_latest_quarter(code: str, table_name: str) -> str:
     try:
         conn = sqlite3.connect(str(DB_PATH))
         r = conn.execute(
-            "SELECT MAX(quarter) FROM financials WHERE code=? AND table_name=?",
-            (code, table_name)).fetchone()
+            "SELECT MAX(quarter) FROM financials WHERE code=? AND table_name=?", (code, table_name)
+        ).fetchone()
         conn.close()
         return r[0] or ""
     except Exception:
@@ -173,9 +175,7 @@ def _get_table_quarters(code: str) -> dict:
     out = {t: set() for t in ("profit", "balance", "cashflow")}
     try:
         conn = sqlite3.connect(str(DB_PATH))
-        rows = conn.execute(
-            "SELECT DISTINCT table_name, quarter FROM financials WHERE code=?",
-            (code,)).fetchall()
+        rows = conn.execute("SELECT DISTINCT table_name, quarter FROM financials WHERE code=?", (code,)).fetchall()
         conn.close()
         for t, q in rows:
             if t in out:
@@ -235,15 +235,56 @@ def fetch_financials(code: str, incremental: bool = False) -> dict:
     bs_code_for_query = bs_code
     result = {}
     queries = [
-        ("profit", bs.query_profit_data, ["code", "pubDate", "statDate", "roeAvg", "npMargin",
-                                           "gpMargin", "netProfit", "epsTTM", "MBRevenue", "totalShare",
-                                           "liqaShare"]),
-        ("balance", bs.query_balance_data, ["code", "pubDate", "statDate", "totalShare", "liqaShare",
-                                              "totalAssets", "totalLiab", "totalEquity", "cashAssets",
-                                              "advanceReceived", "notesPayable"]),
-        ("cashflow", bs.query_cash_flow_data, ["code", "pubDate", "statDate", "CAToAsset", "NCAToAsset",
-                                                "tangibleAssetToAsset", "ebitToInterest", "OCFToAsset",
-                                                "OCFToOR", "OCFToNetprofit"]),
+        (
+            "profit",
+            bs.query_profit_data,
+            [
+                "code",
+                "pubDate",
+                "statDate",
+                "roeAvg",
+                "npMargin",
+                "gpMargin",
+                "netProfit",
+                "epsTTM",
+                "MBRevenue",
+                "totalShare",
+                "liqaShare",
+            ],
+        ),
+        (
+            "balance",
+            bs.query_balance_data,
+            [
+                "code",
+                "pubDate",
+                "statDate",
+                "totalShare",
+                "liqaShare",
+                "totalAssets",
+                "totalLiab",
+                "totalEquity",
+                "cashAssets",
+                "advanceReceived",
+                "notesPayable",
+            ],
+        ),
+        (
+            "cashflow",
+            bs.query_cash_flow_data,
+            [
+                "code",
+                "pubDate",
+                "statDate",
+                "CAToAsset",
+                "NCAToAsset",
+                "tangibleAssetToAsset",
+                "ebitToInterest",
+                "OCFToAsset",
+                "OCFToOR",
+                "OCFToNetprofit",
+            ],
+        ),
     ]
     current_year = datetime.now().year
     if incremental:
@@ -320,8 +361,7 @@ def sync_instrument(code: str, incremental: bool = False) -> bool:
         logger.warning("%s 无财务数据", code_clean)
         return False
     n = save_financials(code_clean, data)
-    logger.info("[OK] %s: %d 条财务记录%s", code_clean, n,
-                " (增量)" if incremental else "")
+    logger.info("[OK] %s: %d 条财务记录%s", code_clean, n, " (增量)" if incremental else "")
     return True
 
 
@@ -349,8 +389,7 @@ def _worker_sync(args: tuple) -> tuple:
             current_year = str(datetime.now().year)
             table_quarters = _get_table_quarters(code_clean)
             all_current = all(
-                max(table_quarters.get(t) or {""})[:4] == current_year
-                for t in ("profit", "balance", "cashflow")
+                max(table_quarters.get(t) or {""})[:4] == current_year for t in ("profit", "balance", "cashflow")
             )
             if all_current:
                 return (code_clean, True, 0, "skip_up_to_date")
@@ -386,10 +425,10 @@ def main():
     parser.add_argument("--all", action="store_true", help="全量同步所有 instruments")
     parser.add_argument("--batch", type=int, metavar="N", help="批量同步前 N 只")
     parser.add_argument("--workers", type=int, default=4, help="并发进程数（Baostock 需进程级隔离）")
-    parser.add_argument("--incremental", "-i", action="store_true",
-                        help="增量同步：只拉库内缺失年份（推荐，快 3-5 倍）")
-    parser.add_argument("--include-inactive", action="store_true",
-                        help="包含退市股（默认跳过）")
+    parser.add_argument(
+        "--incremental", "-i", action="store_true", help="增量同步：只拉库内缺失年份（推荐，快 3-5 倍）"
+    )
+    parser.add_argument("--include-inactive", action="store_true", help="包含退市股（默认跳过）")
     parser.add_argument("--status", action="store_true", help="查看财务库状态")
     args = parser.parse_args()
 
@@ -406,9 +445,8 @@ def main():
         targets = read_instruments(include_inactive=args.include_inactive)
         logger.info("全量财务同步：%d 只（已过滤指数/北交所）", len(targets))
     elif args.batch:
-        targets = read_instruments(include_inactive=args.include_inactive)[:args.batch]
-        logger.info("批量同步 %d 只（%s）", len(targets),
-                    "增量" if args.incremental else "全量")
+        targets = read_instruments(include_inactive=args.include_inactive)[: args.batch]
+        logger.info("批量同步 %d 只（%s）", len(targets), "增量" if args.incremental else "全量")
     elif args.asset:
         targets = [args.asset]
     else:
@@ -429,11 +467,11 @@ def main():
             time.sleep(0.3)
     else:
         # 多进程：Baostock 客户端基于全局 socket，线程并发会数据交错/超时
-        from concurrent.futures import ProcessPoolExecutor, as_completed as _ac
-        with ProcessPoolExecutor(max_workers=args.workers,
-                                 initializer=_worker_init) as pool:
-            futures = {pool.submit(_worker_sync, (t, args.incremental)): t
-                       for t in targets}
+        from concurrent.futures import ProcessPoolExecutor
+        from concurrent.futures import as_completed as _ac
+
+        with ProcessPoolExecutor(max_workers=args.workers, initializer=_worker_init) as pool:
+            futures = {pool.submit(_worker_sync, (t, args.incremental)): t for t in targets}
             done = 0
             for fut in _ac(futures):
                 done += 1
@@ -444,8 +482,7 @@ def main():
                             skipped += 1
                         else:
                             ok += 1
-                            logger.info("[OK] %s: %d 条%s", code, n,
-                                        " (增量)" if args.incremental else "")
+                            logger.info("[OK] %s: %d 条%s", code, n, " (增量)" if args.incremental else "")
                     else:
                         logger.warning("%s 失败: %s", code, err)
                 except Exception as e:

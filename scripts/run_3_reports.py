@@ -8,10 +8,10 @@
     python scripts/run_3_reports.py
 """
 
+import os
 import subprocess
 import sys
 import time
-import os
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
@@ -37,6 +37,7 @@ def main():
     # 2. 依赖检查
     try:
         import akshare, tavily, openai, pdfplumber  # noqa
+
         print("[2/4] 依赖完整 ✓")
     except ImportError as e:
         print(f"[2/4] 缺依赖: {e}，尝试安装...")
@@ -59,11 +60,11 @@ def main():
         r = subprocess.run(cmd, cwd=_ROOT, env=env)
         dt = time.time() - t0
         ok = r.returncode == 0
-        print(f"  {'✓' if ok else '✗'} {asset} 退出码={r.returncode} 耗时={dt/60:.1f}分钟")
+        print(f"  {'✓' if ok else '✗'} {asset} 退出码={r.returncode} 耗时={dt / 60:.1f}分钟")
         results.append((asset, ok))
 
     # 4. 汇总
-    print(f"\n[4/4] 完成！")
+    print("\n[4/4] 完成！")
     print("=" * 60)
     for asset, ok in results:
         print(f"  {'✓' if ok else '✗'} {asset}")

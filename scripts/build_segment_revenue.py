@@ -40,17 +40,15 @@ def _num(v):
 def build_for_ticker(code: str) -> dict | None:
     """为单只标的提取主营构成（分业务收入/占比）— 东财 emweb 直连。"""
     import requests
+
     try:
         prefix = "SH" if code.startswith(("6", "9")) else "SZ"
-        url = ("https://emweb.securities.eastmoney.com/PC_HSF10/"
-               "BusinessAnalysis/PageAjax")
+        url = "https://emweb.securities.eastmoney.com/PC_HSF10/BusinessAnalysis/PageAjax"
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                          "AppleWebKit/537.36",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
             "Referer": "https://emweb.securities.eastmoney.com/",
         }
-        r = requests.get(url, params={"code": f"{prefix}{code}"},
-                         headers=headers, timeout=15)
+        r = requests.get(url, params={"code": f"{prefix}{code}"}, headers=headers, timeout=15)
         d = r.json()
         zg = d.get("zygcfx") or []
         if not zg:
@@ -74,12 +72,14 @@ def build_for_ticker(code: str) -> dict | None:
             rev = _num(row.get("MAIN_BUSINESS_INCOME"))
             ratio = _num(row.get("MBI_RATIO"))
             if rev or ratio:
-                segments.append({
-                    "name": item[:20],
-                    "revenue": rev,
-                    "pct": round(ratio * 100, 2) if ratio else None,
-                    "growth": None,
-                })
+                segments.append(
+                    {
+                        "name": item[:20],
+                        "revenue": rev,
+                        "pct": round(ratio * 100, 2) if ratio else None,
+                        "growth": None,
+                    }
+                )
         if not segments:
             return None
         segments = sorted(segments, key=lambda s: -(s["pct"] or 0))[:8]
@@ -98,6 +98,7 @@ def build_index(index: str, workers: int) -> dict:
     """为指数成分全量构建分业务收入库。"""
     try:
         import akshare as ak
+
         df = ak.index_stock_cons_csindex(symbol=index)
         if df is None or df.empty:
             print(f"[{index}] 成分获取失败")
@@ -145,8 +146,7 @@ def main():
             result.update(build_index(idx, args.workers))
             time.sleep(1)
 
-    OUTPUT.write_text(json.dumps(result, ensure_ascii=False, indent=1),
-                      encoding="utf-8")
+    OUTPUT.write_text(json.dumps(result, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"[完成] 分业务收入库: {len(result)} 只 → {OUTPUT}")
 
     if result:

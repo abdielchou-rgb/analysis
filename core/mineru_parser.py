@@ -47,7 +47,7 @@ class MinerUClient:
         self.mode = mode
         self.token = token
         self.timeout = timeout
-        self._local_ok = None    # 探测缓存
+        self._local_ok = None  # 探测缓存
         self._cloud_ok = None
 
     # ---------- 探测 ----------
@@ -59,6 +59,7 @@ class MinerUClient:
         if self._local_ok is None:
             try:
                 from mineru import process  # noqa: F401
+
                 self._local_ok = True
             except (ImportError, AttributeError):
                 self._local_ok = False
@@ -68,6 +69,7 @@ class MinerUClient:
         if self._cloud_ok is None:
             try:
                 from mineru import MinerU  # noqa: F401  (SDK 包名同为 mineru)
+
                 self._cloud_ok = True
             except (ImportError, AttributeError):
                 self._cloud_ok = False
@@ -96,13 +98,12 @@ class MinerUClient:
         # 2) cloud（auto 或显式 cloud）
         if self.mode in ("auto", "cloud") and self._check_cloud():
             return self._extract_cloud(p, **kw)
-        raise RuntimeError(
-            "MinerU 不可用：请 pip install mineru（本地）或 pip install mineru-open-sdk（云）。"
-        )
+        raise RuntimeError("MinerU 不可用：请 pip install mineru（本地）或 pip install mineru-open-sdk（云）。")
 
     # ---------- 本地模式 ----------
     def _extract_local(self, path: Path, **kw) -> str:
         import mineru
+
         if hasattr(mineru, "process"):
             # mineru>=3.x 提供 mineru.process(input, output_dir)
             out_dir = Path(kw.pop("output_dir", path.parent / "mineru_out"))
@@ -135,7 +136,8 @@ class MinerUClient:
     # ---------- 云模式 ----------
     def _extract_cloud(self, path: Path, **kw) -> str:
         from mineru import MinerU
-        pages = kw.get("pages")          # 如 "1-20"（precision）
+
+        pages = kw.get("pages")  # 如 "1-20"（precision）
         page_range = kw.get("page_range")  # 如 "1-20"（flash）
         if self.token:
             client = MinerU(self.token)
@@ -146,8 +148,7 @@ class MinerUClient:
         # flash 20页超限会 state=failed + err_code=-30003，不静默
         if result.markdown is None:
             raise RuntimeError(
-                f"MinerU cloud 失败: state={getattr(result, 'state', None)} "
-                f"err={getattr(result, 'error', '未知错误')}"
+                f"MinerU cloud 失败: state={getattr(result, 'state', None)} err={getattr(result, 'error', '未知错误')}"
             )
         return result.markdown
 
@@ -159,6 +160,7 @@ def extract_markdown(path: str, mode: str = "auto", **kw) -> str:
 
 if __name__ == "__main__":
     import sys
+
     if len(sys.argv) < 2:
         print(__doc__)
         sys.exit(0)

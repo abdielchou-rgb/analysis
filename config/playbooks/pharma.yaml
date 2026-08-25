@@ -1,0 +1,11 @@
+# M4 Playbook：创新药
+industry: 创新药
+dims_boost: [pipeline_value, policy_impact, catalyst_timeline]
+red_lines:
+  - "管线估值必须用 rNPV 或里程碑折现；禁止单一成功概率×峰值销售"
+  - "临床阶段公司禁止使用 PE 估值（无 E 可言）"
+  - "医保谈判影响必须给出量价拆分假设"
+falsification_library:
+  - "关键适应症 III 期未达主要终点 → 管线峰值销售下修至 0"
+  - "医保谈判降价幅度>50% 且无以量补价证据 → 收入预测证伪"
+key_metrics: [临床阶段构成, 峰值销售折现, 现金跑道月数, 医保谈判窗口]

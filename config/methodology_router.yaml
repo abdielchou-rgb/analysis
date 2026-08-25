@@ -1,0 +1,45 @@
+# M2 行业方法路由表 — 行业 → 框架组合
+# primary: 主框架（必须出现在三件套 [FW:] 中）
+# verify: 交叉验证框架
+# oppose: 反方框架
+# injector_skip: 命中该行业时禁用的注入器变量名（见 prompt_injectors.INJECTORS）
+# 未命中行业走 default。
+
+default:
+  primary: [methodology_rules]
+  verify: [valuation_crosscheck]
+  oppose: [bull_bear_matrix]
+  injector_skip: []
+
+动力电池:
+  keywords: [电池, 宁德, 比亚迪, 亿纬, 国轩, 储能, 正极, 负极, 电解液, 隔膜]
+  primary: [bottleneck, profit_pool]
+  verify: [triangulation, valuation_crosscheck]
+  oppose: [bull_bear_matrix]
+  dims_boost: [supply_chain_analysis, technology_roadmap]
+  red_lines:
+    - "碳酸锂价格假设必须给出数值与来源，禁止'企稳/回落'裸表述"
+    - "产能利用率<60% 时禁止给出满产满销式盈利预测"
+  injector_skip: []
+
+半导体:
+  keywords: [半导体, 芯片, 晶圆, 封测, 存储先进封装]
+  primary: [signal_chain, technology_roadmap]
+  verify: [global_benchmark, valuation_crosscheck]
+  oppose: [bull_bear_matrix]
+  dims_boost: [technology_roadmap, geopolitical_depth]
+  red_lines:
+    - "国产替代空间测算必须给出份额缺口与替代概率两个因子"
+    - "周期位置判断需引用库存/产能利用率数据"
+  injector_skip: []
+
+创新药:
+  keywords: [医药, 创新药, 生物药, 临床,管线, FDA, NMPA]
+  primary: [catalyst_timeline, reference_class]
+  verify: [scenario_analysis]
+  oppose: [bull_bear_matrix]
+  dims_boost: [pipeline_value, policy_impact]
+  red_lines:
+    - "管线估值必须用 rNPV 或里程碑折现，禁止单一成功概率×峰值销售"
+    - "临床阶段公司禁止使用 PE 估值"
+  injector_skip: [dcf_sensitivity]

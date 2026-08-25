@@ -33,8 +33,7 @@ _ROOT = Path(__file__).resolve().parent.parent
 MARK_DIR = _ROOT / "data" / "sync_marks"
 LOG_DIR = _ROOT / "logs"
 
-logging.basicConfig(level=logging.INFO,
-                    format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
 logger = logging.getLogger("run_all_sync")
 
 PY = sys.executable or "python"
@@ -92,8 +91,7 @@ def _run_stage(stage: str, workers: int, dry_run: bool, log_fp) -> int:
 
     t0 = time.time()
     try:
-        r = subprocess.run(cmd, capture_output=True, text=True,
-                           cwd=str(_ROOT), timeout=None)
+        r = subprocess.run(cmd, capture_output=True, text=True, cwd=str(_ROOT), timeout=None)
         # 实时写日志
         if log_fp:
             log_fp.write(r.stdout)
@@ -104,12 +102,10 @@ def _run_stage(stage: str, workers: int, dry_run: bool, log_fp) -> int:
         if tail:
             print(tail)
         elapsed = (time.time() - t0) / 60
-        logger.info("[STAGE %s] 用时 %.1f 分钟, returncode=%d",
-                    stage, elapsed, r.returncode)
+        logger.info("[STAGE %s] 用时 %.1f 分钟, returncode=%d", stage, elapsed, r.returncode)
         if r.returncode != 0 and not dry_run:
             # 部分失败也标记完成（脚本内部有失败统计），但记录警告
-            logger.warning("[STAGE %s] returncode=%d（可能有部分失败）",
-                           stage, r.returncode)
+            logger.warning("[STAGE %s] returncode=%d（可能有部分失败）", stage, r.returncode)
         if not dry_run:
             _mark_done(stage)
         return r.returncode
@@ -124,18 +120,15 @@ def _run_stage(stage: str, workers: int, dry_run: bool, log_fp) -> int:
 def main():
     parser = argparse.ArgumentParser(description="2hao 全量数据同步一键脚本")
     parser.add_argument("--workers", type=int, default=4, help="并发数（默认4）")
-    parser.add_argument("--stage", choices=list(STAGES.keys()) + ["all"], default="all",
-                        help="只跑某阶段或全部")
-    parser.add_argument("--dry-run", action="store_true",
-                        help="预览模式（akshare阶段加--dry-run，不写入）")
-    parser.add_argument("--reset-marks", action="store_true",
-                        help="清除所有完成标记（强制重跑全部）")
+    parser.add_argument("--stage", choices=list(STAGES.keys()) + ["all"], default="all", help="只跑某阶段或全部")
+    parser.add_argument("--dry-run", action="store_true", help="预览模式（akshare阶段加--dry-run，不写入）")
+    parser.add_argument("--reset-marks", action="store_true", help="清除所有完成标记（强制重跑全部）")
     args = parser.parse_args()
 
     if args.reset_marks:
         for p in MARK_DIR.glob("*.done"):
             p.unlink()
-        logger.info("[RESET] 已清除 %d 个完成标记", len(list(MARK_DIR.glob('*.done'))))
+        logger.info("[RESET] 已清除 %d 个完成标记", len(list(MARK_DIR.glob("*.done"))))
 
     log_path = _log_path()
     log_fp = open(log_path, "w", encoding="utf-8")

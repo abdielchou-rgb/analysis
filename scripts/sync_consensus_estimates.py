@@ -18,6 +18,7 @@ Round3 P0-② 一致预期/市场共识同步 — 新建 consensus_estimates.db
   python scripts/sync_consensus_estimates.py --ticker 603662
   python scripts/sync_consensus_estimates.py --dry-run
 """
+
 from __future__ import annotations
 
 import argparse
@@ -99,7 +100,7 @@ def _retry(fn, times=8, base=1.5):
             return fn()
         except Exception as e:  # noqa: BLE001
             last = e
-            time.sleep(base * (2 ** i) + 0.5)
+            time.sleep(base * (2**i) + 0.5)
     raise last
 
 
@@ -161,7 +162,9 @@ def get_tickers(ticker: str | None, index: str | None = None) -> list:
             tickers.extend([c for c in codes if c not in tickers][:50])
     except Exception as e:  # noqa: BLE001
         print(f"[WARN] 获取沪深300成分失败，用兜底池: {e}")
-        tickers.extend(["600519", "000858", "601318", "600036", "000333", "300750", "600900", "601398", "600276", "000001"])
+        tickers.extend(
+            ["600519", "000858", "601318", "600036", "000333", "300750", "600900", "601398", "600276", "000001"]
+        )
     return list(dict.fromkeys(tickers))
 
 
@@ -290,8 +293,7 @@ def sync_history(conn, tickers, dry_run=False) -> dict:
             dkey = d[:10].replace("-", "")
             if not dkey.isdigit():
                 continue
-            rec = by_date.setdefault(dkey, {"buy": 0, "hold": 0, "sell": 0, "n": 0,
-                                            "eps": {y: [] for y in eps_cols}})
+            rec = by_date.setdefault(dkey, {"buy": 0, "hold": 0, "sell": 0, "n": 0, "eps": {y: [] for y in eps_cols}})
             rec["n"] += 1
             if rating_col:
                 s = str(r.get(rating_col, ""))
@@ -318,13 +320,18 @@ def sync_history(conn, tickers, dry_run=False) -> dict:
                     " rating_buy, rating_hold, rating_sell, n_analysts, source, updated_at) "
                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (
-                        tk, dkey,
+                        tk,
+                        dkey,
                         (sum(rec["eps"]["2026"]) / len(rec["eps"]["2026"])) if rec["eps"].get("2026") else None,
                         (sum(rec["eps"]["2027"]) / len(rec["eps"]["2027"])) if rec["eps"].get("2027") else None,
                         (sum(rec["eps"]["2028"]) / len(rec["eps"]["2028"])) if rec["eps"].get("2028") else None,
                         None,
-                        rec["buy"], rec["hold"], rec["sell"], rec["n"],
-                        src, f"{dkey} 12:00:00",
+                        rec["buy"],
+                        rec["hold"],
+                        rec["sell"],
+                        rec["n"],
+                        src,
+                        f"{dkey} 12:00:00",
                     ),
                 )
         total_rows += len(by_date)
@@ -342,14 +349,15 @@ def compute_revisions(conn, dry_run=False) -> int:
     slope: 最新与上一历史 as_of 的 eps_2026e 变化率（预测修正方向）
     breadth: 最新快照买入评级占比 - 上一快照买入占比（修正广度）
     """
-    codes = [r[0] for r in conn.execute(
-        "SELECT DISTINCT code FROM consensus ORDER BY code").fetchall()]
+    codes = [r[0] for r in conn.execute("SELECT DISTINCT code FROM consensus ORDER BY code").fetchall()]
     updated = 0
     for code in codes:
         rows = conn.execute(
             "SELECT as_of, eps_2026e, rating_buy, rating_sell, n_analysts "
             "FROM consensus WHERE code=? AND n_analysts>0 "
-            "ORDER BY as_of", (code,)).fetchall()
+            "ORDER BY as_of",
+            (code,),
+        ).fetchall()
         if len(rows) < 2:
             continue
         latest, prev = rows[-1], rows[-2]
@@ -364,11 +372,17 @@ def compute_revisions(conn, dry_run=False) -> int:
             breadth = (latest[2] / latest[4]) - (prev[2] / prev[4])
         if not dry_run:
             conn.execute(
-                "UPDATE consensus SET revision_slope=?, revision_breadth=? "
-                "WHERE code=? AND as_of=? AND updated_at=?",
-                (slope, breadth, code, latest[0],
-                 conn.execute("SELECT updated_at FROM consensus WHERE code=? AND as_of=? AND n_analysts>0 ORDER BY updated_at DESC LIMIT 1",
-                              (code, latest[0])).fetchone()[0]),
+                "UPDATE consensus SET revision_slope=?, revision_breadth=? WHERE code=? AND as_of=? AND updated_at=?",
+                (
+                    slope,
+                    breadth,
+                    code,
+                    latest[0],
+                    conn.execute(
+                        "SELECT updated_at FROM consensus WHERE code=? AND as_of=? AND n_analysts>0 ORDER BY updated_at DESC LIMIT 1",
+                        (code, latest[0]),
+                    ).fetchone()[0],
+                ),
             )
             updated += 1
     if not dry_run:
@@ -382,8 +396,9 @@ def main():
     parser.add_argument("--ticker", default=None, help="仅同步单只股票")
     parser.add_argument("--index", default=None, help="指数成分全量同步: 000300/000852")
     parser.add_argument("--dry-run", action="store_true", help="试跑不写库")
-    parser.add_argument("--history", action="store_true",
-                        help="R53 P0-2: 按研报日期重建历史预测快照并计算 revision 派生字段")
+    parser.add_argument(
+        "--history", action="store_true", help="R53 P0-2: 按研报日期重建历史预测快照并计算 revision 派生字段"
+    )
     args = parser.parse_args()
 
     tickers = get_tickers(args.ticker, args.index)
@@ -420,10 +435,15 @@ def main():
                     " rating_buy, rating_hold, rating_sell, n_analysts, source, updated_at) "
                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (
-                        tk, as_of,
-                        eps.get("eps_2026e"), eps.get("eps_2027e"), eps.get("eps_2028e"),
+                        tk,
+                        as_of,
+                        eps.get("eps_2026e"),
+                        eps.get("eps_2027e"),
+                        eps.get("eps_2028e"),
                         rat.get("target_price_avg"),
-                        rat.get("rating_buy"), rat.get("rating_hold"), rat.get("rating_sell"),
+                        rat.get("rating_buy"),
+                        rat.get("rating_hold"),
+                        rat.get("rating_sell"),
                         rat.get("n_analysts"),
                         "akshare: stock_profit_forecast_ths/stock_research_report_em",
                         _now(),

@@ -1612,3 +1612,34 @@ class DataQualityChecksMixin:
         score = min(1.0, ratio)
         passed = score >= 0.3  # 30%+ of claims have source nearby
         return GateCheckResult("evidence_layer", passed, score, f"{covered}/{len(claims)} claims sourced ({score:.2f})")
+
+    def _check_anti_patterns(self) -> GateCheckResult:
+        """M6：伪框架黑名单——不可证伪的裸专业表述拦截。
+
+        data/anti_patterns.yaml 定义模式（短语后窗口内无量化即计）。
+        合计命中 ≥3 或单条 ≥2 → ERROR；1-2 条 → WARNING。
+        """
+        from pipeline.checks.base import GateCheckResult
+
+        text = self.report_text or ""
+        if len(text) < 800:
+            return GateCheckResult("anti_patterns", True, 1.0, "短文跳过", severity="warning")
+        try:
+            from core import anti_patterns as ap
+
+            hits = ap.scan(text)
+        except Exception as e:
+            return GateCheckResult("anti_patterns", True, 0.8, f"扫描器不可用: {str(e)[:40]}", severity="warning")
+        total = sum(h["count"] for h in hits)
+        if not total:
+            return GateCheckResult("anti_patterns", True, 1.0, "无伪框架裸表述")
+        detail = "; ".join(f"{h['pattern']}×{h['count']}" for h in hits[:4])
+        if total >= 3 or any(h["count"] >= 2 for h in hits):
+            return GateCheckResult(
+                "anti_patterns",
+                False,
+                max(0.2, 0.6 - total * 0.05),
+                f"伪框架裸表述 {total} 处: {detail} —— 必须量化或删除",
+                severity="error",
+            )
+        return GateCheckResult("anti_patterns", True, 0.8, f"{detail}（轻度，提示）", severity="warning")

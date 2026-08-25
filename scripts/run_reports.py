@@ -16,30 +16,31 @@ run_reports.py — 多报告任务队列（R48 并发编排）
   --workers N   并发 worker 数（默认 2，防 SQLite/API 争抢）
   --priority    可选：高/中/低（队列优先级）
 """
+
 from __future__ import annotations
+
 import argparse
 import json
+import os
 import subprocess
 import sys
-import os
-import threading
 import time
-from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_ROOT))
 
 # 模式 → LLM provider 映射（R48 双模式）
 MODE_LLM = {
-    "perf": "deepseek",     # 性能模式：DeepSeek 高速
+    "perf": "deepseek",  # 性能模式：DeepSeek 高速
     "train": "agent_provider",  # 训练模式：Marvis 自迭代
 }
 
 
-def run_single_report(asset: str, report_type: str, style: str,
-                      output: str, mode: str, max_attempts: int = None,
-                      enrich_file: str = None) -> dict:
+def run_single_report(
+    asset: str, report_type: str, style: str, output: str, mode: str, max_attempts: int = None, enrich_file: str = None
+) -> dict:
     """运行单个报告（子进程隔离，互不干扰）。
 
     Args:
@@ -54,8 +55,17 @@ def run_single_report(asset: str, report_type: str, style: str,
     Returns:
         {"asset", "ok", "returncode", "log"}
     """
-    cmd = [sys.executable, str(_ROOT / "pipeline" / "scheduler.py"),
-           asset, "--type", report_type, "--style", style, "--output", output]
+    cmd = [
+        sys.executable,
+        str(_ROOT / "pipeline" / "scheduler.py"),
+        asset,
+        "--type",
+        report_type,
+        "--style",
+        style,
+        "--output",
+        output,
+    ]
     if enrich_file:
         cmd += ["--enrich-file", enrich_file]
     # R82（2026-08-06）：子进程加载 .env——父进程（Claude/终端）可能没加载 .env，
@@ -86,30 +96,49 @@ def run_single_report(asset: str, report_type: str, style: str,
     start = time.time()
     try:
         with open(log_path, "w", encoding="utf-8") as f:
-            r = subprocess.run(cmd, capture_output=True, text=True,
-                               encoding="utf-8", errors="replace",
-                               timeout=3600, env=env)
+            r = subprocess.run(
+                cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=3600, env=env
+            )
             f.write(r.stdout)
             f.write(r.stderr)
         return {
-            "asset": asset, "ok": r.returncode == 0,
-            "returncode": r.returncode, "log": str(log_path),
+            "asset": asset,
+            "ok": r.returncode == 0,
+            "returncode": r.returncode,
+            "log": str(log_path),
             "elapsed_s": round(time.time() - start, 1),
         }
     except subprocess.TimeoutExpired:
-        return {"asset": asset, "ok": False, "returncode": -1,
-                "log": str(log_path), "elapsed_s": round(time.time() - start, 1),
-                "error": "timeout"}
+        return {
+            "asset": asset,
+            "ok": False,
+            "returncode": -1,
+            "log": str(log_path),
+            "elapsed_s": round(time.time() - start, 1),
+            "error": "timeout",
+        }
     except Exception as e:
-        return {"asset": asset, "ok": False, "returncode": -1,
-                "log": str(log_path), "elapsed_s": round(time.time() - start, 1),
-                "error": str(e)[:100]}
+        return {
+            "asset": asset,
+            "ok": False,
+            "returncode": -1,
+            "log": str(log_path),
+            "elapsed_s": round(time.time() - start, 1),
+            "error": str(e)[:100],
+        }
 
 
-def run_reports(assets: list, report_type: str, style: str,
-                output: str, workers: int, mode: str,
-                max_attempts: int = None, enrich_file: str = None,
-                verbose: bool = True) -> list:
+def run_reports(
+    assets: list,
+    report_type: str,
+    style: str,
+    output: str,
+    workers: int,
+    mode: str,
+    max_attempts: int = None,
+    enrich_file: str = None,
+    verbose: bool = True,
+) -> list:
     """并发运行多个报告。
 
     Returns:
@@ -123,8 +152,7 @@ def run_reports(assets: list, report_type: str, style: str,
     results = []
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures = {
-            pool.submit(run_single_report, a, report_type, style, output,
-                        mode, max_attempts, enrich_file): a
+            pool.submit(run_single_report, a, report_type, style, output, mode, max_attempts, enrich_file): a
             for a in assets
         }
         for fut in as_completed(futures):
@@ -133,12 +161,13 @@ def run_reports(assets: list, report_type: str, style: str,
                 r = fut.result()
                 results.append(r)
                 status = "✓" if r["ok"] else "✗"
-                print(f"[RUN] {status} {asset} "
-                      f"({r['elapsed_s']}s, code={r['returncode']})"
-                      + (f" error={r.get('error','')}" if not r["ok"] else ""))
+                print(
+                    f"[RUN] {status} {asset} "
+                    f"({r['elapsed_s']}s, code={r['returncode']})"
+                    + (f" error={r.get('error', '')}" if not r["ok"] else "")
+                )
             except Exception as e:
-                results.append({"asset": asset, "ok": False,
-                                "error": str(e)[:100]})
+                results.append({"asset": asset, "ok": False, "error": str(e)[:100]})
                 print(f"[RUN] ✗ {asset} error={str(e)[:80]}")
 
     # 汇总
@@ -151,38 +180,43 @@ def main():
     parser = argparse.ArgumentParser(description="2hao 多报告任务队列")
     parser.add_argument("assets", nargs="*", help="标的列表")
     parser.add_argument("--list", "-l", default=None, help="标的清单文件（每行一个）")
-    parser.add_argument("--type", "-t", default="listed_company",
-                        choices=["industry_deep", "listed_company", "unlisted_company", "earnings_notes"])
+    parser.add_argument(
+        "--type",
+        "-t",
+        default="listed_company",
+        choices=["industry_deep", "listed_company", "unlisted_company", "earnings_notes"],
+    )
     parser.add_argument("--style", "-s", default="cicc")
     parser.add_argument("--output", "-o", default="output")
     parser.add_argument("--workers", "-w", type=int, default=2, help="并发数")
-    parser.add_argument("--mode", "-m", default="perf", choices=["perf", "train"],
-                        help="perf=性能模式(DeepSeek) / train=训练模式(Marvis)")
-    parser.add_argument("--max-attempts", type=int, default=None,
-                        help="迭代上限（train 模式建议 5-10）")
+    parser.add_argument(
+        "--mode",
+        "-m",
+        default="perf",
+        choices=["perf", "train"],
+        help="perf=性能模式(DeepSeek) / train=训练模式(Marvis)",
+    )
+    parser.add_argument("--max-attempts", type=int, default=None, help="迭代上限（train 模式建议 5-10）")
     parser.add_argument("--enrich-file", "-e", default=None)
-    parser.add_argument("--retry", "-r", type=int, default=0,
-                        help="失败后重试次数（默认 0；借助 checkpoint 续跑）")
+    parser.add_argument("--retry", "-r", type=int, default=0, help="失败后重试次数（默认 0；借助 checkpoint 续跑）")
     args = parser.parse_args()
 
     assets = list(args.assets)
     if args.list:
         p = Path(args.list)
         if p.exists():
-            assets += [line.strip() for line in p.read_text(encoding="utf-8").splitlines()
-                       if line.strip()]
+            assets += [line.strip() for line in p.read_text(encoding="utf-8").splitlines() if line.strip()]
         else:
             print(f"[ERR] 清单文件不存在: {args.list}")
             sys.exit(1)
 
     # R81 fix: run_reports 签名无 retry 参数，--retry 留作兼容选项
-    results = run_reports(assets, args.type, args.style, args.output,
-                          args.workers, args.mode, args.max_attempts,
-                          args.enrich_file)
+    results = run_reports(
+        assets, args.type, args.style, args.output, args.workers, args.mode, args.max_attempts, args.enrich_file
+    )
     # 输出结果 JSON 供调用方分析
     out = _ROOT / "output" / "run_reports_result.json"
-    out.write_text(json.dumps(results, ensure_ascii=False, indent=1),
-                   encoding="utf-8")
+    out.write_text(json.dumps(results, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"[RUN] 结果写入: {out}")
 
     # 有任何失败则非零退出

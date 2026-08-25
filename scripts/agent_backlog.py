@@ -17,7 +17,10 @@ agent 在开始分析前必须先检查本队列，接手待办并完成兜底�
 """
 
 from __future__ import annotations
-import argparse, json, sys
+
+import argparse
+import json
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -45,6 +48,7 @@ def _check_escalation(t: dict, f: Path = None) -> bool:
     if t.get("status") != "pending" or t.get("escalated"):
         return False
     from datetime import datetime
+
     ttl = t.get("ttl_seconds", 3600)
     try:
         created = datetime.fromisoformat(t.get("created_at", ""))
@@ -57,7 +61,7 @@ def _check_escalation(t: dict, f: Path = None) -> bool:
         t["escalated_at"] = datetime.now().isoformat()
         if f:
             f.write_text(json.dumps(t, ensure_ascii=False, indent=2), encoding="utf-8")
-        print(f"[⚠ 升级] {t.get('asset','')} 待办超过 TTL（{age_sec:.0f}s）未接手，已升级")
+        print(f"[⚠ 升级] {t.get('asset', '')} 待办超过 TTL（{age_sec:.0f}s）未接手，已升级")
         return True
     return False
 
@@ -84,8 +88,8 @@ def cmd_list() -> int:
             pending += 1
         created = t.get("created_at", "")[:16]
         marker = " ⚠" if status == "escalated" else ""
-        print(f"{t.get('asset',''):<20} {status:<12} {missing:<30} {created}{marker}")
-    print(f"\n待办 {pending} 项。接手: python scripts/agent_backlog.py take \"标的\"")
+        print(f"{t.get('asset', ''):<20} {status:<12} {missing:<30} {created}{marker}")
+    print(f'\n待办 {pending} 项。接手: python scripts/agent_backlog.py take "标的"')
     return 0
 
 
@@ -110,7 +114,7 @@ def cmd_take(asset: str) -> int:
     print(f"[✓] 已接手 {asset}。兜底步骤：")
     for step in t.get("how_to_fix", []):
         print(f"    {step}")
-    print(f"    完成后: python scripts/agent_backlog.py complete \"{asset}\"")
+    print(f'    完成后: python scripts/agent_backlog.py complete "{asset}"')
     return 0
 
 

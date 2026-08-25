@@ -65,6 +65,7 @@ def extract_text(path: Path) -> str:
     if path.suffix.lower() == ".pdf":
         try:
             import pdfplumber
+
             with pdfplumber.open(path) as pdf:
                 parts = []
                 for i, page in enumerate(pdf.pages):
@@ -79,6 +80,7 @@ def extract_text(path: Path) -> str:
     elif path.suffix.lower() == ".docx":
         try:
             from docx import Document
+
             doc = Document(str(path))
             return "\n".join(p.text for p in doc.paragraphs[:400])
         except Exception as e:
@@ -88,19 +90,51 @@ def extract_text(path: Path) -> str:
 
 
 # 风格指标正则（复用 report_scanner 的模式）
-_JUDGMENT_WORDS = ["我们认为", "我们判断", "我们预计", "我们预期", "有望", "将",
-                   "意味着", "关键在于", "核心在于", "判断", "预计", "预期",
-                   "看好", "看空", "超预期", "低于预期", "拐点", "反转"]
-_COUNTER_CONSENSUS = ["而非", "不同于市场", "与市场分歧", "与市场共识", "超预期",
-                      "低于预期", "颠覆", "拐点", "误读", "认知差", "预期差", "逆共识"]
+_JUDGMENT_WORDS = [
+    "我们认为",
+    "我们判断",
+    "我们预计",
+    "我们预期",
+    "有望",
+    "将",
+    "意味着",
+    "关键在于",
+    "核心在于",
+    "判断",
+    "预计",
+    "预期",
+    "看好",
+    "看空",
+    "超预期",
+    "低于预期",
+    "拐点",
+    "反转",
+]
+_COUNTER_CONSENSUS = [
+    "而非",
+    "不同于市场",
+    "与市场分歧",
+    "与市场共识",
+    "超预期",
+    "低于预期",
+    "颠覆",
+    "拐点",
+    "误读",
+    "认知差",
+    "预期差",
+    "逆共识",
+]
 _PATTERN_EXPERIENCE = re.compile(
-    r'(我们在[^，。]{2,20}(调研|观察|走访|访谈|跟踪)[^。]{5,50})'
-    r'|((20\d{2}|201[0-9])年.{2,10}(也|同样|类似|曾经)[^。]{10,60})')
+    r"(我们在[^，。]{2,20}(调研|观察|走访|访谈|跟踪)[^。]{5,50})"
+    r"|((20\d{2}|201[0-9])年.{2,10}(也|同样|类似|曾经)[^。]{10,60})"
+)
 _PATTERN_UNCERTAINTY = re.compile(
-    r'(不确定性[集中在于在][^。]{10,60})|(风险集中[在于在][^。]{10,60})'
-    r'|(关键[在于要看是][^。]{10,50})|(取决于[^。]{10,50})|(如果[^。]{10,80})')
+    r"(不确定性[集中在于在][^。]{10,60})|(风险集中[在于在][^。]{10,60})"
+    r"|(关键[在于要看是][^。]{10,50})|(取决于[^。]{10,50})|(如果[^。]{10,80})"
+)
 _PATTERN_DATA_QUALITY = re.compile(
-    r'(数据[来自源于][^。]{10,50})|(该数据[^。]{5,30}(可能|存在|偏低|偏高|低估|高估)[^。]{5,30})')
+    r"(数据[来自源于][^。]{10,50})|(该数据[^。]{5,30}(可能|存在|偏低|偏高|低估|高估)[^。]{5,30})"
+)
 
 
 def scan_one(path: Path, category: str) -> dict:
@@ -109,7 +143,7 @@ def scan_one(path: Path, category: str) -> dict:
     if len(text) < 200:
         return None
     char_count = len(text)
-    word_count = len(re.findall(r'[一-鿿]', text))
+    word_count = len(re.findall(r"[一-鿿]", text))
     # 判断密度
     kc = char_count / 1000
     jc = len(re.findall("|".join(_JUDGMENT_WORDS), text))
@@ -144,7 +178,7 @@ def main():
             continue
         files = list(directory.rglob("*.pdf")) + list(directory.rglob("*.docx"))
         if args.quick:
-            files = files[:args.quick]
+            files = files[: args.quick]
         logger.info("[%s] %d 份", cat, len(files))
         for f in sorted(files):
             if f.is_file():
@@ -167,16 +201,14 @@ def main():
         if i % 20 == 0 or i == len(all_files):
             logger.info("进度 %d/%d, 有效 %d", i, len(all_files), len(results))
     elapsed = time.time() - t0
-    logger.info("扫描完成: %d 份有效 (%d 失败), 用时 %.1fs",
-                len(results), len(all_files) - len(results), elapsed)
+    logger.info("扫描完成: %d 份有效 (%d 失败), 用时 %.1fs", len(results), len(all_files) - len(results), elapsed)
 
     if not results:
         logger.error("无有效结果")
         return 1
 
     # ── 1. 写作基线（分类别 + 全量）──
-    baseline = {"generated": time.strftime("%Y-%m-%dT%H:%M:%S"),
-                "total_scanned": len(results)}
+    baseline = {"generated": time.strftime("%Y-%m-%dT%H:%M:%S"), "total_scanned": len(results)}
     by_cat = defaultdict(list)
     for r in results:
         by_cat[r["category"]].append(r)
@@ -210,8 +242,7 @@ def main():
         inst = _detect_institution(name)
         if inst:
             inst_items[inst].append(r)
-    style_dna = {"generated": time.strftime("%Y-%m-%dT%H:%M:%S"),
-                 "institutions": {}}
+    style_dna = {"generated": time.strftime("%Y-%m-%dT%H:%M:%S"), "institutions": {}}
     for inst, items in inst_items.items():
         n_items = len(items)
         style_dna["institutions"][inst] = {
@@ -230,7 +261,7 @@ def main():
     OUT_METHOD.write_text(json.dumps(method, ensure_ascii=False, indent=2), encoding="utf-8")
     logger.info("方法论 → %s", OUT_METHOD)
 
-    print(f"\n=== 吸收完成 ===")
+    print("\n=== 吸收完成 ===")
     print(f"  扫描研报: {len(results)} 份")
     print(f"  写作基线: {OUT_BASELINE}")
     print(f"  机构风格: {OUT_STYLE} ({len(inst_items)} 机构)")

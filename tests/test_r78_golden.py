@@ -2,6 +2,7 @@
 
 对 tests/golden/*.md 样本做确定性断言（篇幅/结构/判断密度/数据密度/反方论证/无AI免责）。
 """
+
 import sys
 from pathlib import Path
 
@@ -36,11 +37,16 @@ def test_golden_no_ai_disclaimer():
 
 if __name__ == "__main__":
     import traceback
+
     passed = failed = 0
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):
             try:
-                fn(); print(f"  OK {name}"); passed += 1
+                fn()
+                print(f"  OK {name}")
+                passed += 1
             except Exception as e:
-                print(f"  FAIL {name}: {e}"); traceback.print_exc(); failed += 1
+                print(f"  FAIL {name}: {e}")
+                traceback.print_exc()
+                failed += 1
     print(f"\n{passed} passed, {failed} failed")

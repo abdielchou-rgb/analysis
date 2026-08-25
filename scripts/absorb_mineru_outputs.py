@@ -19,7 +19,6 @@
 """
 
 import argparse
-import json
 import re
 import sys
 from pathlib import Path
@@ -85,31 +84,47 @@ def _extract_valuation_rules(title: str, text: str) -> list:
             method_parts.append("收益法：以未来收益折现为基础，公认最佳但依赖假设")
         if "市场法" in text:
             method_parts.append("市场法：以可比交易为基础，直接反映供需但弱可比性受限")
-        rules.append({
-            "rule_id": "valuation_method_comparison",
-            "name": "估值方法三法对比（成本/收益/市场）",
-            "source": f"MinerU解析-{title}",
-            "inputs": ["资产属性", "数据可得性", "可比性"],
-            "rules": [
-                {"condition": "无市场参照+专有技术", "stage": "成本法", "implication": method_parts[0] if method_parts else "成本法"},
-                {"condition": "未来收益可预测", "stage": "收益法", "implication": "折现估值，公认最佳但假设敏感"},
-                {"condition": "可比交易充分", "stage": "市场法", "implication": "直接反映供需，弱可比性受限"},
-            ],
-            "decision_hints": "估值方法选择取决于资产属性与数据可得性；多方法交叉验证",
-        })
+        rules.append(
+            {
+                "rule_id": "valuation_method_comparison",
+                "name": "估值方法三法对比（成本/收益/市场）",
+                "source": f"MinerU解析-{title}",
+                "inputs": ["资产属性", "数据可得性", "可比性"],
+                "rules": [
+                    {
+                        "condition": "无市场参照+专有技术",
+                        "stage": "成本法",
+                        "implication": method_parts[0] if method_parts else "成本法",
+                    },
+                    {"condition": "未来收益可预测", "stage": "收益法", "implication": "折现估值，公认最佳但假设敏感"},
+                    {"condition": "可比交易充分", "stage": "市场法", "implication": "直接反映供需，弱可比性受限"},
+                ],
+                "decision_hints": "估值方法选择取决于资产属性与数据可得性；多方法交叉验证",
+            }
+        )
     # 收益法/DCF 细节
     if "折现" in text or "DCF" in text.upper() or "净现值" in text:
-        rules.append({
-            "rule_id": "valuation_dcf_principle",
-            "name": "收益现值法核心逻辑",
-            "source": f"MinerU解析-{title}",
-            "inputs": ["未来现金流", "折现率", "期限"],
-            "rules": [
-                {"condition": "未来收益可量化", "stage": "收益现值法", "implication": "价值=Σ未来收益折现，需合理折现率"},
-                {"condition": "不确定性高", "stage": "实物期权补充", "implication": "NPV低估灵活性价值，期权法修正"},
-            ],
-            "decision_hints": "收益法对折现率敏感，需做敏感性分析",
-        })
+        rules.append(
+            {
+                "rule_id": "valuation_dcf_principle",
+                "name": "收益现值法核心逻辑",
+                "source": f"MinerU解析-{title}",
+                "inputs": ["未来现金流", "折现率", "期限"],
+                "rules": [
+                    {
+                        "condition": "未来收益可量化",
+                        "stage": "收益现值法",
+                        "implication": "价值=Σ未来收益折现，需合理折现率",
+                    },
+                    {
+                        "condition": "不确定性高",
+                        "stage": "实物期权补充",
+                        "implication": "NPV低估灵活性价值，期权法修正",
+                    },
+                ],
+                "decision_hints": "收益法对折现率敏感，需做敏感性分析",
+            }
+        )
     return rules
 
 
@@ -117,18 +132,23 @@ def _extract_real_option_rules(title: str, text: str) -> list:
     """实物期权规则：识别期权特征资产。"""
     rules = []
     if "实物期权" in text:
-        rules.append({
-            "rule_id": "real_option_principle",
-            "name": "实物期权评估原则",
-            "source": f"MinerU解析-{title}",
-            "inputs": ["决策灵活性", "不确定性", "投资可分阶段"],
-            "rules": [
-                {"condition": "投资可分阶段+不确定性高", "stage": "实物期权适用",
-                 "implication": "NPV法低估灵活性价值，用期权定价修正"},
-                {"condition": "一次性决策+收益确定", "stage": "传统NPV", "implication": "期权法不必要"},
-            ],
-            "decision_hints": "技术研发/专利类资产天然含期权属性",
-        })
+        rules.append(
+            {
+                "rule_id": "real_option_principle",
+                "name": "实物期权评估原则",
+                "source": f"MinerU解析-{title}",
+                "inputs": ["决策灵活性", "不确定性", "投资可分阶段"],
+                "rules": [
+                    {
+                        "condition": "投资可分阶段+不确定性高",
+                        "stage": "实物期权适用",
+                        "implication": "NPV法低估灵活性价值，用期权定价修正",
+                    },
+                    {"condition": "一次性决策+收益确定", "stage": "传统NPV", "implication": "期权法不必要"},
+                ],
+                "decision_hints": "技术研发/专利类资产天然含期权属性",
+            }
+        )
     return rules
 
 
@@ -136,17 +156,19 @@ def _extract_industry_framework_rules(title: str, text: str) -> list:
     """行业框架规则：汽车/半导体等行业分析方法。"""
     rules = []
     if "汽车" in title or "汽车" in text[:500]:
-        rules.append({
-            "rule_id": "industry_auto_framework",
-            "name": "汽车行业分析框架",
-            "source": f"MinerU解析-{title}",
-            "inputs": ["产销量", "区域结构", "渗透率"],
-            "rules": [
-                {"condition": "全球销量CAGR稳定", "stage": "成熟市场", "implication": "看格局与成本，非总量"},
-                {"condition": "区域渗透率提升", "stage": "成长市场", "implication": "看渗透率天花板"},
-            ],
-            "decision_hints": "汽车分析先分区域看渗透率阶段",
-        })
+        rules.append(
+            {
+                "rule_id": "industry_auto_framework",
+                "name": "汽车行业分析框架",
+                "source": f"MinerU解析-{title}",
+                "inputs": ["产销量", "区域结构", "渗透率"],
+                "rules": [
+                    {"condition": "全球销量CAGR稳定", "stage": "成熟市场", "implication": "看格局与成本，非总量"},
+                    {"condition": "区域渗透率提升", "stage": "成长市场", "implication": "看渗透率天花板"},
+                ],
+                "decision_hints": "汽车分析先分区域看渗透率阶段",
+            }
+        )
     return rules
 
 
@@ -154,17 +176,18 @@ def _extract_method_comparison_rules(title: str, text: str) -> list:
     """通用方法对比规则（表1/表2 中的方法体系提炼）。"""
     rules = []
     # 提取"方法体系"段落
-    m = re.search(r'方法(?:体系|比较)[^。\n]{0,200}', text)
+    m = re.search(r"方法(?:体系|比较)[^。\n]{0,200}", text)
     if m:
-        rules.append({
-            "rule_id": f"method_comparison_{title[:10]}",
-            "name": f"{title[:20]}方法体系",
-            "source": f"MinerU解析-{title}",
-            "inputs": ["方法", "适用场景"],
-            "rules": [{"condition": "需方法体系判断", "stage": "方法选择",
-                       "implication": m.group(0)[:120]}],
-            "decision_hints": "多方法交叉验证",
-        })
+        rules.append(
+            {
+                "rule_id": f"method_comparison_{title[:10]}",
+                "name": f"{title[:20]}方法体系",
+                "source": f"MinerU解析-{title}",
+                "inputs": ["方法", "适用场景"],
+                "rules": [{"condition": "需方法体系判断", "stage": "方法选择", "implication": m.group(0)[:120]}],
+                "decision_hints": "多方法交叉验证",
+            }
+        )
     return rules
 
 
@@ -174,7 +197,7 @@ def absorb(parsed_dir: Path, dry_run: bool = False) -> dict:
 
     md_files = list(parsed_dir.rglob("*.md"))
     # 排除中间分段（如 _p1-20.md 是分段，用完整版）
-    md_files = [f for f in md_files if not re.search(r'_p\d+-\d+\.md$', f.name)]
+    md_files = [f for f in md_files if not re.search(r"_p\d+-\d+\.md$", f.name)]
     results = {"scanned": len(md_files), "parsed": 0, "rules_added": 0, "by_topic": {}}
 
     for f in md_files:
@@ -199,11 +222,11 @@ def absorb(parsed_dir: Path, dry_run: bool = False) -> dict:
             print(f"  [DRY] {topic:20s} +{len(rules)} 规则 | {title}")
 
     if dry_run:
-        print(f"\n[dry-run] 扫描 {results['scanned']} 份，可提炼 {results['parsed']} 份，"
-              f"{results['rules_added']} 条规则")
+        print(
+            f"\n[dry-run] 扫描 {results['scanned']} 份，可提炼 {results['parsed']} 份，{results['rules_added']} 条规则"
+        )
     else:
-        print(f"[DONE] 扫描 {results['scanned']} 份，提炼 {results['parsed']} 份，"
-              f"写入 {results['rules_added']} 条规则")
+        print(f"[DONE] 扫描 {results['scanned']} 份，提炼 {results['parsed']} 份，写入 {results['rules_added']} 条规则")
     for t, n in results["by_topic"].items():
         print(f"  {t}: +{n} 条")
     return results

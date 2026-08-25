@@ -17,7 +17,6 @@
 
 import argparse
 import json
-import re
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -27,9 +26,9 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 from core.baseline_pdf_extractor import (
-    extract_text,
-    extract_findings,
     detect_institution,
+    extract_findings,
+    extract_text,
 )
 
 OUTPUT = _ROOT / "data" / "baseline_findings.json"
@@ -39,6 +38,7 @@ FEED_LOG = _ROOT / "data" / "feed_history.json"
 # ──────────────────────────────────────────────────────────────────────
 # 增量入库
 # ──────────────────────────────────────────────────────────────────────
+
 
 def load_knowledge() -> dict:
     """读取现有知识库，兼容新旧格式。"""
@@ -90,10 +90,14 @@ def ingest_pdf(pdf_path: Path, knowledge: dict, fed: set) -> dict:
 
 def _classify_level(pdf_path: Path) -> str:
     parts = pdf_path.parts
-    if "A级" in parts: return "A级"
-    if "S级" in parts: return "S级"
-    if "金牌" in parts: return "gold"
-    if "academic" in parts: return "academic"
+    if "A级" in parts:
+        return "A级"
+    if "S级" in parts:
+        return "S级"
+    if "金牌" in parts:
+        return "gold"
+    if "academic" in parts:
+        return "academic"
     return "unknown"
 
 
@@ -110,13 +114,13 @@ def save_knowledge(knowledge: dict) -> None:
 # 入口
 # ──────────────────────────────────────────────────────────────────────
 
+
 def main():
     parser = argparse.ArgumentParser(description="2hao-analyst 研报投喂 CLI")
     parser.add_argument("pdfs", nargs="*", help="要投喂的PDF文件路径")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--dir", help="批量投喂目录下的所有PDF")
-    group.add_argument("--batch", type=int, metavar="N",
-                       help="从回测基线库2阶段/金牌增量消化N份")
+    group.add_argument("--batch", type=int, metavar="N", help="从回测基线库2阶段/金牌增量消化N份")
     group.add_argument("--status", action="store_true", help="查看知识库统计")
     parser.add_argument("--force", action="store_true", help="忽略去重，强制重新提取")
     args = parser.parse_args()
@@ -166,7 +170,7 @@ def main():
         all_pdfs = sorted(gold_dir.glob("*.pdf"))
         remaining = [p for p in all_pdfs if p.name not in fed or args.force]
         targets = remaining[: args.batch]
-        print(f"  金牌库共{len(all_pdfs)}份，本次消化{len(targets)}份（剩余{len(remaining)-len(targets)}份待消化）")
+        print(f"  金牌库共{len(all_pdfs)}份，本次消化{len(targets)}份（剩余{len(remaining) - len(targets)}份待消化）")
 
     if not targets:
         print("  没有待处理的PDF（可能都已投喂，用 --force 强制重跑）")

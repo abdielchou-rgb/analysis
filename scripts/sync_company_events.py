@@ -20,7 +20,7 @@ FP2 零编造: 所有数据来自 akshare 接口
 import argparse
 import sqlite3
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -103,7 +103,9 @@ def sync_earnings(conn: sqlite3.Connection, ticker: str = None):
         for tk in tickers[:50]:  # 限制批量数量
             try:
                 # 利润表接口：含 营业总收入/净利润 列
-                df = ak.stock_financial_report_sina(stock=f"sh{tk}" if tk.startswith("6") else f"sz{tk}", symbol="利润表")
+                df = ak.stock_financial_report_sina(
+                    stock=f"sh{tk}" if tk.startswith("6") else f"sz{tk}", symbol="利润表"
+                )
                 if df is None or df.empty:
                     continue
                 # 取最新4个季度
@@ -122,11 +124,15 @@ def sync_earnings(conn: sqlite3.Connection, ticker: str = None):
                         except (TypeError, ValueError):
                             revenue_f = None
                         try:
-                            net_profit_f = float(net_profit) if net_profit is not None and net_profit == net_profit else None
+                            net_profit_f = (
+                                float(net_profit) if net_profit is not None and net_profit == net_profit else None
+                            )
                         except (TypeError, ValueError):
                             net_profit_f = None
                         # 营收和净利润至少一项真实值（非 None 且非 0 占位）
-                        has_real = (revenue_f is not None and revenue_f != 0) or (net_profit_f is not None and net_profit_f != 0)
+                        has_real = (revenue_f is not None and revenue_f != 0) or (
+                            net_profit_f is not None and net_profit_f != 0
+                        )
                         if not has_real:
                             skipped += 1
                             print(f"[SKIP] {tk} {report_date} 营收/净利润全空或为0占位")
@@ -139,8 +145,10 @@ def sync_earnings(conn: sqlite3.Connection, ticker: str = None):
                                 "quarterly",
                                 revenue_f,
                                 net_profit_f,
-                                None, None,
-                                "akshare", now,
+                                None,
+                                None,
+                                "akshare",
+                                now,
                             ),
                         )
                         count += 1
@@ -150,7 +158,9 @@ def sync_earnings(conn: sqlite3.Connection, ticker: str = None):
                 continue
         conn.commit()
         # 清理空壳残留（历史脏数据）
-        cleaned = conn.execute("DELETE FROM earnings WHERE (revenue=0 OR revenue IS NULL) AND (net_profit=0 OR net_profit IS NULL)").rowcount
+        cleaned = conn.execute(
+            "DELETE FROM earnings WHERE (revenue=0 OR revenue IS NULL) AND (net_profit=0 OR net_profit IS NULL)"
+        ).rowcount
         conn.commit()
         print(f"[财报] 同步 {count} 条记录（跳过 {skipped} 条无效，清理 {cleaned} 条空壳）")
         return count
@@ -228,6 +238,7 @@ def sync_dividends(conn: sqlite3.Connection, ticker: str = None):
 def _parse_ths_qty(text) -> float:
     """解析同花顺变动数量文本，如 '减持280.00万' → -2800000.0、'增持267.64万' → 2676400.0"""
     import re
+
     if not text:
         return None
     s = str(text).strip()
@@ -262,8 +273,10 @@ def sync_share_changes(conn: sqlite3.Connection, ticker: str = None):
             "stock_share_hold_change_szse": ("证券代码", "变动起始日期", "股东名称", "变动方向", "变动股数", None),
         }
 
-        for api_name, api_fn in [("stock_share_hold_change_sse", ak.stock_share_hold_change_sse),
-                                  ("stock_share_hold_change_szse", ak.stock_share_hold_change_szse)]:
+        for api_name, api_fn in [
+            ("stock_share_hold_change_sse", ak.stock_share_hold_change_sse),
+            ("stock_share_hold_change_szse", ak.stock_share_hold_change_szse),
+        ]:
             tk_col, dt_col, sh_col, ty_col, num_col, ratio_col = col_map[api_name]
             for retry in range(5):  # 深交所限流：5 次退避 3s
                 try:
@@ -310,7 +323,8 @@ def sync_share_changes(conn: sqlite3.Connection, ticker: str = None):
                                     change_type,
                                     num_f,
                                     float(ratio_col) if ratio_col and row.get(ratio_col) else None,
-                                    f"akshare_{api_name}", now,
+                                    f"akshare_{api_name}",
+                                    now,
                                 ),
                             )
                             count += 1
@@ -319,7 +333,7 @@ def sync_share_changes(conn: sqlite3.Connection, ticker: str = None):
                     break  # success, exit retry loop
                 except Exception as e:
                     if retry < 4:
-                        print(f"[增減持] {api_name} retry {retry+1}: {e}")
+                        print(f"[增減持] {api_name} retry {retry + 1}: {e}")
                         sleep(3)
                     else:
                         print(f"[增減持] {api_name} 放弃: {e}")
@@ -339,7 +353,14 @@ def sync_share_changes(conn: sqlite3.Connection, ticker: str = None):
                             shareholder = str(row.get("变动股东", "") or "")
                             change_type = str(row.get("变动途径", "") or "")
                             num_f = _parse_ths_qty(row.get("变动数量"))
-                            if not tk or len(tk) != 6 or not tk.isdigit() or not change_date or num_f is None or num_f == 0:
+                            if (
+                                not tk
+                                or len(tk) != 6
+                                or not tk.isdigit()
+                                or not change_date
+                                or num_f is None
+                                or num_f == 0
+                            ):
                                 skipped += 1
                                 print(f"[SKIP] ths {tk} 无效记录")
                                 continue
@@ -358,7 +379,9 @@ def sync_share_changes(conn: sqlite3.Connection, ticker: str = None):
 
         conn.commit()
         # 清理空壳残留
-        cleaned = conn.execute("DELETE FROM share_changes WHERE ticker='' OR ticker IS NULL OR change_shares=0 OR change_shares IS NULL").rowcount
+        cleaned = conn.execute(
+            "DELETE FROM share_changes WHERE ticker='' OR ticker IS NULL OR change_shares=0 OR change_shares IS NULL"
+        ).rowcount
         conn.commit()
         print(f"[增減持] 同步 {count} 条记录（跳过 {skipped} 条无效，清理 {cleaned} 条空壳）")
         return count
@@ -380,8 +403,9 @@ def sync_announcements(conn: sqlite3.Connection, ticker: str = None, days: int =
     返回全市场公告，列名可能因编码异常显示为乱码，故按位置解析。
     """
     try:
-        import akshare as ak
         import datetime as _dt
+
+        import akshare as ak
 
         count = 0
         now = datetime.now().isoformat()
@@ -436,6 +460,7 @@ def _get_hs300_tickers() -> list:
     """获取沪深300成分股代码。"""
     try:
         import akshare as ak
+
         df = ak.index_stock_cons_csindex(symbol="000300")
         if df is not None and not df.empty:
             return [str(c).zfill(6) for c in df["成分券代码"].tolist()[:50]]

@@ -49,19 +49,13 @@ def build_financial_summary(data: StructuredData) -> FinancialSummary:
     items["EPS"] = {str(f.fiscal_year): f.eps for f in financials}
 
     # 资产负债率 (%)
-    items["资产负债率(%)"] = {
-        str(f.fiscal_year): f.liability_to_asset for f in financials
-    }
+    items["资产负债率(%)"] = {str(f.fiscal_year): f.liability_to_asset for f in financials}
 
     # 利润含金量 (经营现金流/净利润)
-    items["利润含金量"] = {
-        str(f.fiscal_year): f.cfo_to_net_profit for f in financials
-    }
+    items["利润含金量"] = {str(f.fiscal_year): f.cfo_to_net_profit for f in financials}
 
     # 总资产周转率
-    items["总资产周转率"] = {
-        str(f.fiscal_year): f.asset_turnover_ratio for f in financials
-    }
+    items["总资产周转率"] = {str(f.fiscal_year): f.asset_turnover_ratio for f in financials}
 
     return FinancialSummary(
         company=data.profile.stock_name,

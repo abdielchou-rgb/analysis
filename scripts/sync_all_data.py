@@ -24,7 +24,6 @@ import json
 import logging
 import subprocess
 import sys
-import time
 from datetime import datetime
 from pathlib import Path
 
@@ -105,8 +104,7 @@ def stage_name_map(dry_run: bool = False, check_only: bool = False) -> int:
         if map_path.exists():
             try:
                 d = json.loads(map_path.read_text(encoding="utf-8"))
-                logger.info("[OK] 名称映射已存在: %d 条（含柯力传感=%s）",
-                            len(d), d.get("柯力传感", "缺"))
+                logger.info("[OK] 名称映射已存在: %d 条（含柯力传感=%s）", len(d), d.get("柯力传感", "缺"))
                 return 0
             except Exception as e:
                 logger.error("[FAIL] 映射文件损坏: %s", e)
@@ -118,6 +116,7 @@ def stage_name_map(dry_run: bool = False, check_only: bool = False) -> int:
         return 0
     try:
         import akshare as ak
+
         df = ak.stock_zh_a_spot_em()
         name_map = {str(r["名称"]): str(r["代码"]) for _, r in df.iterrows()}
         map_path.write_text(json.dumps(name_map, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -141,12 +140,13 @@ def stage_hk_sync(dry_run: bool = False) -> int:
     logger.info("=" * 50)
     logger.info("[Stage 3] 港股 Layer 1 同步（%d 只核心标的）", len(HK_CORE_STOCKS))
     if dry_run:
-        logger.info("[DRY] 将同步 %d 只港股: %s", len(HK_CORE_STOCKS),
-                    ", ".join(list(HK_CORE_STOCKS.keys())[:6]))
+        logger.info("[DRY] 将同步 %d 只港股: %s", len(HK_CORE_STOCKS), ", ".join(list(HK_CORE_STOCKS.keys())[:6]))
         return 0
     try:
-        import akshare as ak
         import sqlite3
+
+        import akshare as ak
+
         conn = sqlite3.connect(str(_ROOT / "data" / "financials.db"))
         ok, fail = 0, 0
         for name, code in HK_CORE_STOCKS.items():
@@ -165,8 +165,7 @@ def stage_hk_sync(dry_run: bool = False) -> int:
                         if field_key in row and row[field_key] is not None:
                             conn.execute(
                                 "INSERT OR REPLACE INTO financials (code, quarter, table_name, field, value, source) VALUES (?,?,?,?,?,?)",
-                                (code, date_s + "00", "hk_indicator", field_key,
-                                 float(row[field_key]), "hk:akshare"),
+                                (code, date_s + "00", "hk_indicator", field_key, float(row[field_key]), "hk:akshare"),
                             )
                 conn.commit()
                 ok += 1
@@ -188,9 +187,11 @@ def stage_industry_gaps(dry_run: bool = False) -> int:
     logger.info("=" * 50)
     logger.info("[Stage 4] 行业数据补缺检查")
     gaps_found = []
-    for fname, needed in [("industry_chain.json", INDUSTRY_GAPS["chain"]),
-                          ("industry_penetration.json", INDUSTRY_GAPS["penetration"]),
-                          ("industry_drivers.json", INDUSTRY_GAPS["drivers"])]:
+    for fname, needed in [
+        ("industry_chain.json", INDUSTRY_GAPS["chain"]),
+        ("industry_penetration.json", INDUSTRY_GAPS["penetration"]),
+        ("industry_drivers.json", INDUSTRY_GAPS["drivers"]),
+    ]:
         path = _ROOT / "data" / fname
         if not path.exists():
             gaps_found.append(f"{fname}: 文件缺失")
@@ -216,7 +217,9 @@ def stage_industry_gaps(dry_run: bool = False) -> int:
         logger.info("行业缺口清单:")
         for g in gaps_found:
             logger.info("  - %s", g)
-        logger.info("提示: 用 WebSearch 搜索各行业产业链结构/渗透率/供需，按 docs/marvis-data-backfill-20260802.md §2 格式写入")
+        logger.info(
+            "提示: 用 WebSearch 搜索各行业产业链结构/渗透率/供需，按 docs/marvis-data-backfill-20260802.md §2 格式写入"
+        )
         return 1
     logger.info("[OK] 行业数据无缺口")
     return 0
@@ -229,6 +232,7 @@ def stage_keli_enrich(dry_run: bool = False) -> int:
     logger.info("[Stage 5] 柯力传感 enrich 数据准备")
     try:
         from pipeline.data_enrichment import make_enrich_template
+
         tpl = make_enrich_template("柯力传感", Path(str(_ROOT / "data" / "backlog" / "柯力传感_enrich_template.json")))
         logger.info("[OK] enrich 模板: %s", tpl)
     except Exception as e:
@@ -237,7 +241,9 @@ def stage_keli_enrich(dry_run: bool = False) -> int:
     for n in KELI_ENRICH_NEEDS:
         logger.info("  - %s", n)
     if not dry_run:
-        logger.info("提示: 填充模板后执行 → python pipeline/scheduler.py \"柯力传感\" --type listed_company --enrich-file <tpl>")
+        logger.info(
+            '提示: 填充模板后执行 → python pipeline/scheduler.py "柯力传感" --type listed_company --enrich-file <tpl>'
+        )
     return 0
 
 
@@ -252,8 +258,7 @@ STAGES = {
 
 def main():
     parser = argparse.ArgumentParser(description="2hao 综合数据同步（Marvis 执行）")
-    parser.add_argument("--stage", type=int, choices=list(STAGES.keys()), default=None,
-                        help="只跑某阶段")
+    parser.add_argument("--stage", type=int, choices=list(STAGES.keys()), default=None, help="只跑某阶段")
     parser.add_argument("--workers", type=int, default=4, help="A股同步并发数")
     parser.add_argument("--dry-run", action="store_true", help="只预览不执行")
     parser.add_argument("--check", action="store_true", help="只检查缺口（stage 1/4/5）")

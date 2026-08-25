@@ -22,6 +22,7 @@
   python scripts/absorb_knowledge_base.py
   python scripts/absorb_knowledge_base.py --dry-run
 """
+
 import argparse
 import json
 import os
@@ -70,37 +71,111 @@ _ALL_SECTORS = {
 # 方法关键词（行业/估值/财务域）
 _METHOD_KWS = [
     # 行业分析
-    "波特五力", "价值链", "生命周期", "供需", "竞争格局", "集中度",
-    "壁垒", "渗透率", "TAM", "SAM", "SOM", "市场规模", "增速",
-    "产业链", "利润池", "商业模式", "护城河", "景气", "拐点",
-    "国产替代", "全球格局", "出口", "出海",
+    "波特五力",
+    "价值链",
+    "生命周期",
+    "供需",
+    "竞争格局",
+    "集中度",
+    "壁垒",
+    "渗透率",
+    "TAM",
+    "SAM",
+    "SOM",
+    "市场规模",
+    "增速",
+    "产业链",
+    "利润池",
+    "商业模式",
+    "护城河",
+    "景气",
+    "拐点",
+    "国产替代",
+    "全球格局",
+    "出口",
+    "出海",
     # 估值
-    "DCF", "贴现", "自由现金流", "FCFF", "FCFE", "WACC", "永续增长",
-    "PE", "PB", "PS", "EV/EBITDA", "PEG", "可比公司", "相对估值",
-    "绝对估值", "敏感性", "情景分析", "三表", "勾稽", "ROE", "ROIC",
-    "毛利率", "净利率", "资产负债率", "周转率",
+    "DCF",
+    "贴现",
+    "自由现金流",
+    "FCFF",
+    "FCFE",
+    "WACC",
+    "永续增长",
+    "PE",
+    "PB",
+    "PS",
+    "EV/EBITDA",
+    "PEG",
+    "可比公司",
+    "相对估值",
+    "绝对估值",
+    "敏感性",
+    "情景分析",
+    "三表",
+    "勾稽",
+    "ROE",
+    "ROIC",
+    "毛利率",
+    "净利率",
+    "资产负债率",
+    "周转率",
     # 财务
-    "营收", "净利", "现金流", "资产负债表", "利润表", "现金流量表",
-    "研发", "资本开支", "折旧", "摊销", "有息负债", "存货", "应收",
-    "EPS", "BVPS", "每股",
+    "营收",
+    "净利",
+    "现金流",
+    "资产负债表",
+    "利润表",
+    "现金流量表",
+    "研发",
+    "资本开支",
+    "折旧",
+    "摊销",
+    "有息负债",
+    "存货",
+    "应收",
+    "EPS",
+    "BVPS",
+    "每股",
     # 判断
-    "评级", "目标价", "买入", "增持", "中性", "减持", "风险",
-    "催化剂", "超预期", "低于预期", "推荐",
+    "评级",
+    "目标价",
+    "买入",
+    "增持",
+    "中性",
+    "减持",
+    "风险",
+    "催化剂",
+    "超预期",
+    "低于预期",
+    "推荐",
 ]
 
 # 判断信号（报告分析质量基准）
 _JUDGMENT_SIGNALS = [
-    "评级", "目标价", "推荐", "增持", "买入",
-    "风险提示", "催化剂", "敏感性", "情景",
-    "超预期", "低于预期", "预期差", "估值锚",
-    "护城河", "壁垒", "证伪", "反方",
+    "评级",
+    "目标价",
+    "推荐",
+    "增持",
+    "买入",
+    "风险提示",
+    "催化剂",
+    "敏感性",
+    "情景",
+    "超预期",
+    "低于预期",
+    "预期差",
+    "估值锚",
+    "护城河",
+    "壁垒",
+    "证伪",
+    "反方",
 ]
 
 
 def _clean_line(line: str) -> str:
     s = line.strip()
-    for noise in ("免责声明", "信息披露", "证券研究报告", "执业编号",
-                  "本报告由", "仅供内部", "分析师声明"):
+    for noise in ("免责声明", "信息披露", "证券研究报告", "执业编号", "本报告由", "仅供内部", "分析师声明"):
         if noise in s:
             return ""
     if s.startswith("http://") or s.startswith("www."):
@@ -176,8 +251,14 @@ def process_file(filepath: Path, topic: str) -> list[dict]:
     try:
         text = filepath.read_text(encoding="utf-8")
     except Exception as e:
-        return [{"title": f"[READ_ERROR] {filepath.name}", "topic": topic,
-                 "source_file": filepath.name, "summary": str(e)[:80]}]
+        return [
+            {
+                "title": f"[READ_ERROR] {filepath.name}",
+                "topic": topic,
+                "source_file": filepath.name,
+                "summary": str(e)[:80],
+            }
+        ]
     articles = split_articles(text)
     entries = []
     for art in articles:

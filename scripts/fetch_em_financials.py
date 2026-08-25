@@ -12,11 +12,6 @@ stock_cash_flow_sheet_by_report_em 在本机抛 TypeError（接口封装坏了�
     python scripts/fetch_em_financials.py 000001 --all  # 打印全部报告期
 """
 
-import argparse
-import json
-import re
-import sys
-import time
 from pathlib import Path
 
 import requests
@@ -52,7 +47,7 @@ def _build_params(code: str, report_name: str, columns: str, filter_field: str =
 
 def fetch_balance_sheet(code: str) -> dict:
     """拉资产负债表，返回 {报告期: {字段: 值}}"""
-    columns = ("ALL")
+    columns = "ALL"
     params = _build_params(code, "RPT_F10_FINANCE_GINCOME", columns)
     # 资产负债表 reportName 需确认，先用利润表接口试
     try:
@@ -73,12 +68,20 @@ if __name__ == "__main__":
     print("正在测试连接东财接口...")
     # 简单连通性测试
     try:
-        r = requests.get("https://datacenter-web.eastmoney.com/api/data/v1/get",
-                         params={"reportName": "RPT_F10_FINANCE_MAINFINADATA",
-                                 "columns": "ALL", "filter": '(SECURITY_CODE="000001")',
-                                 "pageNumber": "1", "pageSize": "3",
-                                 "source": "WEB", "client": "WEB"},
-                         headers=_HEADERS, timeout=15)
+        r = requests.get(
+            "https://datacenter-web.eastmoney.com/api/data/v1/get",
+            params={
+                "reportName": "RPT_F10_FINANCE_MAINFINADATA",
+                "columns": "ALL",
+                "filter": '(SECURITY_CODE="000001")',
+                "pageNumber": "1",
+                "pageSize": "3",
+                "source": "WEB",
+                "client": "WEB",
+            },
+            headers=_HEADERS,
+            timeout=15,
+        )
         print("HTTP 状态:", r.status_code)
         data = r.json()
         rows = (data.get("result") or {}).get("data") or []

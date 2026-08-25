@@ -8,6 +8,7 @@ R53 P2-1：领先指标库 → data/leading_indicators.json
 - 能繁母猪存栏（农业农村部/统计局，人工维护最新值）
 - 土地成交总价（无免费接口，标记 unavailable）
 """
+
 from __future__ import annotations
 
 import json
@@ -66,9 +67,9 @@ def build_credit_pulse():
     n = 12
     pulse = []
     for i in range(n - 1, len(rows)):
-        cur12 = sum(x["value"] for x in rows[i - n + 1:i + 1])
+        cur12 = sum(x["value"] for x in rows[i - n + 1 : i + 1])
         if i >= n * 2 - 1:
-            prev12 = sum(x["value"] for x in rows[i - n * 2 + 1:i - n + 1])
+            prev12 = sum(x["value"] for x in rows[i - n * 2 + 1 : i - n + 1])
             if prev12 != 0:
                 pulse.append({"date": rows[i]["date"], "value": round((cur12 - prev12) / prev12 * 100, 2)})
     return pulse, "akshare: macro_china_shrzgm (社融增量12月滚动同比)"
@@ -98,15 +99,21 @@ def build_manual():
 def main():
     result = {}
     m1m2, src1 = build_m1_m2()
-    result["M1-M2剪刀差"] = {"latest_value": m1m2[-1]["value"] if m1m2 else None,
-                              "latest_date": m1m2[-1]["date"] if m1m2 else None,
-                              "source": src1, "history": m1m2}
+    result["M1-M2剪刀差"] = {
+        "latest_value": m1m2[-1]["value"] if m1m2 else None,
+        "latest_date": m1m2[-1]["date"] if m1m2 else None,
+        "source": src1,
+        "history": m1m2,
+    }
     print(f"[OK] M1-M2剪刀差: {len(m1m2)} 期, latest={m1m2[-1] if m1m2 else None}")
 
     pulse, src2 = build_credit_pulse()
-    result["信贷脉冲"] = {"latest_value": pulse[-1]["value"] if pulse else None,
-                          "latest_date": pulse[-1]["date"] if pulse else None,
-                          "source": src2, "history": pulse}
+    result["信贷脉冲"] = {
+        "latest_value": pulse[-1]["value"] if pulse else None,
+        "latest_date": pulse[-1]["date"] if pulse else None,
+        "source": src2,
+        "history": pulse,
+    }
     print(f"[OK] 信贷脉冲: {len(pulse)} 期, latest={pulse[-1] if pulse else None}")
 
     for m in build_manual():
@@ -115,7 +122,8 @@ def main():
         print(f"[OK] {name}: {m['latest_value']} @ {m['latest_date']}")
 
     result["土地成交总价"] = {
-        "latest_value": None, "latest_date": None,
+        "latest_value": None,
+        "latest_date": None,
         "source": "unavailable: 无免费接口(中指院/统计局需付费)",
         "history": [],
     }

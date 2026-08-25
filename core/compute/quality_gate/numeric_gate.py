@@ -114,7 +114,7 @@ def _check_margin_bridge(bridge) -> dict:
         return {
             "passed": False,
             "penalty": 20,
-            "message": "毛利率异常（超过+-100%%）" .replace("%%", "%"),
+            "message": "毛利率异常（超过+-100%%）".replace("%%", "%"),
         }
     return {
         "passed": True,
@@ -147,9 +147,7 @@ def _check_summary_completeness(results: ComputedResults) -> dict:
     }
 
 
-def _check_cross_layer_consistency(
-    results: ComputedResults, l1_data: StructuredData
-) -> dict:
+def _check_cross_layer_consistency(results: ComputedResults, l1_data: StructuredData) -> dict:
     """检查 L2 计算结果与 L1 原始数据的一致性。"""
     penalties = []
 
@@ -162,9 +160,7 @@ def _check_cross_layer_consistency(
                 last_driver = results.revenue_bridge.drivers[-1]
                 last_rev_in_bridge = last_driver.get("revenue_level", 0)
                 if last_rev_in_bridge and abs(last_rev_in_bridge - last_l1.revenue) > 0.01:
-                    penalties.append(
-                        "收入桥末年营收 %s 与 L1 %s 不一致" % (last_rev_in_bridge, last_l1.revenue)
-                    )
+                    penalties.append("收入桥末年营收 %s 与 L1 %s 不一致" % (last_rev_in_bridge, last_l1.revenue))
 
     status = "通过" if len(penalties) == 0 else "发现: %s" % penalties
     return {

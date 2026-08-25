@@ -46,11 +46,14 @@ class PredictionLoop:
     """Record → verify → confidence update cycle."""
 
     @staticmethod
-    def record_prediction(code: str, statement: str,
-                           predictor: str = "core_disagreement",
-                           confidence: float = 0.65,
-                           timeframe_days: int = 365,
-                           verification_criteria: Optional[list[str]] = None):
+    def record_prediction(
+        code: str,
+        statement: str,
+        predictor: str = "core_disagreement",
+        confidence: float = 0.65,
+        timeframe_days: int = 365,
+        verification_criteria: Optional[list[str]] = None,
+    ):
         """Record a prediction from report generation.
 
         Args:
@@ -84,16 +87,19 @@ class PredictionLoop:
         # Also update the cognitive baseline
         try:
             from core.cognitive_baseline import CognitiveBaseline
+
             baseline = CognitiveBaseline.load(code)
             if "prediction_history" not in baseline:
                 baseline["prediction_history"] = []
-            baseline["prediction_history"].append({
-                "id": prediction["id"],
-                "statement": statement,
-                "confidence": confidence,
-                "created_at": prediction["created_at"],
-                "status": "pending",
-            })
+            baseline["prediction_history"].append(
+                {
+                    "id": prediction["id"],
+                    "statement": statement,
+                    "confidence": confidence,
+                    "created_at": prediction["created_at"],
+                    "status": "pending",
+                }
+            )
             # Keep only last 50
             baseline["prediction_history"] = baseline["prediction_history"][-50:]
             CognitiveBaseline.save(code, baseline)
@@ -101,8 +107,7 @@ class PredictionLoop:
             logger.warning(f"Failed to update baseline with prediction: {e}")
 
     @staticmethod
-    def check_pending(code: str, new_data: list,
-                       baseline: Optional[dict] = None) -> list[dict]:
+    def check_pending(code: str, new_data: list, baseline: Optional[dict] = None) -> list[dict]:
         """Check if any pending predictions can be verified with new data.
 
         Args:
@@ -139,8 +144,7 @@ class PredictionLoop:
                 pred["outcome"] = "verified_by_data"
                 pred["verified_at"] = datetime.now().isoformat()
                 pred["evidence"] = [
-                    {"source": dp.source, "value": dp.value, "unit": dp.unit}
-                    for dp in new_data if dp.name
+                    {"source": dp.source, "value": dp.value, "unit": dp.unit} for dp in new_data if dp.name
                 ]
                 updated.append(pred)
                 logger.info(f"Prediction {pred['id']} confirmed by new data")
@@ -150,6 +154,7 @@ class PredictionLoop:
             # Update cognitive baseline
             try:
                 from core.cognitive_baseline import CognitiveBaseline
+
                 base = CognitiveBaseline.load(code)
                 for p in base.get("prediction_history", []):
                     for upd in updated:
@@ -164,8 +169,7 @@ class PredictionLoop:
         return updated
 
     @staticmethod
-    def update_confidence(code: str, prediction_id: str,
-                           new_confidence: float):
+    def update_confidence(code: str, prediction_id: str, new_confidence: float):
         """Manually update confidence for a prediction."""
         db = _load_predictions()
         for pred in db["predictions"]:

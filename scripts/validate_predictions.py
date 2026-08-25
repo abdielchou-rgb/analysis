@@ -18,8 +18,7 @@ sys.path.insert(0, str(_ROOT))
 
 def main():
     parser = argparse.ArgumentParser(description="2hao 预测验证 CLI")
-    parser.add_argument("--horizon", type=int, default=365,
-                        help="到期天数（默认 365 天）")
+    parser.add_argument("--horizon", type=int, default=365, help="到期天数（默认 365 天）")
     parser.add_argument("--stats", action="store_true", help="查看评分卡")
     parser.add_argument("--purge", action="store_true", help="清理低质量记录")
     args = parser.parse_args()
@@ -41,7 +40,7 @@ def main():
 
     # 验证
     r = validate_forward_picks_csv(horizon_days=args.horizon)
-    print(f"预测验证结果:")
+    print("预测验证结果:")
     print(f"  总数: {r['total']}")
     print(f"  已到期: {r['expired']}")
     print(f"  已验证: {r['validated']}")

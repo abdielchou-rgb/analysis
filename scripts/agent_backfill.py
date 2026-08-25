@@ -19,7 +19,10 @@
 """
 
 from __future__ import annotations
-import sys, os, json, subprocess
+
+import json
+import subprocess
+import sys
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
@@ -27,8 +30,8 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 import logging
-logging.basicConfig(level=logging.INFO,
-                    format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
 logger = logging.getLogger("2hao.agent_backfill")
 
 PY = sys.executable or "python"
@@ -38,16 +41,19 @@ def _cmd(args: list) -> subprocess.CompletedProcess:
     return subprocess.run([PY] + args, capture_output=True, text=True, cwd=str(_ROOT))
 
 
-def cmd_check(asset: str, report_type: str = "listed_company", output_dir: str = "output",
-              enrich_file: str = None) -> dict:
+def cmd_check(
+    asset: str, report_type: str = "listed_company", output_dir: str = "output", enrich_file: str = None
+) -> dict:
     """跑到 enrich 节点，返回缺口清单"""
-    print(f"\n{'='*60}")
-    print(f"  Agent 数据兜底 — 检查缺口")
-    print(f"{'='*60}")
-    r = subprocess.run([PY, "pipeline/scheduler.py", asset,
-                        "--type", report_type, "--output", output_dir,
-                        "--data-check-only"],
-                       capture_output=True, text=True, cwd=str(_ROOT))
+    print(f"\n{'=' * 60}")
+    print("  Agent 数据兜底 — 检查缺口")
+    print(f"{'=' * 60}")
+    r = subprocess.run(
+        [PY, "pipeline/scheduler.py", asset, "--type", report_type, "--output", output_dir, "--data-check-only"],
+        capture_output=True,
+        text=True,
+        cwd=str(_ROOT),
+    )
     print(r.stdout)
     if r.stderr:
         print(r.stderr[-2000:], file=sys.stderr)
@@ -63,20 +69,25 @@ def cmd_check(asset: str, report_type: str = "listed_company", output_dir: str =
 def cmd_template(asset: str, out: str = "enrich.json") -> str:
     """生成 enrich-file 模板"""
     from pipeline.data_enrichment import make_enrich_template
+
     p = make_enrich_template(asset, out)
     print(f"[TEMPLATE] 已生成: {p}")
     print("  用 WebSearch/akshare-MCP 补数据，每条必须带 source 字段。")
     return str(p)
 
 
-def cmd_run(asset: str, report_type: str = "listed_company", style: str = "cicc",
-            output_dir: str = "output", enrich_file: str = None) -> int:
+def cmd_run(
+    asset: str,
+    report_type: str = "listed_company",
+    style: str = "cicc",
+    output_dir: str = "output",
+    enrich_file: str = None,
+) -> int:
     """带 enrich-file 重跑完整管线"""
-    print(f"\n{'='*60}")
-    print(f"  Agent 数据兜底 — 带补充数据重跑管线")
-    print(f"{'='*60}")
-    args = [PY, "pipeline/scheduler.py", asset,
-            "--type", report_type, "--style", style, "--output", output_dir]
+    print(f"\n{'=' * 60}")
+    print("  Agent 数据兜底 — 带补充数据重跑管线")
+    print(f"{'=' * 60}")
+    args = [PY, "pipeline/scheduler.py", asset, "--type", report_type, "--style", style, "--output", output_dir]
     if enrich_file:
         args += ["--enrich-file", enrich_file]
     r = subprocess.run(args, capture_output=True, text=True, cwd=str(_ROOT))
@@ -86,8 +97,9 @@ def cmd_run(asset: str, report_type: str = "listed_company", style: str = "cicc"
     return 0 if r.returncode == 0 else r.returncode
 
 
-def cmd_auto(asset: str, report_type: str = "listed_company",
-             output_dir: str = "output", enrich_file: str = None) -> int:
+def cmd_auto(
+    asset: str, report_type: str = "listed_company", output_dir: str = "output", enrich_file: str = None
+) -> int:
     """检查缺口 → 若缺则提示 agent 补数据 → 带数据重跑"""
     result = cmd_check(asset, report_type, output_dir, enrich_file)
     if result.get("error"):
@@ -98,7 +110,7 @@ def cmd_auto(asset: str, report_type: str = "listed_company",
         return cmd_run(asset, report_type, "cicc", output_dir, enrich_file)
     print(f"\n[!] 数据不足，缺口: {result.get('missing_core', [])}")
     print("    请用 WebSearch/akshare-MCP 补充数据并生成 enrich-file，然后运行:")
-    print(f"    python scripts/agent_backfill.py run \"{asset}\" --enrich-file <enrich.json>")
+    print(f'    python scripts/agent_backfill.py run "{asset}" --enrich-file <enrich.json>')
     # 自动生成模板供 agent 填写
     tpl = cmd_template(asset, f"{asset.split()[0]}_enrich.json")
     print(f"\n[✓] 已生成模板: {tpl} — 填入数据后重跑即可。")
@@ -107,6 +119,7 @@ def cmd_auto(asset: str, report_type: str = "listed_company",
 
 def main():
     import argparse
+
     parser = argparse.ArgumentParser(description="2hao Agent 数据兜底执行器")
     sub = parser.add_subparsers(dest="cmd", required=True)
 

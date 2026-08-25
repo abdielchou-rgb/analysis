@@ -1,0 +1,11 @@
+# M4 Playbook：动力电池
+industry: 动力电池
+dims_boost: [supply_chain_analysis, technology_roadmap, global_competition]
+red_lines:
+  - "碳酸锂价格假设必须给出数值与来源，禁止'企稳/回落'裸表述"
+  - "产能利用率<60% 时禁止给出满产满销式盈利预测"
+  - "储能与动力电池必须分开给出出货量与毛利，禁止合并口径"
+falsification_library:
+  - "若碳酸锂回升至15万元/吨以上且传导失败 → 毛利率修复逻辑证伪"
+  - "海外工厂投产延迟两个季度 → 全球化第二曲线证伪"
+key_metrics: [碳酸锂价格, 产能利用率, 出货量增速, 单Wh毛利]

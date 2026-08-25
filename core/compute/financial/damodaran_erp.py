@@ -18,32 +18,59 @@ from __future__ import annotations
 
 # 基于主权信用评级的违约利差（来源于达摩达兰 2019 年数据表）
 RATING_DEFAULT_SPREADS: dict[str, float] = {
-    "Aaa": 0.0000, "Aa1": 0.0045, "Aa2": 0.0056, "Aa3": 0.0068,
-    "A1": 0.0108,  "A2": 0.0134,  "A3": 0.0167,
-    "Baa1": 0.0180, "Baa2": 0.0215, "Baa3": 0.0248,
-    "Ba1": 0.0295,  "Ba2": 0.0339,  "Ba3": 0.0406,
-    "B1": 0.0508,   "B2": 0.0621,   "B3": 0.0734,
-    "Caa1": 0.0888, "Caa2": 0.1065, "Caa3": 0.1128,
-    "Ca": 0.1300,   "C": 0.1500,
+    "Aaa": 0.0000,
+    "Aa1": 0.0045,
+    "Aa2": 0.0056,
+    "Aa3": 0.0068,
+    "A1": 0.0108,
+    "A2": 0.0134,
+    "A3": 0.0167,
+    "Baa1": 0.0180,
+    "Baa2": 0.0215,
+    "Baa3": 0.0248,
+    "Ba1": 0.0295,
+    "Ba2": 0.0339,
+    "Ba3": 0.0406,
+    "B1": 0.0508,
+    "B2": 0.0621,
+    "B3": 0.0734,
+    "Caa1": 0.0888,
+    "Caa2": 0.1065,
+    "Caa3": 0.1128,
+    "Ca": 0.1300,
+    "C": 0.1500,
 }
 
 # 主要国家评级查询表（基于达摩达兰 2019 年 + Standard & Poor's 最新）
 # 格式: {国家: (Moody's评级, S&P评级)}
 COUNTRY_RATINGS: dict[str, tuple[str, str]] = {
     # 亚洲
-    "中国": ("A1", "A+"), "日本": ("A1", "A+"), "韩国": ("Aa2", "AA"),
-    "印度": ("Baa3", "BBB-"), "台湾": ("Aa3", "AA+"), "香港": ("Aa3", "AA+"),
-    "新加坡": ("Aaa", "AAA"),  "印度尼西亚": ("Baa2", "BBB"),
-    "马来西亚": ("A3", "A-"), "泰国": ("Baa1", "BBB+"),
+    "中国": ("A1", "A+"),
+    "日本": ("A1", "A+"),
+    "韩国": ("Aa2", "AA"),
+    "印度": ("Baa3", "BBB-"),
+    "台湾": ("Aa3", "AA+"),
+    "香港": ("Aa3", "AA+"),
+    "新加坡": ("Aaa", "AAA"),
+    "印度尼西亚": ("Baa2", "BBB"),
+    "马来西亚": ("A3", "A-"),
+    "泰国": ("Baa1", "BBB+"),
     # 北美
-    "美国": ("Aaa", "AA+"), "加拿大": ("Aaa", "AAA"),
+    "美国": ("Aaa", "AA+"),
+    "加拿大": ("Aaa", "AAA"),
     # 欧洲
-    "德国": ("Aaa", "AAA"), "英国": ("Aa3", "AA"), "法国": ("Aa2", "AA"),
-    "瑞士": ("Aaa", "AAA"), "荷兰": ("Aaa", "AAA"),
+    "德国": ("Aaa", "AAA"),
+    "英国": ("Aa3", "AA"),
+    "法国": ("Aa2", "AA"),
+    "瑞士": ("Aaa", "AAA"),
+    "荷兰": ("Aaa", "AAA"),
     # 南美
-    "巴西": ("Ba2", "BB-"), "阿根廷": ("B2", "B-"), "智利": ("A1", "A"),
+    "巴西": ("Ba2", "BB-"),
+    "阿根廷": ("B2", "B-"),
+    "智利": ("A1", "A"),
     # 其他
-    "澳大利亚": ("Aaa", "AAA"),  "俄罗斯": ("Ba1", "BB+"),
+    "澳大利亚": ("Aaa", "AAA"),
+    "俄罗斯": ("Ba1", "BB+"),
 }
 
 
@@ -90,8 +117,7 @@ class DamodaranERP:
         erp_result["sp_rating"] = ratings[1]
         return erp_result
 
-    def for_wacc_adjustment(self, country: str = "中国",
-                             mature_erp: float = None) -> dict:
+    def for_wacc_adjustment(self, country: str = "中国", mature_erp: float = None) -> dict:
         """生成可直接用于 WACC 计算的参数。"""
         erp = self.for_country(country)
         return {
@@ -104,11 +130,14 @@ class DamodaranERP:
             "note": f"总ERP {erp['total_erp']:.1%} = 成熟市场 {mature_erp or self.mature_erp:.1%} + 国家风险溢价 {erp['country_risk_premium']:.1%}",
         }
 
-    def to_conviction_matrix_input(self, country: str = "中国",
-                                     beta: float = 1.35,
-                                     debt_ratio: float = 0.0,
-                                     cost_of_debt: float = 0.03,
-                                     tax_rate: float = 0.25) -> dict:
+    def to_conviction_matrix_input(
+        self,
+        country: str = "中国",
+        beta: float = 1.35,
+        debt_ratio: float = 0.0,
+        cost_of_debt: float = 0.03,
+        tax_rate: float = 0.25,
+    ) -> dict:
         """生成可直接输入 Conviction Matrix / DCF 的 WACC 参数。"""
         erp = self.for_wacc_adjustment(country)
         risk_free_rate = erp["mature_market_erp"]  # 无风险利率 ≈ 成熟市场 ERP
@@ -132,21 +161,20 @@ class DamodaranERP:
         """列出所有可查询的国家。"""
         return sorted(COUNTRY_RATINGS.keys())
 
-
     def get_wacc_details(self) -> dict:
         """Return all WACC intermediate parameters"""
         return {
-            "risk_free_rate": round(getattr(self, 'risk_free_rate', 0.045), 4),
-            "beta": round(getattr(self, 'beta', 1.1), 4),
-            "equity_risk_premium": round(getattr(self, 'equity_risk_premium', 0.055), 4),
-            "country_risk_premium": round(getattr(self, 'country_risk_premium', 0.01), 4),
-            "cost_of_equity": round(getattr(self, 'cost_of_equity', 0.10), 4),
-            "cost_of_debt": round(getattr(self, 'cost_of_debt', 0.035), 4),
-            "debt_weight": round(getattr(self, 'debt_weight', 0.20), 4),
-            "equity_weight": round(getattr(self, 'equity_weight', 0.80), 4),
-            "wacc": round(getattr(self, 'wacc', 0.095), 4),
+            "risk_free_rate": round(getattr(self, "risk_free_rate", 0.045), 4),
+            "beta": round(getattr(self, "beta", 1.1), 4),
+            "equity_risk_premium": round(getattr(self, "equity_risk_premium", 0.055), 4),
+            "country_risk_premium": round(getattr(self, "country_risk_premium", 0.01), 4),
+            "cost_of_equity": round(getattr(self, "cost_of_equity", 0.10), 4),
+            "cost_of_debt": round(getattr(self, "cost_of_debt", 0.035), 4),
+            "debt_weight": round(getattr(self, "debt_weight", 0.20), 4),
+            "equity_weight": round(getattr(self, "equity_weight", 0.80), 4),
+            "wacc": round(getattr(self, "wacc", 0.095), 4),
             "method": "Damodaran ERP",
-            "data_source": "Damodaran NYU Stern - January 2026 Update"
+            "data_source": "Damodaran NYU Stern - January 2026 Update",
         }
 
     def list_ratings(self) -> list[str]:
@@ -170,6 +198,7 @@ def get_erp() -> DamodaranERP:
 def erp_for_country(country: str = "中国") -> dict:
     """便捷调用：给定国家，获取总 ERP。"""
     return get_erp().for_country(country)
+
 
 def erp_for_wacc(country: str = "中国", **kwargs) -> dict:
     """便捷调用：给定国家，获取 WACC 输入参数。"""

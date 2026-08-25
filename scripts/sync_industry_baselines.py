@@ -55,18 +55,28 @@ def sync_sw_sectors():
             print(f"[申万三级行业] {len(sw_df)} 个行业")
             for _, row in sw_df.iterrows():
                 try:
-                    results.append({
-                        "sector_code": str(row.get("行业代码", "")),
-                        "sector_name": str(row.get("行业名称", "")),
-                        "parent_sector": str(row.get("上级行业", "")),
-                        "pe_ttm": round(float(row["TTM(滚动)市盈率"]), 2) if row.get("TTM(滚动)市盈率") and row["TTM(滚动)市盈率"] == row["TTM(滚动)市盈率"] else None,
-                        "pe_static": round(float(row["静态市盈率"]), 2) if row.get("静态市盈率") and row["静态市盈率"] == row["静态市盈率"] else None,
-                        "pb": round(float(row["市净率"]), 2) if row.get("市净率") and row["市净率"] == row["市净率"] else None,
-                        "dividend_yield": round(float(row["静态股息率"]), 2) if row.get("静态股息率") and row["静态股息率"] == row["静态股息率"] else None,
-                        "stock_count": int(row.get("成份个数", 0) or 0),
-                        "source": "akshare_sw3",
-                        "updated_at": now,
-                    })
+                    results.append(
+                        {
+                            "sector_code": str(row.get("行业代码", "")),
+                            "sector_name": str(row.get("行业名称", "")),
+                            "parent_sector": str(row.get("上级行业", "")),
+                            "pe_ttm": round(float(row["TTM(滚动)市盈率"]), 2)
+                            if row.get("TTM(滚动)市盈率") and row["TTM(滚动)市盈率"] == row["TTM(滚动)市盈率"]
+                            else None,
+                            "pe_static": round(float(row["静态市盈率"]), 2)
+                            if row.get("静态市盈率") and row["静态市盈率"] == row["静态市盈率"]
+                            else None,
+                            "pb": round(float(row["市净率"]), 2)
+                            if row.get("市净率") and row["市净率"] == row["市净率"]
+                            else None,
+                            "dividend_yield": round(float(row["静态股息率"]), 2)
+                            if row.get("静态股息率") and row["静态股息率"] == row["静态股息率"]
+                            else None,
+                            "stock_count": int(row.get("成份个数", 0) or 0),
+                            "source": "akshare_sw3",
+                            "updated_at": now,
+                        }
+                    )
                 except Exception:
                     continue
             print(f"[申万三级行业] 提取 {len(results)} 个行业")
@@ -90,15 +100,23 @@ def sync_sw_sectors():
                 )
                 for _, row in sector_stats.iterrows():
                     try:
-                        results.append({
-                            "sector_name": str(row["所属行业"]),
-                            "pe_ttm": round(float(row["median_pe"]), 2) if row["median_pe"] and row["median_pe"] == row["median_pe"] else None,
-                            "pb": round(float(row["avg_pb"]), 2) if row["avg_pb"] and row["avg_pb"] == row["avg_pb"] else None,
-                            "market_cap": round(float(row["total_market_cap"]) / 1e8, 2) if row["total_market_cap"] else None,
-                            "stock_count": int(row["stock_count"]),
-                            "source": "akshare_spot",
-                            "updated_at": now,
-                        })
+                        results.append(
+                            {
+                                "sector_name": str(row["所属行业"]),
+                                "pe_ttm": round(float(row["median_pe"]), 2)
+                                if row["median_pe"] and row["median_pe"] == row["median_pe"]
+                                else None,
+                                "pb": round(float(row["avg_pb"]), 2)
+                                if row["avg_pb"] and row["avg_pb"] == row["avg_pb"]
+                                else None,
+                                "market_cap": round(float(row["total_market_cap"]) / 1e8, 2)
+                                if row["total_market_cap"]
+                                else None,
+                                "stock_count": int(row["stock_count"]),
+                                "source": "akshare_spot",
+                                "updated_at": now,
+                            }
+                        )
                     except Exception:
                         continue
                 print(f"[行业估值] 统计 {len(results)} 个行业")
@@ -155,7 +173,9 @@ def main():
     sectors = sorted(existing["sectors"], key=lambda x: x.get("stock_count", 0), reverse=True)[:10]
     print("\nTOP 10 行业:")
     for s in sectors:
-        print(f"  {s['sector_name']}: {s.get('stock_count', 0)} 只, PE={s.get('pe_ttm', 'N/A')}, PB={s.get('pb', 'N/A')}")
+        print(
+            f"  {s['sector_name']}: {s.get('stock_count', 0)} 只, PE={s.get('pe_ttm', 'N/A')}, PB={s.get('pb', 'N/A')}"
+        )
     return 0
 
 

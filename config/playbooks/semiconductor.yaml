@@ -1,0 +1,11 @@
+# M4 Playbook：半导体
+industry: 半导体
+dims_boost: [technology_roadmap, geopolitical_depth, capital_market]
+red_lines:
+  - "国产替代空间 = 份额缺口 × 替代概率，两因子必须分别给出依据"
+  - "周期位置判断必须引用库存周转或产能利用率数据"
+  - "设备/材料/设计分开讨论，禁止合并为'半导体板块'"
+falsification_library:
+  - "库存周转连续两季上行且营收下行 → 周期上行逻辑证伪"
+  - "先进制程良率爬坡低于披露路线图 → 技术代际假设证伪"
+key_metrics: [库存周转月数, 产能利用率, 资本开支增速, 先进制程占比]

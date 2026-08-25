@@ -37,6 +37,7 @@ def load_schema() -> dict:
 def check_sac_alignment(schema: dict) -> list[str]:
     """SAC chart_config 的图 id 必须在 schema 中，且 maps_to/type 一致"""
     import yaml
+
     issues = []
     for rt, fname in REPORT_SAC_FILES.items():
         sac_path = _ROOT / "core" / "sacs" / fname
@@ -59,6 +60,7 @@ def check_sac_alignment(schema: dict) -> list[str]:
 def check_pipeline_alignment(schema: dict) -> list[str]:
     """chart_pipeline CHART_TEMPLATES 的图 id 必须在 schema 中"""
     import sys as _sys
+
     _sys.path.insert(0, str(_ROOT))
     try:
         from pipeline.chart_pipeline import CHART_TEMPLATES
@@ -76,6 +78,7 @@ def check_pipeline_alignment(schema: dict) -> list[str]:
 def check_enrich_whitelist(schema: dict) -> list[str]:
     """data_enrichment ALLOWED_FIG_KEYS 必须覆盖 schema 中 allowed=true 的图"""
     import sys as _sys
+
     _sys.path.insert(0, str(_ROOT))
     try:
         from pipeline.data_enrichment import ALLOWED_FIG_KEYS

@@ -4,6 +4,7 @@ P3-audit 2026-08-24：llm_cache.py 此前零消费者——现网关级内嵌 ca
 同 (messages, model, temperature, max_tokens) 命中免重调。
 默认关闭：写作修订循环依赖轮间采样差异，缓存仅用于批量/开发迭代场景。
 """
+
 import sys
 from pathlib import Path
 
@@ -29,8 +30,8 @@ def fake_provider(monkeypatch):
 
     dc._registry._providers.clear()
     dc._registry._providers["fake"] = ProviderConfig(
-        name="fake", base_url="http://fake.local/v1",
-        api_key="k", models=["m"], priority=0)
+        name="fake", base_url="http://fake.local/v1", api_key="k", models=["m"], priority=0
+    )
     counter = {"post": 0}
 
     class _R:
@@ -43,6 +44,7 @@ def fake_provider(monkeypatch):
             return {"choices": [{"message": {"content": f"resp-{counter['post']}"}}], "usage": {}}
 
     import requests
+
     monkeypatch.setattr(requests, "post", lambda *a, **k: (counter.__setitem__("post", counter["post"] + 1), _R())[1])
     monkeypatch.setattr(requests, "get", lambda *a, **k: _R())
     yield dc, counter

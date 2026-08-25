@@ -23,7 +23,6 @@ import argparse
 import json
 import os
 import sqlite3
-import sys
 import time
 from pathlib import Path
 
@@ -31,9 +30,38 @@ ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
 
 # ── 美股 30（任务 H）──
-TICKERS = ["AAPL","MSFT","NVDA","GOOGL","AMZN","META","TSLA","AVGO","ORCL","AMD",
-           "INTC","QCOM","ASML","AMAT","LRCX","JPM","BAC","WMT","KO","PEP",
-           "JNJ","PFE","LLY","MRK","XOM","CVX","CAT","BA","DIS","NFLX"]
+TICKERS = [
+    "AAPL",
+    "MSFT",
+    "NVDA",
+    "GOOGL",
+    "AMZN",
+    "META",
+    "TSLA",
+    "AVGO",
+    "ORCL",
+    "AMD",
+    "INTC",
+    "QCOM",
+    "ASML",
+    "AMAT",
+    "LRCX",
+    "JPM",
+    "BAC",
+    "WMT",
+    "KO",
+    "PEP",
+    "JNJ",
+    "PFE",
+    "LLY",
+    "MRK",
+    "XOM",
+    "CVX",
+    "CAT",
+    "BA",
+    "DIS",
+    "NFLX",
+]
 
 # ── 全球龙头（任务 G）：(行业, 公司, ticker, 描述) ──
 LEADERS = [
@@ -83,6 +111,7 @@ def _to_yi(v):
 def _yf_info(ticker: str) -> dict:
     """yfinance 拉 info，指数退避重试。失败返回 {}"""
     import yfinance as yf
+
     for attempt, delay in enumerate([0.5, 1.0, 2.0, 4.0]):
         try:
             info = yf.Ticker(ticker).info
@@ -90,7 +119,7 @@ def _yf_info(ticker: str) -> dict:
                 return info
         except Exception as e:
             if attempt < 3:
-                print(f"  [RETRY {attempt+1}] {ticker}: {str(e)[:50]}")
+                print(f"  [RETRY {attempt + 1}] {ticker}: {str(e)[:50]}")
                 time.sleep(delay)
     return {}
 
@@ -99,6 +128,7 @@ def _tavily_financial(ticker: str, company: str) -> dict:
     """Tavily 搜真实财报数字回填。返回 {revenue, net_profit, market_cap, pe, source}"""
     try:
         from tavily import TavilyClient
+
         key = os.environ.get("TAVILY_API_KEY", "")
         if not key:
             return {}
@@ -109,15 +139,22 @@ def _tavily_financial(ticker: str, company: str) -> dict:
         # 从搜索结果粗略提取数字（真实来源 URL 保证可追溯）
         content = " ".join(res.get("content", "") for res in r.get("results", [])[:2])
         import re
+
         rev = None
-        m = re.search(r'(\d+\.?\d*)\s*(?:trillion|billion|million|亿|万亿|十亿)', content)
+        m = re.search(r"(\d+\.?\d*)\s*(?:trillion|billion|million|亿|万亿|十亿)", content)
         if m:
             num = float(m.group(1))
             unit = m.group(2)
             mult = {"trillion": 1e12, "billion": 1e9, "million": 1e6, "亿": 1e8, "万亿": 1e12, "十亿": 1e10}
             rev = num * mult.get(unit, 1e9)
-        return {"revenue": _to_yi(rev), "net_profit": None, "market_cap": None,
-                "pe": None, "source": source, "partial": rev is not None}
+        return {
+            "revenue": _to_yi(rev),
+            "net_profit": None,
+            "market_cap": None,
+            "pe": None,
+            "source": source,
+            "partial": rev is not None,
+        }
     except Exception as e:
         print(f"  [TAVILY] {ticker}: {str(e)[:60]}")
         return {}
@@ -142,11 +179,16 @@ def fix_h(skip: set) -> None:
             continue
         info = _yf_info(t)
         if info:
-            row = (t, "2026-08-01", _to_yi(info.get("totalRevenue")),
-                   _to_yi(info.get("netIncomeToCommon")), _to_yi(info.get("marketCap")),
-                   round(info["trailingPE"], 2) if info.get("trailingPE") else None,
-                   round(info["priceToBook"], 2) if info.get("priceToBook") else None,
-                   "yfinance: Ticker.info")
+            row = (
+                t,
+                "2026-08-01",
+                _to_yi(info.get("totalRevenue")),
+                _to_yi(info.get("netIncomeToCommon")),
+                _to_yi(info.get("marketCap")),
+                round(info["trailingPE"], 2) if info.get("trailingPE") else None,
+                round(info["priceToBook"], 2) if info.get("priceToBook") else None,
+                "yfinance: Ticker.info",
+            )
             con.execute("INSERT OR REPLACE INTO us_stocks VALUES (?,?,?,?,?,?,?,?)", row)
             con.commit()
             filled += 1
@@ -155,8 +197,7 @@ def fix_h(skip: set) -> None:
             # yfinance 失败 → Tavily 兜底
             tf = _tavily_financial(t, t)
             if tf.get("revenue"):
-                row = (t, "2026-08-01", tf["revenue"], tf["net_profit"], tf["market_cap"],
-                       tf["pe"], None, tf["source"])
+                row = (t, "2026-08-01", tf["revenue"], tf["net_profit"], tf["market_cap"], tf["pe"], None, tf["source"])
                 con.execute("INSERT OR REPLACE INTO us_stocks VALUES (?,?,?,?,?,?,?,?)", row)
                 con.commit()
                 filled += 1
@@ -188,29 +229,43 @@ def fix_g(skip: set) -> None:
             continue
         info = _yf_info(tk)
         if info:
-            leaders.append({
-                "industry": ind, "company": comp, "ticker": tk,
-                "revenue_2025": _to_yi(info.get("totalRevenue")),
-                "net_profit_2025": _to_yi(info.get("netIncomeToCommon")),
-                "market_cap": _to_yi(info.get("marketCap")),
-                "pe_ttm": round(info["trailingPE"], 2) if info.get("trailingPE") else None,
-                "global_market_share": desc,
-                "source": "yfinance: Ticker.info"})
+            leaders.append(
+                {
+                    "industry": ind,
+                    "company": comp,
+                    "ticker": tk,
+                    "revenue_2025": _to_yi(info.get("totalRevenue")),
+                    "net_profit_2025": _to_yi(info.get("netIncomeToCommon")),
+                    "market_cap": _to_yi(info.get("marketCap")),
+                    "pe_ttm": round(info["trailingPE"], 2) if info.get("trailingPE") else None,
+                    "global_market_share": desc,
+                    "source": "yfinance: Ticker.info",
+                }
+            )
             print(f"  [G] {comp}: rev={_to_yi(info.get('totalRevenue'))} 市值={_to_yi(info.get('marketCap'))}")
         else:
             tf = _tavily_financial(tk, comp)
             if tf.get("revenue"):
-                leaders.append({
-                    "industry": ind, "company": comp, "ticker": tk,
-                    "revenue_2025": tf["revenue"], "net_profit_2025": tf["net_profit"],
-                    "market_cap": tf["market_cap"], "pe_ttm": tf["pe"],
-                    "global_market_share": desc, "source": tf["source"]})
+                leaders.append(
+                    {
+                        "industry": ind,
+                        "company": comp,
+                        "ticker": tk,
+                        "revenue_2025": tf["revenue"],
+                        "net_profit_2025": tf["net_profit"],
+                        "market_cap": tf["market_cap"],
+                        "pe_ttm": tf["pe"],
+                        "global_market_share": desc,
+                        "source": tf["source"],
+                    }
+                )
                 print(f"  [G-TAVILY] {comp}: rev={tf['revenue']} ({tf['source'][:40]})")
             else:
                 print(f"  [G] {comp} FAIL: yfinance限流+Tavily无数据")
         time.sleep(1.0)
-    path.write_text(json.dumps({"leaders": leaders, "source": "yfinance + tavily"},
-                               ensure_ascii=False, indent=2), encoding="utf-8")
+    path.write_text(
+        json.dumps({"leaders": leaders, "source": "yfinance + tavily"}, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
     with_data = sum(1 for l in leaders if l.get("revenue_2025"))
     print(f"G 完成: 共{len(leaders)}家，{with_data}家有数据")
 
@@ -228,8 +283,8 @@ def main():
     if not args.skip_g:
         fix_g(skip)
     print("\n完成。数据文件：")
-    print(f"  {DATA/'us_stocks.db'}")
-    print(f"  {DATA/'global_leaders.json'}")
+    print(f"  {DATA / 'us_stocks.db'}")
+    print(f"  {DATA / 'global_leaders.json'}")
 
 
 if __name__ == "__main__":

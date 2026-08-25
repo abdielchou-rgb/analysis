@@ -146,8 +146,10 @@ def format_sotp_for_report(result: SOTPResult) -> str:
 
     if result.target_price:
         lines.append("")
-        lines.append("**每股目标价: %.2f 元** (总股本 %.2f 亿股)" % (
-            result.target_price, result.total_shares / 1e8 if result.total_shares else 0))
+        lines.append(
+            "**每股目标价: %.2f 元** (总股本 %.2f 亿股)"
+            % (result.target_price, result.total_shares / 1e8 if result.total_shares else 0)
+        )
 
     if result.warnings:
         lines.append("")

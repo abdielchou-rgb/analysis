@@ -17,7 +17,6 @@ D: 渗透率 data/industry_penetration.json（30行业细分赛道）
 import argparse
 import json
 import os
-import sys
 import time
 from pathlib import Path
 
@@ -26,10 +25,36 @@ DATA = ROOT / "data"
 
 # 30 个重点行业
 INDUSTRIES = [
-    "半导体", "消费电子", "汽车", "新能源汽车", "光伏", "风电", "锂电", "储能",
-    "白酒", "乳制品", "医药", "医疗器械", "CXO", "创新药", "军工", "工程机械",
-    "重卡", "家电", "面板", "LED", "PCB", "钢铁", "煤炭", "化工", "有色",
-    "黄金", "银行", "保险", "房地产", "建筑",
+    "半导体",
+    "消费电子",
+    "汽车",
+    "新能源汽车",
+    "光伏",
+    "风电",
+    "锂电",
+    "储能",
+    "白酒",
+    "乳制品",
+    "医药",
+    "医疗器械",
+    "CXO",
+    "创新药",
+    "军工",
+    "工程机械",
+    "重卡",
+    "家电",
+    "面板",
+    "LED",
+    "PCB",
+    "钢铁",
+    "煤炭",
+    "化工",
+    "有色",
+    "黄金",
+    "银行",
+    "保险",
+    "房地产",
+    "建筑",
 ]
 
 
@@ -37,15 +62,18 @@ def _tavily_search(query: str, max_results: int = 4) -> list:
     """Tavily 搜索，返回 [{title, url, content}]"""
     try:
         from tavily import TavilyClient
+
         key = os.environ.get("TAVILY_API_KEY", "")
         if not key:
             print("[!] TAVILY_API_KEY 未设置")
             return []
         tc = TavilyClient(api_key=key)
         r = tc.search(query=query, max_results=max_results)
-        return [{"title": res.get("title", ""), "url": res.get("url", ""),
-                 "content": res.get("content", "")}
-                for res in r.get("results", []) if res.get("url")]
+        return [
+            {"title": res.get("title", ""), "url": res.get("url", ""), "content": res.get("content", "")}
+            for res in r.get("results", [])
+            if res.get("url")
+        ]
     except Exception as e:
         print(f"[!] Tavily 失败: {str(e)[:80]}")
         return []
@@ -100,17 +128,28 @@ def task_b():
                     continue
                 seen.add((ind, title))
                 # 粗略方向判断
-                direction = 1 if any(k in content for k in ["支持", "鼓励", "补贴", "规划", "基金"]) else \
-                            (-1 if any(k in content for k in ["限制", "监管", "禁止", "整治"]) else 0)
-                existing.append({
-                    "industry": ind, "title": title, "date": "2025",
-                    "level": "国家级", "direction": direction,
-                    "summary": content, "related_sectors": [],
-                    "source": url})
+                direction = (
+                    1
+                    if any(k in content for k in ["支持", "鼓励", "补贴", "规划", "基金"])
+                    else (-1 if any(k in content for k in ["限制", "监管", "禁止", "整治"]) else 0)
+                )
+                existing.append(
+                    {
+                        "industry": ind,
+                        "title": title,
+                        "date": "2025",
+                        "level": "国家级",
+                        "direction": direction,
+                        "summary": content,
+                        "related_sectors": [],
+                        "source": url,
+                    }
+                )
                 added += 1
             time.sleep(0.5)  # 限流保护
-    path.write_text(json.dumps({"policies": existing, "source": "tavily"},
-                               ensure_ascii=False, indent=2), encoding="utf-8")
+    path.write_text(
+        json.dumps({"policies": existing, "source": "tavily"}, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
     print(f"B 完成: 共{len(existing)}条（新增{added}），写入 {path}")
 
 
@@ -131,8 +170,15 @@ def task_c():
         if ind in seen:
             continue
         results = _tavily_search(f"{ind} 产业链 上游 中游 下游 成本结构", max_results=3)
-        chain = {"industry": ind, "upstream": [], "midstream": [], "downstream": [],
-                 "price_links": [], "margin_flow": "", "source": ""}
+        chain = {
+            "industry": ind,
+            "upstream": [],
+            "midstream": [],
+            "downstream": [],
+            "price_links": [],
+            "margin_flow": "",
+            "source": "",
+        }
         for res in results:
             if res.get("url") and not chain["source"]:
                 chain["source"] = res["url"]
@@ -149,8 +195,9 @@ def task_c():
             seen.add(ind)
             print(f"  [C] {ind}: 上下游 {len(chain['upstream'])}/{len(chain['downstream'])}")
         time.sleep(0.5)
-    path.write_text(json.dumps({"chains": existing, "source": "tavily"},
-                               ensure_ascii=False, indent=2), encoding="utf-8")
+    path.write_text(
+        json.dumps({"chains": existing, "source": "tavily"}, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
     print(f"C 完成: 共{len(existing)}条，写入 {path}")
 
 
@@ -165,9 +212,15 @@ def task_d():
             existing = []
     print(f"=== 任务 D: 渗透率（已有{len(existing)}条）===")
     segments = {
-        "新能源汽车": "电动乘用车", "光伏": "光伏发电", "锂电": "动力电池",
-        "储能": "电化学储能", "消费电子": "智能手机", "汽车": "L2级辅助驾驶",
-        "家电": "智能家居", "医药": "创新药", "半导体": "先进制程芯片",
+        "新能源汽车": "电动乘用车",
+        "光伏": "光伏发电",
+        "锂电": "动力电池",
+        "储能": "电化学储能",
+        "消费电子": "智能手机",
+        "汽车": "L2级辅助驾驶",
+        "家电": "智能家居",
+        "医药": "创新药",
+        "半导体": "先进制程芯片",
     }
     seen = {(p.get("industry"), p.get("segment")) for p in existing}
     for ind, seg in segments.items():
@@ -177,22 +230,39 @@ def task_d():
         for res in results:
             content = res.get("content", "")
             import re
-            m = re.search(r'(\d{1,3}(?:\.\d+)?)\s*%', content)
+
+            m = re.search(r"(\d{1,3}(?:\.\d+)?)\s*%", content)
             if m:
                 pct = float(m.group(1))
-                life = ("导入期" if pct < 5 else "成长期早期" if pct < 30 else
-                        "成长期" if pct < 60 else "成熟期" if pct < 85 else "衰退期")
-                existing.append({
-                    "industry": ind, "segment": seg,
-                    "penetration_pct": pct, "as_of": "2025",
-                    "life_cycle": life, "growth_curve": "S曲线",
-                    "source": res.get("url", "tavily")})
+                life = (
+                    "导入期"
+                    if pct < 5
+                    else "成长期早期"
+                    if pct < 30
+                    else "成长期"
+                    if pct < 60
+                    else "成熟期"
+                    if pct < 85
+                    else "衰退期"
+                )
+                existing.append(
+                    {
+                        "industry": ind,
+                        "segment": seg,
+                        "penetration_pct": pct,
+                        "as_of": "2025",
+                        "life_cycle": life,
+                        "growth_curve": "S曲线",
+                        "source": res.get("url", "tavily"),
+                    }
+                )
                 seen.add((ind, seg))
                 print(f"  [D] {seg}: {pct}% → {life}")
                 break
         time.sleep(0.5)
-    path.write_text(json.dumps({"penetration": existing, "source": "tavily"},
-                               ensure_ascii=False, indent=2), encoding="utf-8")
+    path.write_text(
+        json.dumps({"penetration": existing, "source": "tavily"}, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
     print(f"D 完成: 共{len(existing)}条，写入 {path}")
 
 

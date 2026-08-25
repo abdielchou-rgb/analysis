@@ -125,6 +125,25 @@ class SectionWriter:
 
         self._skeleton_mode = _settings.skeleton_mode()
 
+    def _route_skip_for(self, asset: str) -> set:
+        """M2：行业级注入器禁用集合（按本次标的动态判定）。"""
+        try:
+            from core.industry_router import route_injector_skip
+
+            return route_injector_skip(asset, getattr(self, "_last_data_context", None) or {})
+        except Exception:
+            return set()
+        # M2 路由器：行业级注入器禁用集合（未命中行业=空集全开）
+        try:
+            from core.industry_router import route_injector_skip
+
+            self._injector_skip = route_injector_skip(
+                getattr(self, "asset", ""),
+                getattr(self, "_last_data_context", None) or {},
+            )
+        except Exception:
+            self._injector_skip = set()
+
     def _build_segments(self):
         chain = self.logic_chain
         if not chain:
@@ -1942,6 +1961,7 @@ class SectionWriter:
             asset_code=getattr(self, "_asset_code", ""),
             data_dict=getattr(self, "_data_dict", None) or {},
             skeleton=bool(getattr(self, "_skeleton_mode", False)),
+            injector_skip=self._route_skip_for(asset),
         )
         fc_str = _inj["fc_str"]
         ac_str = _inj["ac_str"]
@@ -1984,6 +2004,15 @@ class SectionWriter:
             logger.info("[DIM-PARALLEL] 写组 %s (%d维)", gname, len(dims))
             # 取该组维度定义（从 SAC）
             dim_defs = self._build_dimension_defs_for(g["dimensions"])
+            # S4：章节级节奏指令（决策门短句/财务数字链/竞争点名制…）
+            try:
+                from core.rhythm import directive_for
+
+                _rhythm = directive_for(gname, g["dimensions"])
+                if _rhythm:
+                    dim_defs += f"\n\n[节奏指令] {_rhythm}"
+            except Exception:
+                pass
             # R81（2026-08-06 补齐并行路径）：数据驱动参考框架注入——与串行路径 _build_prompt_v4 同源。
             # 此前 R81 两段强制只加在串行路径，维度并行（默认路径）缺失导致"框架应用结论"0 命中。
             fw_str = ""
@@ -2194,6 +2223,11 @@ class SectionWriter:
                 f"- [R99 图表嵌入] 已生成的每张图表必须在对应分析小节内以 "
                 f"[CHART:fig_xxx] 占位符引用（图表清单见上文），禁止全部堆在文末；"
                 f"确无对应内容的小节需说明原因。\n"
+                f"- [R100 框架三件套] 本组主用分析框架按三槽位输出（缺一即 Gate 拦截）：\n"
+                f"  [FW:<框架名>] 主框架应用：结论1/结论2/结论3\n"
+                f"  [FW-XCHECK] 与验证框架的交叉验证：一致 / 分歧点是什么\n"
+                f"  [FW-OPPOSE] 反方攻击：该结论最可能出错的两个原因+可观察信号\n"
+                f"  （评级/目标价等硬结论写在 [FW:] 标记之后，便于问责账本归因）\n"
                 f"- 本节约 {len(dims) * 800} 字，覆盖全部维度（对标国际投行深度报告篇幅）\n"
                 f"- 事实性断言必须有数据依据：若数据中【没有】公司简介/行业归属，"
                 f"禁止断言『主营XX/属于XX行业』，应写『公司主业待确认』并仅基于已有财务数据推断。"

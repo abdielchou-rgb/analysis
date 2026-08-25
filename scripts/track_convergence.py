@@ -10,7 +10,9 @@
     python scripts/track_convergence.py --json   # JSON 输出
 """
 
-import sys, os, json, time, subprocess
+import json
+import sys
+import time
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
@@ -18,6 +20,7 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 import logging
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
 logger = logging.getLogger("convergence")
 
@@ -25,12 +28,13 @@ logger = logging.getLogger("convergence")
 def measure_all() -> dict:
     """Measure all 6 dimensions"""
     measurements = {}
-    
+
     # D1: 速度 — SAC load time
     logger.info("[D1] Measuring SAC load speed...")
     t0 = time.time()
     try:
         from core.sacs import SACLoader
+
         s = SACLoader("listed_company")
         _ = s.get_logic_chain()
         load_time = time.time() - t0
@@ -38,34 +42,37 @@ def measure_all() -> dict:
     except Exception as e:
         measurements["speed_sac_load_ms"] = -1
         logger.warning(f"  SAC load failed: {e}")
-    
+
     # D2: 广度 — SAC dimension count
     logger.info("[D2] Measuring SAC breadth...")
     try:
         from core.sacs import SACLoader as S
+
         for rt in ["listed_company", "industry_deep", "unlisted_company", "earnings_notes"]:
             s = S(rt)
             measurements[f"breadth_{rt}_dims"] = len(s.get_dimension_ids())
             measurements[f"breadth_{rt}_chain"] = len(s.get_logic_chain())
     except Exception as e:
         logger.warning(f"  Breadth failed: {e}")
-    
+
     # D3: 深度 — IronGate check count
     logger.info("[D3] Measuring gate depth...")
     try:
         with open(_ROOT / "pipeline" / "iron_gate.py") as f:
             content = f.read()
         import re
-        checks = re.findall(r'self\._check_\w+\(\)', content)
+
+        checks = re.findall(r"self\._check_\w+\(\)", content)
         measurements["depth_iron_gate_checks"] = len(checks)
-        measurements["depth_iron_gate_lines"] = content.count('\\n')
+        measurements["depth_iron_gate_lines"] = content.count("\\n")
     except Exception as e:
         logger.warning(f"  Depth failed: {e}")
-    
+
     # D4: 记忆 — DB record counts
     logger.info("[D4] Measuring memory persistence...")
     try:
         import sqlite3
+
         for db_name in ["learning_data.db", "findings.db"]:
             db_path = _ROOT / "output" / db_name
             if db_path.exists():
@@ -83,18 +90,19 @@ def measure_all() -> dict:
                 measurements[f"memory_{db_name}_records"] = -1
     except Exception as e:
         logger.warning(f"  Memory failed: {e}")
-    
+
     # D5: 协作 — agent count
     logger.info("[D5] Measuring collaboration...")
     try:
         with open(_ROOT / "pipeline" / "e2e_orchestrator.py") as f:
             content = f.read()
         from core.sacs import SACLoader as S
+
         measurements["collab_agent_nodes"] = content.count("g.add_node(")
         measurements["collab_debate_refs"] = content.count("debate") + content.count("Debate")
     except Exception as e:
         logger.warning(f"  Collab failed: {e}")
-    
+
     # D6: 持续 — log age
     logger.info("[D6] Measuring stability...")
     try:
@@ -108,17 +116,17 @@ def measure_all() -> dict:
             measurements["stability_log_bytes"] = 0
     except Exception as e:
         logger.warning(f"  Stability failed: {e}")
-    
+
     measurements["timestamp"] = time.time()
     return measurements
 
 
 def print_report(m: dict):
     """Print human-readable report"""
-    print(f"\\n{'='*60}")
-    print(f"  FP3 六维收敛报告")
-    print(f"{'='*60}")
-    
+    print(f"\\n{'=' * 60}")
+    print("  FP3 六维收敛报告")
+    print(f"{'=' * 60}")
+
     dims = [
         ("D1 速度", [("SAC load (ms)", "speed_sac_load_ms")]),
         ("D2 广度", [(k, k) for k in m if k.startswith("breadth_")]),
@@ -127,31 +135,32 @@ def print_report(m: dict):
         ("D5 协作", [(k, k) for k in m if k.startswith("collab_")]),
         ("D6 持续", [(k, k) for k in m if k.startswith("stability_")]),
     ]
-    
+
     for dim_name, metrics in dims:
         print(f"\\n  [{dim_name}]")
         for label, key in metrics:
             if key in m:
                 v = m[key]
                 print(f"    {label}: {v}")
-    
-    print(f"\\n{'='*60}")
+
+    print(f"\\n{'=' * 60}")
 
 
 if __name__ == "__main__":
     import argparse
+
     p = argparse.ArgumentParser()
     p.add_argument("--save", action="store_true", help="Save to convergence log")
     p.add_argument("--json", action="store_true", help="JSON output")
     args = p.parse_args()
-    
+
     m = measure_all()
-    
+
     if args.json:
         print(json.dumps(m, indent=2))
     else:
         print_report(m)
-    
+
     if args.save:
         log_dir = _ROOT / "output"
         log_dir.mkdir(exist_ok=True)

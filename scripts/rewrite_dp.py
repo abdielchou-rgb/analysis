@@ -1,6 +1,7 @@
 # Rewrite data_pipeline.py with robust sequential timeouts
 from pathlib import Path
-code = '''# data_pipeline.py — Sequential data collection with per-source timeout
+
+code = """# data_pipeline.py — Sequential data collection with per-source timeout
 from __future__ import annotations
 import os, re, time, logging
 
@@ -41,7 +42,7 @@ class DataPipeline:
                 result["yfinance"] = {k: info[k] for k in ["marketCap","trailingPE","returnOnEquity","sector","industry"] if k in info}
             except: pass
         return result
-'''
+"""
 
-Path('D:/2hao-analyst/pipeline/data_pipeline.py').write_text(code, encoding='utf-8')
-print('Rewritten sequentially')
+Path("D:/2hao-analyst/pipeline/data_pipeline.py").write_text(code, encoding="utf-8")
+print("Rewritten sequentially")

@@ -72,7 +72,14 @@ SELF_CHECK_MATRIX = {
 
 # 模块健康检查（不依赖跑报告，纯本地验证）
 MODULE_CHECKS = [
-    ("chart_schema", "pipeline/chart_schema.json 合法且有 aliases", lambda: _check_json("pipeline/chart_schema.json") and "aliases" in json.load(open("pipeline/chart_schema.json", encoding="utf-8"))),
+    (
+        "chart_schema",
+        "pipeline/chart_schema.json 合法且有 aliases",
+        lambda: (
+            _check_json("pipeline/chart_schema.json")
+            and "aliases" in json.load(open("pipeline/chart_schema.json", encoding="utf-8"))
+        ),
+    ),
     ("sacs_baseline", "_AUTHORITATIVE_MIN 唯一基线", lambda: _check_authoritative_min()),
     ("iron_gate", "IronGate 含 AEFB+三表+豁免+AI Tone", lambda: _check_iron_gate()),
     ("deepseek_client", "DeepSeekClient 兼容类存在", lambda: _check_deepseek_client()),
@@ -93,6 +100,7 @@ def _check_json(p):
 def _check_authoritative_min():
     try:
         from core.sacs import SACLoader
+
         return hasattr(SACLoader, "_AUTHORITATIVE_MIN") and not hasattr(SACLoader, "_STANDARDS_MIN")
     except Exception:
         return False
@@ -101,10 +109,19 @@ def _check_authoritative_min():
 def _check_iron_gate():
     try:
         import inspect
+
         from pipeline import iron_gate
+
         src = inspect.getsource(iron_gate)
-        return all(k in src for k in ["_check_annotation_types", "_check_financial_statements_coverage",
-                                      "ai_tone_llm", "deepseek-reasoner"])
+        return all(
+            k in src
+            for k in [
+                "_check_annotation_types",
+                "_check_financial_statements_coverage",
+                "ai_tone_llm",
+                "deepseek-reasoner",
+            ]
+        )
     except Exception:
         return False
 
@@ -112,6 +129,7 @@ def _check_iron_gate():
 def _check_deepseek_client():
     try:
         from core.deepseek_client import DeepSeekClient
+
         return callable(getattr(DeepSeekClient, "chat", None))
     except Exception:
         return False
@@ -120,7 +138,9 @@ def _check_deepseek_client():
 def _check_chart_assembler():
     try:
         import inspect
+
         from pipeline import chart_assembler
+
         src = inspect.getsource(chart_assembler.ChartAssembler.inject_charts_postprocess)
         return "chart_schema.json" in src and "fig_alias" not in src.replace("_fig_alias", "")
     except Exception:
@@ -130,7 +150,9 @@ def _check_chart_assembler():
 def _check_sync_akshare():
     try:
         import inspect
+
         from scripts import sync_akshare_financials
+
         src = inspect.getsource(sync_akshare_financials)
         return "_em_http_fetch" in src and "RPT_F10_FINANCE_GBALANCE" in src
     except Exception:
@@ -152,15 +174,17 @@ def run_module_checks() -> list:
 def run_report_selfcheck(report_type: str, asset: str, enrich: str) -> dict:
     """跑一份真实报告，返回验证结果。"""
     import subprocess
-    cmd = [sys.executable, str(_ROOT / "pipeline" / "scheduler.py"),
-           asset, "--type", report_type, "--style", "cicc"]
+
+    cmd = [sys.executable, str(_ROOT / "pipeline" / "scheduler.py"), asset, "--type", report_type, "--style", "cicc"]
     if enrich and Path(enrich).exists():
         cmd += ["--enrich-file", enrich]
     print(f"\n=== 跑报告自检: {report_type} / {asset} ===")
     print(f"  命令: {' '.join(cmd[:6])}...")
     t0 = time.time()
     try:
-        r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=1800, cwd=str(_ROOT))
+        r = subprocess.run(
+            cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=1800, cwd=str(_ROOT)
+        )
         elapsed = time.time() - t0
         output = (r.stdout or "") + (r.stderr or "")
         # 解析关键信号
@@ -182,11 +206,9 @@ def run_report_selfcheck(report_type: str, asset: str, enrich: str) -> dict:
             "output_tail": output[-500:],
         }
     except subprocess.TimeoutExpired:
-        return {"report_type": report_type, "asset": asset, "passed": False,
-                "error": "超时(>30min)"}
+        return {"report_type": report_type, "asset": asset, "passed": False, "error": "超时(>30min)"}
     except Exception as e:
-        return {"report_type": report_type, "asset": asset, "passed": False,
-                "error": str(e)[:100]}
+        return {"report_type": report_type, "asset": asset, "passed": False, "error": str(e)[:100]}
 
 
 def main():
@@ -237,7 +259,7 @@ def main():
     print("=" * 60)
     for r in report_results:
         status = "PASS" if r.get("passed") else "FAIL"
-        print(f"  [{status}] {r['report_type']}/{r['asset']}: {r.get('gate_result', r.get('error',''))}")
+        print(f"  [{status}] {r['report_type']}/{r['asset']}: {r.get('gate_result', r.get('error', ''))}")
     print("=" * 60)
 
     # 输出 JSON 报告

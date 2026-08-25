@@ -9,20 +9,34 @@
 """
 
 __all__ = [
-    "DCFResult", "compute_dcf", "format_dcf_for_report",
-    "ComparableResult", "compute_comparable",
-    "compute_comparable_with_existing_data", "format_comparable_for_report",
-    "GlobalPeerEntry", "GlobalBenchmarkResult", "compute_global_benchmark",
+    "DCFResult",
+    "compute_dcf",
+    "format_dcf_for_report",
+    "ComparableResult",
+    "compute_comparable",
+    "compute_comparable_with_existing_data",
+    "format_comparable_for_report",
+    "GlobalPeerEntry",
+    "GlobalBenchmarkResult",
+    "compute_global_benchmark",
     "format_global_benchmark_for_report",
-    "ScenarioDetail", "ScenarioResult", "compute_scenario",
-    "make_base_scenario", "make_bull_scenario", "make_bear_scenario",
+    "ScenarioDetail",
+    "ScenarioResult",
+    "compute_scenario",
+    "make_base_scenario",
+    "make_bull_scenario",
+    "make_bear_scenario",
     "format_scenario_for_report",
-    "SOTPSegmentInput", "SOTPResult", "compute_sotp", "format_sotp_for_report",
+    "SOTPSegmentInput",
+    "SOTPResult",
+    "compute_sotp",
+    "format_sotp_for_report",
 ]
 
 
 def __getattr__(name):
     import importlib
+
     module_map = {
         "DCFResult": ("core.compute.valuation.dcf", "DCFResult"),
         "compute_dcf": ("core.compute.valuation.dcf", "compute_dcf"),
@@ -64,16 +78,20 @@ def __getattr__(name):
             "format_scenario_for_report",
         ),
         "SOTPSegmentInput": (
-            "core.compute.valuation.sotp", "SOTPSegmentInput",
+            "core.compute.valuation.sotp",
+            "SOTPSegmentInput",
         ),
         "SOTPResult": (
-            "core.compute.valuation.sotp", "SOTPResult",
+            "core.compute.valuation.sotp",
+            "SOTPResult",
         ),
         "compute_sotp": (
-            "core.compute.valuation.sotp", "compute_sotp",
+            "core.compute.valuation.sotp",
+            "compute_sotp",
         ),
         "format_sotp_for_report": (
-            "core.compute.valuation.sotp", "format_sotp_for_report",
+            "core.compute.valuation.sotp",
+            "format_sotp_for_report",
         ),
     }
     if name in module_map:

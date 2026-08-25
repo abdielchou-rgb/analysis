@@ -27,8 +27,8 @@ _ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DIR = _ROOT / "data" / "基线" / "原始文档"
 REPORT = _ROOT / "data" / "scanned_pdf_report.json"
 
-SCAN_PAGES = 2          # 每份扫描前几页判断（前2页通常有封面/目录，纯图=扫描版）
-MIN_CHARS = 50          # 前N页有效字符 < 此值 → 判为疑似扫描版
+SCAN_PAGES = 2  # 每份扫描前几页判断（前2页通常有封面/目录，纯图=扫描版）
+MIN_CHARS = 50  # 前N页有效字符 < 此值 → 判为疑似扫描版
 
 
 def _scan_one(args) -> tuple:
@@ -110,7 +110,9 @@ def main():
 
     if args.json:
         print(f"报告已写: {REPORT}")
-        print(f"总计 {meta['total']} 份, 疑似扫描版 {meta['scanned_count']} 份, 错误 {meta['error_count']} 份, 耗时 {meta['elapsed_sec']}s")
+        print(
+            f"总计 {meta['total']} 份, 疑似扫描版 {meta['scanned_count']} 份, 错误 {meta['error_count']} 份, 耗时 {meta['elapsed_sec']}s"
+        )
         return
 
     print(f"扫描 {meta['total']} 份 PDF, 耗时 {meta['elapsed_sec']}s")
@@ -121,10 +123,12 @@ def main():
     scanned.sort(key=lambda kv: kv[1]["size"], reverse=True)
     limit = args.limit if args.limit > 0 else len(scanned)
     for k, v in scanned[:limit]:
-        print(f"  {v['size']//1024:6d}KB | {k}")
+        print(f"  {v['size'] // 1024:6d}KB | {k}")
     print("\n用 MinerU 解析这些：")
-    print("  python -c \"from core.mineru_parser import extract_markdown; "
-          "print(extract_markdown('<pdf路径>', mode='cloud', page_range='1-20')[:500])\"")
+    print(
+        '  python -c "from core.mineru_parser import extract_markdown; '
+        "print(extract_markdown('<pdf路径>', mode='cloud', page_range='1-20')[:500])\""
+    )
     print(f"\n完整报告: {REPORT}")
 
 

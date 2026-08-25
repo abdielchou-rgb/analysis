@@ -60,29 +60,28 @@ def compute_margin_bridge(
     data_gaps = []
 
     # 固定标记：baostock 不分业务线，所以所有拆解都是推断
-    data_gaps.append(
-        "baostock 不分业务线数据，毛利桥驱动因子为结构推断"
-    )
+    data_gaps.append("baostock 不分业务线数据，毛利桥驱动因子为结构推断")
 
     # 如果毛利率基本不变，只有一个总量因子
     if abs(change) < 0.5:
-        drivers.append({
-            "driver": "总体稳定",
-            "contribution_bp": round(change * 100, 2),
-            "description": f"毛利率基本稳定，从 {prev_margin}% 到 {current_margin}%",
-        })
+        drivers.append(
+            {
+                "driver": "总体稳定",
+                "contribution_bp": round(change * 100, 2),
+                "description": f"毛利率基本稳定，从 {prev_margin}% 到 {current_margin}%",
+            }
+        )
     else:
         # 有变化时，记录变化幅度
-        drivers.append({
-            "driver": "毛利率变化",
-            "contribution_bp": round(change * 100, 2),
-            "description": f"整体毛利率 {prev_margin}% → {current_margin}%"
-                          f"（{change:+.2f} 百分点）",
-        })
-        # 注明变化来源需要更细粒度数据才能拆解
-        data_gaps.append(
-            "毛利率变化的精细拆解（价格/成本/结构）需要分业务线数据"
+        drivers.append(
+            {
+                "driver": "毛利率变化",
+                "contribution_bp": round(change * 100, 2),
+                "description": f"整体毛利率 {prev_margin}% → {current_margin}%（{change:+.2f} 百分点）",
+            }
         )
+        # 注明变化来源需要更细粒度数据才能拆解
+        data_gaps.append("毛利率变化的精细拆解（价格/成本/结构）需要分业务线数据")
 
     # ── 置信度判断 ──
     confidence = "low"  # 因为没有分业务线数据
@@ -106,8 +105,10 @@ def format_margin_bridge_for_report(bridge: MarginBridge) -> str:
     lines = []
     lines.append(f"**毛利桥: {bridge.period}**")
     lines.append("")
-    lines.append(f"毛利率: {bridge.gross_margin_prev}% → {bridge.gross_margin_current}% "
-                 f"({bridge.gross_margin_change:+.2f} 百分点)")
+    lines.append(
+        f"毛利率: {bridge.gross_margin_prev}% → {bridge.gross_margin_current}% "
+        f"({bridge.gross_margin_change:+.2f} 百分点)"
+    )
     lines.append("")
     lines.append("| 驱动因子 | 贡献(bp) | 说明 |")
     lines.append("|---------|---------|------|")

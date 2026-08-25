@@ -62,22 +62,41 @@ def _estimate_sganda_rate(
         industry_lower = industry.lower()
         # 科技/医药行业研发费用占比更高
         rd_intensive_keywords = [
-            "科技", "信息", "软件", "医药", "生物", "半导体", "电子",
-            "通信", "计算机", "医疗", "创新",
+            "科技",
+            "信息",
+            "软件",
+            "医药",
+            "生物",
+            "半导体",
+            "电子",
+            "通信",
+            "计算机",
+            "医疗",
+            "创新",
         ]
         if any(kw in industry_lower for kw in rd_intensive_keywords):
             estimated_rd_ratio_of_opex = 0.30
             estimated_finance_ratio_of_opex = 0.03
         # 金融/地产行业财务费用占比更高
         finance_intensive_keywords = [
-            "银行", "证券", "保险", "房地产", "金融",
+            "银行",
+            "证券",
+            "保险",
+            "房地产",
+            "金融",
         ]
         if any(kw in industry_lower for kw in finance_intensive_keywords):
             estimated_finance_ratio_of_opex = 0.20
             estimated_rd_ratio_of_opex = 0.05
         # 消费/制造行业销售费用占比更高
         sales_intensive_keywords = [
-            "消费", "食品", "饮料", "白酒", "零售", "家电", "汽车",
+            "消费",
+            "食品",
+            "饮料",
+            "白酒",
+            "零售",
+            "家电",
+            "汽车",
         ]
         if any(kw in industry_lower for kw in sales_intensive_keywords):
             estimated_rd_ratio_of_opex = 0.08
@@ -107,18 +126,37 @@ def _estimate_rd_rate(
     if industry:
         industry_lower = industry.lower()
         rd_intensive_keywords = [
-            "科技", "信息", "软件", "医药", "生物", "半导体", "电子",
-            "通信", "计算机", "医疗", "创新",
+            "科技",
+            "信息",
+            "软件",
+            "医药",
+            "生物",
+            "半导体",
+            "电子",
+            "通信",
+            "计算机",
+            "医疗",
+            "创新",
         ]
         if any(kw in industry_lower for kw in rd_intensive_keywords):
             estimated_rd_ratio_of_opex = 0.30
         sales_intensive_keywords = [
-            "消费", "食品", "饮料", "白酒", "零售", "家电", "汽车",
+            "消费",
+            "食品",
+            "饮料",
+            "白酒",
+            "零售",
+            "家电",
+            "汽车",
         ]
         if any(kw in industry_lower for kw in sales_intensive_keywords):
             estimated_rd_ratio_of_opex = 0.08
         finance_intensive_keywords = [
-            "银行", "证券", "保险", "房地产", "金融",
+            "银行",
+            "证券",
+            "保险",
+            "房地产",
+            "金融",
         ]
         if any(kw in industry_lower for kw in finance_intensive_keywords):
             estimated_rd_ratio_of_opex = 0.05
@@ -145,18 +183,37 @@ def _estimate_finance_rate(
     if industry:
         industry_lower = industry.lower()
         finance_intensive_keywords = [
-            "银行", "证券", "保险", "房地产", "金融",
+            "银行",
+            "证券",
+            "保险",
+            "房地产",
+            "金融",
         ]
         if any(kw in industry_lower for kw in finance_intensive_keywords):
             estimated_finance_ratio_of_opex = 0.20
         rd_intensive_keywords = [
-            "科技", "信息", "软件", "医药", "生物", "半导体", "电子",
-            "通信", "计算机", "医疗", "创新",
+            "科技",
+            "信息",
+            "软件",
+            "医药",
+            "生物",
+            "半导体",
+            "电子",
+            "通信",
+            "计算机",
+            "医疗",
+            "创新",
         ]
         if any(kw in industry_lower for kw in rd_intensive_keywords):
             estimated_finance_ratio_of_opex = 0.03
         sales_intensive_keywords = [
-            "消费", "食品", "饮料", "白酒", "零售", "家电", "汽车",
+            "消费",
+            "食品",
+            "饮料",
+            "白酒",
+            "零售",
+            "家电",
+            "汽车",
         ]
         if any(kw in industry_lower for kw in sales_intensive_keywords):
             estimated_finance_ratio_of_opex = 0.03
@@ -199,9 +256,7 @@ def compute_expense_bridge(
     data_gaps = []
 
     # 固定标记：所有分项数据均为推断
-    data_gaps.append(
-        "baostock 不提供逐项费用数据，分项费用率为基于总量的推断值"
-    )
+    data_gaps.append("baostock 不提供逐项费用数据，分项费用率为基于总量的推断值")
 
     # 逐年份计算费用推估
     for f in recent:
@@ -232,13 +287,26 @@ def compute_expense_bridge(
             industry_lower = industry.lower()
             # 高新技术企业 15%
             high_tech_keywords = [
-                "科技", "信息", "软件", "半导体", "电子", "医药", "生物", "计算机",
+                "科技",
+                "信息",
+                "软件",
+                "半导体",
+                "电子",
+                "医药",
+                "生物",
+                "计算机",
             ]
             if any(kw in industry_lower for kw in high_tech_keywords):
                 estimated_tax_rate = 0.15
             # 一般企业 25%
             normal_tax_keywords = [
-                "消费", "食品", "饮料", "零售", "房地产", "建筑", "制造",
+                "消费",
+                "食品",
+                "饮料",
+                "零售",
+                "房地产",
+                "建筑",
+                "制造",
             ]
             if any(kw in industry_lower for kw in normal_tax_keywords):
                 estimated_tax_rate = 0.25
@@ -259,15 +327,10 @@ def compute_expense_bridge(
         # 确保费用率合理（不能为负，不能超过毛利率）
         if implied_opex_rate < 0:
             implied_opex_rate = 0.0
-            data_gaps.append(
-                f"[{year}] 推算费用率为负，设为 0%（毛利率={gross_margin}%, "
-                f"净利率={net_margin}%）"
-            )
+            data_gaps.append(f"[{year}] 推算费用率为负，设为 0%（毛利率={gross_margin}%, 净利率={net_margin}%）")
         if implied_opex_rate > gross_margin:
             implied_opex_rate = gross_margin
-            data_gaps.append(
-                f"[{year}] 推算费用率超过毛利率，约束为 {gross_margin}%"
-            )
+            data_gaps.append(f"[{year}] 推算费用率超过毛利率，约束为 {gross_margin}%")
 
         # 推算营业利润率
         operating_margin = round(gross_margin - implied_opex_rate, 4)
@@ -280,9 +343,7 @@ def compute_expense_bridge(
 
         gap_bp = None
         if expected_operating_margin is not None and operating_margin != 0:
-            gap_bp = round(
-                abs(operating_margin - expected_operating_margin) * 100, 2
-            )
+            gap_bp = round(abs(operating_margin - expected_operating_margin) * 100, 2)
 
         # ── 分项费用推算（基于行业经验值） ──
         estimated_sganda = round(_estimate_sganda_rate(implied_opex_rate, industry), 4)
@@ -295,29 +356,28 @@ def compute_expense_bridge(
             data_gaps.append(f"[{year}] 净利率缺失，费用推算精度受限")
         elif gap_bp and gap_bp > 5.0:
             data_quality = "low"
-            data_gaps.append(
-                f"[{year}] 推算一致性偏差较大（{gap_bp}bp），"
-                f"可能受非经常性损益影响"
-            )
+            data_gaps.append(f"[{year}] 推算一致性偏差较大（{gap_bp}bp），可能受非经常性损益影响")
         elif implied_opex_rate == 0:
             data_quality = "low"
         else:
             data_quality = "medium"
 
-        expense_rates.append({
-            "year": year,
-            "imputed": True,  # 标记所有分项为推算值
-            "implied_operating_expense_rate": implied_opex_rate,
-            "estimated_sganda_rate": estimated_sganda,
-            "estimated_rd_rate": estimated_rd,
-            "estimated_finance_rate": estimated_finance,
-            "operating_margin": operating_margin,
-            "net_margin": net_margin,
-            "gross_margin": gross_margin,
-            "implied_tax_rate": estimated_tax_rate,
-            "gap_bp": gap_bp,
-            "data_quality": data_quality,
-        })
+        expense_rates.append(
+            {
+                "year": year,
+                "imputed": True,  # 标记所有分项为推算值
+                "implied_operating_expense_rate": implied_opex_rate,
+                "estimated_sganda_rate": estimated_sganda,
+                "estimated_rd_rate": estimated_rd,
+                "estimated_finance_rate": estimated_finance,
+                "operating_margin": operating_margin,
+                "net_margin": net_margin,
+                "gross_margin": gross_margin,
+                "implied_tax_rate": estimated_tax_rate,
+                "gap_bp": gap_bp,
+                "data_quality": data_quality,
+            }
+        )
 
     if len(expense_rates) < 2:
         logger.warning("[L2费用桥] 推算后有效年份不足2年")
@@ -432,12 +492,14 @@ def _analyze_margin_gap(expense_rates: list[dict]) -> str:
 
         non_recurring = round(gap - expected_gap, 2)
 
-        observations.append({
-            "year": year,
-            "gap": gap,
-            "expected_tax_gap": expected_gap,
-            "non_recurring_impact": non_recurring,
-        })
+        observations.append(
+            {
+                "year": year,
+                "gap": gap,
+                "expected_tax_gap": expected_gap,
+                "non_recurring_impact": non_recurring,
+            }
+        )
 
     if not observations:
         return "无可用利润率数据"
@@ -451,29 +513,17 @@ def _analyze_margin_gap(expense_rates: list[dict]) -> str:
     if abs(gap_change) < 1.0:
         trend_parts.append(f"利润率差距基本稳定（约 {last_gap:.1f} 百分点）")
     elif gap_change > 0:
-        trend_parts.append(
-            f"利润率差距扩大 {gap_change:+.1f} 百分点，"
-            f"税负或非经常性损失影响增加"
-        )
+        trend_parts.append(f"利润率差距扩大 {gap_change:+.1f} 百分点，税负或非经常性损失影响增加")
     else:
-        trend_parts.append(
-            f"利润率差距缩小 {gap_change:+.1f} 百分点，"
-            f"税负或非经常性影响改善"
-        )
+        trend_parts.append(f"利润率差距缩小 {gap_change:+.1f} 百分点，税负或非经常性影响改善")
 
     # 非经常性损益影响
-    avg_non_recurring = round(
-        sum(o["non_recurring_impact"] for o in observations) / len(observations), 2
-    )
+    avg_non_recurring = round(sum(o["non_recurring_impact"] for o in observations) / len(observations), 2)
     if abs(avg_non_recurring) > 2.0:
         if avg_non_recurring > 0:
-            trend_parts.append(
-                f"非经常性损益平均拉低利润率 {avg_non_recurring:.1f} 百分点"
-            )
+            trend_parts.append(f"非经常性损益平均拉低利润率 {avg_non_recurring:.1f} 百分点")
         else:
-            trend_parts.append(
-                f"非经常性损益平均提升利润率 {abs(avg_non_recurring):.1f} 百分点"
-            )
+            trend_parts.append(f"非经常性损益平均提升利润率 {abs(avg_non_recurring):.1f} 百分点")
 
     return "；".join(trend_parts)
 

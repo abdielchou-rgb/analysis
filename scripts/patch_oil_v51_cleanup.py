@@ -5,9 +5,13 @@ R-3 图编号重排：图0/0b/1/12/13/5/15/14 → 图1-图8 连续
 R-2 测算结果标注：NPV/IRR/盈亏平衡等补 (A)/(E)/(F)
 R-4 测算底稿清单：附录列出
 """
+
+import logging
+import shutil
+
 from docx import Document
-from docx.shared import Pt, Inches
-import logging, shutil, re
+from docx.shared import Inches
+
 logging.basicConfig(level=logging.INFO)
 
 REPORT = "output/油位传感器_行业调研与承接久通生产可行性报告_v5.1.docx"
@@ -64,31 +68,35 @@ def main():
     # NPV/IRR 段
     p_npv = find_para(doc, "经营期NPV = +3,116万元为唯一决策主指标")
     if p_npv:
-        replace_para_text(p_npv,
+        replace_para_text(
+            p_npv,
             "经营期NPV = +3,116万元(F，测算值)为唯一决策主指标。含终值NPV（永续增长法约3.2亿元、"
             "8倍EBITDA法约2.2亿元）仅作敏感性参考，不作为主指标——"
             "终值依赖永续增长率/退出倍数等强假设，对1,700万元级项目引入过高杠杆，"
-            "决策统一以经营期NPV为准以保持口径唯一。")
+            "决策统一以经营期NPV为准以保持口径唯一。",
+        )
         logging.info("✅ R-2 NPV标注")
     # IRR 段
     p_irr = find_para(doc, "经营期IRR约57%（该高IRR主要因投资基数小")
     if p_irr:
-        replace_para_text(p_irr,
+        replace_para_text(
+            p_irr,
             "经营期IRR约57%(F，测算值)——该高IRR主要因投资基数小、期限短，不代表回报确定性高，"
-            "决策应关注绝对NPV而非IRR。")
+            "决策应关注绝对NPV而非IRR。",
+        )
         logging.info("✅ R-2 IRR标注")
     # 盈亏平衡段
     p_be = find_para(doc, "盈亏平衡月收入 = 45 ÷ (1-0.70)")
     if p_be:
-        replace_para_text(p_be,
-            "盈亏平衡月收入 = 45 ÷ (1-0.70) = 150万元/月(F，测算值)，对应年化约1,800万元，预计2027年第二季度达成。")
+        replace_para_text(
+            p_be,
+            "盈亏平衡月收入 = 45 ÷ (1-0.70) = 150万元/月(F，测算值)，对应年化约1,800万元，预计2027年第二季度达成。",
+        )
         logging.info("✅ R-2 盈亏平衡标注")
 
     # ========== R-4 测算底稿清单 ==========
     p_app = find_para(doc, "附录：数据来源")
     if p_app:
-        from docx.oxml import parse_xml
-        from docx.oxml.ns import nsdecls
         # 在附录后插入底稿清单表
         prev = p_app._p
         parent = p_app._parent

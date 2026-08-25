@@ -10,6 +10,7 @@ R53 P1-1：宏观高频指标采集 → data/macro_highfreq.json
 
 幂等：覆盖写入；source 标注；单指标失败隔离。
 """
+
 from __future__ import annotations
 
 import json
@@ -29,7 +30,7 @@ def _retry(fn, times=5, base=1.5):
             return fn()
         except Exception as e:  # noqa: BLE001
             last = e
-            time.sleep(base * (2 ** i) + 0.5)
+            time.sleep(base * (2**i) + 0.5)
     raise last
 
 
@@ -64,8 +65,7 @@ def sync_cn_freight() -> dict:
     result = {}
     for c in cols:
         rows = [(r["截止日期"], r[c]) for _, r in df.iterrows()]
-        result[f"中国运价指数_{c}"] = _series(rows, "截止日期", c,
-                                              "akshare: macro_china_freight_index")
+        result[f"中国运价指数_{c}"] = _series(rows, "截止日期", c, "akshare: macro_china_freight_index")
     return result
 
 
@@ -102,7 +102,10 @@ def main():
     result = {}
     jobs = [
         ("螺纹钢期货主力_收盘价", lambda: sync_futures("RB0", "螺纹钢", "akshare: futures_main_sina(RB0)")),
-        ("原油期货主力_收盘价", lambda: sync_futures("SC0", "原油", "akshare: futures_main_sina(SC0) 上海原油，替代布伦特")),
+        (
+            "原油期货主力_收盘价",
+            lambda: sync_futures("SC0", "原油", "akshare: futures_main_sina(SC0) 上海原油，替代布伦特"),
+        ),
         ("玻璃期货主力_收盘价", lambda: sync_futures("FG0", "玻璃", "akshare: futures_main_sina(FG0)")),
         ("沥青期货主力_收盘价", lambda: sync_futures("BU0", "沥青", "akshare: futures_main_sina(BU0)")),
         ("PTA期货主力_收盘价", lambda: sync_futures("TA0", "PTA", "akshare: futures_main_sina(TA0)")),
@@ -125,14 +128,25 @@ def main():
     except Exception as e:
         print(f"[FAIL] 中国运价指数: {str(e)[:120]}")
     # 明确不可用项
-    result["粗钢产量_旬度"] = {"data": [], "count": 0, "source": "unavailable",
-                              "reason": "akshare 无粗钢旬度产量接口（统计局旬度需手工）"}
-    result["半钢胎开工率_周"] = {"data": [], "count": 0, "source": "unavailable",
-                                "reason": "akshare 无轮胎开工率接口"}
-    result["30城商品房成交面积_日"] = {"data": [], "count": 0, "source": "unavailable",
-                                       "reason": "akshare 无30城成交面积日频接口（中指院需付费）"}
-    result["SCFI_上海出口集装箱运价指数"] = {"data": [], "count": 0, "source": "unavailable",
-                                             "reason": "akshare 无 SCFI 接口（macro_china_freight_index 为 BDI 系）"}
+    result["粗钢产量_旬度"] = {
+        "data": [],
+        "count": 0,
+        "source": "unavailable",
+        "reason": "akshare 无粗钢旬度产量接口（统计局旬度需手工）",
+    }
+    result["半钢胎开工率_周"] = {"data": [], "count": 0, "source": "unavailable", "reason": "akshare 无轮胎开工率接口"}
+    result["30城商品房成交面积_日"] = {
+        "data": [],
+        "count": 0,
+        "source": "unavailable",
+        "reason": "akshare 无30城成交面积日频接口（中指院需付费）",
+    }
+    result["SCFI_上海出口集装箱运价指数"] = {
+        "data": [],
+        "count": 0,
+        "source": "unavailable",
+        "reason": "akshare 无 SCFI 接口（macro_china_freight_index 为 BDI 系）",
+    }
 
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w", encoding="utf-8") as f:

@@ -6,10 +6,7 @@ Layer 2 (fallback): 自动兜底层（LLM 不可用时降级）
 Layer 3 (audit): 审计追踪层（全链路可追溯）
 """
 
-import os
-import shutil
 from pathlib import Path
-import sys
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC_COMPUTE = Path(__file__).resolve().parent.parent / "core" / "compute"
@@ -20,17 +17,29 @@ LAYER3 = Path(__file__).resolve().parent.parent / "pipeline" / "layer3_audit"
 # Layer 1: 确定性服务层（非 LLM，可审计，可复现）
 LAYER1_MODULES = {
     "valuation": [
-        "dcf.py", "reverse_dcf.py", "comparable.py", "monte_carlo.py",
-        "real_option.py", "eva.py", "peg.py", "lbo.py", "sotp.py",
+        "dcf.py",
+        "reverse_dcf.py",
+        "comparable.py",
+        "monte_carlo.py",
+        "real_option.py",
+        "eva.py",
+        "peg.py",
+        "lbo.py",
+        "sotp.py",
     ],
     "financial": [
-        "dupont.py", "factor_decomp.py", "three_statement.py",
+        "dupont.py",
+        "factor_decomp.py",
+        "three_statement.py",
     ],
     "engines": [
-        "signal_chain.py", "multi_debate.py",
+        "signal_chain.py",
+        "multi_debate.py",
     ],
     "other": [
-        "data_caliber.py", "data_provenance.py", "predict_model.py",
+        "data_caliber.py",
+        "data_provenance.py",
+        "predict_model.py",
     ],
 }
 
@@ -66,6 +75,7 @@ LAYER3_MODULES = [
     "pipeline/fp5_feedback.py",
 ]
 
+
 def create_layer_dirs():
     """创建三层目录结构"""
     dirs = [
@@ -77,35 +87,71 @@ def create_layer_dirs():
         "pipeline/layer2_fallback/fp5",
         "pipeline/layer3_audit",
     ]
-    for d in [Path(__file__).resolve().parent.parent / "pipeline" / d for d in [
-        "layer1_providers", "layer1_providers/valuation",
-        "layer1_providers/financial", "layer1_providers/engines",
-        "layer2_fallback", "layer2_fallback/llm",
-        "layer2_fallback/data", "layer2_fallback/fp5",
-        "layer3_audit",
-    ]]:
+    for d in [
+        Path(__file__).resolve().parent.parent / "pipeline" / d
+        for d in [
+            "layer1_providers",
+            "layer1_providers/valuation",
+            "layer1_providers/financial",
+            "layer1_providers/engines",
+            "layer2_fallback",
+            "layer2_fallback/llm",
+            "layer2_fallback/data",
+            "layer2_fallback/fp5",
+            "layer3_audit",
+        ]
+    ]:
         d.mkdir(parents=True, exist_ok=True)
         print(f"Created: {d}")
 
+
 def create_layer_init(layer_path: Path, modules: list, layer_name: str):
     """创建层的 __init__.py，导出所有模块的公共 API"""
-    content = f'# {layer_name} - 自动生成的导出\n'
-    content += f'# 自动生成于迁移脚本\n\n'
+    content = f"# {layer_name} - 自动生成的导出\n"
+    content += "# 自动生成于迁移脚本\n\n"
 
     exports = []
     for mod in modules:
         mod_name = mod.replace(".py", "")
         if layer_name == "Layer 1":
             # Layer 1: 计算模块
-            if mod in ["dcf.py", "reverse_dcf.py", "comparable.py", "monte_carlo.py",
-                       "real_option.py", "eva.py", "peg.py", "lbo.py", "sotp.py"]:
-                exports = ["DCFResult", "compute_dcf", "ReverseDCF", "ReverseDCFResult",
-                          "ComparableResult", "MonteCarloValuation", "MCResult",
-                           "RealOption", "RealOptionResult", "EVAModel", "EVAResult",
-                           "AltmanZScore", "PEGValuation", "PEGResult",
-                           "LBOModel", "LBOResult", "SOTPValuation",
-                           "DupontAnalysis", "RevenueAttribution", "AttributionResult",
-                           "SignalChainEngine", "SignalResult", "MultiModelDebate", "DebateResult"]
+            if mod in [
+                "dcf.py",
+                "reverse_dcf.py",
+                "comparable.py",
+                "monte_carlo.py",
+                "real_option.py",
+                "eva.py",
+                "peg.py",
+                "lbo.py",
+                "sotp.py",
+            ]:
+                exports = [
+                    "DCFResult",
+                    "compute_dcf",
+                    "ReverseDCF",
+                    "ReverseDCFResult",
+                    "ComparableResult",
+                    "MonteCarloValuation",
+                    "MCResult",
+                    "RealOption",
+                    "RealOptionResult",
+                    "EVAModel",
+                    "EVAResult",
+                    "AltmanZScore",
+                    "PEGValuation",
+                    "PEGResult",
+                    "LBOModel",
+                    "LBOResult",
+                    "SOTPValuation",
+                    "DupontAnalysis",
+                    "RevenueAttribution",
+                    "AttributionResult",
+                    "SignalChainEngine",
+                    "SignalResult",
+                    "MultiModelDebate",
+                    "DebateResult",
+                ]
     content += "\n".join([f"from . import {m}" for m in modules]) + "\n"
     # 简化：只导出模块名
     exports = "\n".join([f"from . import {m.replace('.py', '')}" for m in modules])
@@ -116,8 +162,10 @@ def create_layer_init(layer_path: Path, modules: list, layer_name: str):
     init_path.write_text(content, encoding="utf-8")
     print(f"Created: {init_path}")
 
+
 def main():
     import argparse
+
     parser = argparse.ArgumentParser(description="三层架构迁移脚本")
     parser.add_argument("--dry-run", action="store_true", help="预览不执行")
     parser.add_argument("--apply", action="store_true", help="执行迁移")
@@ -162,6 +210,7 @@ def main():
 
 if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser(description="三层架构迁移脚本")
     parser.add_argument("--dry-run", action="store_true", help="预览不执行")
     parser.add_argument("--apply", action="store_true", help="执行迁移")

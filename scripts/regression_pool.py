@@ -4,13 +4,15 @@
 用法：
   python3 scripts/regression_pool.py
 """
-import sys, json, os, math
+
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 FAILS = []
+
 
 def check(name, ok, detail=""):
     if ok:
@@ -19,12 +21,18 @@ def check(name, ok, detail=""):
         print(f"  [FAIL] {name}: {detail}")
         FAILS.append(name)
 
+
 def module(m):
     return __import__(f"core.compute.{m}", fromlist=["_"])
+
+
 def module_val(m):
     return __import__(f"core.compute.valuation.{m}", fromlist=["_"])
+
+
 def module_fin(m):
     return __import__(f"core.compute.financial.{m}", fromlist=["_"])
+
 
 # ====== R1: 估值模块 (6) ======
 print("\n[R1] 估值模块")
@@ -39,7 +47,7 @@ check("ReverseDCF敏感性", bool(rd.sensitivity))
 
 eva = module_val("eva").EVAModel(10e8, 80e8, 0.10).calculate()
 check("EVA创造价值", eva.eva == 2e8)
-z = module_val("eva").AltmanZScore(20e8,30e8,15e8,100e8,120e8,60e8,80e8).calculate()
+z = module_val("eva").AltmanZScore(20e8, 30e8, 15e8, 100e8, 120e8, 60e8, 80e8).calculate()
 check("AltmanZ灰色区", 1.81 < z["z_score"] < 2.99)
 
 peg = module_val("peg").PEGValuation(25, 20).analyze()
@@ -75,6 +83,7 @@ check("假设验证器接线", hasattr(hv, "verify"))
 # ====== R4: Gate 模块 (5) ======
 print("\n[R4] Gate 模块")
 from pipeline.checks.methodology_compliance import check_methodology_compliance
+
 rc = check_methodology_compliance("根据行业生命周期判断，该行业处于成长期。营收增速>20%。", "industry_deep")
 check("Compliance Gate 可运行", "issues" in rc)
 

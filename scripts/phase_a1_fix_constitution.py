@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Phase A-1: 修复 CLAUDE.md 宪法矛盾 + 全量 Gate 类型标注"""
-import sys, json, re, os
+
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -44,22 +45,44 @@ for name in dir(IronGate):
 report_types = ["listed_company", "unlisted_company", "industry_deep", "earnings_notes", "decision_memo"]
 
 # 分类逻辑
-MECHANICAL = {"numeric_chain_consistency", "arithmetic_audit", "invariant_audit",
-              "layout_quality", "placeholder_xxx", "placeholder_charts",
-              "forbidden_patterns", "completeness_scan"}
+MECHANICAL = {
+    "numeric_chain_consistency",
+    "arithmetic_audit",
+    "invariant_audit",
+    "layout_quality",
+    "placeholder_xxx",
+    "placeholder_charts",
+    "forbidden_patterns",
+    "completeness_scan",
+}
 
-SEMANTIC = {"so_what_chain", "chart_analysis_quality", "insight_quality",
-            "persuasion_architecture", "counterargument_strength",
-            "ai_tone_llm", "human_impossible_dimension"}
+SEMANTIC = {
+    "so_what_chain",
+    "chart_analysis_quality",
+    "insight_quality",
+    "persuasion_architecture",
+    "counterargument_strength",
+    "ai_tone_llm",
+    "human_impossible_dimension",
+}
 
-LISTED_ONLY = {"check_rating_target_consistency", "check_decision_gate",
-               "check_stock_pick_chain"}
+LISTED_ONLY = {"check_rating_target_consistency", "check_decision_gate", "check_stock_pick_chain"}
 
-UNIVERSAL = {"check_data_traceability", "check_annotation_types", "check_attribution_depth",
-             "check_bold_call", "check_falsification_conditions", "check_honest_gap",
-             "check_meta_cognition", "check_data_conflicts", "check_evidence_chain",
-             "check_source_reliability", "check_narrative_consistency",
-             "check_entity_anchoring", "check_relation_consistency"}
+UNIVERSAL = {
+    "check_data_traceability",
+    "check_annotation_types",
+    "check_attribution_depth",
+    "check_bold_call",
+    "check_falsification_conditions",
+    "check_honest_gap",
+    "check_meta_cognition",
+    "check_data_conflicts",
+    "check_evidence_chain",
+    "check_source_reliability",
+    "check_narrative_consistency",
+    "check_entity_anchoring",
+    "check_relation_consistency",
+}
 
 # 生成标注表
 print("\n=== Gate Check 类型标注 ===")
