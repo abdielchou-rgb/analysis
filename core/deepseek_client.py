@@ -127,7 +127,7 @@ class ProviderRegistry:
 
 # ── API配置 ─────────────────────────────────────────────────
 
-DEFAULT_MODEL = "deepseek-chat"
+DEFAULT_MODEL = os.environ.get("E2E_MODEL", "deepseek-chat")  # 可通过 env 切换
 REASONER_MODEL = "deepseek-reasoner"
 DEEPSEEK_BASE_URL = "https://api.deepseek.com/v1"
 

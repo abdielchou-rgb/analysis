@@ -415,9 +415,12 @@ class IronGate(
                     severity="error",
                 )
 
+        # R89（2026-08-25）：SEG_PARALLEL=0 时 LLM 检查也串行——stealth/免费模型并发>1 即 429
+        import os as _os_ig
         from concurrent.futures import ThreadPoolExecutor
 
-        _llm_pool = ThreadPoolExecutor(max_workers=2)
+        _ig_workers = 1 if _os_ig.environ.get("SEG_PARALLEL", "1") == "0" else 2
+        _llm_pool = ThreadPoolExecutor(max_workers=_ig_workers)
         _llm_futures = {
             _llm_pool.submit(_run_llm_check, _func): _func.__name__
             for _func in _check_funcs

@@ -961,7 +961,12 @@ class SectionWriter:
             # 其余段视为已达标跳过（不推倒重写，R7 收敛哲学）。None=全部写。
             _target = rewrite_indices if rewrite_indices is not None else list(range(len(self.segments)))
             # 并行生成目标段（辩论段也并行），prev_s 用空（靠数据字典衔接）
-            with ThreadPoolExecutor(max_workers=min(3, len(_target) or 1)) as pool:
+            # R89（2026-08-25）：SEG_PARALLEL=0 时串行写作——免费/stealth 模型限流严格
+            # （并发>1 即 429），且 429 连锁会触发跨 provider 回退烧付费余额。
+            import os as _os_seg
+
+            _seg_parallel = _os_seg.environ.get("SEG_PARALLEL", "1") != "0"
+            with ThreadPoolExecutor(max_workers=(1 if not _seg_parallel else min(3, len(_target) or 1))) as pool:
                 futures = {pool.submit(_write_segment, idx, self.segments[idx], ""): idx for idx in _target}
                 seg_texts = {}
                 for fut in as_completed(futures):
@@ -1047,6 +1052,7 @@ class SectionWriter:
         scaffold_section="",
         state_anchor=None,
         data_dict_str="",
+        fp8_plan_str="",
     ):
         # R82：数字单一事实源——防跨章节矛盾
         try:
@@ -1185,6 +1191,13 @@ class SectionWriter:
             self._build_methodology_injection(),
             # 机构写作基准（2026-08-01 吸收产物：对齐顶级机构判断密度）
             self._build_institution_baseline(),
+            "",
+            # R89（2026-08-25）：FP8 元认知方法规划注入——调用方已生成的方法组合/执行要点
+            (
+                "## FP8 方法规划（本次写作执行要点，必须落实）\n" + fp8_plan_str.strip() + "\n"
+                if fp8_plan_str and fp8_plan_str.strip()
+                else ""
+            ),
             "",
             # 跨报告一致性
             self._build_cross_report_context(seg_idx),
