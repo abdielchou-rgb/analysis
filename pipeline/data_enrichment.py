@@ -229,7 +229,8 @@ class DataSufficiencyChecker:
         try:
             from core.data_basement import build_basement_data_dict
 
-            _bd = build_basement_data_dict(str(data.get("asset", "")))
+            _industry = universe_summary.get("industry", "") if universe_summary else ""
+            _bd = build_basement_data_dict(str(data.get("asset", "")), _industry)
             if not _bd.get("industry_driver_count") and not chart_data.get("industry_tags"):
                 semantic_gap.append("industry_hint")
         except Exception:
@@ -290,7 +291,7 @@ class LocalBackfill:
     """
 
     @staticmethod
-    def run(asset: str, data: dict, report_type: str = "listed_company") -> dict:
+    def run(asset: str, data: dict, report_type: str = "listed_company", universe_summary: dict = None) -> dict:
         """尽力补充本地数据，返回更新后的 data。所有补充点带 source。
 
         R90（2026-08-07 P0-1）：新增 report_type 参数——decision_memo 的图集
@@ -489,7 +490,8 @@ class LocalBackfill:
             try:
                 from core.data_basement import build_basement_data_dict
 
-                _bd = build_basement_data_dict(asset)
+                _industry = universe_summary.get("industry", "") if universe_summary else ""
+                _bd = build_basement_data_dict(asset, _industry)
                 if isinstance(_bd, dict) and _bd:
                     if not chart_data.get("industry_baselines"):
                         chart_data["industry_baselines"] = _bd
@@ -640,7 +642,7 @@ class AgentEnricher:
         return max(0.2, min(0.95, _conf))
 
     @staticmethod
-    def merge(asset: str, data: dict, enrich_file: str | Path | None) -> dict:
+    def merge(asset: str, data: dict, enrich_file: str | Path | None, universe_summary: dict = None) -> dict:
         if not enrich_file:
             return data
         path = Path(enrich_file)
@@ -818,7 +820,7 @@ def enrich_node(node_id: str, context: dict) -> dict:
         return universe_summary
 
     if not check["sufficient"]:
-        data = LocalBackfill.run(asset, data, report_type=report_type)
+        data = LocalBackfill.run(asset, data, report_type=report_type, universe_summary=universe_summary)
         context["collected_data"] = data
         # R90（2026-08-07 P0-1）：本地兜底可能注入玩家清单/市场数据——
         # 立即重算 universe coverage，否则 decision_memo 因 coverage<0.5 恒阻断
@@ -830,7 +832,7 @@ def enrich_node(node_id: str, context: dict) -> dict:
     # 3. agent 补充数据 merge（enrich-file 由 scheduler 注入）
     enrich_file = context.get("enrich_file", "")
     if enrich_file:
-        data = AgentEnricher.merge(asset, data, enrich_file)
+        data = AgentEnricher.merge(asset, data, enrich_file, universe_summary)
         # R78（2026-08-05 Phase1.1）：enrich 后数据契约校验——结构漂移早暴露，
         # 不静默带病进下游。
         try:

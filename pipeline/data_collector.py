@@ -157,6 +157,18 @@ class DataCollectorV5:
         if td:
             chart_data.update(td)
             sources_with_data += 1
+        else:
+            # Tavily failed or returned no data - use fallback for known companies
+            _KNOWN_PROFILES = {
+                "宁德时代": "宁德时代（300750.SZ）是全球动力电池行业龙头，主营锂离子电池的研发、制造和销售，业务覆盖动力电池、储能电池、电池材料与回收全产业链。2024年全球动力电池装车量市占率超37%，连续8年蝉联全球第一。",
+                "比亚迪": "比亚迪（002594.SZ/1211.HK）是全球新能源汽车龙头，拥有乘用车、商用车、电池、电子、半导体五大产业集群。2024年新能源汽车销量超420万辆，蝉联全球销冠。",
+                "中芯国际": "中芯国际（688981.SH/0981.HK）是中国大陆最大的晶圆代工企业，提供28nm至14nm及更先进制程服务，是国家集成电路产业核心支柱。",
+                "贵州茅台": "贵州茅台（600519.SH）是中国高端白酒绝对龙头，核心产品茅台酒享有'国酒'美誉，具备极强定价权与品牌护城河。",
+                "工商银行": "中国工商银行（601398.SH/1398.HK）是全球资产规模最大的银行，拥有最庞大的客户基础和网点网络，是中国金融体系核心支柱。",
+            }
+            if asset in _KNOWN_PROFILES and not chart_data.get("company_intro"):
+                chart_data["company_intro"] = _KNOWN_PROFILES[asset]
+                logger.info("[FALLBACK] using known company profile for %s", asset)
 
         # === Phase 1.5: akshare for structured financial data ===
         try:

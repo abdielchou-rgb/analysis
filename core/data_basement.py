@@ -197,11 +197,12 @@ def load_company_events(code: str, limit: int = 20) -> dict | None:
 # ─────────────────────────────────────────────
 # 统一入口：给 data_dict 用的扁平化 key
 # ─────────────────────────────────────────────
-def build_basement_data_dict(asset: str = "") -> dict:
+def build_basement_data_dict(asset: str = "", industry: str = "") -> dict:
     """把新数据源转成 data_dict 扁平 key（供 data_dict.build_data_dict 合并）。
 
     返回 {capital_north_net_5d: x, industry_pe_ttm: y, ...} 等。
     asset 可含 6 位代码。
+    industry: 可选，已解析的行业键（来自 universe_build），用于精准匹配 industry_drivers。
     """
     d = {}
     code = ""
@@ -268,29 +269,29 @@ def build_basement_data_dict(asset: str = "") -> dict:
 
     # R14 接入 Round4 新数据源：行业供需/政策/产业链/渗透率 + 宏观/全球/美股
     try:
-        # R26：用统一解析得到的名字（若未解析到则用原始兜底）
-        _asset_name = asset_name or (asset.split()[0] if asset else "")
+        # R26：优先使用已解析的行业键（来自 universe_build），兜底用资产名
+        _industry_key = industry or asset_name or (asset.split()[0] if asset else "")
         # 行业供需（行业名模糊匹配）
-        ind = load_industry_driver(_asset_name)
+        ind = load_industry_driver(_industry_key)
         if ind:
             d["industry_driver_count"] = len(ind)
             for i, pt in enumerate(ind[:5]):
                 if isinstance(pt, str):
                     d[f"industry_driver_{i}"] = pt[:100]
         # 政策（行业名匹配，取方向评分）
-        pol = load_policy(_asset_name)
+        pol = load_policy(_industry_key)
         if pol:
             d["policy_count"] = len(pol)
             dirs = [p.get("direction", 0) for p in pol if isinstance(p, dict)]
             d["policy_dir_avg"] = round(sum(dirs) / max(len(dirs), 1), 2) if dirs else 0
         # 产业链（行业匹配）
-        chain = load_industry_chain(_asset_name)
+        chain = load_industry_chain(_industry_key)
         if chain:
             d["chain_upstream_count"] = len(chain.get("upstream", []))
             d["chain_midstream_count"] = len(chain.get("midstream", []))
             d["chain_downstream_count"] = len(chain.get("downstream", []))
         # 渗透率（行业匹配，取首个渗透率）
-        pen = load_penetration(_asset_name)
+        pen = load_penetration(_industry_key)
         if pen:
             d["penetration_pct"] = float(pen.get("penetration_pct", 0))
             d["penetration_life_cycle"] = pen.get("life_cycle", "")
@@ -320,7 +321,7 @@ def build_basement_data_dict(asset: str = "") -> dict:
                 if isinstance(v, (int, float)):
                     d[f"gmacro_{k}"] = v
         # R18 估值模型知识：从投行 Excel 估值模型提取的参数（WACC/g/风险）
-        vk = load_valuation_knowledge(code, _asset_name)
+        vk = load_valuation_knowledge(code, asset_name)
         if vk:
             for k, v in vk.items():
                 if isinstance(v, (int, float)):
