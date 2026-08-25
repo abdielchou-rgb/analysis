@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 
 logger = logging.getLogger("2hao.injectors.p3b")
 
@@ -140,4 +141,183 @@ def _inj_macro_str(ctx):
         return block()
     except Exception as e:
         logger.debug("[MACRO] %s", e)
+    return ""
+
+
+# ── K-09~K-15 批量资产激活注入器 ──────────────────────────────
+
+
+def _inj_valuation_kb_str(ctx):
+    """投行估值模型全知识库（131KB）→ 估值方法论参考。"""
+    try:
+        import json
+
+        fp = Path(__file__).resolve().parent.parent / "data" / "投行估值模型全知识库.json"
+        d = json.loads(fp.read_text(encoding="utf-8"))
+        if isinstance(d, dict):
+            lines = ["## [投行估值模型知识库]"]
+            for k, v in list(d.items())[:6]:
+                summary = str(v)[:200]
+                lines.append("  [" + k + "] " + summary)
+            return "\n".join(lines)
+    except Exception as e:
+        logger.debug("[VAL-KB] %s", e)
+    return ""
+
+
+def _inj_policy_str(ctx):
+    """K-12：政策文库注入器。"""
+    try:
+        import json
+
+        dc = ctx.get("data_context") or {}
+        biz = dc.get("biz_model") or {}
+        tags = [str(t) for t in (biz.get("industry_tags") or [])] if isinstance(biz, dict) else []
+        fp = Path(__file__).resolve().parent.parent / "data" / "policy_library.json"
+        d = json.loads(fp.read_text(encoding="utf-8"))
+        policies = d.get("policies", []) if isinstance(d, dict) else []
+        if not policies:
+            return ""
+        relevant = [
+            p
+            for p in policies[:100]
+            if any(str(t).lower() in str(p.get("title", "")).lower() for t in tags if len(t) >= 2)
+        ]
+        if not relevant:
+            relevant = policies[-3:]
+        lines = ["## [政策文库参考] 近期相关政策："]
+        for p in relevant[:5]:
+            lines.append("  [" + str(p.get("date", "")) + "] " + str(p.get("title", ""))[:100])
+        return "\n".join(lines)
+    except Exception as e:
+        logger.debug("[POLICY] %s", e)
+    return ""
+
+
+def _inj_esg_data_str(ctx):
+    """行业 ESG 数据注入器。"""
+    try:
+        import json
+
+        dc = ctx.get("data_context") or {}
+        biz = dc.get("biz_model") or {}
+        tags = [str(t) for t in (biz.get("industry_tags") or [])] if isinstance(biz, dict) else []
+        fp = Path(__file__).resolve().parent.parent / "data" / "industry_esg.json"
+        d = json.loads(fp.read_text(encoding="utf-8"))
+        matched = None
+        for ind_key, esg_data in d.items():
+            if any(t.lower() in ind_key.lower() for t in tags if len(t) >= 2):
+                matched = esg_data
+                break
+        if not matched:
+            return ""
+        lines = ["## [行业ESG数据]"]
+        if isinstance(matched, dict):
+            for k, v in list(matched.items())[:5]:
+                lines.append("  " + k + ": " + str(v)[:100])
+        return "\n".join(lines)
+    except Exception as e:
+        logger.debug("[ESG-DATA] %s", e)
+    return ""
+
+
+def _inj_ma_cases_str(ctx):
+    """M&A 可比案例注入器。"""
+    try:
+        import json
+
+        base = Path(__file__).resolve().parent.parent / "data"
+        cases_fp = base / "m_and_a_cases.json"
+        ev_fp = base / "m_and_a_ev_ebitda.json"
+        cases = json.loads(cases_fp.read_text(encoding="utf-8")) if cases_fp.exists() else []
+        ev = json.loads(ev_fp.read_text(encoding="utf-8")) if ev_fp.exists() else {}
+        dc = ctx.get("data_context") or {}
+        biz = dc.get("biz_model") or {}
+        tags = [str(t) for t in (biz.get("industry_tags") or [])] if isinstance(biz, dict) else []
+        relevant = [
+            c
+            for c in (cases if isinstance(cases, list) else [])
+            if any(str(t).lower() in str(c.get("industry", "")).lower() for t in tags if len(t) >= 2)
+        ]
+        if not relevant:
+            relevant = (cases if isinstance(cases, list) else [])[-3:]
+        lines = ["## [M&A可比案例]"]
+        for c in relevant[:4]:
+            if isinstance(c, dict):
+                lines.append(
+                    "  "
+                    + c.get("acquirer", "?")
+                    + " → "
+                    + c.get("target", "?")
+                    + ": EV/EBITDA "
+                    + str(c.get("ev_ebitda", "N/A"))
+                )
+        if isinstance(ev, dict) and ev:
+            lines.append("  行业EV/EBITDA中位数: " + str(ev.get("median", "N/A")))
+        return "\n".join(lines)
+    except Exception as e:
+        logger.debug("[MA-CASES] %s", e)
+    return ""
+
+
+def _inj_segment_rev_str(ctx):
+    """segment_revenue 注入器——分部收入拆分。"""
+    try:
+        import json
+
+        code = ctx.get("asset_code", "")
+        if not code:
+            return ""
+        fp = Path(__file__).resolve().parent.parent / "data" / "segment_revenue.json"
+        d = json.loads(fp.read_text(encoding="utf-8"))
+        entry = d.get(code, {}) if isinstance(d, dict) else {}
+        if not entry:
+            return ""
+        lines = ["## [分部收入拆分]"]
+        if isinstance(entry, dict):
+            for seg, val in list(entry.items())[:8]:
+                lines.append("  " + seg + ": " + str(val))
+        return "\n".join(lines)
+    except Exception as e:
+        logger.debug("[SEGMENT] %s", e)
+    return ""
+
+
+def _inj_consulting_str(ctx):
+    """methodology_consulting_deep 注入器——MBB 方法论补充。"""
+    try:
+        import json
+
+        fp = Path(__file__).resolve().parent.parent / "data" / "methodology_consulting_deep.json"
+        d = json.loads(fp.read_text(encoding="utf-8"))
+        if isinstance(d, dict):
+            lines = ["## [MBB咨询方法论补充]"]
+            for k, v in list(d.items())[:5]:
+                lines.append("  [" + k + "] " + str(v)[:150])
+            return "\n".join(lines)
+        elif isinstance(d, list):
+            lines = ["## [MBB咨询方法论补充]"]
+            for item in d[:5]:
+                if isinstance(item, dict):
+                    lines.append("  [" + item.get("name", "") + "] " + str(item.get("implication", ""))[:150])
+            return "\n".join(lines)
+    except Exception as e:
+        logger.debug("[CONSULTING] %s", e)
+    return ""
+
+
+def _inj_market_seg_str(ctx):
+    """global_market_segments 注入器。"""
+    try:
+        import json
+
+        fp = Path(__file__).resolve().parent.parent / "data" / "global_market_segments.json"
+        d = json.loads(fp.read_text(encoding="utf-8"))
+        if isinstance(d, dict) and d:
+            lines = ["## [全球市场细分参考]"]
+            for k, v in list(d.items())[:6]:
+                lines.append("  " + k + ": " + str(v)[:100])
+            return "\n".join(lines)
+    except Exception as e:
+        logger.debug("[MKT-SEG] %s", e)
     return ""
