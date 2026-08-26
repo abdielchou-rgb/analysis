@@ -124,12 +124,7 @@
 **阶段 2：Conviction Matrix 输出改版（1 天）**
 当前：
 ```python
-{
-    "base": 0.55,
-    "bull": 0.20,
-    "bear": 0.25,
-    "calibration_log": [...]
-}
+{"base": 0.55, "bull": 0.20, "bear": 0.25, "calibration_log": [...]}
 ```
 改版后：
 ```python
@@ -143,7 +138,7 @@
         "sample_size": 53,
         "data_period": "2018-2023",
         "staleness_warning": "数据源为历史估值模型，可能不反映当前利率环境",
-        "source": "130家估值模型批量提取 (2026-07)"
+        "source": "130家估值模型批量提取 (2026-07)",
     },
     "assumptions": [
         {
@@ -154,10 +149,10 @@
             "supporting_data": {
                 "industry_distribution": {"mean": 0.20, "p50": 0.18, "p75": 0.25},
                 "n_models": 12,
-                "data_freshness": "2019-2023"
-            }
+                "data_freshness": "2019-2023",
+            },
         }
-    ]
+    ],
 }
 ```
 

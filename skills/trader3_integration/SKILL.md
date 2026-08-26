@@ -24,7 +24,8 @@ description: 3号交易员量化引擎 + 策略进化工厂集成——回测/�
 
 ```python
 from trader3 import Trader3
-t3 = Trader3()          # gates 默认启用
+
+t3 = Trader3()  # gates 默认启用
 
 # 1. 回测验证
 r = t3.run_backtest(start_date="2020-01-01", end_date="2024-12-31")
@@ -35,18 +36,18 @@ r = t3.walk_forward_analysis(train_window=252, test_window=63)
 # → 样本外年化/夏普/过拟合概率/参数稳定性
 
 # 3. 组合优化（三种方法）
-r = t3.optimize_portfolio(signals={"600519.SH":80,"000858.SZ":70}, method="risk_budget")
+r = t3.optimize_portfolio(signals={"600519.SH": 80, "000858.SZ": 70}, method="risk_budget")
 # 或 method="mean_variance" / "black_litterman"
 
 # 4. 情境路由
 r = t3.regime_aware_allocation(signals={...}, regime_probs={...}, regime_weights={...})
 
 # 5. 交易成本估算（A股印花税/冲击）
-buy = t3.estimate_transaction_cost(orders=[{"symbol":"600519.SH","side":"buy","value_cny":5000000}])
-sell = t3.estimate_transaction_cost(orders=[{"symbol":"600519.SH","side":"sell","value_cny":5000000}])
+buy = t3.estimate_transaction_cost(orders=[{"symbol": "600519.SH", "side": "buy", "value_cny": 5000000}])
+sell = t3.estimate_transaction_cost(orders=[{"symbol": "600519.SH", "side": "sell", "value_cny": 5000000}])
 
 # 6. 执行计划（TWAP/VWAP/IS/自适应）
-r = t3.generate_execution_plan(target_weights={"600519.SH":0.3}, algorithm="adaptive_vwap")
+r = t3.generate_execution_plan(target_weights={"600519.SH": 0.3}, algorithm="adaptive_vwap")
 
 # 7. 信号/因子验证（真实行情）
 r = t3.validate_signal(signal_name="20日动量")
@@ -114,13 +115,15 @@ python evolve/run_evolution.py --source etf --etf-dir evolve/data/etf --n-stocks
 ### 2.3 进化策略 → 回测验证闭环
 
 ```python
-import sys; sys.path.insert(0, r"D:\Claude\projects\3号交易员")
+import sys
+
+sys.path.insert(0, r"D:\Claude\projects\3号交易员")
 sys.path.insert(0, r"D:\Claude\projects\3号交易员\evolve")
 from core.gp import evaluate, parse_expr
 from core.data_loader import load_qlib_panel
 
-panel, fwd = load_qlib_panel(universe='csi300', n_stocks=60)
-node = parse_expr("ts_corr(low, zscore(volume), 10)")   # 从 selected.json 取
+panel, fwd = load_qlib_panel(universe="csi300", n_stocks=60)
+node = parse_expr("ts_corr(low, zscore(volume), 10)")  # 从 selected.json 取
 signal = evaluate(node, panel)
 # → 把 signal 交给 trader3.run_backtest 做最终验证
 ```

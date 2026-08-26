@@ -38,13 +38,14 @@ ChartPlanner 是一个纯规则引擎。输入是 KnowledgePackage 中的数据�
 ```python
 @dataclass
 class ChartSpec:
-    chart_id: str            # "C1", "C2"...
-    chart_type: str          # "line", "bar", "waterfall", "tornado", "heatmap", "pie", "scatter", "radar"
-    title: str               # "近5年营收趋势"
+    chart_id: str  # "C1", "C2"...
+    chart_type: str  # "line", "bar", "waterfall", "tornado", "heatmap", "pie", "scatter", "radar"
+    title: str  # "近5年营收趋势"
     data_sources: list[str]  # 触发这张图的数据点ID
-    file_name: str           # "revenue_trend_cicc_line.png"
-    section_hint: str        # 建议放在哪个章节
-    priority: int            # 1=必须, 2=推荐, 3=可选的
+    file_name: str  # "revenue_trend_cicc_line.png"
+    section_hint: str  # 建议放在哪个章节
+    priority: int  # 1=必须, 2=推荐, 3=可选的
+
 
 @dataclass
 class ChartInventory:
@@ -137,19 +138,19 @@ class ChartPlanner:
     def __init__(self, chart_engine: ChartEngine):
         self.engine = chart_engine
         self.rules = self._register_rules()
-    
+
     def _register_rules(self) -> list[ChartRule]:
         return [
-            TimeSeriesRule(priority=1),        # R1: 3+ period → line
-            PeerComparisonRule(priority=1),    # R2: 5+ peers → bar
-            WaterfallBridgeRule(priority=2),   # R3: bridge data → waterfall
-            TornadoSensitivityRule(priority=1),# R4: WACC → tornado
-            ConvictionStackRule(priority=1),   # R5: probability → stacked bar
-            IndustryDistributionRule(priority=2), # R6: benchmark → box
-            ForecastHistoryRule(priority=1),   # R7: actual + forecast → combo
-            ... 
+            TimeSeriesRule(priority=1),  # R1: 3+ period → line
+            PeerComparisonRule(priority=1),  # R2: 5+ peers → bar
+            WaterfallBridgeRule(priority=2),  # R3: bridge data → waterfall
+            TornadoSensitivityRule(priority=1),  # R4: WACC → tornado
+            ConvictionStackRule(priority=1),  # R5: probability → stacked bar
+            IndustryDistributionRule(priority=2),  # R6: benchmark → box
+            ForecastHistoryRule(priority=1),  # R7: actual + forecast → combo
+            ...,
         ]
-    
+
     def plan(self, kp: KnowledgePackage) -> ChartInventory:
         specs = []
         for rule in self.rules:
@@ -171,15 +172,15 @@ class ChartPlanner:
 
 ```python
 def run(self, brief):
-    kp = self.t0(brief)         # 数据收集
-    kp = self.t1(kp)            # KnowledgeOrchestrator
+    kp = self.t0(brief)  # 数据收集
+    kp = self.t1(kp)  # KnowledgeOrchestrator
     # ★ NEW：图表规划和生成
     chart_inventory = self.chart_planner.plan(kp)
     kp.chart_inventory = chart_inventory
     # 继续管线
-    scaffold = self.t2a(kp)     # ArgumentEngine（知道有哪些图可用）
+    scaffold = self.t2a(kp)  # ArgumentEngine（知道有哪些图可用）
     report = self.llm(kp, scaffold, chart_inventory)  # LLM 必须引用图表
-    report = self.style(report) # StyleCompiler
+    report = self.style(report)  # StyleCompiler
     return report
 ```
 

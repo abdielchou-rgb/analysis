@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Calibrate IronGate thresholds from report samples"""
+
 import os, sys, json
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_ROOT))
+
 
 def collect_samples():
     samples = []
@@ -16,8 +18,10 @@ def collect_samples():
                     samples.append(f)
     return samples
 
+
 def calibrate():
     from pipeline.iron_gate import IronGate
+
     samples = collect_samples()
     if not samples:
         print("No .md samples found. Place some in benchmark/reports/")
@@ -26,7 +30,7 @@ def calibrate():
     all_scores = {}
     for fp in samples:
         try:
-            with open(fp, encoding='utf-8') as f:
+            with open(fp, encoding="utf-8") as f:
                 text = f.read()
             rtype = "listed_company"
             if "\u884c\u4e1a" in text[:500]:
@@ -44,15 +48,26 @@ def calibrate():
     defaults = {"sac_coverage": 0.7, "data_traceability": 0.5, "content_volume": 0.6}
     for name in sorted(all_scores.keys()):
         scores = sorted(all_scores[name])
-        p20 = scores[len(scores)//5] if len(scores)>=5 else scores[0]
+        p20 = scores[len(scores) // 5] if len(scores) >= 5 else scores[0]
         thresholds[name] = round(max(0.3, min(p20, 0.95)), 2)
         dflt = defaults.get(name, 0.6)
-        flag = " *" if abs(p20-dflt) > 0.15 else ""
-        print("  " + name.ljust(30) + " " + str(len(scores)).rjust(4) + " samples  P20=" + "{:.2f}".format(p20) + "  default=" + "{:.2f}".format(dflt) + flag)
+        flag = " *" if abs(p20 - dflt) > 0.15 else ""
+        print(
+            "  "
+            + name.ljust(30)
+            + " "
+            + str(len(scores)).rjust(4)
+            + " samples  P20="
+            + "{:.2f}".format(p20)
+            + "  default="
+            + "{:.2f}".format(dflt)
+            + flag
+        )
     out = _ROOT / "benchmark" / "calibrated_thresholds.json"
-    with open(out, 'w') as f:
+    with open(out, "w") as f:
         json.dump(thresholds, f, indent=2, ensure_ascii=False)
     print("\nWritten: benchmark/calibrated_thresholds.json (" + str(len(thresholds)) + " dims)")
+
 
 if __name__ == "__main__":
     calibrate()

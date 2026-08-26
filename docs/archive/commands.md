@@ -291,6 +291,7 @@ Validate Trend:   [{'day': '2026-07-22', 'pass_rate': 85.0}, ...]
 
 ```python
 import sys
+
 sys.path.insert(0, r"D:\Claude\projects\analysis\1hao-analyst-v50+\V50")
 
 from run_v50 import V50PlusOrchestrator

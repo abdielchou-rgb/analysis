@@ -62,7 +62,11 @@ def validate_indicators(text: str, tolerance: float = 0.20) -> list[str]:
             ctx = ctx_clean if len(ctx_clean) >= 2 else ""
             # CAGR 为多年复合口径，与单年增速/增长率不同，单独成簇
             mname = m.group(1) if m.lastindex and m.lastindex >= 1 else ""
-            cal = "|CAGR" if "CAGR" in mname.upper() else ""
+            cal = "|CAGR" if "CAGR" in mname.upper() or "复合" in mname else ""
+            # 额外：如果上下文含"十年""复合""CAGR"，强制标记为CAGR
+            ctx_text = text[max(0, m.start() - 20) : m.end() + 20]
+            if any(kw in ctx_text for kw in ("十年", "复合", "CAGR", "十年复合")):
+                cal = "|CAGR"
             key = f"{unit}|{year}|{ctx}{cal}"
             groups.setdefault(key, []).append(num)
         for key, values in groups.items():

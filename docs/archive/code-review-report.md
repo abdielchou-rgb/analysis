@@ -235,7 +235,7 @@ def _per_section(self, text: str, depth: int = 0) -> dict:
     if depth >= 2:  # 最多递归2层
         return {}
     ...
-    scores = self.score(body, _depth=depth+1) if body else QualityScore()
+    scores = self.score(body, _depth=depth + 1) if body else QualityScore()
 ```
 
 #### 5. 硬编码 Windows 绝对路径
@@ -280,8 +280,7 @@ except Exception as e:
 
 ```python
 # data_pipeline.py — 当前（违反原则）
-cd["market_size"] = {"labels": ["2022","2023","2024","2025E","2026E"],
-                     "values": [100, 125, 158, 198, 245]}
+cd["market_size"] = {"labels": ["2022", "2023", "2024", "2025E", "2026E"], "values": [100, 125, 158, 198, 245]}
 
 # 建议
 cd["market_size"] = {"labels": [], "values": [], "note": "数据源不可用，需人工补充"}
@@ -299,6 +298,7 @@ json_match = __import__("re").search(r"\{.*\}", content, __import__("re").DOTALL
 
 # 建议
 import re  # 顶部
+
 json_match = re.search(r"\{.*\}", content, re.DOTALL)
 ```
 
@@ -316,10 +316,10 @@ json_match = re.search(r"\{.*\}", content, re.DOTALL)
 
 ```python
 # 当前（永远False）
-report_type=ReportType(rt) if rt in ReportType.__members__ else ReportType.LISTED_COMPANY
+report_type = ReportType(rt) if rt in ReportType.__members__ else ReportType.LISTED_COMPANY
 
 # 建议
-report_type=ReportType(rt) if rt in ReportType._value2member_map_ else ReportType.LISTED_COMPANY
+report_type = ReportType(rt) if rt in ReportType._value2member_map_ else ReportType.LISTED_COMPANY
 ```
 
 #### 11. API Key 获取逻辑冗余

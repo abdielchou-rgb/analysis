@@ -70,11 +70,12 @@ R55 升级后，行业报告 `global_competition` 维度要求"中国玩家 vs �
 ### 验证标准
 ```python
 import json
-d = json.load(open('data/global_industry_players.json'))
+
+d = json.load(open("data/global_industry_players.json"))
 # 至少 8 个行业，每个行业 ≥5 家玩家
-print('行业数:', len(d))  # 应 ≥8
+print("行业数:", len(d))  # 应 ≥8
 for ind, v in d.items():
-    print(f'{ind}: {len(v["players"])}家玩家, public={sum(1 for p in v["players"] if p.get("public"))}家上市')
+    print(f"{ind}: {len(v['players'])}家玩家, public={sum(1 for p in v['players'] if p.get('public'))}家上市")
 ```
 **通过标准**：≥8 行业 × ≥5 家玩家，每家有 country/role/confidence 字段。
 

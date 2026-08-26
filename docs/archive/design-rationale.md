@@ -42,16 +42,18 @@ T2b 行文引擎（Prose Engine）—— LLM 但高度约束
 ```python
 class ArgumentScaffold(BaseModel):
     """不是 JSON blob——是经过类型和约束检查的论证结构"""
+
     sections: list[Section]
-    
+
+
 class Section(BaseModel):
     id: str
     type: Literal["judgment", "evidence", "counter", "transition"]
-    thesis: str                      # 主题句（一段只一句话）
-    evidence_ids: list[str]          # 只引用 T1 中已有的证据 ID
+    thesis: str  # 主题句（一段只一句话）
+    evidence_ids: list[str]  # 只引用 T1 中已有的证据 ID
     counter_evidence_ids: list[str]  # 反方证据，非可选
-    required_citations: int          # 这段至少引用几个来源
-    style_rules: list[str]           # 来自 style_profile 的该节约束
+    required_citations: int  # 这段至少引用几个来源
+    style_rules: list[str]  # 来自 style_profile 的该节约束
 ```
 
 **关键变化**：

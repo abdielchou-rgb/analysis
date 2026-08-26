@@ -315,10 +315,10 @@
 正确做法：
 ```python
 # 当前（伪阳性）
-return AnalysisResult(score=0.5, direction='neutral', confidence=0.0)
+return AnalysisResult(score=0.5, direction="neutral", confidence=0.0)
 
 # 建议（显式缺省）
-return AnalysisResult(score=None, direction='unknown', confidence=0.0, reason='数据不足')
+return AnalysisResult(score=None, direction="unknown", confidence=0.0, reason="数据不足")
 ```
 
 **B. synthesis_engine的normalizer失效**
@@ -406,12 +406,12 @@ normalizer本应将各knowledge模块的异构输出归一化（如将"导入期
 class AuditLoop:
     def fix_and_verify(self, finding):
         fix = apply_fix(finding)
-        verify = run_tests()           # 修复后立即跑测试
+        verify = run_tests()  # 修复后立即跑测试
         regression = run_regression()  # 回归测试
         if not verify or not regression:
-            rollback(fix)              # 验证失败则回滚
+            rollback(fix)  # 验证失败则回滚
             raise FixFailed(finding)
-        close_finding(finding)         # 验证通过才闭环
+        close_finding(finding)  # 验证通过才闭环
 ```
 
 ---

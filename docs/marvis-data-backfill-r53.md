@@ -39,6 +39,7 @@ baostock（免费免 token，字段稳定）：
 1. **探测字段**：先写个小脚本实测 baostock `query_balance_data` 返回哪些字段，确认折旧摊销/应付债券的字段名。
    ```python
    import baostock as bs
+
    bs.login()
    rs = bs.query_balance_data(code="sh.600519", year="2024", quarter="4")
    while rs.next():
@@ -59,12 +60,13 @@ baostock（免费免 token，字段稳定）：
 ### 验证标准
 ```python
 import sqlite3
-conn = sqlite3.connect('data/financials.db')
+
+conn = sqlite3.connect("data/financials.db")
 # 抽查：茅台/柯力 有 DA/RD 字段
-for code in ['600519', '603662']:
+for code in ["600519", "603662"]:
     da = conn.execute("SELECT COUNT(*) FROM financials WHERE code=? AND field='DA'", (code,)).fetchone()[0]
     rd = conn.execute("SELECT COUNT(*) FROM financials WHERE code=? AND field='RD'", (code,)).fetchone()[0]
-    print(f'{code}: DA={da}条, RD={rd}条')
+    print(f"{code}: DA={da}条, RD={rd}条")
 conn.close()
 ```
 **通过标准**：覆盖 ≥3000 只，DA/RD 每只 ≥4 个季度。
@@ -95,10 +97,11 @@ conn.close()
 ### 验证标准
 ```python
 import sqlite3
-conn = sqlite3.connect('data/consensus_estimates.db')
+
+conn = sqlite3.connect("data/consensus_estimates.db")
 # 单只股票应有多个历史 as_of
 n = conn.execute("SELECT COUNT(DISTINCT as_of) FROM consensus WHERE code='600519'").fetchone()[0]
-print(f'茅台历史预测点: {n}个')  # 应 ≥5 才说明历史序列建起来了
+print(f"茅台历史预测点: {n}个")  # 应 ≥5 才说明历史序列建起来了
 conn.close()
 ```
 **通过标准**：≥500 只股票有 ≥3 个历史 as_of；revision_slope 可计算。
@@ -129,11 +132,12 @@ conn.close()
 ### 验证标准
 ```python
 import json
-hf = json.load(open('data/macro_highfreq.json'))
+
+hf = json.load(open("data/macro_highfreq.json"))
 # 至少要有 螺纹钢、粗钢、原油 三组
-for k in ['螺纹钢', '粗钢', '原油']:
+for k in ["螺纹钢", "粗钢", "原油"]:
     has = any(k in key for key in hf)
-    print(f'{k}: {"✓" if has else "✗"}')
+    print(f"{k}: {'✓' if has else '✗'}")
 ```
 **通过标准**：≥5 个高频指标入库，每个 ≥30 个数据点。
 
@@ -205,8 +209,9 @@ akshare：
 ### 验证标准
 ```python
 import json
-us = json.load(open('data/us_highfreq.json'))
-print('CFNAI:', len(us.get('CFNAI', [])), '期')
+
+us = json.load(open("data/us_highfreq.json"))
+print("CFNAI:", len(us.get("CFNAI", [])), "期")
 ```
 **通过标准**：CFNAI + WEI 各 ≥100 期。
 

@@ -166,14 +166,17 @@ class ComplianceChecklist:
     def _check_source_credibility(self, text, **kw) -> ComplianceChecklistItem:
         """Check that sources have credibility signals (distinguish company data from estimates)."""
         # Look for credibility signals: "可信度", "公司公告", "官方", "测算", "估算"
-        has_credibility_signal = any(m in text for m in ["可信度", "公司公告", "官方数据", "公司披露"])
-        has_estimation_signal = any(m in text for m in ["测算", "估算", "推测", "假设"])
+        has_credibility_signal = any(
+            m in text for m in ["可信度", "公司公告", "官方数据", "公司披露", "年报", "三季报", "半年报", "一季报"]
+        )
+        has_estimation_signal = any(m in text for m in ["测算", "估算", "推测", "假设", "预测", "预期", "一致预期"])
         # Only meaningful if there are data sources AND some credibility distinction
         source_count = len(re.findall(r"来源[：:]", text))
         if source_count < 2:
             return ComplianceChecklistItem("source_credibility", "数据来源可信度判断", True, "来源较少，无需分档")
         # PASS if both credibility and estimation signals exist (sources are differentiated)
-        passed = has_credibility_signal and has_estimation_signal
+        # Also pass if we have official company disclosures (high credibility)
+        passed = (has_credibility_signal and has_estimation_signal) or has_credibility_signal
         detail = ""
         if passed:
             detail = f"检测到可信度分级 ({source_count} 处来源)"

@@ -77,8 +77,7 @@
 **建议方案**：
 ```python
 # 按SAC因果链，每步200-400字，分7步生成
-steps = ["稀缺层定位", "利润迁移路径", "竞争格局重构", 
-         "技术路线验证", "市场空间校准", "政策传导检验", "资本市场映射"]
+steps = ["稀缺层定位", "利润迁移路径", "竞争格局重构", "技术路线验证", "市场空间校准", "政策传导检验", "资本市场映射"]
 for step in steps:
     section = generate_section(step, data_for_step, charts_for_step)
     report.append(section)

@@ -87,7 +87,7 @@ MINERU_API_TOKEN=your_key mineru-open-mcp --transport streamable-http --port 800
 ```python
 from core.mineru_parser import MinerUClient, extract_markdown
 
-md = extract_markdown("研报.pdf", mode="auto")   # auto: local→cloud 自动降级
+md = extract_markdown("研报.pdf", mode="auto")  # auto: local→cloud 自动降级
 # mode="local" 强制本地 | mode="cloud" 强制云
 # kw: pages="1-20" 限页数；token= 传 API key
 ```

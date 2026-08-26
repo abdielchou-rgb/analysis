@@ -112,8 +112,7 @@ FormatSheriff → VisualGate → IronGate，层层收紧。IronGate的22项检�
 
 ```python
 _deepseek_key = (
-    os.environ.get("DEEPSEEK_API_KEY") or
-    os.environ.get("DEEPSEEK_API_KEY", "")  # 完全冗余
+    os.environ.get("DEEPSEEK_API_KEY") or os.environ.get("DEEPSEEK_API_KEY", "")  # 完全冗余
 )
 ```
 

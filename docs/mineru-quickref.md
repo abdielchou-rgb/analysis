@@ -20,6 +20,7 @@
 ### 场景 A：研报/PDF 知识提取（最高价值）
 ```python
 from core.mineru_parser import extract_markdown
+
 md = extract_markdown("研报.pdf", mode="auto", page_range="1-20")
 # → 结构化 Markdown，供 data_basement / knowledge_injector 注入
 ```

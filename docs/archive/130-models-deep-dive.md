@@ -143,13 +143,14 @@ Layer 1: 行业总规模（TAM）
 @dataclass
 class AssumptionTree:
     """从驱动因子到财务预测的完整假设树。"""
-    industry_tam: list[dict]          # [{year, value, growth_rate}]
-    penetration_rate: list[dict]      # 在线渗透率
-    market_share: list[dict]          # 公司份额
-    revenue_model: dict               # 量/价/结构拆分
-    margin_assumptions: dict          # 毛利率/费用率预测
-    wacc_assumptions: dict            # Beta/无风险/ERP/资本结构
-    terminal_assumptions: dict        # 永续增长率/Exit Multiple
+
+    industry_tam: list[dict]  # [{year, value, growth_rate}]
+    penetration_rate: list[dict]  # 在线渗透率
+    market_share: list[dict]  # 公司份额
+    revenue_model: dict  # 量/价/结构拆分
+    margin_assumptions: dict  # 毛利率/费用率预测
+    wacc_assumptions: dict  # Beta/无风险/ERP/资本结构
+    terminal_assumptions: dict  # 永续增长率/Exit Multiple
 ```
 
 这个不是让 LLM 生成的——是让 agent+T1+T2a 结构化的。美团那个模型的实际公式全部是 Python 可以复现的确定性计算。
@@ -176,7 +177,7 @@ class AssumptionTree:
     "宁德时代所在的新能源车": {
         "营收CAGR": {"一致预期": "25%", "模型假设": "22-30%"},
         "毛利率": {"当前": "25%", "模型假设": "18-22%"},
-    }
+    },
 }
 ```
 

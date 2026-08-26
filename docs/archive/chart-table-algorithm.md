@@ -33,6 +33,7 @@ Markdown 报告
 import re
 from typing import List, Dict
 
+
 def extract_tables(markdown_text: str) -> List[Dict]:
     """从 markdown 文本中提取所有表格块。
 
@@ -42,28 +43,30 @@ def extract_tables(markdown_text: str) -> List[Dict]:
           "char_count": N}, ...]
     """
     tables = []
-    lines = markdown_text.split('\n')
+    lines = markdown_text.split("\n")
     buffer = []
     in_table = False
 
     for line in lines:
-        if '|' in line and '---' not in line:
+        if "|" in line and "---" not in line:
             buffer.append(line)
             in_table = True
         else:
             if in_table and len(buffer) >= 2:  # 至少表头+分隔线
-                headers = [c.strip() for c in buffer[0].split('|') if c.strip()]
+                headers = [c.strip() for c in buffer[0].split("|") if c.strip()]
                 rows = []
                 for row_line in buffer[2:]:  # 跳过分隔线
-                    cells = [c.strip() for c in row_line.split('|') if c.strip()]
+                    cells = [c.strip() for c in row_line.split("|") if c.strip()]
                     if cells:
                         rows.append(cells)
                 if headers and rows:
-                    tables.append({
-                        "headers": headers,
-                        "rows": rows,
-                        "char_count": sum(len(c) for r in rows for c in r),
-                    })
+                    tables.append(
+                        {
+                            "headers": headers,
+                            "rows": rows,
+                            "char_count": sum(len(c) for r in rows for c in r),
+                        }
+                    )
             buffer = []
             in_table = False
 
@@ -80,11 +83,12 @@ from docx.shared import Inches, Pt, RGBColor
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.oxml.ns import qn
 
+
 def render_table_to_docx(
     doc: Document,
-    table_data: dict,      # {"headers": [...], "rows": [[...], ...]}
+    table_data: dict,  # {"headers": [...], "rows": [[...], ...]}
     primary_color: tuple,  # (R, G, B) 机构主色，如 GS=(5,28,44)
-    accent_color: tuple,   # 强调色
+    accent_color: tuple,  # 强调色
     table_index: int = 0,
 ) -> None:
     """将 markdown 表格渲染为富样式 Word 表格。
@@ -102,7 +106,7 @@ def render_table_to_docx(
 
     table = doc.add_table(rows=1 + len(rows), cols=n_cols)
     table.alignment = WD_TABLE_ALIGNMENT.CENTER
-    table.style = 'Table Grid'
+    table.style = "Table Grid"
 
     # 表头
     for ci, header in enumerate(headers):
@@ -116,10 +120,8 @@ def render_table_to_docx(
                 run.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
         # 背景色填充
         shading = cell._element.get_or_add_tcPr()
-        fill_hex = f'{primary_color[0]:02X}{primary_color[1]:02X}{primary_color[2]:02X}'
-        shd = shading.makeelement(qn('w:shd'), {
-            qn('w:fill'): fill_hex, qn('w:val'): 'clear'
-        })
+        fill_hex = f"{primary_color[0]:02X}{primary_color[1]:02X}{primary_color[2]:02X}"
+        shd = shading.makeelement(qn("w:shd"), {qn("w:fill"): fill_hex, qn("w:val"): "clear"})
         shading.append(shd)
 
     # 数据行
@@ -128,7 +130,7 @@ def render_table_to_docx(
         for ci, cell_text in enumerate(row_data[:n_cols]):
             cell = row.cells[ci]
             cell.text = cell_text
-            is_num = bool(re.match(r'^[\d\-.%]+$', cell_text.strip()))
+            is_num = bool(re.match(r"^[\d\-.%]+$", cell_text.strip()))
             for para in cell.paragraphs:
                 para.alignment = 2 if is_num else 0
                 for run in para.runs:
@@ -140,9 +142,7 @@ def render_table_to_docx(
             for ci in range(n_cols):
                 cell = row.cells[ci]
                 shading = cell._element.get_or_add_tcPr()
-                shd = shading.makeelement(qn('w:shd'), {
-                    qn('w:fill'): 'F5F5F5', qn('w' 'val'): 'clear'
-                })
+                shd = shading.makeelement(qn("w:shd"), {qn("w:fill"): "F5F5F5", qn("wval"): "clear"})
                 shading.append(shd)
 
     doc.add_paragraph()  # 表后间距
@@ -158,10 +158,11 @@ from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN
 
+
 def render_table_to_pptx(
     slide,
     table_data: dict,
-    left: float = 0.5,   # 英寸
+    left: float = 0.5,  # 英寸
     top: float = 1.5,
     width: float = 9.0,
     height: float = None,  # 自动计算
@@ -176,30 +177,24 @@ def render_table_to_pptx(
     rows = table_data["rows"][:8]  # PPTX 每页表格不超过 8 行
     n_cols = len(headers)
     n_rows = 1 + len(rows)
-    
+
     # 有图时表格窄一些
-    has_image_on_slide = any(
-        sh.shape_type == 13 for sh in slide.shapes
-    )
+    has_image_on_slide = any(sh.shape_type == 13 for sh in slide.shapes)
     if has_image_on_slide:
         width = 4.5
         left = 0.3
-    
+
     row_height = Inches(0.35)
     tbl_height = row_height * n_rows
-    
+
     try:
-        table_shape = slide.shapes.add_table(
-            n_rows, n_cols,
-            Inches(left), Inches(top),
-            Inches(width), tbl_height
-        )
+        table_shape = slide.shapes.add_table(n_rows, n_cols, Inches(left), Inches(top), Inches(width), tbl_height)
         table = table_shape.table
-        
+
         # 列宽均匀分配
         for ci in range(n_cols):
             table.columns[ci].width = Inches(width / n_cols)
-        
+
         # 表头
         for ci, header in enumerate(headers):
             cell = table.cell(0, ci)
@@ -212,23 +207,20 @@ def render_table_to_pptx(
                     run.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
             # 填充
             from lxml import etree
+
             solidFill = etree.SubElement(
-                cell._tc.get_or_add_tcPr(), 
-                '{http://schemas.openxmlformats.org/drawingml/2006/main}solidFill'
+                cell._tc.get_or_add_tcPr(), "{http://schemas.openxmlformats.org/drawingml/2006/main}solidFill"
             )
-            srgbClr = etree.SubElement(
-                solidFill,
-                '{http://schemas.openxmlformats.org/drawingml/2006/main}srgbClr'
-            )
-            srgbClr.set('val', primary_hex.lstrip('#'))
-        
+            srgbClr = etree.SubElement(solidFill, "{http://schemas.openxmlformats.org/drawingml/2006/main}srgbClr")
+            srgbClr.set("val", primary_hex.lstrip("#"))
+
         # 数据行
         for ri, row_data in enumerate(rows):
             for ci, cell_text in enumerate(row_data[:n_cols]):
                 cell = table.cell(ri + 1, ci)
                 cell.text = cell_text[:40]
                 for para in cell.text_frame.paragraphs:
-                    is_num = bool(re.match(r'^[\d\-.%]+$', cell_text.strip()))
+                    is_num = bool(re.match(r"^[\d\-.%]+$", cell_text.strip()))
                     para.alignment = PP_ALIGN.RIGHT if is_num else PP_ALIGN.LEFT
                     for run in para.runs:
                         run.font.size = Pt(8)
@@ -238,15 +230,9 @@ def render_table_to_pptx(
             if ri % 2 == 0:
                 for ci in range(n_cols):
                     fill = table.cell(ri + 1, ci)._tc.get_or_add_tcPr()
-                    sf = etree.SubElement(
-                        fill,
-                        '{http://schemas.openxmlformats.org/drawingml/2006/main}solidFill'
-                    )
-                    sc = etree.SubElement(
-                        sf,
-                        '{http://schemas.openxmlformats.org/drawingml/2006/main}srgbClr'
-                    )
-                    sc.set('val', 'F5F5F5')
+                    sf = etree.SubElement(fill, "{http://schemas.openxmlformats.org/drawingml/2006/main}solidFill")
+                    sc = etree.SubElement(sf, "{http://schemas.openxmlformats.org/drawingml/2006/main}srgbClr")
+                    sc.set("val", "F5F5F5")
     except Exception:
         pass  # 嵌入失败不阻断
 ```
@@ -263,6 +249,7 @@ def render_table_to_pptx(
 import re
 from collections import Counter
 
+
 def extract_chart_data_from_text(text: str) -> dict:
     """从报告正文提取数字 + 单位 → 可用于绘图的键值对。
 
@@ -271,8 +258,8 @@ def extract_chart_data_from_text(text: str) -> dict:
       2. 匹配数字+单位对 → 取前 10 个最常出现的指标
     """
     patterns = [
-        r'(\w{2,8})[（(]\s*(\d+\.?\d*)\s*(亿元|亿美元|%|倍|港元|元)[）)]',
-        r'(\w{2,8})[：:]\s*(\d+\.?\d*)\s*(亿元|亿|%)',
+        r"(\w{2,8})[（(]\s*(\d+\.?\d*)\s*(亿元|亿美元|%|倍|港元|元)[）)]",
+        r"(\w{2,8})[：:]\s*(\d+\.?\d*)\s*(亿元|亿|%)",
     ]
     data = {}
     for pat in patterns:
@@ -288,27 +275,45 @@ def extract_chart_data_from_text(text: str) -> dict:
 
 ```python
 def assign_charts_to_sections(
-    sections: list,       # slide_content: [{"title": "...", "body": [...]}, ...]
-    chart_paths: dict,    # {"bar": "path.png", "pie": "...", ...}
+    sections: list,  # slide_content: [{"title": "...", "body": [...]}, ...]
+    chart_paths: dict,  # {"bar": "path.png", "pie": "...", ...}
 ) -> list:
     """将图表分配到最匹配的章节。
 
     匹配优先级：
       字面匹配 > 关键词匹配 > 章节序号匹配
-    
+
     每章节最多嵌入 1 张图，每张图最多使用 1 次。
     """
     chart_items = sorted(chart_paths.items())
     keyword_map = {
-        "核心判断": 0, "核心分歧": 0, "Bold Call": 0,
-        "财务": 1, "收入": 1, "利润": 1,
-        "KPI": 2, "用户": 2, "指标": 2,
-        "竞争": 3, "壁垒": 3, "格局": 3,
-        "估值": 4, "DCF": 4, "目标价": 4,
-        "反方": 5, "风险": 5, "证伪": 5,
-        "增长": 6, "增速": 6, "趋势": 6,
-        "股权": 7, "融资": 7, "资本": 7,
-        "电商": 8, "广告": 8, "收入结构": 8,
+        "核心判断": 0,
+        "核心分歧": 0,
+        "Bold Call": 0,
+        "财务": 1,
+        "收入": 1,
+        "利润": 1,
+        "KPI": 2,
+        "用户": 2,
+        "指标": 2,
+        "竞争": 3,
+        "壁垒": 3,
+        "格局": 3,
+        "估值": 4,
+        "DCF": 4,
+        "目标价": 4,
+        "反方": 5,
+        "风险": 5,
+        "证伪": 5,
+        "增长": 6,
+        "增速": 6,
+        "趋势": 6,
+        "股权": 7,
+        "融资": 7,
+        "资本": 7,
+        "电商": 8,
+        "广告": 8,
+        "收入结构": 8,
     }
     assigned = set()
     result = [False] * len(sections)  # has_chart 标记
@@ -333,6 +338,7 @@ def embed_charts_to_docx(doc: Document, chart_paths: dict) -> None:
     每张图附带"图：类型"标题。
     """
     from pathlib import Path
+
     for chart_type, chart_path in sorted(chart_paths.items()):
         if Path(chart_path).exists():
             try:

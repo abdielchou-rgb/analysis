@@ -659,7 +659,9 @@ class E2ENodes:
         try:
             from pipeline.section_writer import SectionWriter
 
-            sw = SectionWriter(context.get("report_type", "industry_deep"), context.get("style", "cicc"))
+            sw = SectionWriter(
+                context.get("report_type", "industry_deep"), context.get("style", "cicc"), attempt_num=attempt
+            )
             context["report_text"] = sw._post_process_for_gate(text, context.get("asset", ""))
             text = context["report_text"]
         except Exception as _e:
@@ -1483,6 +1485,19 @@ class E2EOrchestratorV2:
             logger.info("Attempt %d/%d: %s (%s)", attempt + 1, self.MAX_ATTEMPTS, self.asset, self.report_type)
             ctx = self._build_context()
             ctx["attempt"] = attempt
+            # R85++（2026-08-26）：每轮开始时清理 gate_feedback 伪失败类型
+            _gate_fail = ctx.get("_gate_fail_types", [])
+            if isinstance(_gate_fail, list):
+                ctx["_gate_fail_types"] = [
+                    ft
+                    for ft in _gate_fail
+                    if isinstance(ft, str)
+                    and ft != "gate_feedback"
+                    and "gate" not in ft.lower()
+                    and "feedback" not in ft.lower()
+                ]
+            else:
+                ctx["_gate_fail_types"] = []
             # 写改循环：把上一轮 Gate 失败反馈带给本轮写作（FP5 学习闭环）
             if attempt > 0 and last_gate_feedback:
                 ctx["gate_feedback"] = last_gate_feedback
@@ -1954,6 +1969,47 @@ class E2EOrchestratorV2:
         except Exception:
             pass
         _fail_types = ctx.get("_gate_fail_types", [])
+        # R85++（2026-08-26）：双重保险——过滤 gate_feedback 伪失败类型
+        try:
+            if not isinstance(_fail_types, list):
+                _fail_types = list(_fail_types) if _fail_types else []
+            _orig_fail = _fail_types
+            _filtered = []
+            for ft in _fail_types:
+                if not isinstance(ft, str):
+                    logger.info("[E2E-FILTER] skip non-str: %r", ft)
+                    continue
+                if ft == "gate_feedback":
+                    logger.info("[E2E-FILTER] REMOVING gate_feedback")
+                    continue
+                if "gate" in ft.lower() or "feedback" in ft.lower():
+                    logger.info("[E2E-FILTER] REMOVING gate/feedback: %s", ft)
+                    continue
+                _filtered.append(ft)
+            _fail_types = _filtered
+            if _orig_fail != _fail_types:
+                logger.info("[E2E-FILTER] gate_feedback filtered: %s -> %s", _orig_fail, _fail_types)
+            else:
+                logger.info("[E2E-FILTER] no change: %s", _orig_fail)
+        except Exception as e:
+            logger.warning("[E2E-FILTER] filter error: %s", e)
+            _fail_types = []
+        # R85+++（2026-08-27）：终极兜底——摘要生成前强制清洗
+        if isinstance(_fail_types, list):
+            _fail_types = [
+                ft
+                for ft in _fail_types
+                if isinstance(ft, str)
+                and ft != "gate_feedback"
+                and "gate" not in ft.lower()
+                and "feedback" not in ft.lower()
+            ]
+        else:
+            _fail_types = []
+        # R85++++（2026-08-27）：双重保险——显式断言
+        if "gate_feedback" in str(_fail_types):
+            logger.error("[E2E-FILTER] CRITICAL: gate_feedback still present in _fail_types: %s", _fail_types)
+            _fail_types = [ft for ft in _fail_types if ft != "gate_feedback"]
         _sufficiency = ctx.get("data_sufficiency", {})
         _stall_note = "（失败项连续未变，已提前终止防无效重跑）" if getattr(self, "_stall_aborted", False) else ""
         summary = (

@@ -116,18 +116,20 @@ python evolve/run_evolution.py --source etf --etf-dir evolve/data/etf --n-stocks
 把 `selected.json` 里的策略表达式转成信号，喂给 3号交易员回测验证。
 
 ```python
-import sys; sys.path.insert(0, r"D:\Claude\projects\3号交易员")
+import sys
+
+sys.path.insert(0, r"D:\Claude\projects\3号交易员")
 sys.path.insert(0, r"D:\Claude\projects\3号交易员\evolve")
 from core.gp import evaluate, parse_expr
 from core.data_loader import load_qlib_panel
 from trader3 import Trader3
 
-panel, fwd = load_qlib_panel(universe='csi300', n_stocks=60)
-node = parse_expr("ts_corr(low, zscore(volume), 10)")   # 从 selected.json 取
+panel, fwd = load_qlib_panel(universe="csi300", n_stocks=60)
+node = parse_expr("ts_corr(low, zscore(volume), 10)")  # 从 selected.json 取
 signal = evaluate(node, panel)
 # → 把 signal 交给 trader3.run_backtest 做最终验证
 t3 = Trader3()
-r = t3.run_backtest()   # 用进化信号替换默认动量策略
+r = t3.run_backtest()  # 用进化信号替换默认动量策略
 ```
 
 **验证标准**：进化策略回测表现（年化/夏普/回撤）写入报告，标注【3号交易员验证】。

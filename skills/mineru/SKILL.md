@@ -53,7 +53,8 @@ mineru-open-api extract --list 文件清单.txt -o ./results/
 ## 2hao 项目内调用（Python 封装）
 ```python
 from core.mineru_parser import extract_markdown
-md = extract_markdown("研报.pdf", mode="auto")   # auto: local→cloud 降级
+
+md = extract_markdown("研报.pdf", mode="auto")  # auto: local→cloud 降级
 ```
 - `mode="local"` 强制本地；`mode="cloud"` 强制云
 - 传 `pages="1-20"` 限制页数（云 Flash 上限 20 页）
