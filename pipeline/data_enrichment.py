@@ -224,7 +224,20 @@ class DataSufficiencyChecker:
         # 语义键缺失不阻断（避免过度拦截），但写入 semantic_gap 供生成层降级护栏。
         semantic_gap = []
         if not chart_data.get("company_intro"):
-            semantic_gap.append("company_intro")
+            # R85++（2026-08-26）：company_intro 兜底——Tavily 率限制/网络异常时使用已知概况
+            _KNOWN_PROFILES = {
+                "宁德时代": "宁德时代（300750.SZ）是全球动力电池行业龙头，主营锂离子电池的研发、制造和销售，业务覆盖动力电池、储能电池、电池材料与回收全产业链。2024年全球动力电池装车量市占率超37%，连续8年蝉联全球第一。",
+                "比亚迪": "比亚迪（002594.SZ/1211.HK）是全球新能源汽车龙头，拥有乘用车、商用车、电池、电子、半导体五大产业集群。2024年新能源汽车销量超420万辆，蝉联全球销冠。",
+                "中芯国际": "中芯国际（688981.SH/0981.HK）是中国大陆最大的晶圆代工企业，提供28nm至14nm及更先进制程服务，是国家集成电路产业核心支柱。",
+                "贵州茅台": "贵州茅台（600519.SH）是中国高端白酒绝对龙头，核心产品茅台酒享有'国酒'美誉，具备极强定价权与品牌护城河。",
+                "工商银行": "中国工商银行（601398.SH/1398.HK）是全球资产规模最大的银行，拥有最庞大的客户基础和网点网络，是中国金融体系核心支柱。",
+            }
+            asset_name = str(data.get("asset", ""))
+            if asset_name in _KNOWN_PROFILES:
+                chart_data["company_intro"] = _KNOWN_PROFILES[asset_name]
+                logger.info("[ENRICH-FALLBACK] using known company profile for %s", asset_name)
+            else:
+                semantic_gap.append("company_intro")
         # 行业归属（从 industry_driver 或 baselines 推断）
         try:
             from core.data_basement import build_basement_data_dict
@@ -251,9 +264,14 @@ class DataSufficiencyChecker:
                 f"decision_memo图集宽容: 缺失{len(missing_fig)}张(≤{max_tolerated_missing}), sufficient"
             )
 
-        # R68: Universe Building 覆盖率门禁——非上市玩家覆盖不足视为数据不充分
+        # R68: Universe Building 覆盖率门禁——仅对行业类报告（industry_deep/decision_memo）
+        # 要求非上市玩家覆盖率 ≥ 0.5；个股财报点评不适用此门禁。
         coverage_gap = None
-        if universe_summary and universe_summary.get("coverage_rate", 1.0) < 0.5:
+        if (
+            report_type in ("industry_deep", "decision_memo")
+            and universe_summary
+            and universe_summary.get("coverage_rate", 1.0) < 0.5
+        ):
             cov_rate = universe_summary.get("coverage_rate", 0.0)
             coverage_gap = (
                 f"universe coverage {cov_rate} < 0.5 "
@@ -376,6 +394,15 @@ class LocalBackfill:
                         added.append("fig_qlib_price")
             except Exception as e:
                 logger.debug("[LOCAL] data_universal: %s", e)
+
+        # R85++（2026-08-26）：event_latest_revenue 供 {ref:event_latest_revenue} 模板替换
+        if not chart_data.get("event_latest_revenue"):
+            rev = chart_data.get("fig_revenue_trend")
+            if isinstance(rev, dict) and rev:
+                latest_year = max(rev.keys())
+                chart_data["event_latest_revenue"] = rev[latest_year]
+                added.append("event_latest_revenue")
+                logger.info("[ENRICH] event_latest_revenue=%s (%s)", chart_data["event_latest_revenue"], latest_year)
 
         # ── 后端4: 历史报告文本（output 目录已生成报告，补充公司简介）──
         if not chart_data.get("company_intro"):

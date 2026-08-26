@@ -1815,6 +1815,171 @@
       "gate_score": 0.9,
       "data_sufficiency": true,
       "notes": ""
+    },
+    {
+      "timestamp": "2026-08-26T09:15:53.108223",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-26T09:15:53.123262",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-26T09:15:53.130983",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-26T09:51:22.015272",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-26T09:51:22.027786",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-26T09:51:22.033693",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-26T10:16:56.682785",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-26T10:16:56.698294",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-26T10:16:56.704609",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-26T15:03:58.469263",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-26T15:03:58.482941",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-26T15:03:58.490870",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-26T15:10:22.251036",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-26T15:10:22.262635",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-08-26T15:10:22.270476",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
     }
   ]
 }

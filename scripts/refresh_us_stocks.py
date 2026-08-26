@@ -10,7 +10,7 @@ import requests
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36"}
 DB_PATH = r"D:\Claude\projects\2hao-analyst\data\us_stocks.db"
-AS_OF = "2026-08-24"  # 美股 8/24 收盘后（Marvis 定时刷新）
+AS_OF = "2026-08-25"  # 美股 8/25 收盘后（Marvis 定时刷新）
 
 
 def fetch_quote(ticker: str):

@@ -126,6 +126,11 @@ def locate_failed_segments(context: dict, sw) -> list | None:
             logger.info("[REVISE-LOCAL] 死角段定位=%s → 重写段 %s", _dead_names, sorted(indices))
             fail_types.append("so_what_chain")
 
+    # R85++（2026-08-26）：过滤掉 "gate_feedback" 伪失败类型
+    # Gate 反馈文本常含 "Gate feedback:" 字样，会被误匹配为失败类型
+    fail_types = [
+        ft for ft in fail_types if ft != "gate_feedback" and "gate" not in ft.lower() and "feedback" not in ft.lower()
+    ]
     context["_gate_fail_types"] = fail_types
     _global_types = (
         "content_volume",

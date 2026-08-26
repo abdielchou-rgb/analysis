@@ -1,94 +1,65 @@
-# SAC: 上市公司财报点评
-#
-# > **ID**: sac_earnings_notes
-# > **版本**: V50.0 / 2026-07-23
-# > **适用报告类型**: earnings_notes
-# > **方法论来源**: V24 writer_agent public_company 框架
-
 id: sac_earnings_notes
 name: 上市公司财报点评
-applies_to: [earnings_notes]
-
-# 谋篇前置工作流
+applies_to:
+- earnings_notes
 pre_workflow:
-  - step: 增量信息提取
-    description: 本次财报最超预期的数字是什么？低于预期的又是什么？
-  - step: 市场预期差
-    description: 一致预期 vs 实际数据--差距在哪？
-  - step: 核心判断生成
-    description: 基于增量信息+预期差, 生成明确的超预期/低于预期判断
-
-# V57: 轻量化因果链--财报点评的逻辑递进
+- step: 增量信息提取
+  description: 本次财报最超预期的数字是什么？低于预期的又是什么？
+- step: 市场预期差
+  description: 一致预期 vs 实际数据--差距在哪？
+- step: 核心判断生成
+  description: 基于增量信息+预期差, 生成明确的超预期/低于预期判断
 logic_chain:
-  - step: 核心数字定位
-    description: 财报最核心的数字是什么？营收/利润/毛利率 vs 一致预期--超预期还是低于预期
-    maps_to: [headline]
-  - step: 超预期归因
-    description: 最超预期/低于预期的分项--原因分析、是否可持续
-    maps_to: [key_surprise]
-  - step: 分部穿透
-    description: 分部业绩变化(按业务/渠道/区域拆解)--增量/减量的结构归因
-    maps_to: [segment_analysis]
-  - step: 现金流与隐性信号
-    description: 资产负债表与现金流质量--隐含风险信号(应收/存货/商誉的变化方向)
-    maps_to: [balance_cashflow]
-  - step: 展望与影响
-    description: 管理层指引 vs 我们的判断--对估值/评级的影响--下一步跟踪重点
-    maps_to: [outlook_implication]
-
-# 5 阶检查清单(财报点评比深度分析轻量化)
-# ── 财报点评写作节奏指南 ──
-# 财报点评的效率优先原则--读者只想知道超预期/低于预期
+- step: 核心数字定位
+  description: 财报最核心的数字是什么？营收/利润/毛利率 vs 一致预期--超预期还是低于预期
+  maps_to:
+  - headline
+- step: 超预期归因
+  description: 最超预期/低于预期的分项--原因分析、是否可持续
+  maps_to:
+  - key_surprise
+- step: 分部穿透
+  description: 分部业绩变化(按业务/渠道/区域拆解)--增量/减量的结构归因
+  maps_to:
+  - segment_analysis
+- step: 现金流与隐性信号
+  description: 资产负债表与现金流质量--隐含风险信号(应收/存货/商誉的变化方向)
+  maps_to:
+  - balance_cashflow
+- step: 展望与影响
+  description: 管理层指引 vs 我们的判断--对估值/评级的影响--下一步跟踪重点
+  maps_to:
+  - outlook_implication
 writing_rhythm:
   name: 财报点评写作节奏指南
   description: 财报点评的效率优先原则--读者只想知道超预期/低于预期
   flow_diagram: 核心数字(超预期/低于预期) -> 原因分析 -> 分部穿透 -> 隐性风险信号 -> 估值含义
   principles:
-    - 第一段必须包含核心数字(营收/利润/毛利率 vs 一致预期),不超过100字
-    - 逻辑递进:核心数字 -> 超预期归因 -> 分部穿透 -> 现金流信号 -> 展望影响
-    - '超预期归因(Step 2)是全文最重要的维度--必须解释为什么超预期和可持续吗'
-    - 分部穿透(Step 3)用表格展示分部数据变化,文字只写关键结论
-    - 现金流与隐性信号(Step 4)重点不是数字本身,而是数字隐含的风险信号
-    - 全文不超过2000字,每段不超过150字
-
-# ── 财报点评写作节奏指南 ──
-# 财报点评的效率优先原则--读者只想知道超预期/低于预期
-writing_rhythm:
-  name: 财报点评写作节奏指南
-  description: 财报点评的效率优先原则--读者只想知道超预期/低于预期
-  flow_diagram: 核心数字(超预期/低于预期) -> 原因分析 -> 分部穿透 -> 隐性风险信号 -> 估值含义
-  principles:
-    - 第一段必须包含核心数字(营收/利润/毛利率 vs 一致预期),不超过100字
-    - 逻辑递进:核心数字 -> 超预期归因 -> 分部穿透 -> 现金流信号 -> 展望影响
-    - 超预期归因(Step 2)是全文最重要的维度--必须解释为什么超预期和可持续吗
-    - 分部穿透(Step 3)用表格展示分部数据变化,文字只写关键结论
-    - 现金流与隐性信号(Step 4)重点不是数字本身,而是数字隐含的风险信号
-    - 全文不超过2000字,每段不超过150字
-
+  - 第一段必须包含核心数字(营收/利润/毛利率 vs 一致预期),不超过100字
+  - 逻辑递进:核心数字 -> 超预期归因 -> 分部穿透 -> 现金流信号 -> 展望影响
+  - 超预期归因(Step 2)是全文最重要的维度--必须解释为什么超预期和可持续吗
+  - 分部穿透(Step 3)用表格展示分部数据变化,文字只写关键结论
+  - 现金流与隐性信号(Step 4)重点不是数字本身,而是数字隐含的风险信号
+  - 全文不超过2000字,每段不超过150字
 required_dimensions:
-  - id: headline
-    question: 财报的核心数字总结(营收/利润/毛利率 vs 一致预期)
-    evidence_min: 2
-
-  - id: key_surprise
-    question: 最超预期/低于预期的分项--原因分析
-    evidence_min: 1
-    counter_evidence: true
-
-  - id: segment_analysis
-    question: 分部业绩变化(按业务/渠道/区域拆解)
-    evidence_min: 2
-
-  - id: balance_cashflow
-    question: 资产负债表与现金流质量--隐含风险信号
-    evidence_min: 1
-    counter_evidence: true
-
-  - id: outlook_implication
-    question: 管理层指引 vs 我们的判断--对估值/评级的影响
-    evidence_min: 1
-    counter_evidence: true
-
+- id: headline
+  question: 财报的核心数字总结(营收/利润/毛利率 vs 一致预期)
+  evidence_min: 2
+- id: key_surprise
+  question: 最超预期/低于预期的分项--原因分析
+  evidence_min: 1
+  counter_evidence: true
+- id: segment_analysis
+  question: 分部业绩变化(按业务/渠道/区域拆解)
+  evidence_min: 2
+- id: balance_cashflow
+  question: 资产负债表与现金流质量--隐含风险信号
+  evidence_min: 1
+  counter_evidence: true
+- id: outlook_implication
+  question: 管理层指引 vs 我们的判断--对估值/评级的影响
+  evidence_min: 1
+  counter_evidence: true
 chart_config:
   min_charts: 4
   min_tables: 2
@@ -117,13 +88,11 @@ chart_config:
     caption: '{asset}利润率分析'
     source: 公司财报/Wind
     maps_to: key_surprise
-
 evidence_requirements:
   min_sources: 4
   counter_evidence_required: true
-
 forbidden_patterns:
-  - SAC
-  - MECE
-  - AI生成
-  - 本报告由系统生成
+- SAC
+- MECE
+- AI生成
+- 本报告由系统生成

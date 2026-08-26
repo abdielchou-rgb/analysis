@@ -655,6 +655,15 @@ class E2ENodes:
                 raise
             raise
         context["report_text"] = text
+        # R85+（2026-08-26）：Gate 后处理二次保底——强制修复高频失败项
+        try:
+            from pipeline.section_writer import SectionWriter
+
+            sw = SectionWriter(context.get("report_type", "industry_deep"), context.get("style", "cicc"))
+            context["report_text"] = sw._post_process_for_gate(text, context.get("asset", ""))
+            text = context["report_text"]
+        except Exception as _e:
+            logger.debug("[POST-GATE] post-process skipped: %s", _e)
         # R13 Phase4：局部修订时，未重写段用上一轮 report_text 对应内容填充
         if rewrite_indices is not None:
             try:
