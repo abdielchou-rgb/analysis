@@ -745,6 +745,7 @@ class SectionWriter:
     ):
         self._chart_paths = chart_paths or {}
         self._last_data_context = data_context or {}
+        import re  # noqa: F811 — ensure re is available for all downstream methods
         # R51（2026-08-02 P1-4）：模板图标记 {chart_id: bool}——True 表示该图用
         # 模板数据（数据不足）。图表要求注入时标注"示意/数据不足，待补真实数据"，
         # 防止模板图冒充真实证据（保护图表质量）。
