@@ -613,6 +613,7 @@ class E2ENodes:
 
     @staticmethod
     def write_sections(node_id, context):
+
         from pipeline.section_writer import SectionWriter
 
         sw = SectionWriter(context.get("report_type", "industry_deep"), context.get("style", "cicc"))
@@ -700,7 +701,9 @@ class E2ENodes:
             from pipeline.section_writer import SectionWriter
 
             sw = SectionWriter(
-                context.get("report_type", "industry_deep"), context.get("style", "cicc"), attempt_num=attempt
+                context.get("report_type", "industry_deep"),
+                context.get("style", "cicc"),
+                attempt_num=context.get("attempt", 0),
             )
             context["report_text"] = sw._post_process_for_gate(text, context.get("asset", ""))
             text = context["report_text"]
@@ -849,6 +852,7 @@ class E2ENodes:
         # S6-3: 合规条款自动附加（替代 LLM 生成的免责——R42 已删 AI 免责）
         try:
             from core.compliance_clauses import get_clause
+
             _rt = context.get("report_type", "listed_company")
             _clause = get_clause(_rt)
             if _clause and _clause not in final:
@@ -1011,6 +1015,7 @@ class E2ENodes:
                 return {"_docx_path": "", "_review_required": True}
             try:
                 import json as _rjson
+
                 _review = _rjson.loads(_review_fp.read_text(encoding="utf-8"))
                 if _review.get("decision") != "approved":
                     logger.warning("[S7-4] decision_memo %s 审核未通过: %s", _job_id, _review.get("decision"))
