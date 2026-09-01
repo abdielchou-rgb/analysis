@@ -1,0 +1,313 @@
+## Short-Term Market Outlook And Strategy Money markets remain orderly during month-end
+
+● SOFR settled slightly higher week-over-week, in line with typical trends in the repo markets surrounding month-ends/quarter-ends as banks optimize their balance sheets for regulatory purposes
+
+ON RRP balance moved slightly higher by \~\$22bn over the past few days, also in line with month-end trends, as a pullback in money market investment offerings tend to push MMFs to the facility
+
+● With bank CP/CD supply somewhat constrained heading into month-end, 1y bank spreads returned to recent tights, with 1y FRNs trading around 34bp on average, down slightly from the prior week
+
+We expect repo rates to descend back down towards pre-month-end levels once dealer balance sheets normalize and Treasury settlement works its way through the system
+
+● There is a possibility that the T-bill share of the market could migrate above the current recommended range over time. Even so, we believe the markets will have no issues digesting the additional T-bill supply, as demand should remain robust
+
+Perhaps more importantly, we see the demand from several key T-bill buyers remaining substantial, if not expanding, in the near term
+
+● MMFs are currently the largest buyers of T-bills, comprising 35% of the market. Given current AUMs, they will likely continue to maintain a large presence in this market, particularly if a shallower easing cycle emerges. Also, implementation of the 2023 MMF reforms this year will likely further their demand for T-bills going forward
+
+● To the extent the Fed were to shift their SOMA portfolio to shorter maturities, this could also increase their presence in the T-bill market, which currently stands at 3% as of March-end. Reinvesting maturing Agency MBS into T-bills when QT concludes would result in \$180bn in T-bill demand from the SOMA (assuming MBS paydowns continue to run at approximately \$15bn/month)
+
+Stablecoin issuers only own 1% of the T-bill market currently but are poised to grow meaningfully in the future should stablecoin legislation come to fruition
+
+● Berkshire Hathaway has drastically grown its T-bill position over the years and now comprises a larger share of the market than international organizations, stablecoin issuers, offshore MMFs, or LGIPs. At Berkshire<sup>’</sup>s annual meeting, Warren Buffett noted a lack of investment opportunities and attractive cash yields as reasons that are driving their positions higher, and a continuation of these dynamics could easily push their cash pile to \$200bn by the end of 2Q24
+
+● Near-term catalysts: April personal income (5/31), April JOLTS (6/4), May employment (6/7), June FOMC meeting (6/11-6/12), May CPI (6/12), May retail sales (6/18)
+
+## Market commentary
+
+Since we last published a fortnight ago, 2-year Treasury yields moved in a wide range of 4.82% - 4.98%, peak to trough, only to increase by 7bp to 4.89%. This price action witnessed in the front-end was mainly based on mixed economic data and the Fed. On data, the US May flash PMIs surprised to the upside, with the manufacturing composite rising 0.9 to 50.9, and services business activity rebounding 3.5-pts to 54.8, a 25-month high (see US: May flash PMIs rebound, M. Hanson, 5/23/24). The consumer confidence index rose to 102, above expectations, and there were slight upward revisions in April. Additionally, the labor differential (the gap between the share of respondents saying jobs are “plentiful<sup>”</sup> versus “hard to get<sup>”</sup>) moved up on the month to 24, but has gradually drifted lower over the past few years. Even so, the level of this measure remains elevated by historical standards and points to a still-strong labor market (see US: Consumer confidence improves in May, M. Hanson, 5/28/24).
+
+GDP growth for 1Q24 was revised down from 1.6% to 1.3% q/q saar, in line with expectations, while the core PCE QoQ was revised from 3.7% to 3.6% (see US: 1Q GDP growth revised down to 1.3%, M. Hanson, 5/30/24). On inflation, the April PCE report showed some modest further cooling. Core PCE rose 0.2% during the month, slightly softer than expectations but still firm, and the year-ago measure was steady at 2.8%. The annualized three-month run rate in core PCE inflation is still at 3.5%, but much lower than the stronger 4.4%ar pace as of March. Elsewhere in the report, nominal consumer spending rose 0.2% in April while personal income increased 0.3%. On an inflation-adjusted level, real consumer spending declined by 0.1% in April, suggesting a soft start to the current quarter. Given these data points, our economists lowered their forecast for real consumption to 2.0% q/q saar from nearly 3% and now look for 2.0% q/q saar real GDP growth in the current quarter, down from our previous forecast of 2.25% (see US: Some cooling in April PCE prices and 2Q GDP growth, M. Hanson, 3/31/24).
+
+Meanwhile, the language in the May FOMC minutes were more hawkish and echoed similar views of recent Fedspeak—mainly that members believe it will take longer than previously anticipated to gain confidence that inflation is moving closer to their 2% goal. Notably, while participants still viewed the current policy stance as restrictive, many expressed uncertainty about the degree. While Fed officials continue to expect the economy to slow over the course of this year, they appear less certain than earlier this year about the outlook on and path of removing policy restriction, and will continue to remain data dependent (see May FOMC minutes: the waiting is the hardest part, M. Hanson, 5/22/24). By week<sup>’</sup>s end, OIS markets have pushed back the timing of the first full cut to December, and only expect 77bp of easing by 1H25 (Figure 1OIS markets hvpud bc ingof l D, yx 7 1H25).
+
+In the money markets, the SOFR benchmark rate settled 2bp higher week-over-week at 5.33% as of 5/30. This is in line with the typical trend in the repo markets surrounding month-ends/quarter-ends as banks optimize their balance sheets for regulatory purposes. Indeed, we tend to see the benchmark rate increase by \~2-3bp on average leading up to and including month-end (Figure 2SOFR tendsoicra by\~2-3p vg lu  mh). Meanwhile, the Fed ON RRP balance moved slightly higher by \~\$22bn to \$440bn over the past few days. The increase is also in line with recent month-end trends, as pullback in money market investment offerings over month-end/quarter-end tend to push MMFs to the facility.
+
+In the credit space, 6m FRN spreads didn<sup>’</sup>t budge from recent tights of 19-20bp to SOFR. With supply somewhat constrained heading into month-end, 1y bank spreads returned to recent tights, with 1y FRNs trading around 34bp to SOFR on average, down slightly from the prior week. Volume in the 1y fixed space appeared to pick up somewhat following the Fed minutes, but markets have been relatively quiet approaching month-end as participants await further signals from upcoming data.
+
+Looking ahead, we expect repo rates to descend back down towards pre-month-end levels once dealer balance sheets normalize and Treasury settlement works its way through the system. At the same time, the ON RRP balance should continue to remain rangebound in the near term.
+
+Figure 1: OIS markets have pushed back the timing of the first full cut to December, and only expect 77bp of easing by 1H25
+OIS-implied change in fed funds effective rate by FOMC meeting, as of 5/31/24, 5/17/24, and 1/12/24 (bp)
+![](images/63d31411ea63bbf9edee6ea7557528039b659c8fb866ea649818d9415a419845.jpg)
+Source: J.P. Morgan
+
+Figure 2: SOFR tends to increase by \~2-3bp on average leading up to and including month-end Cumulative change in SOFR setting around month-end (bp)
+![](images/cf4c1cef1887af0c31bc9b2ccec547d5f8445a8c6118491bf8e250b65b257791.jpg)
+Source: J.P. Morgan
+
+## Yes, T-bill demand should remain robust
+
+While the outcome of the upcoming November election remains highly uncertain, the one thing we know is that the US fiscal deficit will remain large in the coming years, regardless of who wins. As our Treasury strategists note, given Treasury<sup>’</sup>s current net coupon borrowing capacity and their estimates of the budget deficit forecasts over the medium term, Treasury will likely remain underfunded in FY26 and beyond. And while it would make sense to finance the funding gap by increased coupon auction sizes, as the deficit is likely to be more structural than cyclical in nature, the minutes to the May refunding meeting interestingly revealed that some members of TBAC felt that the recommended 15-20% T-bill share of the market could be revisited at a later date, given market developments and continued robust demand in the years since the original recommendation. Reading between the lines, it appears there is a possibility that the T-bill share of the market could migrate above the current recommended range over time (see Wait till next year, Dissecting Treasury<sup>’</sup>s financing needs in the coming year, J. Barry, 5/24/24).
+
+If so, we believe the markets will have no issues digesting the additional T-bill supply, with demand remaining robust. Indeed, even as T-bill outstandings have grown by \$2tn over the past year, the impact on T-bill/SOFR spreads has been marginal thanks to the available pool of liquidity at the ON RRP, underscoring the sheer amount of demand for T-bills in the current market environment (Figure 3Even asT-bil outdg hrw y\$2 p, mc /SOFR   k fq NP). Perhaps more importantly, when we look at the buyer base of the T-bill market, we see the demand from several key buyers remaining substantial, if not expanding, in the near term.
+
+Money Market Funds. As of March-end, government and prime MMFs accounted for \$2.1tn, or 35%, of the T-bill buyer base, a dramatic 19%-pt increase year-over-year (Figure 4As ofMarch-end, gvmt pi Fu \$2.1 35% Tbly  9 ). Given the growth in MMF balances in 2023 as well as YTD, particularly in government funds, it<sup>’</sup>s no surprise that MMFs contributed to the bulk of the uptake in net T-bill issuance over the past year. Currently, MMFs are the largest buyers of T-bills, and we suspect they will continue to maintain a large presence in this market, particularly as they should likely keep WAMs elevated heading into an easing cycle. Moreover, implementation of the 2023 MMF reforms this year will likely further the demand for T-bills going forward, as institutional prime funds are required to hold more daily and weekly liquidity and as certain funds decide to convert from prime to government.
+
+• Federal Reserve. To the extent the Fed were to shift their SOMA portfolio to shorter maturities, this could also increase the Fed<sup>’</sup>s presence in the T-bill market, which currently stands at 3% as of March-end. Our Treasury strategists believe a shift towards the Fed holding more T-bills makes sense, as it not only reduces the volatility of the Fed<sup>’</sup>s remittances but will also more closely match the maturity profile of the Treasury market given the events of the past year. To be sure, the notion of holding more T-bills on the Fed<sup>’</sup>s balance sheet has some support within the FOMC, as both Governor Waller and Chair Powell have commented on it. If this comes to fruition, we believe the Fed would reinvest maturing Agency MBS into T-bills when QT concludes. This would result in approximately \$180bn in T-bill demand from the SOMA (assuming MBS paydowns continue to run at approximately \$15bn/month).
+
+Stablecoin issuers. Though stablecoin issuers only own 1% of the T-bill market currently, they are poised to grow meaningfully in the future should a stablecoin legislation come to fruition. This will not only fuel the growth of existing stablecoin issuers, but also open the doors for new entrants into this space. At present, there seems to be bipartisan support in both the House (led by Maxine Waters (D-CA) and Patrick McHenry (R-NC)) and Senate (led by Cynthia Lummis (R-WY) and Kristin Gillibrand (D-NY)) to get a stablecoin legislation done this year. If passed, this could substantially strengthen stablecoin issuers<sup>’</sup> demand for T-bills, as the coins need to be backed at least 1:1 by HQLA such as Treasuries.
+
+Berkshire. It is well-known that Berkshire Hathaway keeps its excess cash mainly invested in T-bills. Over the years, their T-bill position has grown so large that, as of March-end, it owned \$158bn in T-bills, comprising 3% of the market. Berkshire Hathaway currently holds more T-bills than international organizations, stablecoin issuers, offshore MMFs, or LGIPs. At Berkshire<sup>’</sup>s annual meeting, Warren Buffett noted a lack of investment opportunities and attractive cash yields as reasons that are driving their positions higher, and a continuation of these dynamics could easily push their cash pile to \$200bn by the end of 2Q24, and perhaps even higher over the medium term.
+
+Currently, the T-bill share of total outstanding Treasury debt is already above the top end of the 15-20% range, and even under baseline assumptions, our Treasury strategists don<sup>’</sup>t see a decline to below 20% until late 2026. Until the need for more borrowing capacity emerges in mid- to late-2025, that share is unlikely to rise significantly higher than 22%, as it stands. That said, the good news is that when that time comes there are structural buyers ready to digest that supply.
+
+Figure 3: Even as T-bill outstandings have grown by \$2tn over the past year, the impact on T-bill/SOFR spreads has been marginal thanks the available pool of liquidity at the ON RRP
+1m, 3m, and 6m matched-maturity T-bill spread to SOFR (bp)
+![](images/b78023d159289deb217a0ed58f68a86729e37884f949bf7f8e0d62d6187b56db.jpg)
+Source: J.P. Morgan
+
+Figure 4: As of March-end, government and prime MMFs accounted for \$2.1tn, or 35%, of the T-bill buyer base, a dramatic 19%-pt increase year-over-year T-bill investor composition (\$bn)
+<table><tr><td colspan="4"></td><td colspan="2">% of Total Market</td></tr><tr><td></td><td>3/31/23</td><td>3/31/24</td><td>Chg</td><td>3/31/23</td><td>3/31/24</td></tr><tr><td>Total Bill Outstandings</td><td>4069</td><td>6063</td><td>1994</td><td>100%</td><td>100%</td></tr><tr><td>Access to the Fed&#x27;s balance sheet</td><td>1524</td><td>2873</td><td>1348</td><td>37%</td><td>47%</td></tr><tr><td>Government MMFs</td><td>647</td><td>1906</td><td>1259</td><td>16%</td><td>31%</td></tr><tr><td>Prime MMFs</td><td>17</td><td>226</td><td>210</td><td>0%</td><td>4%</td></tr><tr><td>Foreign Official Institutions</td><td>252</td><td>267</td><td>15</td><td>6%</td><td>4%</td></tr><tr><td>Foreign Banks</td><td>223</td><td>193</td><td>-30</td><td>5%</td><td>3%</td></tr><tr><td>Primary Dealers</td><td>104</td><td>82</td><td>-23</td><td>3%</td><td>1%</td></tr><tr><td>Federal Reserve</td><td>282</td><td>199</td><td>-83</td><td>7%</td><td>3%</td></tr><tr><td>No access to the Fed&#x27;s balance sheet</td><td>2544</td><td>3190</td><td>646</td><td>63%</td><td>53%</td></tr><tr><td>Offshore MMFs</td><td>19</td><td>142</td><td>122</td><td>0%</td><td>2%</td></tr><tr><td>Berkshire</td><td>97</td><td>158</td><td>61</td><td>2%</td><td>3%</td></tr><tr><td>International Organizations</td><td>6</td><td>22</td><td>16</td><td>0%</td><td>0%</td></tr><tr><td>LGIPs</td><td>113</td><td>146</td><td>33</td><td>3%</td><td>2%</td></tr><tr><td>Stablecoin Issuers</td><td>82</td><td>85</td><td>4</td><td>2%</td><td>1%</td></tr><tr><td>Others Foreigners</td><td>482</td><td>585</td><td>103</td><td>12%</td><td>10%</td></tr><tr><td>Others</td><td>1745</td><td>2052</td><td>307</td><td>43%</td><td>34%</td></tr></table>
+
+Source: Crane Data, TIC data, Federal Reserve Bank of New York, Fitch, Company 10-Qs and other disclosures, J.P. Morgan
+
+## Forecast & Analytics
+
+## Interest rate forecast
+
+<table><tr><td></td><td>Actual</td><td>2Q24</td><td>3Q24</td><td>4Q24</td><td>1Q25</td></tr><tr><td>Rates (%)</td><td>31-May-24</td><td>28-Jun-24</td><td>30-Sep-24</td><td>31-Dec-24</td><td>31-Mar-25</td></tr><tr><td>EFFR</td><td>5.33</td><td>5.35</td><td>4.85</td><td>4.60</td><td>4.35</td></tr><tr><td>SOFR*</td><td>5.33</td><td>5.30</td><td>4.85</td><td>4.60</td><td>4.35</td></tr><tr><td>2-year T-note</td><td>4.89</td><td>4.50</td><td>4.35</td><td>4.15</td><td>3.90</td></tr><tr><td>3-year T-note</td><td>4.70</td><td>4.30</td><td>4.15</td><td>3.95</td><td>3.75</td></tr><tr><td>5-year T-note</td><td>4.53</td><td>4.15</td><td>4.00</td><td>3.85</td><td>3.65</td></tr><tr><td>7-year T-note</td><td>4.52</td><td>4.20</td><td>4.05</td><td>3.90</td><td>3.70</td></tr><tr><td>10-year T-note</td><td>4.51</td><td>4.15</td><td>4.05</td><td>4.00</td><td>3.90</td></tr><tr><td>20-year Treasury</td><td>4.73</td><td>4.40</td><td>4.30</td><td>4.25</td><td>4.15</td></tr><tr><td>30-year T-bond</td><td>4.65</td><td>4.35</td><td>4.30</td><td>4.30</td><td>4.25</td></tr><tr><td>Curves (bp)</td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>2s/5s</td><td>-36</td><td>-35</td><td>-35</td><td>-30</td><td>-25</td></tr><tr><td>2s/10s</td><td>-38</td><td>-35</td><td>-30</td><td>-15</td><td>0</td></tr><tr><td>2s/30s</td><td>-24</td><td>-15</td><td>-5</td><td>15</td><td>35</td></tr><tr><td>5s/10s</td><td>-2</td><td>0</td><td>5</td><td>15</td><td>25</td></tr><tr><td>5s/30s</td><td>12</td><td>20</td><td>30</td><td>45</td><td>60</td></tr><tr><td>10s/30s</td><td>14</td><td>20</td><td>25</td><td>30</td><td>35</td></tr></table>
+
+\* SOFR actual as of 5/30/2024
+Source: J.P. Morgan
+
+## Economic forecast
+
+<table><tr><td>%ch q/q, saar, unless otnerwise noted</td><td>23Q2</td><td>23Q3</td><td>23Q4</td><td>24Q1</td><td>24Q2</td><td>24Q3</td><td>24Q4</td><td>2022*</td><td>2023*</td><td>2024*</td></tr><tr><td>Gross Domestic Product</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>Real GDP</td><td>2.1</td><td>4.9</td><td>3.4</td><td>1.3</td><td>2.0</td><td>1.0</td><td>1.0</td><td>0.7</td><td>3.1</td><td>1.3</td></tr><tr><td>Final Sales</td><td>2.1</td><td>3.6</td><td>3.9</td><td>1.7</td><td>1.5</td><td>0.8</td><td>1.1</td><td>1.0</td><td>3.5</td><td>1.3</td></tr><tr><td>Domestic Final Sales</td><td>2.0</td><td>3.5</td><td>3.6</td><td>2.5</td><td>2.3</td><td>1.2</td><td>1.5</td><td>0.8</td><td>3.2</td><td>1.9</td></tr><tr><td>Business Investment</td><td>7.4</td><td>1.4</td><td>3.7</td><td>3.3</td><td>5.8</td><td>2.1</td><td>3.4</td><td>5.6</td><td>4.6</td><td>3.7</td></tr><tr><td>Net Trade (% contribution to GDP)</td><td>0.0</td><td>0.0</td><td>0.3</td><td>-0.9</td><td>-0.9</td><td>-0.4</td><td>-0.4</td><td>0.2</td><td>0.3</td><td>-0.6</td></tr><tr><td>Inventories (% contribution to GDP)</td><td>0.0</td><td>1.3</td><td>-0.5</td><td>-0.5</td><td>0.5</td><td>0.2</td><td>-0.1</td><td>-0.3</td><td>-0.4</td><td>0.0</td></tr><tr><td>Prices and Labor Cost</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>Consumer Price Index</td><td>3.0</td><td>3.4</td><td>2.7</td><td>3.8</td><td>3.6</td><td>2.3</td><td>2.6</td><td>7.1</td><td>3.2</td><td>3.1</td></tr><tr><td>Core</td><td>4.7</td><td>3.0</td><td>3.4</td><td>4.2</td><td>3.7</td><td>2.7</td><td>2.5</td><td>6.0</td><td>4.0</td><td>3.3</td></tr><tr><td>Employment Cost Index</td><td>4.1</td><td>4.1</td><td>3.8</td><td>4.8</td><td>3.3</td><td>3.0</td><td>2.8</td><td>5.1</td><td>4.2</td><td>3.5</td></tr><tr><td>Unemployment Rate (%, sa)</td><td>3.6</td><td>3.7</td><td>3.7</td><td>3.8</td><td>3.9</td><td>4.0</td><td>4.1</td><td></td><td></td><td></td></tr></table>
+
+\* Q4/Q4 change
+
+Source: J.P. Morgan
+
+## Fed Watch
+
+Members of the Federal Open Market Committee (FOMC) with voting status\*
+<table><tr><td colspan="2"></td><td colspan="5">DOVISH HAWKISH</td></tr><tr><td colspan="2"></td><td colspan="4"></td></tr><tr><td rowspan="6">2024</td><td rowspan="3">Chair Governors</td><td colspan="2"></td><td colspan="3">Powell (2028)</td></tr><tr><td>Barr (2032)</td><td>Cook (2024) Kugler (2026)</td><td></td><td>Waller (2030) Bowman (2034)</td></tr><tr><td colspan="2">Jefferson (2036)</td><td></td><td></td><td></td></tr><tr><td rowspan="3">Presidents</td><td colspan="3">Bostic (Atl., &#x27;24) Williams (NY, &#x27;24) Daly (SF, &#x27;24)</td><td>Barkin (Rich., &#x27;24)</td><td>Mester (Clev., &#x27;24)</td></tr><tr><td colspan="2">Goolsbee (Chi., &#x27;25)</td><td>Collins (Bos., &#x27;25) Harker (Phil., &#x27;26)</td><td>Kashkari (Mpls, &#x27;26) Schmid (KC, &#x27;25)</td><td>Logan (Dal., &#x27;26)</td></tr><tr><td colspan="3"></td><td>O&#x27;Neill Paese (St.L, &#x27;25)</td><td></td></tr></table>
+
+Source: J.P. Morgan, as of 09/2023
+\* Blue shading denotes 2024 voting members. For those on the Board of Governors (who are all permanent voting members), the year in which their term ends is noted.
+OIS-implied fed funds rate forecast
+
+![](images/cd0637aeb63e81c9b86d28fc02e3d7e98bbd5c80683875b4726bd344908765fe.jpg)
+Source: J.P. Morgan. 1d OIS implied forecast as of 5/31/2024
+
+## Dealer Net Positions
+
+Government (\$bn)
+![](images/8d29b8fc5ab982dda95fa73052f5b4bc8e94f2451def4e61fc87f10035898b0c.jpg)
+
+Agency (\$bn)
+![](images/7fb78cd09696610a644cbefde939964b9684b158b57c484fae5c37b2a057db18.jpg)
+
+MBS (\$bn)
+![](images/015b4bc2713fe94306b86be5968ca12fae35fa6deafa2dcf16ae1b59f318c09b.jpg)
+
+Corporates (\$bn)
+![](images/23add93527a9a8f2b71cfc50f9ca1e619ac0b6e458c2a984e39b6800320165d3.jpg)
+
+Municipals (\$bn)
+![](images/03c6d437633bebdbcf1284e2253cf917d85b1b138e12a0895772de3f9f17a907.jpg)
+Source for all charts on this page: New York Fed
+
+ABS (\$bn)
+![](images/7f69302f1c1e0e2cb81fdf2f3dfb72719cfd505e550e2e7a38221eee7189292d.jpg)
+
+## Repo
+
+Total repo outstanding (\$bn)
+![](images/db032bce26d800a6b5127b46fcc7961429b2a9e85319fc98101048518e774f16.jpg)
+
+Total securities lending outstanding (\$bn)
+![](images/8e64ea541f0d647e6230a547a4b321a053403d2823164089d18686c9933a54fb.jpg)
+
+Traditional collateral repo (\$bn)
+![](images/0ea7bbb106d87202dfec8b2d687fe878f9b0e76926a8e945359e57b2da0938c3.jpg)
+
+Non-traditional collateral repo (\$bn)
+![](images/ecededc1ba01932c4522b55e641cb58904fd42660c060728edc4a465acc50ea3.jpg)
+
+Repo terms (%)
+![](images/8ff07eb63efbb3b36b0a95d98457c77e9a7fe6a6ca015e9dbf4a6cc4b20c5593.jpg)
+Source for all charts on this page: New York Fed
+
+Securities lending terms (%)
+![](images/ac4c17717db292612e764d293afa0a146cd86622805114711541d19db9dfdd83.jpg)
+
+## Repo (continued)
+
+Total tri-party outstanding (\$bn)
+![](images/126b923e8f95c1a4d611f566b51e2a26745b17cbcf9487772b2a6c78da3472dc.jpg)
+
+Tri-party traditional collateral (\$bn)
+![](images/3477f2a623f7bec571235f8d0d08be69290ddab1502cf54a36c286cd1b47e0cb.jpg)
+
+Tri-party non-traditional collateral (\$bn)
+![](images/dff4cadb023a85e153c555670711aae2257a04e648283e36a8856a85a6913916.jpg)
+
+ON GC rates (%)
+![](images/6bdcb8845f9eba42ce6cb68be7ef3ecdd5be3e533857c16a18a8ac50aede0463.jpg)
+
+GCF collateral (\$bn)
+![](images/c3ccd7cdf14f66cb7bc8324a5e408cbf631aa8bd448ba15b3474893565fda880.jpg)
+Source for all charts on this page: New York Fed
+
+GCF term composition (\$bn)
+![](images/2a536cbe49f35c2298896decaf1fb91c0db5ada6ff14edb100fb207cfa43ba29.jpg)
+
+## Repo (continued)
+
+NY Fed repo rates (%)
+![](images/433c08163e87d784dc75799fa208f4c987d8e94a8514b7be2415b543ec1f7ad7.jpg)
+
+NY Fed repo rate volumes (\$bn)
+![](images/422ba5727c2d62bd8c9b3335d641078a46a9ba1e55da53a51bc79f8d1a09f506.jpg)
+
+Fed funds effective and OBFR (%)
+![](images/3ba90016f5b56f06457815cf4550c887014e8cee0c47479c1184e906953b4d41.jpg)
+
+Fed funds and OBFR\* volumes (\$bn)
+![](images/a637212ccba068243cb2343676fe4c68a51d7500cab812575333eb71f785886c.jpg)
+
+FFE and SOFR spread to IORB (bp)
+![](images/d8ea9de082cb35a8f5cb8420b546f1b668b484712ed3925e377c1a144f034971.jpg)
+Source for all charts on this page: New York Fed
+\* OBFR volumes include “Selected Deposits” (onshore Eurodollar-like deposits) from 5/01/19 on
+
+## Fed Reverse Repo (RRP) Facility
+
+ON accepted amount (\$bn)
+![](images/f6e1686f9d870841ef68c514173fa5f134c9a302e7714be20ff6c678b448aac1.jpg)
+
+ON accepted amount: daily change (\$bn)
+![](images/06c2c268a233d7a47fd249f249dfb51356b6e3244760650fc16b61e6d55181a2.jpg)
+ON number of bidders
+
+![](images/5381dc3d0adc9bdcce696a995e6ec9425a152560a5c631aeb5505b3cada0776e.jpg)
+
+ON numbers of bidders: daily change
+![](images/ce22bf7ab14b7e83ee8caba232604b405590fc52f6475e3861127632c9703a4b.jpg)
+
+ONGC vs. RRP fixed rate (%)
+![](images/089a639ff711263136f1c050de9fb42855092ee3f52b4f4725fe7e915924aba5.jpg)
+Source for all charts on this page: Federal Reserve
+
+## Outstanding Debt
+
+Treasury coupons (money market) and bills outstanding (\$bn)
+![](images/fad7763d44b310eab4513b1bb189f68af2a717d0112dca4151719a151e3f3f48.jpg)
+
+Agency discount notes outstanding (\$bn)
+![](images/0ee37a85d75d842be36565cba3382ee7327930438892b4acac68143af4b5767f.jpg)
+
+Agency coupons outstanding (\$bn)
+![](images/77f3499bc450d97af8887365c06631bebf28e87a860df28d9b689a03fc0286fe.jpg)
+
+Commercial paper outstanding (\$bn)
+![](images/b4de18e438dabfd61bcdb84e86a3c4ac1b901a630427b3f90beec814e1fc2cb6.jpg)
+Sources: Federal Reserve, US Treasury, J.P. Morgan estimates
+
+Change in commercial paper outstanding (\$bn)
+![](images/4010bb8541a256295bb79f66e6e6f0131c52c9c19acb2f8c3fc3b45bbba86899.jpg)
+
+## Money Market Funds
+
+Assets under management (\$bn)
+![](images/2a8cb6ec1cd72b89c71d0abe1ec269975cafc7da55519fe9b35df78f25c77e76.jpg)
+Weighted average maturity (days)
+
+Net yield (%)
+![](images/349b81ef9082d807fa099ae673707c5c0b945336662f62696ef91fe5d2cf1753.jpg)
+
+![](images/4a6fd286ca9f8e53586c98e2230cd1bc612272b93d81e3f79f5d644fc230315c.jpg)
+
+Weighted average life (days)
+![](images/77735d60c61f6d728c643c77b79f5dc7a539c7d7c8509dad3946b654d46083db.jpg)
+
+USD offshore fund AUM (\$bn)
+![](images/0d8b0e96aba0486a868053f144abbbbf9fc8ac265b242328b94be6d834a729d7.jpg)
+Source for all charts on this page: Crane Data, J.P. Morgan
+
+USD offshore fund WAM (days)
+![](images/9d4fff194980625903753c75b28fffc21ca627a096fbb6ebf6783a85bf09dc34.jpg)
+
+## Money Market Funds (continued)
+
+Prime MMF asset allocation (\$bn)
+<table><tr><td colspan="5">chg</td><td colspan="2"></td></tr><tr><td></td><td></td><td>% of</td><td>m/m</td><td>since</td><td>m/m %</td><td>% chg since</td></tr><tr><td>Sector Banks (US)</td><td>Apr-24</td><td>total</td><td>chg</td><td>Oct-23</td><td>chg -1%</td><td>Oct-23</td></tr><tr><td>Banks (Eurozone)</td><td>51</td><td>4%</td><td>(0) 5</td><td>(7)</td><td></td><td>-12%</td></tr><tr><td>Banks (Other Yankee)</td><td>142</td><td>10%</td><td></td><td>(6)</td><td>4%</td><td>-4%</td></tr><tr><td>Repo</td><td>337</td><td>25%</td><td>(7)</td><td>5</td><td>-2%</td><td>1%</td></tr><tr><td>ABCP/CCP (Banks)</td><td>308</td><td>23%</td><td>(8)</td><td>112</td><td>-2%</td><td>57%</td></tr><tr><td>ABCP (Non-banks)</td><td>59</td><td>4%</td><td>(6)</td><td>11</td><td>-10%</td><td>22%</td></tr><tr><td>ABS</td><td>15</td><td>1%</td><td>0</td><td>1</td><td>2%</td><td>5%</td></tr><tr><td>Corporates (Financial)</td><td>1 6</td><td>0% 0%</td><td>(0)</td><td>0</td><td>-14%</td><td>12%</td></tr><tr><td>Corporates (Non-financial)</td><td>23</td><td>2%</td><td>(1) (3)</td><td>(2)</td><td>-19%</td><td>-26%</td></tr><tr><td>US Treasuries</td><td>224</td><td>16%</td><td>(13)</td><td>(12) 123</td><td>-11%</td><td>-35%</td></tr><tr><td>US Agencies</td><td>49</td><td>4%</td><td>1</td><td></td><td>-6% 3%</td><td>122%</td></tr><tr><td>US S&amp;L Govt/Munis</td><td>12</td><td>1%</td><td>0</td><td>(9) 1</td><td>3%</td><td>-16%</td></tr><tr><td>Foreign SSA</td><td>7</td><td>0%</td><td>(4)</td><td></td><td>-38%</td><td>13%</td></tr><tr><td>Central Banks (Fed RRP)</td><td>116</td><td>9%</td><td>9</td><td>(6) (113)</td><td>9%</td><td>-45%</td></tr><tr><td>Other</td><td></td><td></td><td>(0)</td><td>1</td><td></td><td>-49%</td></tr><tr><td>Total</td><td>17 1,366</td><td>1% 100%</td><td>(27)</td><td>99</td><td>-2% -2%</td><td>9% 8%</td></tr></table>
+
+Government MMF asset allocation (\$bn)
+<table><tr><td colspan="5"></td><td colspan="2">% chg</td></tr><tr><td></td><td></td><td>% of</td><td>m/m</td><td>chg since</td><td>m/m %</td><td>since</td></tr><tr><td>Sector</td><td>Apr-24</td><td>total</td><td>chg</td><td>Oct-23</td><td>chg</td><td>Oct-23</td></tr><tr><td>Treasuries</td><td>2,188</td><td>45%</td><td>(132)</td><td>348</td><td>-6%</td><td>19%</td></tr><tr><td>Bills</td><td>1,803</td><td>37%</td><td>(103)</td><td>261</td><td>-5%</td><td>17%</td></tr><tr><td>Treasury coupons</td><td>105</td><td>2%</td><td>(3)</td><td>86</td><td>-3%</td><td>460%</td></tr><tr><td>FRNs</td><td>280</td><td>6%</td><td>(26)</td><td>1</td><td>-9%</td><td>0%</td></tr><tr><td>Agencies</td><td>663</td><td>14%</td><td>1</td><td>12</td><td>0%</td><td>2%</td></tr><tr><td>Discos</td><td>133</td><td>3%</td><td>11</td><td>43</td><td>9%</td><td>49%</td></tr><tr><td>Agency Coupons</td><td>69</td><td>1%</td><td>(35)</td><td>(85)</td><td>-34%</td><td>-55%</td></tr><tr><td>Agency FRNs</td><td>461</td><td>9%</td><td>25</td><td>53</td><td>6%</td><td>13%</td></tr><tr><td>Repo</td><td>2,029</td><td>41%</td><td>93</td><td>(137)</td><td>5%</td><td>-6%</td></tr><tr><td>Treasury repo</td><td>1,040</td><td>21%</td><td>101</td><td>276</td><td>11%</td><td>36%</td></tr><tr><td>Agency repo</td><td>598</td><td>12%</td><td>30</td><td>44</td><td>5%</td><td>8%</td></tr><tr><td>Other Repo</td><td></td><td>0%</td><td>0</td><td>(1)</td><td>0%</td><td>-100%</td></tr><tr><td>RRP</td><td>392</td><td>8%</td><td>(38)</td><td>(456)</td><td>-9%</td><td>-54%</td></tr><tr><td>Other</td><td>17</td><td>0%</td><td>2</td><td>9</td><td>13%</td><td>116%</td></tr><tr><td>Total</td><td>4,897</td><td>100%</td><td>(35)</td><td>232</td><td>-1%</td><td>5%</td></tr></table>
+
+J.P. Morgan estimates of prime MMF exposures to banks (\$bn)
+<table><tr><td></td><td colspan="9">Mar-24</td><td colspan="9">m/m change</td><td colspan="9">Change since Mar-23</td><td colspan="13"></td></tr><tr><td></td><td colspan="9">CP</td><td>Oother Total</td><td></td><td>C0</td><td>T</td><td>ABCP</td><td>CP</td><td>AYRP</td><td>Tsy RP</td><td>Oth RP</td><td>Oother</td><td>Total</td><td></td><td>80</td><td>TD</td><td>ABCP</td><td></td><td>CP</td><td>AyYRP</td><td></td><td>Tsy RP</td><td></td><td>Oth Rp</td><td>Other</td><td></td></tr><tr><td>Total</td><td></td><td>8 214</td><td>T 123</td><td>ABCP 58</td><td></td><td>AYRP 121</td><td>TSy RP 113</td><td>Oth RP 81</td><td>3</td><td>902</td><td>CP (3)</td><td>(19)</td><td>(23)</td><td>(2)</td><td></td><td></td><td></td><td>6</td><td>1</td><td>(7)</td><td>C 30</td><td>66</td><td>50</td><td></td><td>23</td><td>3</td><td></td><td>53</td><td></td><td>87</td><td>31</td><td></td><td>(3)</td><td>Total 341</td></tr><tr><td>Eurozone</td><td>182 39</td><td>47</td><td>43</td><td></td><td>16</td><td>7</td><td>14</td><td>22</td><td>0</td><td>190</td><td>(5)</td><td>(8)</td><td>(5)</td><td>0</td><td>(0) (0)</td><td>13 (1)</td><td>20 3</td><td>1</td><td>0</td><td>(14)</td><td>19</td><td>17</td><td></td><td>13</td><td>3</td><td>0</td><td></td><td>(1)</td><td></td><td>11</td><td>5</td><td></td><td>0</td><td>67</td></tr><tr><td>France</td><td>14</td><td>27</td><td>7</td><td></td><td>15</td><td>4</td><td>13</td><td>20</td><td>0</td><td>102</td><td>(2)</td><td>(6)</td><td>(3)</td><td>0</td><td>(0)</td><td>(1)</td><td>2</td><td>2</td><td>0</td><td>(7)</td><td></td><td></td><td></td><td>3</td><td>2</td><td>0</td><td></td><td>(1)</td><td>10</td><td></td><td>5</td><td>0</td><td>34</td></tr><tr><td>Germany Netherlands</td><td>12</td><td>11</td><td>5</td><td></td><td>0</td><td></td><td>0</td><td></td><td>0</td><td>29</td><td>(1)</td><td>(1)</td><td>(1)</td><td>0</td><td></td><td></td><td></td><td></td><td></td><td>(3)</td><td>685</td><td>8 4</td><td>4</td><td>0</td><td></td><td></td><td></td><td></td><td>(0)</td><td></td><td>0</td><td></td><td>16</td></tr><tr><td>Belgium</td><td>10</td><td>8</td><td>22 26</td><td></td><td></td><td>2</td><td>0</td><td>2</td><td>0</td><td>44 3</td><td>1</td><td>(0) (0)</td><td>4 1</td><td>0</td><td></td><td>(0)</td><td>0</td><td>(1)</td><td></td><td>4 1</td><td></td><td>3</td><td>2２２</td><td>0</td><td></td><td></td><td>(0)</td><td></td><td>(0)</td><td>0</td><td></td><td>(0)</td><td>10</td></tr><tr><td>Spain</td><td>2</td><td>2 1</td><td></td><td></td><td></td><td></td><td>1</td><td></td><td>0</td><td>11</td><td>0</td><td>(0)</td><td>0</td><td></td><td></td><td>(0)</td><td></td><td></td><td></td><td>1</td><td>0</td><td>1 0</td><td></td><td></td><td></td><td></td><td>0</td><td>1</td><td></td><td></td><td>0</td><td></td><td>33</td></tr><tr><td>Luxembourg Austria</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0②</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>(0)</td><td>(0)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>(0)</td></tr><tr><td>Other Europe</td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>(0)</td><td>(6)</td><td></td><td></td><td></td><td></td><td></td><td></td><td>(9)</td><td>0</td><td></td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td></tr><tr><td></td><td>42</td><td>21</td><td>26</td><td>6</td><td></td><td>8</td><td>10</td><td>6</td><td>1</td><td>120</td><td>(1)</td><td>(1)</td><td>(20)</td><td>(1)</td><td></td><td></td><td></td><td></td><td></td><td>(21)</td><td>5</td><td>(1)</td><td>21</td><td>2</td><td></td><td>(0)</td><td>5</td><td>6</td><td></td><td>2</td><td></td><td>0</td><td>40</td></tr><tr><td>United Kingdom</td><td>12</td><td>9</td><td>5</td><td>4</td><td></td><td>8</td><td>10</td><td>6</td><td>1</td><td>54</td><td>(0)</td><td>(3)</td><td>1</td><td>(1)</td><td>(0)</td><td></td><td></td><td></td><td>(0)</td><td>(0)</td><td>3</td><td>(1)</td><td>5</td><td>1</td><td></td><td>(0)</td><td>5</td><td></td><td>6</td><td>2</td><td></td><td>0</td><td>21</td></tr><tr><td>Sweden Switzerland</td><td>15</td><td>12 1</td><td>12 0</td><td>2</td><td></td><td></td><td>0</td><td></td><td>0</td><td>41</td><td>(0)</td><td>1</td><td>(18)</td><td>(0)</td><td></td><td></td><td></td><td></td><td>(0)</td><td>(17)</td><td>(3)</td><td>(0)</td><td>7</td><td>1</td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td><td>0</td><td>5 1</td></tr><tr><td>Norway</td><td>69</td><td></td><td>10</td><td></td><td></td><td></td><td></td><td>0</td><td>0</td><td>7 18</td><td>(1) 0</td><td>0</td><td>0 (3)</td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>(0) (3)</td><td>1 4</td><td>0 (0)</td><td>0 8</td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td>0</td><td>13</td></tr><tr><td>Denmark Other Regions</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></table>
+
+Teresa Ho <sup>AC</sup> (1-212) 834-5087 teresa.c.ho@jpmorgan.com J.P. Morgan Securities LLC Pankaj Vohra (1-212) 834 5292 pankaj.x.vohra@jpmchase.com J.P. Morgan Securities LLC
+
+Analyst Certification: The Research Analyst(s) denoted by an “AC<sup>”</sup> on the cover of this report certifies (or, where multiple Research Analyst are primarily responsible for this report, the Research Analyst denoted by an “AC<sup>”</sup> on the cover or within the document individually certifies, with respect to each security or issuer that the Research Analyst covers in this research) that: (1) all of the views expressed in this report accurately reflect the Research Analyst<sup>’</sup>s personal views about any and all of the subject securities or issuers; and (2) no part of any of the Research Analyst's compensation was, is, or will be directly or indirectly related to the specific recommendations or views expressed by the Research Analyst(s) in this report. For all Korea-based Research Analysts listed on the front cover, if applicable, they also certify, as per KOFIA requirements, that the Research Analyst<sup>’</sup>s analysis was made in good faith and that the views reflect the Research Analyst<sup>’</sup>s own opinion, without undue influence or intervention.
+
+All authors named within this report are Research Analysts who produce independent research unless otherwise specified. In Europe, Sector Specialists (Sales and Trading) may be shown on this report as contacts but are not authors of the report or part of the Research Department.
+
+## Important Disclosures
+
+Company-Specific Disclosures: Important disclosures, including price charts and credit opinion history tables, are available for compendium reports and all J.P. Morgan–covered companies, and certain non-covered companies, by visitinghttps://www.jpmm.com/research/disclosures, calling 1-800-477-0406, or e-mailing research.disclosure.inquiries@jpmorgan.com with your request.
+
+A history of J.P. Morgan investment recommendations disseminated during the preceding 12 months can be accessed on the Research & Commentary page of http://www.jpmorganmarkets.com where you can also search by analyst name, sector or financial instrument.
+
+Analysts' Compensation:The research analysts responsible for the preparation of this report receive compensation based upon various factors, including the quality and accuracy of research, client feedback, competitive factors, and overall firm revenues.
+
+## Other Disclosures
+
+J.P. Morgan is a marketing name for investment banking businesses of JPMorgan Chase & Co. and its subsidiaries and affiliates worldwide.
+
+UK MIFID FICC research unbundling exemption: UK clients should refer to UK MIFID Research Unbundling exemption for details of J.P Morgan<sup>’</sup>s implementation of the FICC research exemption and guidance on relevant FICC research categorisation.
+
+Any long form nomenclature for references to China; Hong Kong; Taiwan; and Macau within this research material are Mainland China; Hong Kong SAR (China); Taiwan (China); and Macau SAR (China).
+
+J.P. Morgan Research may, from time to time, write on issuers or securities targeted by economic or financial sanctions imposed or administered by the governmental authorities of the U.S., EU, UK or other relevant jurisdictions (Sanctioned Securities). Nothing in this report is intended to be read or construed as encouraging, facilitating, promoting or otherwise approving investment or dealing in such Sanctioned Securities. Clients should be aware of their own legal and compliance obligations when making investment decisions.
+
+Any digital or crypto assets discussed in this research report are subject to a rapidly changing regulatory landscape. For relevant regulatory advisories on crypto assets, including bitcoin and ether, please see https://www.jpmorgan.com/disclosures/cryptoasset-disclosure.
+
+The author(s) of this research report may not be licensed to carry on regulated activities in your jurisdiction and, if not licensed, do not hold themselves out as being able to do so.
+
+Exchange-Traded Funds (ETFs): J.P. Morgan Securities LLC (“JPMS<sup>”</sup>) acts as authorized participant for substantially all U.S.-listed ETFs. To the extent that any ETFs are mentioned in this report, JPMS may earn commissions and transaction-based compensation in connection with the distribution of those ETF shares and may earn fees for performing other trade-related services, such as securities lending to short sellers of the ETF shares. JPMS may also perform services for the ETFs themselves, including acting as a broker or dealer to the ETFs. In addition, affiliates of JPMS may perform services for the ETFs, including trust, custodial, administration, lending, index calculation and/or maintenance and other services.
+
+Options and Futures related research: If the information contained herein regards options- or futures-related research, such information is available only to persons who have received the proper options or futures risk disclosure documents. Please contact your J.P. Morgan Representative or visit https://www.theocc.com/components/docs/riskstoc.pdf for a copy of the Option Clearing Corporation's Characteristics and Risks of Standardized Options or http://www.finra.org/sites/default/files/Security\_Futures\_Risk\_Disclosure\_Statement\_2018.pdf for a copy of the Security Futures Risk Disclosure Statement.
+
+Changes to Interbank Offered Rates (IBORs) and other benchmark rates: Certain interest rate benchmarks are, or may in the future become, subject to ongoing international, national and other regulatory guidance, reform and proposals for reform. For more information, please consult: https://www.jpmorgan.com/global/disclosures/interbank\_offered\_rates
+
+Private Bank Clients: Where you are receiving research as a client of the private banking businesses offered by JPMorgan Chase & Co. and its subsidiaries (“J.P. Morgan Private Bank<sup>”</sup>), research is provided to you by J.P. Morgan Private Bank and not by any other division of J.P. Morgan, including, but not limited to, the J.P. Morgan Corporate and Investment Bank and its Global Research division.
+
+Legal entity responsible for the production and distribution of research: The legal entity identified below the name of the Reg AC Research Analyst who authored this material is the legal entity responsible for the production of this research. Where multiple Reg AC Research Analysts authored this material with different legal entities identified below their names, these legal entities are jointly responsible for the production of this research. Research Analysts from various J.P. Morgan affiliates may have contributed to the production of this material but may not be licensed to carry out regulated activities in your jurisdiction (and do not hold themselves out as being able to do so). Unless otherwise stated below, this material has been distributed by the legal entity responsible for production. If you have any queries, please contact the relevant Research Analyst in your jurisdiction or the entity in your jurisdiction that has distributed this research material.
+
+## Legal Entities Disclosures and Country-/Region-Specific Disclosures:
+
+Argentina: JPMorgan Chase Bank N.A Sucursal Buenos Aires is regulated by Banco Central de la República Argentina (“BCRA<sup>”</sup>- Central Bank of Argentina) and Comisión Nacional de Valores (“CNV<sup>”</sup>- Argentinian Securities Commission - ALYC y AN Integral N°51). Australia: J.P. Morgan Securities Australia Limited (“JPMSAL<sup>”</sup>) (ABN 61 003 245 234/AFS Licence No: 238066) is regulated by the Australian Securities and Investments Commission and is a Market Participant of ASX Limited, a Clearing and Settlement Participant of ASX Clear Pty Limited and a Clearing Participant of ASX Clear (Futures) Pty Limited. This material is issued and distributed in Australia by or on behalf of JPMSAL only to "wholesale clients" (as defined in section 761G of the Corporations Act 2001). A list of all financial products covered can be found by visiting https://www.jpmm.com/research/disclosures. J.P. Morgan seeks to cover companies of relevance to the domestic and international investor base across all Global Industry Classification Standard (GICS) sectors, as well as across a range of market capitalisation sizes. If applicable, in the course of conducting public side due diligence on the subject company(ies), the Research Analyst team may at times perform such diligence through corporate engagements such as site visits, discussions with company representatives, management presentations, etc. Research issued by JPMSAL has been prepared in accordance with J.P. Morgan Australia<sup>’</sup>s Research Independence Policy which can be found at the following link: J.P. Morgan Australia - Research Independence Policy. Brazil: Banco J.P. Morgan S.A. is regulated by the Comissao de Valores Mobiliarios (CVM) and by the Central Bank of Brazil. Ombudsman J.P. Morgan: 0800-7700847 / 0800-7700810 (For Hearing Impaired) / ouvidoria.jp.morgan@jpmorgan.com. Canada: J.P. Morgan Securities Canada Inc. is a registered investment dealer, regulated by the Canadian Investment Regulatory Organization and the Ontario Securities Commission and is the participating member on Canadian exchanges. This material is distributed in Canada by or on behalf of J.P.Morgan Securities Canada Inc. Chile: Inversiones J.P. Morgan Limitada is an unregulated entity incorporated in Chile. China: J.P. Morgan Securities (China) Company Limited has been approved by CSRC to conduct the securities investment consultancy business. Dubai International Financial Centre (DIFC): JPMorgan Chase Bank, N.A., Duba Branch is regulated by the Dubai Financial Services Authority (DFSA) and its registered address is Dubai International Financial Centre - The Gate, West Wing, Level 3 and 9 PO Box 506551, Dubai, UAE. This material has been distributed by JP Morgan Chase Bank, N.A., Dubai Branch to persons regarded as professional clients or market counterparties as defined under the DFSA rules. European Economic Area (EEA): Unless specified to the contrary, research is distributed in the EEA by J.P. Morgan SE (“JPM SE<sup>”</sup>), which is authorised as a credit institution by the Federal Financial Supervisory Authority (Bundesanstalt für Finanzdienstleistungsaufsicht, BaFin) and jointly supervised by the BaFin, the German Central Bank (Deutsche Bundesbank) and the European Central Bank (ECB). JPM SE is a company headquartered in Frankfurt with registered address at TaunusTurm, Taunustor 1, Frankfurt am Main, 60310, Germany. The material has been distributed in the EEA to persons regarded as professional investors (or equivalent) pursuant to Art. 4 para. 1 no. 10 and Annex II of MiFID II and its respective implementation in their home jurisdictions (“EEA professional investors<sup>”</sup>). This material must not be acted on or relied on by persons who are not EEA professional investors. Any investment or investment activity to which this material relates is only available to EEA relevant persons and will be engaged in only with EEA relevant persons. Hong Kong: J.P. Morgan Securities (Asia Pacific) Limited (CE number AAJ321) is regulated by the Hong Kong Monetary Authority and the Securities and Futures Commission in Hong Kong, and J.P. Morgan Broking (Hong Kong) Limited (CE number AAB027) is regulated by the Securities and Futures Commission in Hong Kong. JP Morgan Chase Bank, N.A., Hong Kong Branch (CE Number AAL996) is regulated by the Hong Kong Monetary Authority and the Securities and Futures Commission, is organized under the laws of the United States with limited liability. Where the distribution of this material is a regulated activity in Hong Kong, the material is distributed in Hong Kong by or through J.P. Morgan Securities (Asia Pacific) Limited and/or J.P. Morgan Broking (Hong Kong) Limited. India: J.P. Morgan India Private Limited (Corporate Identity Number - U67120MH1992FTC068724), having its registered office at J.P. Morgan Tower, Off. C.S.T. Road, Kalina, Santacruz - East, Mumbai – 400098, is registered with the Securities and Exchange Board of India (SEBI) as a <sup>‘</sup>Research Analyst<sup>’</sup> having registration number INH000001873. J.P. Morgan India Private Limited is also registered with SEBI as a member of the National Stock Exchange of India Limited and the Bombay Stock Exchange Limited (SEBI Registration Number – INZ000239730) and as a Merchant Banker (SEBI Registration Number - MB/INM000002970). Telephone: 91-22-6157 3000, Facsimile: 91-22- 6157 3990 and Website: http://www.jpmipl.com . JPMorgan Chase Bank, N.A. - Mumbai Branch is licensed by the Reserve Bank of India (RBI) (Licence No. 53/ Licence No. BY.4/94; SEBI - IN/CUS/014/ CDSL : IN-DP-CDSL-444-2008/ IN-DP-NSDL-285-2008/ INBI00000984 INE231311239) as a Scheduled Commercial Bank in India, which is its primary license allowing it to carry on Banking business in India and other activities, which a Bank branch in India are permitted to undertake. For non-local research material, this material is not distributed in India by J.P. Morgan India Private Limited. Compliance Officer: Spurthi Gadamsetty; spurthi.gadamsetty@jpmchase.com; +912261573225. Grievance Officer: Ramprasadh K, jpmipl.research.feedback@jpmorgan.com; +912261573000.
+
+Investment in securities market are subject to market risks. Read all the related documents carefully before investing. Registration granted by SEBI and certification from NISM in no way guarantee performance of the intermediary or provide any assurance of returns to investors.
+
+Indonesia: PT J.P. Morgan Sekuritas Indonesia is a member of the Indonesia Stock Exchange and is registered and supervised by the Otoritas Jasa Keuangan (OJK). Korea: J.P. Morgan Securities (Far East) Limited, Seoul Branch, is a member of the Korea Exchange (KRX). JPMorgan
+
+Chase Bank, N.A., Seoul Branch, is licensed as a branch office of foreign bank (JPMorgan Chase Bank, N.A.) in Korea. Both entities are regulated by the Financial Services Commission (FSC) and the Financial Supervisory Service (FSS). For non-macro research material, the material is distributed in Korea by or through J.P. Morgan Securities (Far East) Limited, Seoul Branch. Japan: JPMorgan Securities Japan Co., Ltd. and JPMorgan Chase Bank, N.A., Tokyo Branch are regulated by the Financial Services Agency in Japan. Malaysia: This material is issued and distributed in Malaysia by JPMorgan Securities (Malaysia) Sdn Bhd (18146-X), which is a Participating Organization of Bursa Malaysia Berhad and holds a Capital Markets Services License issued by the Securities Commission in Malaysia. Mexico: J.P. Morgan Casa de Bolsa, S.A. de C.V. and J.P. Morgan Grupo Financiero are members of the Mexican Stock Exchange and are authorized to act as a broker dealer by the National Banking and Securities Exchange Commission. New Zealand: This material is issued and distributed by JPMSAL in New Zealand only to "wholesale clients" (as defined in the Financial Markets Conduct Act 2013). JPMSAL is registered as a Financial Service Provider under the Financial Service providers (Registration and Dispute Resolution) Act of 2008. Philippines: J.P. Morgan Securities Philippines Inc. is a Trading Participant of the Philippine Stock Exchange and a member of the Securities Clearing Corporation of the Philippines and the Securities Investor Protection Fund. It is regulated by the Securities and Exchange Commission. Singapore: This material is issued and distributed in Singapore by or through J.P. Morgan Securities Singapore Private Limited (JPMSS) [MCI (P) 030/08/2023 and Co. Reg. No.: 199405335R], which is a member of the Singapore Exchange Securities Trading Limited, and/or JPMorgan Chase Bank, N.A., Singapore branch (JPMCB Singapore), both of which are regulated by the Monetary Authority of Singapore. This material is issued and distributed in Singapore only to accredited investors, expert investors and institutional investors, as defined in Section 4A of the Securities and Futures Act, Cap. 289 (SFA). This material is not intended to be issued or distributed to any retail investors or any other investors that do not fall into the classes of “accredited investors,<sup>”</sup> “expert investors<sup>”</sup> or “institutional investors,<sup>”</sup> as defined under Section 4A of the SFA. Recipients of this material in Singapore are to contact JPMSS or JPMCB Singapore in respect of any matters arising from, or in connection with, the material. South Africa: J.P. Morgan Equities South Africa Proprietary Limited and JPMorgan Chase Bank, N.A., Johannesburg Branch are members of the Johannesburg Securities Exchange and are regulated by the Financial Services Conduct Authority (FSCA). Taiwan: J.P. Morgan Securities (Taiwan) Limited is a participant of the Taiwan Stock Exchange (company-type) and regulated by the Taiwan Securities and Futures Bureau. Material relating to equity securities is issued and distributed in Taiwan by J.P. Morgan Securities (Taiwan) Limited, subject to the license scope and the applicable laws and the regulations in Taiwan. According to Paragraph 2, Article 7-1 of Operational Regulations Governing Securities Firms Recommending Trades in Securities to Customers (as amended or supplemented) and/or other applicable laws or regulations, please note that the recipient of this material is not permitted to engage in any activities in connection with the material that may give rise to conflicts of interests, unless otherwise disclosed in the “Important Disclosures<sup>”</sup> in this material. Thailand: This material is issued and distributed in Thailand by JPMorgan Securities (Thailand) Ltd., which is a member of the Stock Exchange of Thailand and is regulated by the Ministry of Finance and the Securities and Exchange Commission, and its registered address is 3rd Floor, 20 North Sathorn Road, Silom, Bangrak, Bangkok 10500. UK: Unless specified to the contrary, research is distributed in the UK by J.P. Morgan Securities plc (“JPMS plc<sup>”</sup>) which is a member of the London Stock Exchange and is authorised by the Prudential Regulation Authority and regulated by the Financial Conduct Authority and the Prudential Regulation Authority. JPMS plc is registered in England & Wales No. 2711006, Registered Office 25 Bank Street, London, E14 5JP. This material is directed in the UK only to: (a) persons having professional experience in matters relating to investments falling within article 19(5) of the Financial Services and Markets Act 2000 (Financial Promotion) (Order) 2005 (“the FPO<sup>”</sup>); (b) persons outlined in article 49 of the FPO (high net worth companies, unincorporated associations or partnerships, the trustees of high value trusts, etc.); or (c) any persons to whom this communication may otherwise lawfully be made; all such persons being referred to as "UK relevant persons". This material must not be acted on or relied on by persons who are not UK relevant persons. Any investment or investment activity to which this material relates is only available to UK relevant persons and will be engaged in only with UK relevant persons. Research issued by JPMS plc has been prepared in accordance with JPMS plc's policy for prevention and avoidance of conflicts of interest related to the production of Research which can be found at the following link: J.P. Morgan EMEA - Research Independence Policy. U.S.: J.P. Morgan Securities LLC (“JPMS<sup>”</sup>) is a member of the NYSE, FINRA, SIPC, and the NFA. JPMorgan Chase Bank, N.A. is a member of the FDIC. Material published by non-U.S. affiliates is distributed in the U.S. by JPMS who accepts responsibility for its content.
+
+General: Additional information is available upon request. The information in this material has been obtained from sources believed to be reliable. While all reasonable care has been taken to ensure that the facts stated in this material are accurate and that the forecasts, opinions and expectations contained herein are fair and reasonable, JPMorgan Chase & Co. or its affiliates and/or subsidiaries (collectively J.P. Morgan) make no representations or warranties whatsoever to the completeness or accuracy of the material provided, except with respect to any disclosures relative to J.P. Morgan and the Research Analyst's involvement with the issuer that is the subject of the material. Accordingly, no reliance should be placed on the accuracy, fairness or completeness of the information contained in this material. There may be certain discrepancies with data and/or limited content in this material as a result of calculations, adjustments, translations to different languages, and/or local regulatory restrictions, as applicable. These discrepancies should not impact the overall investment analysis, views and/or recommendations of the subject company(ies) that may be discussed in the material. J.P. Morgan accepts no liability whatsoever for any loss arising from any use of this materia or its contents, and neither J.P. Morgan nor any of its respective directors, officers or employees, shall be in any way responsible for the contents hereof, apart from the liabilities and responsibilities that may be imposed on them by the relevant regulatory authority in the jurisdiction in question, or the regulatory regime thereunder. Opinions, forecasts or projections contained in this material represent J.P. Morgan's current opinions or judgment as of the date of the material only and are therefore subject to change without notice. Periodic updates may be provided on companies/industries based on company-specific developments or announcements, market conditions or any other publicly available information. There can be no assurance that future results or events will be consistent with any such opinions, forecasts or projections, which represent only one possible outcome. Furthermore, such opinions, forecasts or projections are subject to certain risks, uncertainties and assumptions that have not been verified, and future actual results or events could differ materially. The value of, or income from, any investments referred to in this material may fluctuate and/or be affected by changes in exchange rates. All pricing is indicative as of the close of market for the securities discussed, unless otherwise stated. Past performance is not indicative of future results. Accordingly, investors may
+
+receive back less than originally invested. This material is not intended as an offer or solicitation for the purchase or sale of any financial instrument. The opinions and recommendations herein do not take into account individual client circumstances, objectives, or needs and are not intended as recommendations of particular securities, financial instruments or strategies to particular clients. This material may include views on structured securities, options, futures and other derivatives. These are complex instruments, may involve a high degree of risk and may be appropriate investments only for sophisticated investors who are capable of understanding and assuming the risks involved. The recipients of this material must make their own independent decisions regarding any securities or financial instruments mentioned herein and should seek advice from such independent financial, legal, tax or other adviser as they deem necessary. J.P. Morgan may trade as a principal on the basis of the Research Analysts<sup>’</sup> views and research, and it may also engage in transactions for its own account or for its clients<sup>’</sup> accounts in a manner inconsistent with the views taken in this material, and J.P. Morgan is under no obligation to ensure that such other communication is brought to the attention of any recipient of this material. Others within J.P. Morgan, including Strategists, Sales staff and other Research Analysts, may take views that are inconsistent with those taken in this material. Employees of J.P. Morgan not involved in the preparation of this material may have investments in the securities (or derivatives of such securities) mentioned in this material and may trade them in ways different from those discussed in this material. This material is not an advertisement for or marketing of any issuer, its products or services, or its securities in any jurisdiction.
+
+Confidentiality and Security Notice: This transmission may contain information that is privileged, confidential, legally privileged, and/or exempt from disclosure under applicable law. If you are not the intended recipient, you are hereby notified that any disclosure, copying, distribution, or use of the information contained herein (including any reliance thereon) is STRICTLY PROHIBITED. Although this transmission and any attachments are believed to be free of any virus or other defect that might affect any computer system into which it is received and opened, it is the responsibility of the recipient to ensure that it is virus free and no responsibility is accepted by JPMorgan Chase & Co., its subsidiaries and affiliates, as applicable, for any loss or damage arising in any way from its use. If you received this transmission in error, please immediately contact the sender and destroy the material in its entirety, whether in electronic or hard copy format. This message is subject to electronic monitoring: https://www.jpmorgan.com/disclosures/email
+
+MSCI: Certain information herein (“Information<sup>”</sup>) is reproduced by permission of MSCI Inc., its affiliates and information providers (“MSCI<sup>”</sup>) ©2024. No reproduction or dissemination of the Information is permitted without an appropriate license. MSCI MAKES NO EXPRESS OR IMPLIED WARRANTIES (INCLUDING MERCHANTABILITY OR FITNESS) AS TO THE INFORMATION AND DISCLAIMS ALL LIABILITY TO THE EXTENT PERMITTED BY LAW. No Information constitutes investment advice, except for any applicable Information from MSCI ESG Research. Subject also to msci.com/disclaimer
+
+Sustainalytics: Certain information, data, analyses and opinions contained herein are reproduced by permission of Sustainalytics and: (1) includes the proprietary information of Sustainalytics; (2) may not be copied or redistributed except as specifically authorized; (3) do not constitute investment advice nor an endorsement of any product or project; (4) are provided solely for informational purposes; and (5) are not warranted to be complete, accurate or timely. Sustainalytics is not responsible for any trading decisions, damages or other losses related to it or its use. The use of the data is subject to conditions available at https://www.sustainalytics.com/legal-disclaimers . ©2024 Sustainalytics. All Rights Reserved.
+
+"Other Disclosures" last revised April 06, 2024.
+
+Copyright 2024 JPMorgan Chase & Co. All rights reserved. This material or any portion hereof may not be reprinted, sold or redistributed without the written consent of J.P. Morgan. It is strictly prohibited to use or share without prior written consent from J.P. Morgan any research material received from J.P. Morgan or an authorized third-party (“J.P. Morgan Data”) in any third-party artificial intelligence (“AI”) systems or models when such J.P. Morgan Data is accessible by a third-party. It is permissible to use J.P. Morgan Data for internal business purposes only in an AI system or model that protects the confidentiality of J.P. Morgan Data so as to prevent any and all access to or use of such J.P. Morgan Data by any third-party.

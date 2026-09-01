@@ -1,0 +1,199 @@
+## China
+
+Weak domestic auto demand continued in July
+
+• Automobile production fell in oya terms for the first time since July 2023
+
+• Auto retail sales value fell further amid soft domestic demand
+
+• Auto exports remained solid
+
+China’s automobile production fell in oya terms for the first time since July 2023. China’s auto production (NBS, units) fell 2.4%oya in July (vs +1.8%oya in June). Seasonally adjusted, we estimate that July auto production fell 3.4%m/m sa. The sequential growth trend turned negative, as production fell 5.5%3m/3m saar in July. NEV production remained solid, rising 27.8%oya, or +2.0%m/m sa, by our estimate. In value-added terms, automobile sector VAI rose 4.4%oya in July (vs +6.8%oya in June), compared with overall IP growth of 5.1%oya. Note that this was the first time since Jan-Feb 2023 that auto sector VAI underperformed the overall industrial production. On fixed asset investment (FAI), auto sector FAI grew 5.0%oya in Jan-July (vs 6.5%oya in Jan-June), outperforming overall FAI growth of 3.6%oya, yet underperforming manufacturing FAI growth of 9.3%oya.
+
+Retail sales value fell further amid soft domestic demand. NBS auto retail sales (value) fell 4.9%oya in July, following a 6.2%oya decline in June. For reference, total nominal retail sales came in modestly above expectations, growing 2.7%oya in July (vs +2.0%oya in June). Seasonally adjusted, we estimate that July auto retail sales value fell 1.3%m/m sa in July, with the sequential trend falling 6.0%3m/3m saar. Meanwhile, CAAM auto domestic sales (units) fell 10.1%oya in July, falling 3.2%m/m sa by our estimate. It seems that recent policy measures to boost auto demand are yet to have an effect. Also, prices continued to deteriorate. Our equity team estimates that industry pricing discounts further widened to 16.6% in July (vs 16.1%oya in June), a record-high since 2016 (see China Auto Driver). Meanwhile, channel inventory widened to 1.50 months in July from 1.40 months in June, partly due to seasonality. On the positive side, domestic NEV sales (units) growth continued to outperform, rising 30.7%oya in July, with penetration up from 46.6% in June to 49.5% in July.
+
+Automobile exports remained solid. In unit terms, Customs reported 26.2%oya growth of auto exports in July, following 19.3%oya growth in June. In value terms, auto exports grew 13.8%oya in July, following 12.6%oya growth in June. However, the sequential trend turned negative, as the auto exports value edged down 4.8%3m/3m saar in July, and a similar trend was also observed in CAAM data. This was possibly due to seasonal factors, and headwinds from the tariff hikes in the EU. For the first seven months combined, CAAM data suggest that auto exports rose 28.8%oya, and China remains the largest auto exporter in 2024 so far. Meanwhile, NEV exports rose 1.7%oya in July (vs +10.6%oya in June), compared with 19.6%oya growth of total auto exports (units). The share of NEV in total auto exports rose from 17.8% in June to 22.0% in July.
+
+Emerging Markets Asia, Economic and Policy Research
+
+High-frequency data send mixed signals on auto production and weakness in wholesale into early August. The semi-steel tire operating rate edged down to 79.1% in the first week of August, compared with the monthly average of 79.2% in July. The all-steel tire operating rate fell to 52.3% (vs 55.3% in July). Compared with the same period a year ago, the operating rates send mixed signals on auto
+
+See page 5 for analyst certification and important disclosures.
+
+Ji Yan (852) 2800-7673 ji.yan@jpmorgan.com
+
+Haibin Zhu
+(852) 2800-7039
+haibin.zhu@jpmorgan.com
+Tingting Ge
+(852) 2800-0143
+tingting.ge@jpmorgan.com
+JPMorgan Chase Bank, N.A., Hong Kong Branch
+
+production into early August. On the demand side, the high-frequency data signaled continued weakness in auto wholesale into early August.
+
+Table 1: China Automobile Production (NBS)
+unit, % change
+<table><tr><td colspan="2"></td><td>2022</td><td>2023</td><td>Jan-Feb 24</td><td>Mar-24</td><td>Apr-24</td><td>May-24</td><td>Jun-24</td><td>Jul-24</td></tr><tr><td rowspan="2">Overall</td><td>%oya</td><td>3.5</td><td>9.3</td><td>4.4</td><td>6.5</td><td>15.4</td><td>1.3</td><td>1.8</td><td>-2.4</td></tr><tr><td>%m/m sa</td><td></td><td></td><td>-7.7</td><td>6.9</td><td>1.7</td><td>-3.6</td><td>0.4</td><td>-3.4</td></tr><tr><td rowspan="2">NEV</td><td>%oya</td><td>90.5</td><td>30.3</td><td>25.6</td><td>33.5</td><td>39.2</td><td>33.6</td><td>37.0</td><td>27.8</td></tr><tr><td>%m/m sa</td><td></td><td></td><td>-3.6</td><td>7.5</td><td>5.2</td><td>2.6</td><td>2.0</td><td>2.0</td></tr></table>
+
+Source: NBS, J.P. Morgan
+
+## Table 2: China Automobile Production (CAAM)
+
+unit, % change
+<table><tr><td></td><td></td><td>2022</td><td>2023</td><td>Feb-24</td><td>Mar-24</td><td>Apr-24</td><td>May-24</td><td>Jun-24</td><td>Jul-24</td></tr><tr><td rowspan="2">Overall</td><td>%oya</td><td>3.4</td><td>11.6</td><td>-25.9</td><td>4.0</td><td>12.8</td><td>1.7</td><td>-2.1</td><td>-4.8</td></tr><tr><td>%m/m sa</td><td></td><td></td><td>-5.6</td><td>3.7</td><td>4.2</td><td>-1.6</td><td>-0.2</td><td>-2.7</td></tr><tr><td rowspan="2">NEV</td><td>%oya</td><td>96.9</td><td>35.8</td><td>-16.0</td><td>28.1</td><td>35.9</td><td>31.9</td><td>28.1</td><td>22.3</td></tr><tr><td>%m/m sa</td><td></td><td></td><td>-3.7</td><td>8.6</td><td>0.8</td><td>3.5</td><td>1.6</td><td>2.3</td></tr></table>
+
+Source: CAAM, J.P. Morgan
+
+## Table 3: China Automobile Sales (NBS)
+
+RMB, % change
+<table><tr><td colspan="2"></td><td>2022</td><td>2023</td><td>Jan-Feb 24</td><td>Mar-24</td><td>Apr-24</td><td>May-24</td><td>Jun-24</td><td>Jul-24</td></tr><tr><td rowspan="3">Retail</td><td>%oya</td><td>0.7</td><td>5.9</td><td>8.7</td><td>-3.7</td><td>-5.6</td><td>-4.4</td><td>-6.2</td><td>-4.9</td></tr><tr><td>%m/m sa</td><td></td><td></td><td>-0.2</td><td>0.5</td><td>-2.3</td><td>0.2</td><td>-0.1</td><td>-1.3</td></tr><tr><td>%3m/3m saar</td><td></td><td></td><td>-9.9</td><td>-7.3</td><td>-6.9</td><td>-4.2</td><td>-7.3</td><td>-6.0</td></tr></table>
+
+Source: NBS, J.P. Morgan
+
+## Table 4: China Automobile Sales (CAAM)
+
+unit, % change
+<table><tr><td></td><td></td><td>2022</td><td>2023</td><td>Feb-24</td><td>Mar-24</td><td>Apr-24</td><td>May-24</td><td>Jun-24</td><td>Jul-24</td></tr><tr><td rowspan="2">Overall</td><td>%oya</td><td>2.1</td><td>12.0</td><td>-19.9</td><td>9.9</td><td>9.3</td><td>1.5</td><td>-2.7</td><td>-5.2</td></tr><tr><td>%m/m sa</td><td></td><td></td><td>0.2</td><td>7.5</td><td>1.7</td><td>-2.0</td><td>-2.8</td><td>-2.1</td></tr><tr><td rowspan="2">Domestic</td><td>%oya</td><td>-2.1</td><td>6.1</td><td>-26.8</td><td>5.1</td><td>4.1</td><td>-2.9</td><td>-7.7</td><td>-10.1</td></tr><tr><td>%m/m sa</td><td></td><td></td><td>-1.4</td><td>1.3</td><td>1.2</td><td>-0.6</td><td>0.7</td><td>-3.2</td></tr><tr><td rowspan="2">NEV</td><td>%oya</td><td>93.4</td><td>37.9</td><td>-9.2</td><td>35.3</td><td>33.5</td><td>33.3</td><td>30.1</td><td>27.0</td></tr><tr><td>%m/m sa</td><td></td><td></td><td>-17.3</td><td>16.4</td><td>11.0</td><td>-1.0</td><td>-4.7</td><td>6.0</td></tr></table>
+
+Source: CAAM, J.P. Morgan
+
+Table 5: China Automobile Trade (Customs)
+value, % change
+<table><tr><td></td><td></td><td>2022</td><td>2023</td><td>Jan-Feb 24</td><td>Mar-24</td><td>Apr-24</td><td>May-24</td><td>Jun-24</td><td>Jul-24</td></tr><tr><td rowspan="2">Exports</td><td>%oya</td><td>74.5</td><td>69.0</td><td>12.6</td><td>28.4</td><td>28.8</td><td>16.6</td><td>12.6</td><td>13.8</td></tr><tr><td>%m/m sa</td><td></td><td></td><td>-7.7</td><td>22.4</td><td>2.6</td><td>-6.4</td><td>-3.9</td><td>1.6</td></tr><tr><td rowspan="2">Imports</td><td>%oya</td><td>-1.3</td><td>-11.6</td><td>-14.2</td><td>-24.2</td><td>-22.7</td><td>-0.8</td><td>-6.3</td><td>17.3</td></tr><tr><td>%m/m sa</td><td></td><td></td><td>-17.1</td><td>-9.1</td><td>-10.7</td><td>21.2</td><td>1.0</td><td>18.6</td></tr></table>
+
+Source: China Customs, J.P. Morgan
+
+China automobile domestic sales %3m/3m, saar
+Table 6: China Automobile Exports (CAAM)
+<table><tr><td></td><td></td><td>2022</td><td>2023</td><td>Feb-24</td><td>Mar-24</td><td>Apr-24</td><td>May-24</td><td>Jun-24</td><td>Jul-24</td></tr><tr><td rowspan="2">Overall</td><td>%oya</td><td>54.4</td><td>57.9</td><td>14.7</td><td>37.9</td><td>34.0</td><td>23.9</td><td>26.9</td><td>19.6</td></tr><tr><td>%m/m sa</td><td></td><td></td><td>5.0</td><td>-2.8</td><td>6.8</td><td>-6.4</td><td>-2.6</td><td>0.0</td></tr><tr><td rowspan="2">NEV</td><td>%oya</td><td>119.4</td><td>77.4</td><td>-6.0</td><td>59.0</td><td>13.4</td><td>-9.1</td><td>10.6</td><td>1.7</td></tr><tr><td>%m/m sa</td><td></td><td></td><td>-22.3</td><td>42.6</td><td>2.1</td><td>-7.2</td><td>-34.9</td><td>49.8</td></tr></table>
+
+Source: CAAM, J.P. Morgan
+
+China automobile production %3m/3m saar
+![](images/c833222121a5c51035dd6ab5c9efae55d1ddff792cbb1f19fb27035142c362ec.jpg)
+Source: NBS, J.P. Morgan
+China value added of industry %oya, both scales
+
+![](images/82530528f51c5c25c7001bec412d5c31c386cb64dc315b6b4d966d80eb44acfe.jpg)
+Source: NBS, J.P. Morgan
+
+China automobile production
+![](images/ac91db6f092b98868ccc9de9906efc571e3e3415bc1cfaf8cfd72973c47245f3.jpg)
+
+![](images/abd5aa3ef486c18fa71f74708e8a24b81ae342a5f6a24535ac41fccf4af554f5.jpg)
+Source: CAAM, J.P. Morgan
+
+China automobile sales
+![](images/4d23855d827d10debe83d1a67f4f6eb069733ba08b8e1a7b7d4625ea43a92e50.jpg)
+Source: CAAM, CPCA, J.P. Morgan. Note: Month-to-date for Aug 2024.
+
+China automobile inventory days at dealers
+![](images/88020cf76da90176719720f3af6c0bd0f7cd33d6af19261de1ceac13cbdead6b.jpg)
+Source: CADA, J.P. Morgan
+
+China automobile trade US\$, %oya, 3mma
+
+![](images/44910e36307d0b39bcedcbd367f8fca94a40d854fb8abe824915f89ccf978592.jpg)
+Source: China Customs, J.P. Morgan.
+China automobile exports '000 units, monthly
+
+![](images/c83b875f8d4819fa0ad52a22dec2b5d16c29054bde5cf731ce914e88cee166ac.jpg)
+Source: CAAM, J.P. Morgan
+
+## Disclosures
+
+Analyst Certification: The Research Analyst(s) denoted by an “AC” on the cover of this report certifies (or, where multiple Research Analysts are primarily responsible for this report, the Research Analyst denoted by an “AC” on the cover or within the document individually certifies, with respect to each security or issuer that the Research Analyst covers in this research) that: (1) all of the views expressed in this report accurately reflect the Research Analyst’s personal views about any and all of the subject securities or issuers; and (2) no part of any of the Research Analyst's compensation was, is, or will be directly or indirectly related to the specific recommendations or views expressed by the Research Analyst(s) in this report. For all Korea-based Research Analysts listed on the front cover, if applicable, they also certify, as per KOFIA requirements, that the Research Analyst’s analysis was made in good faith and that the views reflect the Research Analyst’s own opinion, without undue influence or intervention.
+
+All authors named within this report are Research Analysts who produce independent research unless otherwise specified. In Europe, Sector Specialists (Sales and Trading) may be shown on this report as contacts but are not authors of the report or part of the Research Department.
+
+## Important Disclosures
+
+Company-Specific Disclosures: Important disclosures, including price charts and credit opinion history tables, are available for compendium reports and all J.P. Morgan–covered companies, and certain non-covered companies, by visitinghttps://www.jpmm.com/research/disclosures, calling 1-800-477-0406, or e-mailing research.disclosure.inquiries@jpmorgan.com with your request.
+
+A history of J.P. Morgan investment recommendations disseminated during the preceding 12 months can be accessed on the Research & Commentary page of http://www.jpmorganmarkets.com where you can also search by analyst name, sector or financial instrument.
+
+## Explanation of Emerging Markets Sovereign Research Ratings System and Valuation & Methodology:
+
+Ratings System: J.P. Morgan uses the following issuer portfolio weightings for Emerging Markets Sovereign Research: Overweight (over the next three months, the recommended risk position is expected to outperform the relevant index, sector, or benchmark credit returns); Marketweight (over the next three months, the recommended risk position is expected to perform in line with the relevant index, sector, or benchmark credit returns); and Underweight (over the next three months, the recommended risk position is expected to underperform the relevant index, sector, or benchmark credit returns). NR is Not Rated. In this case, J.P. Morgan has removed the rating for this security because of either legal, regulatory or policy reasons or because of lack of a sufficient fundamental basis. The previous rating no longer should be relied upon. An NR designation is not a recommendation or a rating. NC is Not Covered. An NC designation is not a rating or a recommendation. Recommendations will be at the issuer level, and an issuer recommendation applies to all of the index-eligible bonds at the same level for the issuer. When we change the issuer-level rating, we are changing the rating for all of the issues covered, unless otherwise specified. Ratings for quasi-sovereign issuers in the EMBIG may differ from the ratings provided in EM corporate coverage.
+
+Valuation & Methodology: For J.P. Morgan's Emerging Markets Sovereign Research, we assign a rating to each sovereign issuer (Overweight, Marketweight or Underweight) based on our view of whether the combination of the issuer’s fundamentals, market technicals, and the relative value of its securities will cause it to outperform, perform in line with, or underperform the credit returns of the EMBIGD index over the next three months. Our view of an issuer’s fundamentals includes our opinion of whether the issuer is becoming more or less able to service its deb obligations when they become due and payable, as well as whether its willingness to service debt obligations is increasing or decreasing.
+
+J.P. Morgan Emerging Markets Sovereign Research Ratings Distribution, as of July 6, 2024
+
+<table><tr><td></td><td>Overweight (buy)</td><td>Marketweight (hold)</td><td>Underweight (sell)</td></tr><tr><td>Global Sovereign Research Universe*</td><td>11%</td><td>79%</td><td>11%</td></tr><tr><td>IB clients**</td><td>29%</td><td>48%</td><td>86%</td></tr></table>
+
+\*Please note that the percentages may not add to 100% because of rounding. Please note that the percentages may not add to
+
+\*\*Percentage of subject issuers within each of the "Overweight, "Marketweight" and "Underweight" categories for which J.P. Morgan has provided investment banking services within the previous 12 months.
+For purposes of FINRA ratings distribution rules only, our Overweight rating falls into a buy rating category; our Marketweight rating falls into a hold rating category; and our Underweight rating falls into a sell rating category. The Emerging Markets Sovereign Research Rating Distribution is at the issuer level. Issuers with an NR or an NC designation are not included in the table above. This information is current as of the end of the most recent calendar quarter.
+
+Analysts' Compensation:The research analysts responsible for the preparation of this report receive compensation based upon various factors, including the quality and accuracy of research, client feedback, competitive factors, and overall firm revenues.
+
+Registration of non-US Analysts: Unless otherwise noted, the non-US analysts listed on the front of this report are employees of non-US affiliates of J.P. Morgan Securities LLC, may not be registered as research analysts under FINRA rules, may not be associated persons of J.P. Morgan Securities LLC, and may not be subject to FINRA Rule 2241 or 2242 restrictions on communications with covered companies, public appearances, and trading securities held by a research analyst account.
+
+## Other Disclosures
+
+J.P. Morgan is a marketing name for investment banking businesses of JPMorgan Chase & Co. and its subsidiaries and affiliates worldwide
+
+UK MIFID FICC research unbundling exemption: UK clients should refer to UK MIFID Research Unbundling exemption for details of J.P.
+Morgan’s implementation of the FICC research exemption and guidance on relevant FICC research categorisation.
+
+Any long form nomenclature for references to China; Hong Kong; Taiwan; and Macau within this research material are Mainland China; Hong Kong SAR (China); Taiwan (China); and Macau SAR (China).
+
+J.P. Morgan Research may, from time to time, write on issuers or securities targeted by economic or financial sanctions imposed or administered by the governmental authorities of the U.S., EU, UK or other relevant jurisdictions (Sanctioned Securities). Nothing in this report is intended to be read or construed as encouraging, facilitating, promoting or otherwise approving investment or dealing in such Sanctioned Securities. Clients should be aware of their own legal and compliance obligations when making investment decisions.
+
+Any digital or crypto assets discussed in this research report are subject to a rapidly changing regulatory landscape. For relevant regulatory advisories on crypto assets, including bitcoin and ether, please see https://www.jpmorgan.com/disclosures/cryptoasset-disclosure.
+
+The author(s) of this research report may not be licensed to carry on regulated activities in your jurisdiction and, if not licensed, do not hold themselves out as being able to do so.
+
+Exchange-Traded Funds (ETFs): J.P. Morgan Securities LLC (“JPMS”) acts as authorized participant for substantially all U.S.-listed ETFs. To the extent that any ETFs are mentioned in this report, JPMS may earn commissions and transaction-based compensation in connection with the distribution of those ETF shares and may earn fees for performing other trade-related services, such as securities lending to short sellers of the ETF shares. JPMS may also perform services for the ETFs themselves, including acting as a broker or dealer to the ETFs. In addition, affiliates of JPMS may perform services for the ETFs, including trust, custodial, administration, lending, index calculation and/or maintenance and other services.
+
+Options and Futures related research: If the information contained herein regards options- or futures-related research, such information is available only to persons who have received the proper options or futures risk disclosure documents. Please contact your J.P. Morgan Representative or visit https://www.theocc.com/components/docs/riskstoc.pdf for a copy of the Option Clearing Corporation's Characteristics and Risks of Standardized Options or http://www.finra.org/sites/default/files/Security\_Futures\_Risk\_Disclosure\_Statement\_2018.pdf for a copy of the Security Futures Risk Disclosure Statement.
+
+Changes to Interbank Offered Rates (IBORs) and other benchmark rates: Certain interest rate benchmarks are, or may in the future become, subject to ongoing international, national and other regulatory guidance, reform and proposals for reform. For more information, please consult: https://www.jpmorgan.com/global/disclosures/interbank\_offered\_rates
+
+Private Bank Clients: Where you are receiving research as a client of the private banking businesses offered by JPMorgan Chase & Co. and its subsidiaries (“J.P. Morgan Private Bank”), research is provided to you by J.P. Morgan Private Bank and not by any other division of J.P. Morgan, including, but not limited to, the J.P. Morgan Corporate and Investment Bank and its Global Research division.
+
+Legal entity responsible for the production and distribution of research: The legal entity identified below the name of the Reg AC Research Analyst who authored this material is the legal entity responsible for the production of this research. Where multiple Reg AC Research Analysts authored this material with different legal entities identified below their names, these legal entities are jointly responsible for the production of this research. Research Analysts from various J.P. Morgan affiliates may have contributed to the production of this material but may not be licensed to carry out regulated activities in your jurisdiction (and do not hold themselves out as being able to do so). Unless otherwise stated below, this material has been distributed by the legal entity responsible for production. If you have any queries, please contact the relevant Research Analyst in your jurisdiction or the entity in your jurisdiction that has distributed this research material.
+
+## Legal Entities Disclosures and Country-/Region-Specific Disclosures:
+
+Argentina: JPMorgan Chase Bank N.A Sucursal Buenos Aires is regulated by Banco Central de la República Argentina (“BCRA”- Central Bank of Argentina) and Comisión Nacional de Valores (“CNV”- Argentinian Securities Commission - ALYC y AN Integral N°51). Australia: J.P. Morgan Securities Australia Limited (“JPMSAL”) (ABN 61 003 245 234/AFS Licence No: 238066) is regulated by the Australian Securities and Investments Commission and is a Market Participant of ASX Limited, a Clearing and Settlement Participant of ASX Clear Pty Limited and a Clearing Participant of ASX Clear (Futures) Pty Limited. This material is issued and distributed in Australia by or on behalf of JPMSAL only to "wholesale clients" (as defined in section 761G of the Corporations Act 2001). A list of all financial products covered can be found by visiting https://www.jpmm.com/research/disclosures. J.P. Morgan seeks to cover companies of relevance to the domestic and international investor base across all Global Industry Classification Standard (GICS) sectors, as well as across a range of market capitalisation sizes. If applicable, in the course of conducting public side due diligence on the subject company(ies), the Research Analyst team may at times perform such diligence through corporate engagements such as site visits, discussions with company representatives, management presentations, etc. Research issued by JPMSAL has been prepared in accordance with J.P. Morgan Australia’s Research Independence Policy which can be found at the following link: J.P. Morgan Australia - Research Independence Policy. Brazil: Banco J.P. Morgan S.A. is regulated by the Comissao de Valores Mobiliarios (CVM) and by the Central Bank of Brazil. Ombudsman J.P. Morgan: 0800-7700847 / 0800-7700810 (For Hearing Impaired) / ouvidoria.jp.morgan@jpmorgan.com. Canada: J.P. Morgan Securities Canada Inc. is a registered investment dealer,
+
+Ji Yan (852) 2800-7673
+ji.yan@jpmorgan.com
+JPMorgan Chase Bank, N.A., Hong Kong Branch
+Haibin Zhu (852) 2800-7039
+haibin.zhu@jpmorgan.com
+
+Grace Ng (852) 2800-7002 grace.h.ng@jpmorgan.com
+
+Tingting Ge (852) 2800-0143 tingting.ge@jpmorgan.com
+
+15 August 2024
+
+regulated by the Canadian Investment Regulatory Organization and the Ontario Securities Commission and is the participating member on Canadian exchanges. This material is distributed in Canada by or on behalf of J.P.Morgan Securities Canada Inc. Chile: Inversiones J.P. Morgan Limitada is an unregulated entity incorporated in Chile. China: J.P. Morgan Securities (China) Company Limited has been approved by CSRC to conduct the securities investment consultancy business. Dubai International Financial Centre (DIFC): JPMorgan Chase Bank, N.A., Dubai Branch is regulated by the Dubai Financial Services Authority (DFSA) and its registered address is Dubai International Financial Centre - The Gate, West Wing, Level 3 and 9 PO Box 506551, Dubai, UAE. This material has been distributed by JP Morgan Chase Bank, N.A., Duba Branch to persons regarded as professional clients or market counterparties as defined under the DFSA rules. European Economic Area (EEA): Unless specified to the contrary, research is distributed in the EEA by J.P. Morgan SE (“JPM SE”), which is authorised as a credit institution by the Federal Financial Supervisory Authority (Bundesanstalt für Finanzdienstleistungsaufsicht, BaFin) and jointly supervised by the BaFin, the German Central Bank (Deutsche Bundesbank) and the European Central Bank (ECB). JPM SE is a company headquartered in Frankfurt with registered address at TaunusTurm, Taunustor 1, Frankfurt am Main, 60310, Germany. The material has been distributed in the EEA to persons regarded as professional investors (or equivalent) pursuant to Art. 4 para. 1 no. 10 and Annex II of MiFID II and its respective implementation in their home jurisdictions (“EEA professional investors”). This material must not be acted on or relied on by persons who are not EEA professional investors. Any investment or investment activity to which this material relates is only available to EEA relevant persons and will be engaged in only with EEA relevant persons. Hong Kong: J.P. Morgan Securities (Asia Pacific) Limited (CE number AAJ321) is regulated by the Hong Kong Monetary Authority and the Securities and Futures Commission in Hong Kong, and J.P. Morgan Broking (Hong Kong) Limited (CE number AAB027) is regulated by the Securities and Futures Commission in Hong Kong. JP Morgan Chase Bank, N.A., Hong Kong Branch (CE Number AAL996) is regulated by the Hong Kong Monetary Authority and the Securities and Futures Commission, is organized under the laws of the United States with limited liability. Where the distribution of this material is a regulated activity in Hong Kong, the material is distributed in Hong Kong by or through J.P. Morgan Securities (Asia Pacific) Limited and/or J.P. Morgan Broking (Hong Kong) Limited. India: J.P. Morgan India Private Limited (Corporate Identity Number - U67120MH1992FTC068724), having its registered office at J.P. Morgan Tower, Off. C.S.T. Road, Kalina, Santacruz - East, Mumbai – 400098, is registered with the Securities and Exchange Board of India (SEBI) as a ‘Research Analyst’ having registration number INH000001873. J.P. Morgan India Private Limited is also registered with SEBI as a member of the National Stock Exchange of India Limited and the Bombay Stock Exchange Limited (SEBI Registration Number INZ000239730) and as a Merchant Banker (SEBI Registration Number - MB/INM000002970). Telephone: 91-22-6157 3000, Facsimile: 91-22- 6157 3990 and Website: http://www.jpmipl.com . JPMorgan Chase Bank, N.A. - Mumbai Branch is licensed by the Reserve Bank of India (RBI) (Licence No. 53/ Licence No. BY.4/94; SEBI - IN/CUS/014/ CDSL : IN-DP-CDSL-444-2008/ IN-DP-NSDL-285-2008/ INBI00000984/ INE231311239) as a Scheduled Commercial Bank in India, which is its primary license allowing it to carry on Banking business in India and other activities, which a Bank branch in India are permitted to undertake. For non-local research material, this material is not distributed in India by J.P. Morgan India Private Limited. Compliance Officer: Spurthi Gadamsetty; spurthi.gadamsetty@jpmchase.com; +912261573225. Grievance Officer: Ramprasadh K, jpmipl.research.feedback@jpmorgan.com; +912261573000.
+
+Investment in securities market are subject to market risks. Read all the related documents carefully before investing. Registration granted by SEBI and certification from NISM in no way guarantee performance of the intermediary or provide any assurance of returns to investors.
+
+Indonesia: PT J.P. Morgan Sekuritas Indonesia is a member of the Indonesia Stock Exchange and is registered and supervised by the Otoritas Jasa Keuangan (OJK). Korea: J.P. Morgan Securities (Far East) Limited, Seoul Branch, is a member of the Korea Exchange (KRX). JPMorgan Chase Bank, N.A., Seoul Branch, is licensed as a branch office of foreign bank (JPMorgan Chase Bank, N.A.) in Korea. Both entities are regulated by the Financial Services Commission (FSC) and the Financial Supervisory Service (FSS). For non-macro research material, the material is distributed in Korea by or through J.P. Morgan Securities (Far East) Limited, Seoul Branch. Japan: JPMorgan Securities Japan Co., Ltd. and JPMorgan Chase Bank, N.A., Tokyo Branch are regulated by the Financial Services Agency in Japan. Malaysia: This material is issued and distributed in Malaysia by JPMorgan Securities (Malaysia) Sdn Bhd (18146-X), which is a Participating Organization of Bursa Malaysia Berhad and holds a Capital Markets Services License issued by the Securities Commission in Malaysia. Mexico: J.P. Morgan Casa de Bolsa, S.A. de C.V. and J.P. Morgan Grupo Financiero are members of the Mexican Stock Exchange and are authorized to act as a broker dealer by the National Banking and Securities Exchange Commission. New Zealand: This material is issued and distributed by JPMSAL in New Zealand only to "wholesale clients" (as defined in the Financial Markets Conduct Act 2013). JPMSAL is registered as a Financial Service Provider under the Financial Service providers (Registration and Dispute Resolution) Act of 2008. Philippines: J.P. Morgan Securities Philippines Inc. is a Trading Participant of the Philippine Stock Exchange and a member of the Securities Clearing Corporation of the Philippines and the Securities Investor Protection Fund. It is regulated by the Securities and Exchange Commission. Singapore: This material is issued and distributed in Singapore by or through J.P. Morgan Securities Singapore Private Limited (JPMSS) [MCI (P) 030/08/2023 and Co. Reg. No.: 199405335R], which is a member of the Singapore Exchange Securities Trading Limited, and/or JPMorgan Chase Bank, N.A., Singapore branch (JPMCB Singapore), both of which are regulated by the Monetary Authority of Singapore. This material is issued and distributed in Singapore only to accredited investors, expert investors and institutional investors, as defined in Section 4A of the Securities and Futures Act, Cap. 289 (SFA). This material is not intended to be issued or distributed to any retail investors or any other investors that do not fall into the classes of “accredited investors,” “expert investors” or “institutional investors,” as defined under Section 4A of the SFA. Recipients of this material in Singapore are to contact JPMSS or JPMCB Singapore in respect of any matters arising from, or in connection with, the material. South Africa: J.P. Morgan Equities South Africa Proprietary Limited and JPMorgan Chase Bank, N.A., Johannesburg Branch are members of the Johannesburg Securities Exchange and are regulated by the Financial Services Conduct Authority (FSCA). Taiwan: J.P. Morgan Securities (Taiwan) Limited is a participant of the Taiwan Stock Exchange (company-type) and regulated by the Taiwan Securities and Futures Bureau. Material relating to equity securities is issued and distributed in Taiwan by J.P. Morgan Securities (Taiwan) Limited, subject to the license scope and the applicable laws and the regulations in Taiwan. According to Paragraph 2, Article 7-1 of Operational Regulations Governing Securities Firms Recommending Trades in Securities to Customers (as amended or supplemented) and/or other applicable laws or regulations, please note
+
+Ji Yan (852) 2800-7673
+ji.yan@jpmorgan.com
+JPMorgan Chase Bank, N.A., Hong Kong Branch
+Haibin Zhu (852) 2800-7039
+haibin.zhu@jpmorgan.com
+
+Grace Ng (852) 2800-7002 grace.h.ng@jpmorgan.com Tingting Ge (852) 2800-0143 tingting.ge@jpmorgan.com
+
+that the recipient of this material is not permitted to engage in any activities in connection with the material that may give rise to conflicts of interests, unless otherwise disclosed in the “Important Disclosures” in this material. Thailand: This material is issued and distributed in Thailand by JPMorgan Securities (Thailand) Ltd., which is a member of the Stock Exchange of Thailand and is regulated by the Ministry of Finance and the Securities and Exchange Commission, and its registered address is 3rd Floor, 20 North Sathorn Road, Silom, Bangrak, Bangkok 10500. UK: Unless specified to the contrary, research is distributed in the UK by J.P. Morgan Securities plc (“JPMS plc”) which is a member of the London Stock Exchange and is authorised by the Prudential Regulation Authority and regulated by the Financial Conduct Authority and the Prudential Regulation Authority. JPMS plc is registered in England & Wales No. 2711006, Registered Office 25 Bank Street, London, E14 5JP. This material is directed in the UK only to: (a) persons having professional experience in matters relating to investments falling within article 19(5) of the Financial Services and Markets Act 2000 (Financial Promotion) (Order) 2005 (“the FPO”); (b) persons outlined in article 49 of the FPO (high net worth companies, unincorporated associations or partnerships, the trustees of high value trusts, etc.); or (c) any persons to whom this communication may otherwise lawfully be made; all such persons being referred to as "UK relevant persons". This material must not be acted on or relied on by persons who are not UK relevant persons. Any investment or investment activity to which this material relates is only available to UK relevant persons and will be engaged in only with UK relevant persons. Research issued by JPMS plc has been prepared in accordance with JPMS plc's policy for prevention and avoidance of conflicts of interest related to the production of Research which can be found at the following link: J.P. Morgan EMEA - Research Independence Policy. U.S.: J.P. Morgan Securities LLC (“JPMS”) is a member of the NYSE, FINRA, SIPC, and the NFA. JPMorgan Chase Bank, N.A. is a member of the FDIC. Material published by non-U.S. affiliates is distributed in the U.S. by JPMS who accepts responsibility for its content.
+
+General: Additional information is available upon request. The information in this material has been obtained from sources believed to be reliable. While all reasonable care has been taken to ensure that the facts stated in this material are accurate and that the forecasts, opinions and expectations contained herein are fair and reasonable, JPMorgan Chase & Co. or its affiliates and/or subsidiaries (collectively J.P. Morgan) make no representations or warranties whatsoever to the completeness or accuracy of the material provided, except with respect to any disclosures relative to J.P. Morgan and the Research Analyst's involvement with the issuer that is the subject of the material. Accordingly, no reliance should be placed on the accuracy, fairness or completeness of the information contained in this material. There may be certain discrepancies with data and/or limited content in this material as a result of calculations, adjustments, translations to different languages, and/or local regulatory restrictions, as applicable. These discrepancies should not impact the overall investment analysis, views and/or recommendations of the subject company(ies) that may be discussed in the material. J.P. Morgan accepts no liability whatsoever for any loss arising from any use of this material or its contents, and neither J.P. Morgan nor any of its respective directors, officers or employees, shall be in any way responsible for the contents hereof, apart from the liabilities and responsibilities that may be imposed on them by the relevant regulatory authority in the jurisdiction in question, or the regulatory regime thereunder. Opinions, forecasts or projections contained in this material represent J.P. Morgan's current opinions or judgment as of the date of the material only and are therefore subject to change without notice. Periodic updates may be provided on companies/industries based on company-specific developments or announcements, market conditions or any other publicly available information. There can be no assurance that future results or events will be consistent with any such opinions, forecasts or projections, which represent only one possible outcome. Furthermore, such opinions, forecasts or projections are subject to certain risks, uncertainties and assumptions that have not been verified, and future actual results or events could differ materially. The value of, or income from, any investments referred to in this material may fluctuate and/or be affected by changes in exchange rates. All pricing is indicative as of the close of market for the securities discussed, unless otherwise stated. Past performance is not indicative of future results. Accordingly, investors may receive back less than originally invested. This material is not intended as an offer or solicitation for the purchase or sale of any financial instrument. The opinions and recommendations herein do not take into account individual client circumstances, objectives, or needs and are not intended as recommendations of particular securities, financial instruments or strategies to particular clients. This material may include views on structured securities, options, futures and other derivatives. These are complex instruments, may involve a high degree of risk and may be appropriate investments only for sophisticated investors who are capable of understanding and assuming the risks involved. The recipients of this material must make their own independent decisions regarding any securities or financial instruments mentioned herein and should seek advice from such independent financial, legal, tax or other adviser as they deem necessary. J.P. Morgan may trade as a principal on the basis of the Research Analysts’ views and research, and it may also engage in transactions for its own account or for its clients’ accounts in a manner inconsistent with the views taken in this material, and J.P. Morgan is under no obligation to ensure that such other communication is brought to the attention of any recipient of this material. Others within J.P. Morgan, including Strategists, Sales staff and other Research Analysts, may take views that are inconsistent with those taken in this material. Employees of J.P. Morgan not involved in the preparation of this material may have investments in the securities (or derivatives of such securities) mentioned in this material and may trade them in ways different from those discussed in this material. This material is not an advertisement for or marketing of any issuer, its products or services, or its securities in any jurisdiction.
+
+Confidentiality and Security Notice: This transmission may contain information that is privileged, confidential, legally privileged, and/or exempt from disclosure under applicable law. If you are not the intended recipient, you are hereby notified that any disclosure, copying, distribution, or use of the information contained herein (including any reliance thereon) is STRICTLY PROHIBITED. Although this transmission and any attachments are believed to be free of any virus or other defect that might affect any computer system into which it is received and opened, it is the responsibility of the recipient to ensure that it is virus free and no responsibility is accepted by JPMorgan Chase & Co., its subsidiaries and affiliates, as applicable, for any loss or damage arising in any way from its use. If you received this transmission in error, please immediately contact the sender and destroy the material in its entirety, whether in electronic or hard copy format. This message is subject to electronic monitoring: https://www.jpmorgan.com/disclosures/emai
+
+MSCI: Certain information herein (“Information”) is reproduced by permission of MSCI Inc., its affiliates and information providers (“MSCI”) ©2024. No reproduction or dissemination of the Information is permitted without an appropriate license. MSCI MAKES NO EXPRESS OR
+
+Completed 15 Aug 2024 04:55 PM HKT

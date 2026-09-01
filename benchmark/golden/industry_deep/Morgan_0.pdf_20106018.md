@@ -1,0 +1,204 @@
+## Oil Demand Tracker
+
+## Global oil demand in January continues to improve
+
+• Our high-frequency demand indicators are tracking a 1.5 mbd month-overmonth decline in global oil demand through January 18 (Figure 1). This compares favorably to the 1.7 mbd decline in the last week<sup>’</sup>s reading and the pre-COVID five-year average MoM drop of 2.3 mbd for January.
+
+Regionally, Thailand, France and Portugal reported oil consumption statistics.
+
+France and Portugal reported their oil consumption data for December 2023. France<sup>’</sup>s oil demand in December contracted 48 kbd YoY led by weak diesel demand. For the year, France<sup>’</sup>s total oil consumption contracted 24 kbd as diesel and fuel oil demand weakness offset demand expansion in jet fuel and gasoline. In Portugal, total oil demand in December remained stable at 178 kbd, up 2 kbd YoY. For 2023, oil demand recorded a 11 kbd YoY increase supported by jet fuel, diesel, and gasoline demand. Jet fuel demand rose to 110% of 2019 volumes benefitting from increased international travel activity.
+
+Our Europe demand tracker for January suggests demand may overshoot our 13.5 mbd estimate by 300 kbd as teeth-chattering temperatures are likely driving consumers to crank up their heating demand.
+
+US gasoline demand is tracking 100 kbd above our published estimates at 8.5 mbd (Figure 8). The stronger-than-expected gasoline consumption is also reflected in 36.8 million more weekly trips undertaken by American drivers in the first week of January relative to same period last year (Figure 12).
+
+• China demand for December came in at 15.9 mbd, 300 kbd below our estimates on account of lower LPG and <sup>‘</sup>other products<sup>’</sup> demand. For January, demand is tracking 15.6 mbd, 400 kbd below our published estimates. We believe warmer-than-normal winter weather in East Asia is undermining heating demand in the region, China included. On the bright side, trucks on Chinese expressways rose by 4.9 million to 53.8 million, a six-week high.
+
+Thailand reported a 23 kbd YoY decline in its total oil consumption for November 2023 led by a 34 kbd YoY drop in diesel demand. The nation<sup>’</sup>s diesel demand has contracted every month since February on account of cooling growth and deteriorating manufacturing activity. On the other hand, air travel activity continues to normalize in the region. As a result, jet fuel demand recovered to 71% of 2019 volumes.
+
+• Global jet fuel demand expanded 480 kbd YoY for the week ending January 12, the smallest weekly YoY gain since 2023. This aligns with lower global flights activity last week as severe weather conditions caused flight disruptions across the US and Europe. Global daily flights averaged 96.1% of 2019 volumes, dropping 3.2%-pt over the week. US domestic flights declined to a five-week low of 87.8% of pre-COVID volumes, while European flights dropped to a six-week low of 92.7%. Meanwhile, China daily flights reached a 15-week high at 104.4% of 2019 levels.
+
+Global Commodities Research
+
+Prateek Kedia <sup>AC</sup>
+
+(1-646) 326 1124
+
+prateek.kedia@jpmchase.com
+
+J.P. Morgan Securities LLC
+
+Natasha Kaneva <sup>AC</sup>
+
+(1-212) 834-3175
+
+natasha.kaneva@jpmorgan.com
+
+JPMorgan Chase Bank NA
+
+Cole Wolf <sup>AC</sup>
+
+(1-212) 622-5762
+
+cole.wolf@jpmchase.com
+
+J.P. Morgan Securities LLC
+
+Figure 6: Global demand for mobility fuels by product, YoY growth kbd
+Figure 1: Global oil demand: tracker, realized and estimate mbd
+![](images/c114e31968fa9e9500c45893157c602869d0349c380f9ac7166bac008433d0ff.jpg)
+Source: Woodmac, EIA, IEA, Rystad, Kpler, IIR, S&P Global, J.P. Morgan Commodities Research
+
+![](images/f40d5364de92c5eea47d0080c9fe8eafb2128f2ead37a30dfdd093cbd533294c.jpg)
+Figure 2: Total oil demand in 6 European economies (Germany, France, Spain, Italy, Portugal and UK)
+Source: German Federal Statistical Service, UFIP, CORES, DUKES, Ministry of Environment and Energy Security, ENSE
+
+Figure 3: Global demand for mobility fuels expanded 0.5 mbd YoY in the week ending January 12
+![](images/5a4115bb3f245ddc25c93ab175a4056cf05e62f1ec092acf0333b3402373cd65.jpg)
+Source: Bloomberg Finance L.P., FlightAware, Rystad, J.P. Morgan Commodities Research Figure 5: Global demand for mobility fuels by region, YoY growth kbd
+Source: Bloomberg Finance L.P., FlightAware, Rystad, J.P. Morgan Commodities Research
+
+![](images/cd67555f0cfa5d9987e80f5f7fbe1c6646c0df45944e63bcc3608caa91a4de81.jpg)
+
+Figure 4: Global demand for mobility fuels averaged 1.5 mbd in 2023 kbd
+![](images/58514cc51a7d300a0ed08b55957397c8e55af462a172b055b1bd8dd31efa051e.jpg)
+
+![](images/20650c9766d25a8ec74fef2d3edbdd14098de26d00b024a577bbcc85e83e77be.jpg)
+Source: Bloomberg Finance L.P., FlightAware, Rystad, J.P. Morgan Commodities Research
+
+Figure 7: Global total oil demand running below our published estimates in early January mbd
+![](images/03d5882f8e665bfa9d6c70006d0714f95eb7dddf98e32c7bb66aaf6ddfdfd9c4.jpg)
+Source: Woodmac, EIA, IEA, Rystad, Kpler, IIR, S&P Global, J.P. Morgan Commodities Research
+
+Figure 8: US gasoline demand is tracking our estimate of 8.4 mbd in January higher by 100 kbd...
+![](images/4a75cbd153b5ea844c65628328d73649320e5ea8ecb730677f7717ae3f025bc0.jpg)
+Source: Woodmac, EIA, IEA, Rystad, Kpler, IIR, J.P. Morgan Commodities Research
+
+Figure 9: ...with total US oil demand below our January estimates as heating fuel demand remains lukewarm
+![](images/780faec37a53c913fb518c837c0e516161469568790e9631979b5d1086544566.jpg)
+Source: Woodmac, EIA, IEA, Rystad, Kpler, IIR, J.P. Morgan Commodities Research
+
+Percent
+Figure 10: Europe total oil demand tracking above our estimates for January by 300 kbd
+![](images/ca6bbfb214155b5a9f9fdad3c04609a0cefdff79c09e38a8c1b8f1b70a9cc3d8.jpg)
+Source: Woodmac, EIA, IEA, Rystad, Kpler, IIR, J.P. Morgan Commodities Research
+
+Figure 11: China total oil demand is tracking 15.6 mbd in January, 400 kbd below our published estimates
+![](images/c1bf8be4dad170f36ed7c94fa4ce6d3ec44515455b76cc8d4b05c256170d379f.jpg)
+Source: Woodmac, EIA, IEA, Rystad, Kpler, IIR, J.P. Morgan Commodities Research
+
+Figure 12: US average daily passenger trips (3-100 miles) starts the year strong Million
+![](images/544bddc13c1b5a99607ac5297ab86616210712326927b64298519f8cdb4161f9.jpg)
+Source: US DoT
+Figure 13: US freight carloads traffic below 2023 levels in early January ‘000, weekly
+
+![](images/6397a250d614eb0203c313f1c50a312f963b37dd2062bfaf3ddb7dac7a867c22.jpg)
+
+Figure 14: US active truck utilization stabilized at 89% in November after falling throughout 2022 and 1H23 ...
+![](images/003ced68a7e6767f805f8cb0035d72d93430272b7f78cd776ba2a5b400a295e6.jpg)
+Source: Association of American Railroads, Bloomberg Finance L.P.
+Source: Freight Transportation Research Associates, Bloomberg Finance L.P.
+
+Figure 15: Despite that, ATA truck tonnage index for-hire, which reflects volume of goods being hauled, continues to decline on an annual basis Percent change YoY
+![](images/12d586e58b99238a1b4845c5bf9bbfe2dca28ffc988fcb4d99707880de816fdf.jpg)
+Source: American Trucking Association, Bloomberg Finance L.P.
+
+Index, Jan 2021 = 100
+Figure 16: China daily (domestic and international) flights soar above 100% of 2019 levels as international travel improves
+Percent of 2019 levels, 7-dma
+![](images/a8d51684fddadbcf184be7d39c2ad28eaef864d0e3b6020a64f15742bcbcb6f8.jpg)
+Source: Flightaware
+
+Figure 17: China’s jet fuel demand has recovered to 100% of 2019 levels kbd
+![](images/a9cce87aca237da461439511fc1cbd4ef157827b301f35f0b992d21766a65fc0.jpg)
+Source: Flightaware, IEA, J.P. Morgan Commodities Research
+Figure 18: Europe daily flights drop to 92% of 2019 levels over weather disruption
+
+Percent of 2019 levels, 7-dma
+![](images/d05696a285a9d17c4f47a76274fd07f16840695a0062831cb11b6f9ade17bc5a.jpg)
+Source: Flightaware
+
+Figure 19: Germany truck toll mileage weakness persists in early January 2024
+Percent change YoY
+![](images/4b8e648f95848b0ca87dd2520fd93d243e4c2f5f40e08240a8d3433afbee4062.jpg)
+Source: German Federal Statistical Office, Bloomberg Finance L.P.
+
+Figure 20: The price of oil in local currencies weakened in early January 2024 v/s December 2023
+![](images/a4aff792260caf791474f998bdfdb341e06bd4976b8573301a084a596d757ef6.jpg)
+Source: Bloomberg Finance L.P.
+
+Figure 21: Total oil products imported by Nigeria in early January 2024 is down 280 kbd, but is likely to improve
+![](images/458b4448102ca6af49da316e01f066dbfc972583af5fbc75b9f067c65d1064e7.jpg)
+
+Figure 22: Total oil demand in Thailand, Taiwan, South Korea, and Japan dropped 10 kbd YoY in November 2023 as Fuel oil use contracted 100 kbd YoY
+![](images/6b988ace7a8d00fbbb470812a496c4d4b7f97017ef39ed84576b7e75ca88129e.jpg)
+Source: Taiwan Bureau of Energy, Korea National Oil Corporation, METI Japan, Thailand Ministry of Source: Kpler Energy
+
+Figure 23: Total crude oil and oil products imports by Pakistan, Bangladesh, and Sri Lanka below their five year range in early January kbd
+![](images/866e52ce275c40800a74c858602081f81100f2866b7ac3139f5d267fa280f25e.jpg)
+
+## Methodology
+
+Our global demand tracker calculates implied demand formulated as:
+
+Daily total oil products demand = total refinery output<sup>(1)</sup>+biofuels blending+ daily net imports of products +daily change in products stocks
+
+<sup>(1)</sup> Total refinery output is computed as: daily crude runs \* products yie ${ \bf \Delta } [ { \bf d } ^ { ( 2 ) } + \mathrm { N G L s } ^ { ( 3 ) * }$ products yields
+
+<sup>(2)</sup> Product yields are for LPG, Naphtha, Gasoline, Diesel/Gasoil, Fuel Oil, and other products
+
+<sup>(3)</sup>NGLs are used to generate ethane, propane, butane, and pentane. We have applied different yields based on that for LPG and other products to estimate NGLs derived liquids demand.
+
+Our US gasoline demand tracker calculates daily implied gasoline consumption using the formula:
+
+implied gasoline demand = daily crude runs\* US gasoline yield +ethanol blending+ net gasoline imports
+
+Data source: Refinery runs and outages are sourced from IIR. Product yields are sourced from WoodMac. Trade flows from Kpler. Biofuels from Rystad, and products stocks from Platts.
+
+## Disclosures
+
+A history of J.P. Morgan investment recommendations disseminated during the preceding 12 months can be accessed on the Research & Commentary page of http://www.jpmorganmarkets.com where you can also search by analyst name, sector or financial instrument.
+
+Analysts' Compensation:The research analysts responsible for the preparation of this report receive compensation based upon various factors, including the quality and accuracy of research, client feedback, competitive factors, and overall firm revenues.
+
+Company-Specific Disclosures: Important disclosures, including price charts and credit opinion history tables, are available for compendium reports and all J.P. Morgan–covered companies, and certain non-covered companies, by visitinghttps://www.jpmm.com/research/disclosures, calling 1-800-477-0406, or e-mailing research.disclosure.inquiries@jpmorgan.com with your request.
+
+## Other Disclosures
+
+J.P. Morgan is a marketing name for investment banking businesses of JPMorgan Chase & Co. and its subsidiaries and affiliates worldwide.
+
+UK MIFID FICC research unbundling exemption: UK clients should refer to UK MIFID Research Unbundling exemption for details of JPMorgan<sup>’</sup>s implementation of the FICC research exemption and guidance on relevant FICC research categorisation.
+
+J.P. Morgan Research may, from time to time, write on issuers or securities targeted by economic or financial sanctions imposed or administered by the governmental authorities of the U.S., EU, UK or other relevant jurisdictions (Sanctioned Securities). Nothing in this report is intended to be read or construed as encouraging, facilitating, promoting or otherwise approving investment or dealing in such Sanctioned Securities. Clients should be aware of their own legal and compliance obligations when making investment decisions.
+
+Any digital or crypto assets discussed in this research report are subject to a rapidly changing regulatory landscape. For relevant regulatory advisories on crypto assets, including bitcoin and ether, please see https://www.jpmorgan.com/disclosures/cryptoasset-disclosure.
+
+The author(s) of this research report may not be licensed to carry on regulated activities in your jurisdiction and, if not licensed, do not hold themselves out as being able to do so.
+
+Exchange-Traded Funds (ETFs): J.P. Morgan Securities LLC (“JPMS<sup>”</sup>) acts as authorized participant for substantially all U.S.-listed ETFs. To the extent that any ETFs are mentioned in this report, JPMS may earn commissions and transaction-based compensation in connection with the distribution of those ETF shares and may earn fees for performing other trade-related services, such as securities lending to short sellers of the ETF shares. JPMS may also perform services for the ETFs themselves, including acting as a broker or dealer to the ETFs. In addition, affiliates of JPMS may perform services for the ETFs, including trust, custodial, administration, lending, index calculation and/or maintenance and other services.
+
+Options and Futures related research: If the information contained herein regards options- or futures-related research, such information is available only to persons who have received the proper options or futures risk disclosure documents. Please contact your J.P. Morgan Representative or visit https://www.theocc.com/components/docs/riskstoc.pdf for a copy of the Option Clearing Corporation's Characteristics and Risks of Standardized Options or http://www.finra.org/sites/default/files/Security\_Futures\_Risk\_Disclosure\_Statement\_2018.pdf for a copy of the Security Futures Risk Disclosure Statement.
+
+Changes to Interbank Offered Rates (IBORs) and other benchmark rates: Certain interest rate benchmarks are, or may in the future become, subject to ongoing international, national and other regulatory guidance, reform and proposals for reform. For more information, please consult: https://www.jpmorgan.com/global/disclosures/interbank\_offered\_rates
+
+Private Bank Clients: Where you are receiving research as a client of the private banking businesses offered by JPMorgan Chase & Co. and its subsidiaries (“J.P. Morgan Private Bank<sup>”</sup>), research is provided to you by J.P. Morgan Private Bank and not by any other division of J.P. Morgan, including, but not limited to, the J.P. Morgan Corporate and Investment Bank and its Global Research division.
+
+Legal entity responsible for the production and distribution of research: The legal entity identified below the name of the Reg AC Research Analyst who authored this material is the legal entity responsible for the production of this research. Where multiple Reg AC Research Analysts authored this material with different legal entities identified below their names, these legal entities are jointly responsible for the production of this research. Research Analysts from various J.P. Morgan affiliates may have contributed to the production of this material but may not be licensed to carry out regulated activities in your jurisdiction (and do not hold themselves out as being able to do so). Unless otherwise stated below, this material has been distributed by the legal entity responsible for production. If you have any queries, please contact the relevant Research Analyst in your jurisdiction or the entity in your jurisdiction that has distributed this research material.
+
+## Legal Entities Disclosures and Country-/Region-Specific Disclosures:
+
+Argentina: JPMorgan Chase Bank N.A Sucursal Buenos Aires is regulated by Banco Central de la República Argentina (“BCRA<sup>”</sup>- Central Bank of Argentina) and Comisión Nacional de Valores (“CNV<sup>”</sup>- Argentinian Securities Commission - ALYC y AN Integral N°51). Australia: J.P. Morgan Securities Australia Limited (“JPMSAL<sup>”</sup>) (ABN 61 003 245 234/AFS Licence No: 238066) is regulated by the Australian Securities and Investments Commission and is a Market, Clearing and Settlement Participant of ASX Limited and CHI-X. This material is issued and distributed in Australia by or on behalf of JPMSAL only to "wholesale clients" (as defined in section 761G of the Corporations Act
+
+2001). A list of all financial products covered can be found by visiting https://www.jpmm.com/research/disclosures. J.P. Morgan seeks to cover companies of relevance to the domestic and international investor base across all Global Industry Classification Standard (GICS) sectors, as wel as across a range of market capitalisation sizes. If applicable, in the course of conducting public side due diligence on the subject company(ies), the Research Analyst team may at times perform such diligence through corporate engagements such as site visits, discussions with company representatives, management presentations, etc. Research issued by JPMSAL has been prepared in accordance with J.P. Morgan Australia<sup>’</sup>s Research Independence Policy which can be found at the following link: J.P. Morgan Australia - Research Independence Policy. Brazil: Banco J.P. Morgan S.A. is regulated by the Comissao de Valores Mobiliarios (CVM) and by the Central Bank of Brazil. Ombudsman J.P. Morgan: 0800-7700847 / 0800-7700810 (For Hearing Impaired) / ouvidoria.jp.morgan@jpmorgan.com. Canada: J.P. Morgan Securities Canada Inc. is a registered investment dealer, regulated by the Canadian Investment Regulatory Organization and the Ontario Securities Commission and is the participating member on Canadian exchanges. This material is distributed in Canada by or on behalf of J.P.Morgan Securities Canada Inc. Chile: Inversiones J.P. Morgan Limitada is an unregulated entity incorporated in Chile. China: J.P. Morgan Securities (China) Company Limited has been approved by CSRC to conduct the securities investment consultancy business. Dubai International Financial Centre (DIFC): JPMorgan Chase Bank, N.A., Dubai Branch is regulated by the Dubai Financial Services Authority (DFSA) and its registered address is Dubai International Financial Centre - The Gate, West Wing, Level 3 and 9 PO Box 506551, Dubai, UAE. This material has been distributed by JP Morgan Chase Bank, N.A., Dubai Branch to persons regarded as professional clients or market counterparties as defined under the DFSA rules. European Economic Area (EEA): Unless specified to the contrary, research is distributed in the EEA by J.P. Morgan SE (“JPM SE<sup>”</sup>), which is authorised as a credit institution by the Federal Financial Supervisory Authority (Bundesanstalt für Finanzdienstleistungsaufsicht, BaFin) and jointly supervised by the BaFin, the German Central Bank (Deutsche Bundesbank) and the European Central Bank (ECB). JPM SE is a company headquartered in Frankfurt with registered address at TaunusTurm, Taunustor 1, Frankfurt am Main, 60310, Germany. The material has been distributed in the EEA to persons regarded as professional investors (or equivalent) pursuant to Art. 4 para. 1 no. 10 and Annex II of MiFID II and its respective implementation in their home jurisdictions (“EEA professional investors<sup>”</sup>). This material must not be acted on or relied on by persons who are not EEA professional investors. Any investment or investment activity to which this material relates is only available to EEA relevant persons and will be engaged in only with EEA relevant persons. Hong Kong: J.P. Morgan Securities (Asia Pacific) Limited (CE number AAJ321) is regulated by the Hong Kong Monetary Authority and the Securities and Futures Commission in Hong Kong, and J.P. Morgan Broking (Hong Kong) Limited (CE number AAB027) is regulated by the Securities and Futures Commission in Hong Kong. JP Morgan Chase Bank, N.A., Hong Kong Branch (CE Number AAL996) is regulated by the Hong Kong Monetary Authority and the Securities and Futures Commission, is organized under the laws of the United States with limited liability. Where the distribution of this material is a regulated activity in Hong Kong, the material is distributed in Hong Kong by or through J.P. Morgan Securities (Asia Pacific) Limited and or J.P. Morgan Broking (Hong Kong) Limited. India: J.P. Morgan India Private Limited (Corporate Identity Number - U67120MH1992FTC068724), having its registered office at J.P. Morgan Tower, Off. C.S.T. Road, Kalina, Santacruz - East, Mumbai – 400098, is registered with the Securities and Exchange Board of India (SEBI) as a <sup>‘</sup>Research Analyst<sup>’</sup> having registration number INH000001873. J.P. Morgan India Private Limited is also registered with SEBI as a member of the National Stock Exchange of India Limited and the Bombay Stock Exchange Limited (SEBI Registration Number – INZ000239730) and as a Merchant Banker (SEBI Registration Number - MB/ INM000002970). Telephone: 91-22-6157 3000, Facsimile: 91-22-6157 3990 and Website: http://www.jpmipl.com. JPMorgan Chase Bank, N.A. - Mumbai Branch is licensed by the Reserve Bank of India (RBI) (Licence No. 53/ Licence No. BY.4/94; SEBI - IN/CUS/014/ CDSL : IN DP-CDSL-444-2008/ IN-DP-NSDL-285-2008/ INBI00000984/ INE231311239) as a Scheduled Commercial Bank in India, which is its primary license allowing it to carry on Banking business in India and other activities, which a Bank branch in India are permitted to undertake. For nonlocal research material, this material is not distributed in India by J.P. Morgan India Private Limited. Compliance Officer: Spurthi Gadamsetty; spurthi.gadamsetty@jpmchase.com; +912261573225. Grievance Officer: Ramprasadh K, jpmipl.research.feedback@jpmorgan.com; +912261573000
+
+Investment in securities market are subject to market risks. Read all the related documents carefully before investing. Registration granted by SEBI and certification from NISM in no way guarantee performance of the intermediary or provide any assurance of returns to investors.
+
+Indonesia: PT J.P. Morgan Sekuritas Indonesia is a member of the Indonesia Stock Exchange and is registered and supervised by the Otoritas Jasa Keuangan (OJK). Korea: J.P. Morgan Securities (Far East) Limited, Seoul Branch, is a member of the Korea Exchange (KRX). JPMorgan Chase Bank, N.A., Seoul Branch, is licensed as a branch office of foreign bank (JPMorgan Chase Bank, N.A.) in Korea. Both entities are regulated by the Financial Services Commission (FSC) and the Financial Supervisory Service (FSS). For non-macro research material, the material is distributed in Korea by or through J.P. Morgan Securities (Far East) Limited, Seoul Branch. Japan: JPMorgan Securities Japan Co., Ltd. and JPMorgan Chase Bank, N.A., Tokyo Branch are regulated by the Financial Services Agency in Japan. Malaysia: This material is issued and distributed in Malaysia by JPMorgan Securities (Malaysia) Sdn Bhd (18146-X), which is a Participating Organization of Bursa Malaysia Berhad and holds a Capital Markets Services License issued by the Securities Commission in Malaysia. Mexico: J.P. Morgan Casa de Bolsa, S.A. de C.V. and J.P. Morgan Grupo Financiero are members of the Mexican Stock Exchange and are authorized to act as a broker dealer by the National Banking and Securities Exchange Commission. New Zealand: This material is issued and distributed by JPMSAL in New Zealand only to "wholesale clients" (as defined in the Financial Markets Conduct Act 2013). JPMSAL is registered as a Financial Service Provider under the Financial Service providers (Registration and Dispute Resolution) Act of 2008. Philippines: J.P. Morgan Securities Philippines Inc. is a Trading Participant of the Philippine Stock Exchange and a member of the Securities Clearing Corporation of the Philippines and the Securities Investor Protection Fund. It is regulated by the Securities and Exchange Commission. Singapore: This material is issued and distributed in Singapore by or through J.P. Morgan Securities Singapore Private Limited (JPMSS) [MCI (P) 030/08/2023 and Co. Reg. No.: 199405335R], which is a member of the Singapore Exchange Securities Trading Limited, and/or JPMorgan Chase Bank, N.A., Singapore branch (JPMCB Singapore), both of which are regulated by the Monetary Authority of Singapore. This material is issued and distributed in Singapore only to accredited investors, expert investors and institutional investors, as defined in Section 4A of the Securities and Futures Act, Cap. 289 (SFA).
+
+This material is not intended to be issued or distributed to any retail investors or any other investors that do not fall into the classes of “accredited investors,<sup>”</sup> “expert investors<sup>”</sup> or “institutional investors,<sup>”</sup> as defined under Section 4A of the SFA. Recipients of this material in Singapore are to contact JPMSS or JPMCB Singapore in respect of any matters arising from, or in connection with, the material. South Africa: J.P. Morgan Equities South Africa Proprietary Limited and JPMorgan Chase Bank, N.A., Johannesburg Branch are members of the Johannesburg Securities Exchange and are regulated by the Financial Services Conduct Authority (FSCA). Taiwan: J.P. Morgan Securities (Taiwan) Limited is a participant of the Taiwan Stock Exchange (company-type) and regulated by the Taiwan Securities and Futures Bureau. Material relating to equity securities is issued and distributed in Taiwan by J.P. Morgan Securities (Taiwan) Limited, subject to the license scope and the applicable laws and the regulations in Taiwan. According to Paragraph 2, Article 7-1 of Operational Regulations Governing Securities Firms Recommending Trades in Securities to Customers (as amended or supplemented) and/or other applicable laws or regulations, please note that the recipient of this material is not permitted to engage in any activities in connection with the material that may give rise to conflicts of interests, unless otherwise disclosed in the “Important Disclosures<sup>”</sup> in this material. Thailand: This material is issued and distributed in Thailand by JPMorgan Securities (Thailand) Ltd., which is a member of the Stock Exchange of Thailand and is regulated by the Ministry of Finance and the Securities and Exchange Commission, and its registered address is 3rd Floor, 20 North Sathorn Road, Silom, Bangrak, Bangkok 10500. UK: Unless specified to the contrary, research is distributed in the UK by J.P. Morgan Securities plc (“JPMS plc<sup>”</sup>) which is a member of the London Stock Exchange and is authorised by the Prudential Regulation Authority and regulated by the Financial Conduct Authority and the Prudential Regulation Authority. JPMS plc is registered in England & Wales No. 2711006, Registered Office 25 Bank Street, London, E14 5JP. This material is directed in the UK only to: (a) persons having professional experience in matters relating to investments falling within article 19(5) of the Financial Services and Markets Act 2000 (Financial Promotion) (Order) 2005 (“the FPO<sup>”</sup>); (b) persons outlined in article 49 of the FPO (high net worth companies, unincorporated associations or partnerships, the trustees of high value trusts, etc.); or (c) any persons to whom this communication may otherwise lawfully be made; all such persons being referred to as "UK relevant persons". This material must not be acted on or relied on by persons who are not UK relevant persons. Any investment or investment activity to which this material relates is only available to UK relevant persons and will be engaged in only with UK relevant persons. Research issued by JPMS plc has been prepared in accordance with JPMS plc's policy for prevention and avoidance of conflicts of interest related to the production of Research which can be found at the following link: J.P. Morgan EMEA - Research Independence Policy. U.S.: J.P. Morgan Securities LLC (“JPMS<sup>”</sup>) is a member of the NYSE, FINRA, SIPC, and the NFA. JPMorgan Chase Bank, N.A. is a member of the FDIC. Material published by non-U.S. affiliates is distributed in the U.S. by JPMS who accepts responsibility for its content.
+
+General: Additional information is available upon request. The information in this material has been obtained from sources believed to be reliable. While all reasonable care has been taken to ensure that the facts stated in this material are accurate and that the forecasts, opinions and expectations contained herein are fair and reasonable, JPMorgan Chase & Co. or its affiliates and/or subsidiaries (collectively J.P. Morgan) make no representations or warranties whatsoever to the completeness or accuracy of the material provided, except with respect to any disclosures relative to J.P. Morgan and the Research Analyst's involvement with the issuer that is the subject of the material. Accordingly, no reliance should be placed on the accuracy, fairness or completeness of the information contained in this material. There may be certain discrepancies with data and/or limited content in this material as a result of calculations, adjustments, translations to different languages, and/or local regulatory restrictions, as applicable. These discrepancies should not impact the overall investment analysis, views and/or recommendations of the subject company(ies) that may be discussed in the material. J.P. Morgan accepts no liability whatsoever for any loss arising from any use of this material or its contents, and neither J.P. Morgan nor any of its respective directors, officers or employees, shall be in any way responsible for the contents hereof, apart from the liabilities and responsibilities that may be imposed on them by the relevant regulatory authority in the jurisdiction in question, or the regulatory regime thereunder. Opinions, forecasts or projections contained in this material represent J.P. Morgan's current opinions or judgment as of the date of the material only and are therefore subject to change without notice. Periodic updates may be provided on companies/industries based on company-specific developments or announcements, market conditions or any other publicly available information. There can be no assurance that future results or events will be consistent with any such opinions, forecasts or projections, which represent only one possible outcome. Furthermore, such opinions, forecasts or projections are subject to certain risks, uncertainties and assumptions that have not been verified, and future actual results or events could differ materially. The value of, or income from, any investments referred to in this material may fluctuate and/or be affected by changes in exchange rates. All pricing is indicative as of the close of market for the securities discussed, unless otherwise stated. Past performance is not indicative of future results. Accordingly, investors may receive back less than originally invested. This material is not intended as an offer or solicitation for the purchase or sale of any financial instrument. The opinions and recommendations herein do not take into account individual client circumstances, objectives, or needs and are not intended as recommendations of particular securities, financial instruments or strategies to particular clients. This material may include views on structured securities, options, futures and other derivatives. These are complex instruments, may involve a high degree of risk and may be appropriate investments only for sophisticated investors who are capable of understanding and assuming the risks involved. The recipients of this material must make their own independent decisions regarding any securities or financial instruments mentioned herein and should seek advice from such independent financial, legal, tax or other adviser as they deem necessary. J.P. Morgan may trade as a principal on the basis of the Research Analysts<sup>’</sup> views and research, and it may also engage in transactions for its own account or for its clients<sup>’</sup> accounts in a manner inconsistent with the views taken in this material, and J.P. Morgan is under no obligation to ensure that such other communication is brought to the attention of any recipient of this material. Others within J.P. Morgan, including Strategists, Sales staff and other Research Analysts, may take views that are inconsistent with those taken in this material. Employees of J.P. Morgan not involved in the preparation of this material may have investments in the securities (or derivatives of such securities) mentioned in this material and may trade them in ways different from those discussed in this material. This material is not an advertisement for or marketing of any issuer, its products or services, or its securities in any jurisdiction.
+
+Confidentiality and Security Notice: This transmission may contain information that is privileged, confidential, legally privileged, and/or exempt from disclosure under applicable law. If you are not the intended recipient, you are hereby notified that any disclosure, copying,
+
+Completed 18 Jan 2024 05:57 PM EST

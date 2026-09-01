@@ -8,7 +8,9 @@ P2-2 (2026-09-01): \u6821\u51c6\u95ed\u73af\u52a0\u56fa\u2014\u2014
 3. \u660e\u786e\u6392\u9664 output/ \u81ea\u4ea7\u5931\u8d25\u4ea7\u7269
 """
 
-import os, sys, json
+import json
+import os
+import sys
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
@@ -97,9 +99,7 @@ def calibrate():
         thresholds[name] = round(max(0.3, min(p25, 0.95)), 2)
         dflt = defaults.get(name, 0.6)
         flag = " *" if abs(p25 - dflt) > 0.15 else ""
-        print(
-            f"  {name.ljust(30)} {len(scores):>4} {p10:>6.2f} {p25:>6.2f} {p50:>6.2f} {dflt:>8.2f}{flag}"
-        )
+        print(f"  {name.ljust(30)} {len(scores):>4} {p10:>6.2f} {p25:>6.2f} {p50:>6.2f} {dflt:>8.2f}{flag}")
     out = _ROOT / "benchmark" / "calibrated_thresholds.json"
     with open(out, "w") as f:
         json.dump(thresholds, f, indent=2, ensure_ascii=False)
