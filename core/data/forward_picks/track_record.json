@@ -1,5 +1,4 @@
 {
-  "analyst_name": "2号分析师",
   "predictions": [
     {
       "id": "20260731_1503_中芯国际",
@@ -33691,6 +33690,5 @@
       "outcome_detail": "",
       "confidence_at_make": 0.4
     }
-  ],
-  "last_updated": "2026-08-31T09:25:46.457982"
+  ]
 }

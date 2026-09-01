@@ -1906,5 +1906,50 @@
     "life_cycle": "成熟期",
     "growth_curve": "雷达液位计逐步替代浮子/超声波成为工业储罐主流",
     "source": "McIlvaine《2023年全球液位计市场报告》（付费报告，数据未公开验证，C级）"
+  },
+  {
+    "industry": "仪器仪表",
+    "segment": "高端仪器仪表国产化率",
+    "penetration_pct": 32.0,
+    "as_of": "2026",
+    "life_cycle": "成长期",
+    "growth_curve": "2026年国产高端仪器仪表国内市场占有率约32%（较2023年28%提升4pct），质谱仪等关键设备国产化率约20%",
+    "source": "中国报告大厅2026仪器仪表行业统计"
+  },
+  {
+    "industry": "仪器仪表",
+    "segment": "智能仪表渗透率",
+    "penetration_pct": 70.0,
+    "as_of": "2026",
+    "life_cycle": "成长期",
+    "growth_curve": "智能仪表渗透率向70%迈进，2026年仪器仪表行业市场规模预计突破14000亿元，CAGR约9.5%",
+    "source": "中国报告大厅2026仪器仪表行业统计"
+  },
+  {
+    "industry": "工控",
+    "segment": "小型PLC国产化率",
+    "penetration_pct": 38.6,
+    "as_of": "2026",
+    "life_cycle": "成长期",
+    "growth_curve": "小型PLC国产化率预计38.6%（汇川/信捷/台达已突破），2026年中国PLC市场规模约193亿元",
+    "source": "天风证券/亿渡数据2026 PLC市场研报"
+  },
+  {
+    "industry": "工控",
+    "segment": "中大型PLC国产化率",
+    "penetration_pct": 11.2,
+    "as_of": "2026",
+    "life_cycle": "导入期",
+    "growth_curve": "中大型PLC国产化率仅11.2%，外资TOP3占72%份额，技术+客户+组网三重壁垒",
+    "source": "天风证券2026 PLC市场研报"
+  },
+  {
+    "industry": "具身智能",
+    "segment": "人形机器人出货量渗透",
+    "penetration_pct": null,
+    "as_of": "2026",
+    "life_cycle": "导入期",
+    "growth_curve": "宇树/智元2025年人形机器人出货量均突破5000台；2027年市场规模预计156亿元，2030年突破1068亿元",
+    "source": "慧辰股份2026中国具身智能产业报告"
   }
 ]
