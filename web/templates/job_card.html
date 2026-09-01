@@ -1,0 +1,39 @@
+<div class="job-card" hx-get="/jobs/{{ job.id }}/status" hx-trigger="every 2s" hx-swap="outerHTML" hx-target="this">
+    <div class="job-header">
+        <span class="job-id">{{ job.id }}</span>
+        <span class="job-status status-{{ job.status }}">
+            {% if job.status == 'queued' %}排队中
+            {% elif job.status == 'running' %}运行中
+            {% elif job.status == 'completed' %}✅ 完成
+            {% elif job.status == 'failed' %}❌ 失败
+            {% elif job.status == 'error' %}⚠️ 错误
+            {% else %}{{ job.status }}
+            {% endif %}
+        </span>
+    </div>
+    <div class="job-meta">
+        <span>标的: {{ job.asset }}</span>
+        <span>类型: {{ job.report_type }}</span>
+        <span>风格: {{ job.style }}</span>
+    </div>
+    {% if job.status in ('completed', 'failed') %}
+    <div class="job-result">
+        {% if job.result %}
+            <div>Gate: {% if job.result.gate_passed %}✅ 通过{% else %}❌ 不通过{% endif %} (Score: {{ "%.3f"|format(job.result.gate_score or 0) }})</div>
+            {% if job.result.md %}
+            <a href="/output/{{ job.id }}/{{ job.asset }}_{{ job.style }}.md" target="_blank" class="btn-secondary btn-sm">查看 Markdown</a>
+            {% endif %}
+            {% if job.result.docx %}
+            <a href="/output/{{ job.id }}/{{ job.asset }}_{{ job.style }}.docx" target="_blank" class="btn-secondary btn-sm">下载 DOCX</a>
+            {% endif %}
+            {% if job.result.error %}
+            <div class="error">{{ job.result.error }}</div>
+            {% endif %}
+        {% elif job.error %}
+            <div class="error">{{ job.error }}</div>
+        {% endif %}
+    </div>
+    {% elif job.status == 'running' %}
+    <div class="progress-bar"><div class="progress-fill"></div></div>
+    {% endif %}
+</div>

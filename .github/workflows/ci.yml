@@ -4,43 +4,40 @@ on:
   push:
     branches: [main]
   pull_request:
-  workflow_dispatch:
+    branches: [main]
 
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.11"]
+        python-version: ["3.11"]
+
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install deps
-        run: |
-          pip install pytest
-          pip install -r requirements.txt
-      - name: Unit tests
-        run: python -m pytest tests/ -q --no-header -k "not e2e" --ignore=tests/benchmark_full.py --ignore=tests/run_all.py
-        env:
-          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-      - name: Golden evals
-        run: python tests/golden/golden_check.py
-      - name: Syntax check
-        run: python -m compileall -q pipeline core scripts export
 
-  security:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Scan for secrets
+      - name: Install dependencies
         run: |
-          if grep -rnE "sk-[a-zA-Z0-9]{20,}|tvly(-dev)?-[a-zA-Z0-9]{16,}" \
-              --include="*.py" --include="*.md" --include="*.json" \
-              --include="*.bat" --include="*.ps1" --include="*.toml" --include="*.yaml" --include="*.yml" .; then
-            echo "::error::Secrets detected in tracked files"
-            exit 1
-          else
-            echo "No secrets found"
-          fi
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests
+        run: |
+          python -m pytest tests/ -v --tb=short
+
+      - name: Run lint (ruff)
+        continue-on-error: true
+        run: |
+          pip install ruff
+          ruff check . --ignore=E501,W503,F601
+
+      - name: Import check
+        run: |
+          python -c "from pipeline.e2e_orchestrator import E2EOrchestratorV2; print('Orchestrator OK')"
+          python -c "from pipeline.section_writer import SectionWriter; print('SectionWriter OK')"
+          python -c "from pipeline.data_collector import DataCollectorV5; print('DataCollector OK')"

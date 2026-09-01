@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二号分析师 · 任务详情</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+    <link href="/static/style.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="detail-header">
+            <div class="header-left">
+                <h1>任务详情</h1>
+                <span class="job-id">{{ job.id }}</span>
+            </div>
+            <div class="header-right">
+                <a href="/jobs" class="btn-secondary">返回列表</a>
+            </div>
+        </header>
+
+        <main class="detail-main">
+            <!-- Status Card -->
+            <section class="status-card">
+                <div class="status-main">
+                    <span class="status-badge status-{{ job.status.value }}">{{ job.status.value }}</span>
+                    <div class="progress-section">
+                        <div class="progress-bar-large">
+                            <div class="progress-fill" style="width: {{ job.progress }}%"></div>
+                        </div>
+                        <div class="progress-text">{{ job.progress }}% · {{ job.stage or '等待中' }}</div>
+                    </div>
+                </div>
+                <div class="status-meta">
+                    <div class="meta-item">
+                        <label>标的</label>
+                        <span>{{ job.asset }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <label>类型</label>
+                        <span>{{ job.report_type }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <label>风格</label>
+                        <span>{{ job.style }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <label>创建时间</label>
+                        <span>{{ job.created_at[:19].replace('T', ' ') }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <label>开始时间</label>
+                        <span>{{ job.started_at[:19].replace('T', ' ') if job.started_at else '—' }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <label>完成时间</label>
+                        <span>{{ job.completed_at[:19].replace('T', ' ') if job.completed_at else '—' }}</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pipeline Stages -->
+            {% if job.pipeline_stages %}
+            <section class="section">
+                <h2>管线执行阶段</h2>
+                <div class="pipeline-stages">
+                    {% for stage in job.pipeline_stages %}
+                    <div class="stage-item {% if stage.completed %}completed{% endif %} {% if not stage.completed and loop.first and job.status.value == 'running' %}current{% endif %}">
+                        <div class="stage-icon">
+                            {% if stage.completed %}✅{% elif loop.first and job.status.value == 'running' %}⚙️{% else %}⏳{% endif %}
+                        </div>
+                        <div class="stage-info">
+                            <div class="stage-name">{{ stage.name }}</div>
+                            <div class="stage-progress">{{ stage.progress }}%</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
+            <!-- Actions -->
+            <section class="section actions-section">
+                <div class="action-buttons">
+                    {% if job.status.value in ('failed', 'error', 'cancelled') %}
+                    <button hx-post="/jobs/{{ job.id }}/retry"
+                            class="btn-primary"
+                            hx-target="body"
+                            hx-swap="innerHTML">重试任务</button>
+                    {% endif %}
+                    {% if job.status.value in ('queued', 'running') %}
+                    <button hx-post="/jobs/{{ job.id }}/cancel"
+                            class="btn-danger"
+                            hx-target="body"
+                            hx-swap="innerHTML">取消任务</button>
+                    {% endif %}
+                    {% if job.status.value == 'completed' %}
+                    <a href="/output/{{ job.id }}/{{ job.asset }}_{{ job.style }}.md" target="_blank" class="btn-secondary">查看 Markdown</a>
+                    {% if job.result and job.result.docx %}
+                    <a href="/output/{{ job.id }}/{{ job.asset }}_{{ job.style }}.docx" target="_blank" class="btn-secondary">下载 DOCX</a>
+                    {% endif %}
+                    <button hx-post="/jobs/{{ job.id }}/retry"
+                            class="btn-warning"
+                            hx-target="body"
+                            hx-swap="innerHTML">重新生成</button>
+                    {% endif %}
+                    <button hx-delete="/jobs/{{ job.id }}"
+                            hx-confirm="确定删除此任务及其输出文件？"
+                            class="btn-danger">删除任务</button>
+                </div>
+            </section>
+
+            <!-- Result Details -->
+            {% if job.result %}
+            <section class="section">
+                <h2>执行结果</h2>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <label>Gate 状态</label>
+                        <span>{% if job.result.gate_passed %}✅ 通过{% else %}❌ 不通过{% endif %}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Gate 分数</label>
+                        <span>{{ "%.3f"|format(job.result.gate_score or 0) }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>耗时</label>
+                        <span>{{ job.result.pipeline_time_s }}s</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>输出目录</label>
+                        <span>{{ job.output_dir }}</span>
+                    </div>
+                </div>
+
+                {% if job.result.gate_checks and job.result.gate_checks.failures %}
+                <div class="failures-section">
+                    <h3>Gate 失败项 ({{ job.result.gate_checks.failures|length }})</h3>
+                    <ul>
+                        {% for failure in job.result.gate_checks.failures[:10] %}
+                        <li>{{ failure }}</li>
+                        {% endfor %}
+                        {% if job.result.gate_checks.failures|length > 10 %}
+                        <li>... 共 {{ job.result.gate_checks.failures|length }} 项</li>
+                        {% endif %}
+                    </ul>
+                </div>
+                {% endif %}
+            {% endif %}
+
+            <!-- Error Details -->
+            {% if job.error %}
+            <section class="section error-section">
+                <h2>错误信息</h2>
+                <pre>{{ job.error }}</pre>
+            </section>
+            {% endif %}
+
+            <!-- Requirements -->
+            {% if job.requirement %}
+            <section class="section">
+                <h2>委托需求</h2>
+                <div class="requirement-box">{{ job.requirement }}</div>
+            </section>
+            {% endif %}
+        </main>
+    </div>
+</body>
+</html>

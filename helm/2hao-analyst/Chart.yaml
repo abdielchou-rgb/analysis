@@ -1,0 +1,14 @@
+apiVersion: v2
+name: 2hao-analyst
+description: 二号分析师 — AI驱动的深度研究报告生成引擎
+type: application
+version: 0.10.0
+appVersion: "0.10.0"
+keywords:
+  - ai
+  - research
+  - finance
+  - analyst
+maintainers:
+  - name: 2hao Team
+    email: team@2hao-analyst.io

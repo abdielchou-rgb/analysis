@@ -1,0 +1,39 @@
+{% if runs %}
+<div class="runs-table">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>标的</th>
+                <th>类型</th>
+                <th>风格</th>
+                <th>状态</th>
+                <th>Gate Score</th>
+                <th>创建时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for run in runs %}
+            <tr>
+                <td>{{ run.id }}</td>
+                <td>{{ run.asset }}</td>
+                <td>{{ run.report_type }}</td>
+                <td>{{ run.style }}</td>
+                <td><span class="status-{{ run.status }}">{{ run.status }}</span></td>
+                <td>{% if run.result and run.result.gate_score %}{{ "%.3f"|format(run.result.gate_score) }}{% else %}-{% endif %}</td>
+                <td>{{ run.created_at[:19].replace('T', ' ') }}</td>
+                <td>
+                    <a href="/jobs/{{ run.id }}" class="btn-secondary btn-sm">详情</a>
+                    {% if run.result and run.result.md %}
+                    <a href="/output/{{ run.id }}/{{ run.asset }}_{{ run.style }}.md" target="_blank" class="btn-secondary btn-sm">MD</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<p class="empty-state">暂无运行记录</p>
+{% endif %}

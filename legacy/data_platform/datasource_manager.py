@@ -1,9 +1,9 @@
-"""V50+ DataSourceManager 鈥?unified engine lifecycle, retry, circuit breaker.
+"""V50+ DataSourceManager — unified engine lifecycle, retry, circuit breaker.
 
-缁熶竴绠＄悊鎵€鏈?data engine 鐨勶細
-  - 娉ㄥ唽涓庝紭鍏堢骇
-  - 瓒呮椂涓庨噸璇曠瓥鐣ワ紙鎸囨暟閫€閬匡級
-  - 鐔旀柇鍣紙杩炵画澶辫触 N 娆″悗鏆傚仠璇ユ簮锛?  - 鍋ュ悍妫€鏌?"""
+统一管理所有 data engine 的：
+  - 注册与优先级
+  - 超时与重试策略（指数退避）
+  - 熔断器（连续失败 N 次后暂停该源）  - 健康检查"""
 
 from __future__ import annotations
 import time
@@ -34,7 +34,7 @@ class EngineConfig:
 
 
 class CircuitBreaker:
-    """Simple circuit breaker: closed 鈫?open 鈫?half-open 鈫?closed."""
+    """Simple circuit breaker: closed → open → half-open → closed."""
 
     def __init__(self, failure_threshold: int = 5, cooldown: float = 60.0):
         self.threshold = failure_threshold
@@ -126,7 +126,7 @@ class DataSourceManager:
         """Fetch data with retry, timeout, circuit breaker, and fallback.
 
         Uses ThreadPoolExecutor + Future.result(timeout=...) for proper
-        thread lifecycle management 鈥?timed-out tasks are cancelled cleanly.
+        thread lifecycle management — timed-out tasks are cancelled cleanly.
 
         On first call, lazily registers built-in engines via _init_builtin_engines().
         """

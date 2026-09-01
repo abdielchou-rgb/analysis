@@ -1,0 +1,52 @@
+{{- if .Values.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "2hao-analyst.fullname" . }}-output
+  labels:
+    {{- include "2hao-analyst.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.persistence.output.size }}
+  {{- if .Values.persistence.output.storageClass }}
+  storageClassName: {{ .Values.persistence.output.storageClass }}
+  {{- end }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "2hao-analyst.fullname" . }}-cache
+  labels:
+    {{- include "2hao-analyst.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.persistence.cache.size }}
+  {{- if .Values.persistence.cache.storageClass }}
+  storageClassName: {{ .Values.persistence.cache.storageClass }}
+  {{- end }}
+---
+{{- end }}
+{{- if .Values.goldenSamples.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "2hao-analyst.fullname" . }}-golden
+  labels:
+    {{- include "2hao-analyst.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadOnlyMany
+  resources:
+    requests:
+      storage: {{ .Values.goldenSamples.size }}
+  {{- if .Values.goldenSamples.storageClass }}
+  storageClassName: {{ .Values.goldenSamples.storageClass }}
+  {{- end }}
+---
+{{- end }}

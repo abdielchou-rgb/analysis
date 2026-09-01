@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二号分析师 · 任务列表</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+    <link href="/static/style.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>任务管理</h1>
+            <a href="/" class="btn-secondary">返回仪表盘</a>
+        </header>
+
+        <main>
+            <!-- Filters -->
+            <div class="filters-bar" hx-get="/jobs" hx-target="#jobs-content" hx-push-url="true">
+                <div class="filter-group">
+                    <select name="status" hx-get="/jobs" hx-target="#jobs-content" hx-push-url="true" hx-trigger="change">
+                        <option value="">全部状态</option>
+                        {% for s in statuses %}
+                        <option value="{{ s }}" {% if s == status_filter %}selected{% endif %}>{{ s }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="text" name="asset" placeholder="搜索标的..." value="{{ asset_filter or '' }}"
+                           hx-get="/jobs" hx-target="#jobs-content" hx-push-url="true" hx-trigger="keyup changed delay:300ms">
+                    <select name="limit" hx-get="/jobs" hx-target="#jobs-content" hx-push-url="true" hx-trigger="change">
+                        <option value="20" {% if limit == 20 %}selected{% endif %}>20/页</option>
+                        <option value="50" {% if limit == 50 %}selected{% endif %}>50/页</option>
+                        <option value="100" {% if limit == 100 %}selected{% endif %}>100/页</option>
+                    </select>
+                </div>
+                <div class="filter-actions">
+                    <a href="/export/history?format=csv{% if status_filter %}&status={{ status_filter }}{% endif %}{% if asset_filter %}&asset={{ asset_filter }}{% endif %}" class="btn-secondary">导出 CSV</a>
+                    <a href="/export/history?format=json{% if status_filter %}&status={{ status_filter }}{% endif %}{% if asset_filter %}&asset={{ asset_filter }}{% endif %}" class="btn-secondary">导出 JSON</a>
+                </div>
+            </div>
+
+            <!-- Jobs Table -->
+            <div id="jobs-content">
+                {% include 'jobs_table_fragment.html' %}
+            </div>
+        </main>
+    </div>
+</body>
+</html>

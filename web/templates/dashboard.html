@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二号分析师 · 仪表盘</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+    <link href="/static/style.css" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <div class="header-left">
+                <h1>二号分析师 · 工作台</h1>
+                <span class="version">v0.11.0</span>
+            </div>
+            <div class="header-right">
+                <a href="/jobs" class="btn-primary">查看所有任务</a>
+            </div>
+        </header>
+
+        <main class="dashboard-main">
+            <!-- Stats Cards -->
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📋</div>
+                    <div class="stat-info">
+                        <div class="stat-value">{{ stats.total }}</div>
+                        <div class="stat-label">总任务数</div>
+                    </div>
+                </div>
+                <div class="stat-card success">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-info">
+                        <div class="stat-value">{{ stats.completed }}</div>
+                        <div class="stat-label">已完成</div>
+                    </div>
+                </div>
+                <div class="stat-card running">
+                    <div class="stat-icon">⚙️</div>
+                    <div class="stat-info">
+                        <div class="stat-value">{{ stats.running }}</div>
+                        <div class="stat-label">运行中</div>
+                    </div>
+                </div>
+                <div class="stat-card queued">
+                    <div class="stat-icon">⏳</div>
+                    <div class="stat-info">
+                        <div class="stat-value">{{ stats.queued }}</div>
+                        <div class="stat-label">排队中</div>
+                    </div>
+                </div>
+                <div class="stat-card failed">
+                    <div class="stat-icon">❌</div>
+                    <div class="stat-info">
+                        <div class="stat-value">{{ stats.failed }}</div>
+                        <div class="stat-label">失败</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quick Actions -->
+            <section class="section">
+                <div class="section-header">
+                    <h2>快速操作</h2>
+                </div>
+                <div class="quick-actions">
+                    <form hx-post="/jobs" hx-target="#recent-jobs" hx-swap="afterbegin" class="quick-form">
+                        <div class="form-row">
+                            <input type="text" name="asset" placeholder="标的名称/代码 (如: 贵州茅台)" required class="flex-1">
+                            <select name="report_type" class="w-auto">
+                                <option value="listed_company">上市公司深度</option>
+                                <option value="industry_deep">行业深度</option>
+                                <option value="unlisted_company">非上市尽调</option>
+                                <option value="earnings_notes">业绩点评</option>
+                                <option value="decision_memo">决策备忘录</option>
+                            </select>
+                            <select name="style" class="w-auto">
+                                <option value="cicc">中金</option>
+                                <option value="gs">高盛</option>
+                                <option value="ms">摩根士丹利</option>
+                                <option value="jpm">摩根大通</option>
+                                <option value="mck">麦肯锡</option>
+                                <option value="bcg">波士顿咨询</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <textarea name="requirement" placeholder="委托方定制需求 (可选)" rows="2"></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary">创建任务</button>
+                    </form>
+                    <a href="/track-record" class="btn-secondary">查看业绩记录</a>
+                    <a href="/export/history?format=csv" class="btn-secondary">导出历史 (CSV)</a>
+                </div>
+            </section>
+
+            <!-- Recent Jobs -->
+            <section class="section">
+                <div class="section-header">
+                    <h2>最近任务</h2>
+                    <a href="/jobs" class="btn-link">查看全部</a>
+                </div>
+                <div id="recent-jobs" class="jobs-table-container">
+                    {% if recent_jobs %}
+                    <table class="jobs-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>标的</th>
+                                <th>类型</th>
+                                <th>风格</th>
+                                <th>状态</th>
+                                <th>进度</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for job in recent_jobs %}
+                            <tr>
+                                <td><code>{{ job.id }}</code></td>
+                                <td>{{ job.asset }}</td>
+                                <td>{{ job.report_type }}</td>
+                                <td>{{ job.style }}</td>
+                                <td><span class="status-badge status-{{ job.status.value }}">{{ job.status.value }}</span></td>
+                                <td>
+                                    {% if job.status.value == 'running' %}
+                                    <div class="progress-bar-small">
+                                        <div class="progress-fill" style="width: {{ job.progress }}%"></div>
+                                    </div>
+                                    <span>{{ job.progress }}%</span>
+                                    {% else %}
+                                    {{ job.progress }}%
+                                    {% endif %}
+                                </td>
+                                <td>{{ job.created_at[:16].replace('T', ' ') }}</td>
+                                <td>
+                                    <a href="/jobs/{{ job.id }}" class="btn-sm btn-secondary">详情</a>
+                                    {% if job.status.value in ('failed', 'error', 'cancelled') %}
+                                    <button hx-post="/jobs/{{ job.id }}/retry" class="btn-sm btn-warning" hx-target="#recent-jobs" hx-swap="afterbegin">重试</button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <p class="empty-state">暂无任务，点击上方"创建任务"开始</p>
+                    {% endif %}
+                </div>
+            </section>
+        </main>
+
+        <footer class="dashboard-footer">
+            <a href="/health" target="_blank">健康检查</a>
+            <a href="/metrics" target="_blank">Prometheus 指标</a>
+            <a href="/track-record" target="_blank">业绩记录</a>
+        </footer>
+    </div>
+</body>
+</html>

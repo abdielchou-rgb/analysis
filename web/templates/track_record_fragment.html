@@ -1,0 +1,92 @@
+<div class="track-record">
+    {% if summary.error %}
+    <div class="error">加载失败: {{ summary.error }}</div>
+    {% else %}
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-value">{{ summary.total_calls }}</div>
+            <div class="metric-label">总 Bold Call 数</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">{{ "%.1f%%"|format(summary.directional_accuracy * 100) }}</div>
+            <div class="metric-label">方向准确率</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">{{ "%.2f%%"|format(summary.avg_pnl_pct) }}</div>
+            <div class="metric-label">平均超额收益</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">{{ summary.kelly_sizing or '1.3x' }}</div>
+            <div class="metric-label">Kelly 仓位倍数</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>最近 Bold Call 记录</h3>
+        {% if summary.calls %}
+        <div class="calls-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>时间</th>
+                        <th>标的</th>
+                        <th>类型</th>
+                        <th>方向</th>
+                        <th>时间窗口</th>
+                        <th>触发变量</th>
+                        <th>证伪条件</th>
+                        <th>结果</th>
+                        <th>PnL%</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for call in summary.calls[:20] %}
+                    <tr>
+                        <td>{{ call.created_at[:10] if call.created_at else 'N/A' }}</td>
+                        <td>{{ call.asset }}</td>
+                        <td>{{ call.report_type }}</td>
+                        <td><span class="direction-{{ call.direction }}">{{ call.direction }}</span></td>
+                        <td>{{ call.time_window }}</td>
+                        <td>{{ call.trigger[:50] }}...</td>
+                        <td>{{ call.falsification[:50] }}...</td>
+                        <td><span class="outcome-{{ call.outcome }}">{{ call.outcome }}</span></td>
+                        <td class="pnl-{{ 'pos' if (call.pnl_pct or 0) > 0 else 'neg' }}">{{ "%.2f%%"|format(call.pnl_pct or 0) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty-state">暂无 Bold Call 记录</p>
+        {% endif %}
+    </div>
+
+    <div class="section">
+        <h3>行业分布</h3>
+        {% if summary.by_sector %}
+        <div class="distribution">
+            {% for sector, count in summary.by_sector.items() %}
+            <div class="dist-item">
+                <span>{{ sector }}</span>
+                <span>{{ count }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="section">
+        <h3>报告类型分布</h3>
+        {% if summary.by_type %}
+        <div class="distribution">
+            {% for rtype, count in summary.by_type.items() %}
+            <div class="dist-item">
+                <span>{{ rtype }}</span>
+                <span>{{ count }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>

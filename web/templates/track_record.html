@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二号分析师 · 公开业绩记录</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <link href="/static/style.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>二号分析师 · 公开业绩记录</h1>
+            <p class="subtitle">所有 Bold Call 均经 IronGate 验证，可追溯、可复现、可证伪</p>
+            <a href="/" class="btn-secondary">返回工作台</a>
+        </header>
+
+        <main>
+            <div id="track-record-content" hx-get="/track-record" hx-trigger="load" hx-swap="innerHTML"></div>
+        </main>
+    </div>
+</body>
+</html>

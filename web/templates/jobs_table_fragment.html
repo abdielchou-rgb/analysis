@@ -1,0 +1,84 @@
+<div class="jobs-table-container">
+    <table class="jobs-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>标的</th>
+                <th>类型</th>
+                <th>风格</th>
+                <th>状态</th>
+                <th>进度</th>
+                <th>阶段</th>
+                <th>创建时间</th>
+                <th>开始时间</th>
+                <th>完成时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for job in jobs %}
+            <tr>
+                <td><code>{{ job.id }}</code></td>
+                <td>{{ job.asset }}</td>
+                <td>{{ job.report_type }}</td>
+                <td>{{ job.style }}</td>
+                <td><span class="status-badge status-{{ job.status.value }}">{{ job.status.value }}</span></td>
+                <td>
+                    {% if job.status.value == 'running' %}
+                    <div class="progress-bar-small">
+                        <div class="progress-fill" style="width: {{ job.progress }}%"></div>
+                    </div>
+                    <span>{{ job.progress }}%</span>
+                    {% else %}
+                    {{ job.progress }}%
+                    {% endif %}
+                </td>
+                <td>{{ job.stage or '-' }}</td>
+                <td>{{ job.created_at[:19].replace('T', ' ') }}</td>
+                <td>{{ job.started_at[:19].replace('T', ' ') if job.started_at else '-' }}</td>
+                <td>{{ job.completed_at[:19].replace('T', ' ') if job.completed_at else '-' }}</td>
+                <td>
+                    <div class="action-buttons">
+                        <a href="/jobs/{{ job.id }}" class="btn-sm btn-secondary">详情</a>
+                        {% if job.status.value in ('failed', 'error', 'cancelled') %}
+                        <button hx-post="/jobs/{{ job.id }}/retry"
+                                hx-target="#jobs-content"
+                                hx-swap="innerHTML"
+                                class="btn-sm btn-warning">重试</button>
+                        {% endif %}
+                        {% if job.status.value in ('queued', 'running') %}
+                        <button hx-post="/jobs/{{ job.id }}/cancel"
+                                hx-target="#jobs-content"
+                                hx-swap="innerHTML"
+                                class="btn-sm btn-danger">取消</button>
+                        {% endif %}
+                        {% if job.status.value == 'completed' %}
+                        <a href="/output/{{ job.id }}/{{ job.asset }}_{{ job.style }}.md" target="_blank" class="btn-sm btn-secondary">MD</a>
+                        {% if job.result and job.result.docx %}
+                        <a href="/output/{{ job.id }}/{{ job.asset }}_{{ job.style }}.docx" target="_blank" class="btn-sm btn-secondary">DOCX</a>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="11" class="empty-state">暂无任务</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Pagination -->
+    {% if has_more %}
+    <div class="pagination">
+        <button hx-get="/jobs"
+                hx-target="#jobs-content"
+                hx-push-url="true"
+                hx-vals='{"page": {{ page + 1 }}, "limit": {{ limit }}{% if status_filter %}, "status": "{{ status_filter }}"{% endif %}{% if asset_filter %}, "asset": "{{ asset_filter }}"{% endif %}}'
+                class="btn-primary">
+            加载更多 (第 {{ page + 1 }} 页)
+        </button>
+    </div>
+    {% endif %}
+</div>

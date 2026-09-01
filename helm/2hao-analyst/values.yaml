@@ -1,0 +1,143 @@
+# 2hao-analyst Helm Values
+# Usage: helm install 2hao ./helm/2hao-analyst -f values.yaml --namespace 2hao --create-namespace
+
+replicaCount: 1
+
+image:
+  repository: 2hao-analyst
+  tag: v10
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "9090"
+  prometheus.io/path: "/metrics"
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+
+service:
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: 2hao.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: 2hao-tls
+      hosts:
+        - 2hao.example.com
+
+resources:
+  limits:
+    cpu: "2"
+    memory: "4Gi"
+  requests:
+    cpu: "1"
+    memory: "2Gi"
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+
+# Environment variables
+env:
+  - name: DEEPSEEK_API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: 2hao-secrets
+        key: deepseek-api-key
+  - name: TAVILY_API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: 2hao-secrets
+        key: tavily-api-key
+  - name: RUN_MODE
+    value: "perf"
+  - name: SEG_PARALLEL
+    value: "0"
+  - name: DIM_PARALLEL
+    value: "1"
+  - name: MAX_ATTEMPTS
+    value: "3"
+  - name: EARLY_STOP_SIMILARITY
+    value: "0.98"
+  - name: REPORT_CITATION_APPENDIX
+    value: "1"
+  - name: REPORT_VOICE_SEPARATION
+    value: "1"
+
+# Prometheus metrics
+metrics:
+  enabled: true
+  port: 9090
+  path: /metrics
+
+# Persistent volumes for output and cache
+persistence:
+  enabled: true
+  output:
+    size: 10Gi
+    storageClass: ""
+  cache:
+    size: 5Gi
+    storageClass: ""
+
+# Golden samples (read-only)
+goldenSamples:
+  enabled: true
+  size: 1Gi
+  storageClass: ""
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Pod disruption budget
+pdb:
+  enabled: true
+  minAvailable: 1
+
+# Network policies
+networkPolicy:
+  enabled: true
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: monitoring
+      ports:
+        - protocol: TCP
+          port: 9090
+        - protocol: TCP
+          port: 8080
