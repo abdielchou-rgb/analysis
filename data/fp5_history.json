@@ -127,21 +127,168 @@
           "severity": "warning"
         }
       ]
+    },
+    {
+      "asset": "宁德时代",
+      "report_type": "listed_company",
+      "timestamp": "2026-09-02T00:43:33.248368",
+      "gate_passed": false,
+      "gate_score": 0,
+      "failures": [
+        {
+          "name": "AIGC痕迹",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "chart_completeness",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "source_entity",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "so_what_chain",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "chart_analysis_quality",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "data_dict_refs",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "completeness_scan",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "semantic_repeat",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "honest_gap",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "methodology_compliance",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "inline_citations",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "anti_patterns",
+          "class": "",
+          "severity": "warning"
+        }
+      ]
+    },
+    {
+      "asset": "宁德时代",
+      "report_type": "listed_company",
+      "timestamp": "2026-09-02T00:54:36.896817",
+      "gate_passed": false,
+      "gate_score": 0,
+      "failures": [
+        {
+          "name": "AIGC痕迹",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "chart_completeness",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "data_traceability",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "source_entity",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "so_what_chain",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "chart_analysis_quality",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "cross_section_consistency",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "data_dict_refs",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "completeness_scan",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "semantic_repeat",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "methodology_compliance",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "inline_citations",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "anti_patterns",
+          "class": "",
+          "severity": "warning"
+        }
+      ]
     }
   ],
   "failure_patterns": {
-    "AIGC痕迹": 2,
-    "source_entity": 2,
-    "so_what_chain": 2,
-    "chart_analysis_quality": 2,
-    "cross_section_consistency": 2,
-    "data_dict_refs": 2,
+    "AIGC痕迹": 4,
+    "source_entity": 4,
+    "so_what_chain": 4,
+    "chart_analysis_quality": 4,
+    "cross_section_consistency": 3,
+    "data_dict_refs": 4,
     "layout_quality": 2,
-    "completeness_scan": 2,
+    "completeness_scan": 4,
     "financial_value_consistency": 1,
-    "inline_citations": 2,
-    "anti_patterns": 2,
-    "methodology_compliance": 1
+    "inline_citations": 4,
+    "anti_patterns": 4,
+    "methodology_compliance": 3,
+    "chart_completeness": 2,
+    "semantic_repeat": 2,
+    "honest_gap": 1,
+    "data_traceability": 1
   },
   "rule_updates": []
 }
