@@ -148,3 +148,12 @@ test_batch/
 time_test/
 archive/one_off_scripts/
 
+# 2026-09-01 Marvis full-commit sweep additions
+core/*.db*
+test_out/
+data/observability_fallback/
+validation_report_v10.json
+
+# Heavy raw corpus (2026-09-01): original PDF/input data, stay out of VCS
+benchmark/golden_raw/
+

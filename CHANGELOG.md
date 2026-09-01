@@ -1,3 +1,51 @@
+# 二号分析师 (2hao-analyst) CHANGELOG
+
+## S1-S7 升级工程 (2026-09-01) — 27/27 子项完成
+
+### S1: 预测闭环
+- `scripts/prediction_daily.py` — 每日定时预测调度（ForwardPicksDB + track_record）
+- `core/benchmark_client.py` — 可复用基准 NAV 客户端（HS300/ZZ500/ZZ1000）
+- `scripts/prediction_attribution.py` — 前瞻选股归因 → learning_loop
+- `scripts/prediction_monthly.py` — 月度命中率报告（含分组统计）
+- S1-1 + S1-3 已接入归因回写
+
+### S2: 日频数据流
+- `scripts/refresh_daily.py` — 轻量增量日频数据刷新
+- `core/earnings_calendar.py` — akshare 财报日历
+- `scripts/event_driver.py` — 公司事件扫描 + 过期财报检测
+- `pipeline/sw_serialize.py` — last30days 舆情注入（S2-4 已在 v23 实现）
+
+### S3: 可追溯性
+- `core/claim_citation.py` — 新增 `render_jsonld_ledger()` JSON-LD 输出
+- `core/signal_divergence.py` — 情绪 vs 基本面分歧检测
+- `scripts/falsification_tracker.py` — 证伪条件解析 + 检查
+- `export/exporter.py` — [注N] 脚注引用 → Word 上标（S3-2）
+
+### S4: 自进化能力
+- `scripts/framework_effectiveness.py` — 框架使用率/通过率统计
+- `core/method_reflection.py` — 新增 `get_framework_ranking()` 动态排序（S4-2）
+- `core/framework_injector.py` — 新增 `inject_framework_rationale()` 数据驱动依据（S4-3）
+
+### S5: 工程基建
+- `scripts/consolidate_data.py` — 数据层整合迁移脚本（S5-2）
+- `pipeline/agent_graph.py` — 节点级 checkpoint save/load/clear（S5-3）
+- `pipeline/agent_graph.py` — `PipelineContext` typed dataclass（S5-4）
+- S5-1 CI/CD 待配 git remote; S5-5 已在 v23 解决
+
+### S6: 合规与信披
+- `scripts/rating_tracker.py` — 评级变动检测 + 披露模板
+- `scripts/target_price_reminder.py` — 12M 目标价到期提醒
+- `core/compliance_clauses.py` — 按报告类型自动附免责声明
+- `scripts/sensitive_info_scan.py` — 发布前敏感信息扫描（S6-4）
+
+### S7: 工作台与编排
+- `scripts/run_reports.py` — 批次状态追踪 + 断点续跑（S7-2）
+- `web/app.py` — `/workbench` 路由 + `/api/batches` 状态 API（S7-1）
+- `web/app.py` — `/api/review/{job_id}/approve|reject` 人工审核（S7-4）
+- `scripts/cost_panel.py` — LLM 成本审计面板
+
+---
+
 # 1号分析师 V51 — 从 V24 到 V51 的完整演化
 
 > ⚠️ 归档说明（2026-08-24）：本文件是**前代项目「1号分析师」**的演化史（止于 2026-07-23），
