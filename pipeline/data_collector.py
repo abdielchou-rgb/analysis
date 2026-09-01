@@ -562,84 +562,157 @@ class DataCollectorV5:
         return chart_data
 
     def _last30days_search(self, asset, time_anchor=None):
-        """P3-1 (2026-09-01): last30days 舆情桥接骨架——近 30 天真实动态信号。
+        """P3-1 (2026-09-01): last30days 舆情采集——近 30 天真实动态信号。
 
-        外部 skill（mvanhorn/last30days-skill，60k star）安装后启用：
-        Reddit/X/YouTube/HN/Polymarket 真实互动信号 → 结构化 fig_recent_news/fig_sentiment。
-
-        设计（EVAL_20260901 增强评估）：
-        - 补 2hao 数据层完全缺失的"近 30 天舆情/情绪"层（静态本地库无时效锚）
-        - 严格走 CLAUDE.md 桥接协议：产物是 enrich 输入（带来源），不直接写正文
-        - 后端不可用时静默降级（不阻塞主流程）
-
-        接线方式：
-        1. 安装 last30days-skill（npx skills add mvanhorn/last30days-skill -g）
-        2. 在 __init__ 的 _collect 链中调用本方法（见调用处注释）
-        3. 输出自动进 collected_data.chart_data，由桥接层校验来源
+        基于 mvanhorn/last30days-skill（60k star），HN/Reddit/Web 真实互动信号。
+        本地集成：scripts/last30days/ 目录，通过 Python 3.12（uv-managed）运行。
+        默认只用 hackernews（无需 API key，快速可靠）；有 key 时扩展到更多源。
+        后端不可用时静默降级（不阻塞主流程）。
         """
         chart_data = {}
         try:
-            import json
-            import shutil
-            import subprocess
+            import re
             import tempfile
 
-            # 探测 last30days CLI（skill 安装后才有）
-            cli = shutil.which("last30days")
-            if not cli:
-                logger.debug("[LAST30DAYS] CLI 未安装——跳过舆情采集（静默降级）")
+            # Python 3.12 路径（last30days 要求 >=3.12）
+            PY312 = r"C:\Users\Windows\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\python.exe"
+            SCRIPT = str(_ROOT / "scripts" / "last30days" / "last30days.py")
+            if not Path(SCRIPT).exists():
+                logger.debug("[LAST30DAYS] 脚本不存在——跳过舆情采集")
                 return chart_data
-            # 30 天窗口 + JSON 输出 + 离线保存
+            if not Path(PY312).exists():
+                logger.debug("[LAST30DAYS] Python 3.12 不可用——跳过舆情采集")
+                return chart_data
+
+            # 检测可用搜索源：有 Brave/Tavily key 时扩展
+            search_sources = "hackernews"
+            if os.environ.get("BRAVE_API_KEY") or os.environ.get("TAVILY_API_KEY"):
+                search_sources = "hackernews,web"
+
+            # 30 天窗口 + compact 输出 + 快速模式
             with tempfile.TemporaryDirectory() as td:
                 cmd = [
-                    cli,
+                    PY312,
+                    SCRIPT,
                     asset,
-                    "--emit=json",
-                    "--save-dir",
-                    td,
+                    "--emit=compact",
                     "--search",
-                    "reddit,hackernews,web,polymarket",
+                    search_sources,
+                    "--days",
+                    "30",
+                    "--quick",
                 ]
-                proc = subprocess.run(
-                    cmd,
-                    capture_output=True,
-                    text=True,
-                    timeout=120,
-                    env={"PATH": _os.environ.get("PATH", "")},
-                )
-                # 解析输出 JSON（last30days --emit=json 输出 profile 结构）
-                result = {}
-                if proc.stdout:
-                    try:
-                        result = json.loads(proc.stdout)
-                    except Exception:
-                        result = {}
-                if not result:
-                    # 回退：读 save-dir 下的 raw md
-                    import glob
+                # 用 bytes 模式避免 GBK 编码问题
+                # 注意：排除 OPENROUTER_API_KEY 等会干扰 last30days 后端选择的变量
+                import subprocess as _sp
 
-                    raw_files = glob.glob(str(td) + "/*.md")
-                    if raw_files:
-                        result = {"raw": open(raw_files[0], encoding="utf-8").read()[:3000]}
-            if not result:
-                return chart_data
+                clean_env = {
+                    k: v
+                    for k, v in os.environ.items()
+                    if k
+                    not in (
+                        "OPENROUTER_API_KEY",
+                        "OPENROUTER_MODELS",
+                        "DEEPSEEK_API_KEY",
+                        "TAVILY_API_KEY",
+                        "OPENAI_API_KEY",
+                        "XAI_API_KEY",
+                    )
+                }
+                logger.debug("[LAST30DAYS] Running: %s", " ".join(cmd[:3]) + " ...")
+                proc = _sp.Popen(cmd, stdout=_sp.PIPE, stderr=_sp.PIPE, env=clean_env)
+                try:
+                    stdout_bytes, stderr_bytes = proc.communicate(timeout=180)
+                except _sp.TimeoutExpired:
+                    proc.kill()
+                    logger.debug("[LAST30DAYS] 超时(180s)")
+                    return chart_data
+                logger.debug("[LAST30DAYS] Completed, stdout=%d bytes", len(stdout_bytes or b""))
+
+                # 手动解码 UTF-8（避免 Windows GBK 默认编码）
+                output = ""
+                if stdout_bytes:
+                    output = stdout_bytes.decode("utf-8", errors="replace")
+                if not output and stderr_bytes:
+                    output = stderr_bytes.decode("utf-8", errors="replace")
+
+                if not output:
+                    logger.debug("[LAST30DAYS] 无输出——跳过")
+                    return chart_data
+
+                # 提取 evidence clusters（### N. 开头的块）
+                clusters = []
+                cluster_pattern = re.compile(
+                    r"### \d+\. (.+?) \(score (\d+), (\d+) item.*?sources?: (.+?)\)",
+                    re.DOTALL,
+                )
+                for m in cluster_pattern.finditer(output):
+                    clusters.append(
+                        {
+                            "title": m.group(1).strip(),
+                            "score": int(m.group(2)),
+                            "item_count": int(m.group(3)),
+                            "sources": m.group(4).strip(),
+                        }
+                    )
+
+                # 提取 stats 块
+                stats_match = re.search(
+                    r"Total evidence: (\d+) item.*?across (\d+) source",
+                    output,
+                )
+                total_items = int(stats_match.group(1)) if stats_match else len(clusters)
+                total_sources = int(stats_match.group(2)) if stats_match else 1
+
+                # 提取 source coverage
+                source_lines = re.findall(r"- (\w[\w\s]*): (\d+) item", output)
+                source_coverage = {s[0].strip(): int(s[1]) for s in source_lines}
+
+                # 提取 freshness 警告
+                freshness_match = re.search(r"Limited recent data:.*?(\d+) of (\d+)", output)
+                freshness_ratio = None
+                if freshness_match:
+                    freshness_ratio = f"{freshness_match.group(1)}/{freshness_match.group(2)}"
+
+                # 提取原始 evidence 文本（用于 enrich）
+                evidence_match = re.search(
+                    r"EVIDENCE FOR SYNTHESIS.*?(### \d\..+?)<!-- END EVIDENCE",
+                    output,
+                    re.DOTALL,
+                )
+                evidence_text = evidence_match.group(1)[:3000] if evidence_match else ""
+
             # 结构化为 enrich 键（带来源）
             chart_data["fig_recent_news"] = {
                 "source": "last30days",
                 "asset": asset,
                 "window": "30d",
-                "headlines": result.get("topics", result.get("raw", ""))[:10],
+                "cluster_count": len(clusters),
+                "total_items": total_items,
+                "total_sources": total_sources,
+                "clusters": clusters[:5],  # top 5
+                "evidence": evidence_text,
                 "collected_at": __import__("datetime").datetime.now().isoformat(),
             }
             chart_data["fig_sentiment"] = {
                 "source": "last30days",
                 "asset": asset,
                 "window": "30d",
-                "summary": str(result.get("summary", ""))[:500],
+                "summary": f"{total_items} items from {total_sources} sources. "
+                + "; ".join(f"{k}: {v}" for k, v in source_coverage.items()),
+                "freshness": freshness_ratio,
             }
-            logger.info("[LAST30DAYS] %s 舆情采集完成（%d 条）", asset, len(chart_data))
+            if source_coverage:
+                chart_data["fig_source_health"] = {
+                    "source": "last30days",
+                    "coverage": source_coverage,
+                }
+            logger.info("[LAST30DAYS] %s 舆情采集完成（%d clusters, %d items）", asset, len(clusters), total_items)
         except Exception as e:
-            logger.debug("[LAST30DAYS] 采集失败(静默降级): %s", str(e)[:100])
+            import traceback
+
+            logger.debug("[LAST30DAYS] 采集失败(静默降级): %s", str(e)[:200])
+            logger.debug("[LAST30DAYS] traceback: %s", traceback.format_exc()[:500])
         return chart_data
 
     def _yfinance_search(self, asset):
