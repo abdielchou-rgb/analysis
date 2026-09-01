@@ -68,7 +68,58 @@ class ObservabilityDB:
         if not db_path:
             db_path = str(OBSERVABILITY_DIR / "observability.db")
         self.db_path = db_path
-        self._init_db()
+        try:
+            self._init_db()
+        except Exception as e:
+            # P1-1 修复（2026-09-01）：Windows 共享文件锁场景——observability.db 被
+            # 其他进程（Marvis 等）占用时，磁盘缓存复制方案兜底，不阻塞主流程。
+            logger.debug("[METRICS] init fallback: %s", e)
+            try:
+                self.db_path = self._fallback_db_path()
+                self._init_db()
+            except Exception as e2:
+                logger.debug("[METRICS] init fallback failed: %s", e2)
+
+    def _fallback_db_path(self) -> str:
+        """P1-1 修复：主库被锁时用可写副本（读主库+写副本，趋势数据不丢失）。
+
+        副本放 data/observability_fallback/（项目内持久化，非 /tmp 临时），
+        跨进程重启保留——主库锁释放后可手动合并回主库。
+        """
+        import shutil
+
+        try:
+            src = Path(self.db_path)
+            fb_dir = Path(__file__).resolve().parent.parent / "data" / "observability_fallback"
+            fb_dir.mkdir(parents=True, exist_ok=True)
+            if src.exists():
+                tmp = fb_dir / "observability_fallback.db"
+                shutil.copy2(str(src), str(tmp))
+                return str(tmp)
+            return str(fb_dir / "observability_fallback.db")
+        except Exception:
+            import tempfile
+
+            return str(Path(tempfile.mkdtemp()) / "observability_fallback.db")
+
+    def _write(self, sql: str, args: tuple):
+        """P1-1 修复：带重试的写入——主库锁时切副本，最多 2 次。"""
+
+        for attempt in range(2):
+            try:
+                conn = sqlite3.connect(self.db_path, timeout=5)
+                conn.execute(sql, args)
+                conn.commit()
+                conn.close()
+                return
+            except Exception as e:
+                if attempt == 0 and "disk I/O" in str(e) or "locked" in str(e):
+                    # 主库被锁 → 切副本（读主库副本，数据保留）
+                    self.db_path = self._fallback_db_path()
+                    logger.debug("[METRICS] 主库被锁，切换副本写入: %s", e)
+                    continue
+                logger.debug("[METRICS] 写入失败: %s", e)
+                return
 
     def _init_db(self):
         """初始化三张表"""
@@ -138,9 +189,8 @@ class ObservabilityDB:
     # ─── LLM 调用日志 ──────────────────────
 
     def log_llm_call(self, entry: LLMCallLog):
-        """记录一次 LLM 调用"""
-        conn = sqlite3.connect(self.db_path)
-        conn.execute(
+        """记录一次 LLM 调用（P1-1 修复：防锁重试）"""
+        self._write(
             """
             INSERT INTO llm_calls
             (timestamp, module, section_id, model,
@@ -163,8 +213,6 @@ class ObservabilityDB:
                 entry.provider,
             ),
         )
-        conn.commit()
-        conn.close()
 
     def log_llm_call_simple(
         self,
@@ -194,9 +242,8 @@ class ObservabilityDB:
     # ─── Validate 历史 ─────────────────────
 
     def log_validation(self, entry: ValidateHistory):
-        """记录一次 validate（P1-1 2026-09-01：接通 IronGate 每轮 run_all，替代 7 月停更）"""
-        conn = sqlite3.connect(self.db_path)
-        conn.execute(
+        """记录一次 validate（P1-1 2026-09-01：接通 IronGate 每轮 run_all，防锁重试）"""
+        self._write(
             """
             INSERT INTO validate_history
             (timestamp, report_id,
@@ -220,8 +267,6 @@ class ObservabilityDB:
                 entry.notes,
             ),
         )
-        conn.commit()
-        conn.close()
 
     # ─── 质量趋势（P1-1 新增写入，2026-09-01）──
 
@@ -230,16 +275,13 @@ class ObservabilityDB:
 
         metric_name 取值建议：gate_score_avg / gate_pass_rate / judgment_density_avg
         / failure_count / recurrence_rate。质量趋势表此前 0 条——FP3 收敛曲线
-        依赖此表，必须开始积累。
+        依赖此表，必须开始积累。P1-1 修复：防锁重试。
         """
         try:
-            conn = sqlite3.connect(self.db_path)
-            conn.execute(
+            self._write(
                 "INSERT INTO quality_trends (date, metric_name, metric_value, sample_size) VALUES (?, ?, ?, ?)",
                 (datetime.now().strftime("%Y-%m-%d"), metric_name, float(metric_value), int(sample_size)),
             )
-            conn.commit()
-            conn.close()
         except Exception as e:
             logger.debug("[METRICS] quality_trend 写入失败: %s", e)
 
