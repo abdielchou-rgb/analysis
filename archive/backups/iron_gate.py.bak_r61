@@ -210,13 +210,13 @@ class IronGate:
                 except Exception:
                     pass
         return {}
-    
+
     def _get_threshold(self, check_name, default=0.7):
         """Get calibrated threshold for a check"""
         if self._calibrated and check_name in self._thresholds:
             return self._thresholds[check_name]
         return default
-    
+
     def check(self, text):
         self.report_text = text
         return self.run_all()
@@ -499,7 +499,7 @@ class IronGate:
                 for hf in _hot_fails:
                     if hf in _auto_adjust:
                         report.suggestions.append(f"  [AUTO] {hf}: {_auto_adjust[hf]}")
-        
+
         # L3: detect empty/corrupted text from LLM failure
         if not self.report_text or len(self.report_text.strip()) < 200:
             report.passed = False
@@ -969,13 +969,13 @@ class IronGate:
         """Check data fidelity: revenue/profit numbers should be reasonable"""
         import re
         text = self.report_text or ""
-        
+
         # Look for revenue/profit numbers in the text
         rev_patterns = re.findall(r"营收[约达为]?[：:]?\s*(\d+\.?\d*)", text)
         profit_patterns = re.findall(r"(?:净利|归母净利)[润约达为]?[：:]?\s*(-?\d+\.?\d*)", text)
-        
+
         issues = []
-        
+
         # Check if revenue numbers are reasonable (A-share companies typically 1-1000+ billion)
         for v in rev_patterns[:5]:
             val = float(v)
@@ -983,18 +983,18 @@ class IronGate:
                 issues.append("Revenue %.0f unusually high" % val)
             if val == 0:
                 issues.append("Revenue is 0 - likely missing data")
-        
+
         # Check profit-loss consistency
         for v in profit_patterns[:3]:
             val = float(v)
             if abs(val) > 1000:  # Very large loss/profit
                 issues.append("Profit %.0f unusually large" % val)
-        
+
         if issues:
             score = max(0.3, 1.0 - len(issues) * 0.2)
         else:
             score = 1.0
-        
+
         score = max(score, 0.3)  # Floor at 0.3
         return GateCheckResult(name="data_fidelity", passed=score >= 0.5, score=score,
                                details="Checks:%d Issues:%d Score:%.2f" % (
@@ -1253,7 +1253,7 @@ class IronGate:
 
         text = self.report_text if hasattr(self, 'report_text') and self.report_text else ''
         from .iron_gate import GateCheckResult
-        
+
         # 检查DCF敏感性分析的关键模式
         patterns = [
             (r'WACC.*\u6210\u957f\u7387', 0.3),
@@ -1263,20 +1263,20 @@ class IronGate:
             (r'\u76c8\u5229\u9884\u6d4b\u8868', 0.3),
             (r'\u7ec8\u7aef\u589e\u957f\u7387', 0.4),
         ]
-        
+
         score = 0.0
         hits = 0
         for pat, weight in patterns:
             if re.search(pat, text):
                 score = max(score, weight)
                 hits += 1
-        
+
         # DCF sensitivity matrix check (WACC rows x growth rate columns)
         matrix_pattern = r'\d+[\.\,]\d+%.{0,20}\d+[\.\,]\d+%.{0,20}\d+[\.\,]\d+%'
         has_matrix = len(re.findall(matrix_pattern, text)) >= 2
         if has_matrix:
             score = max(score, 0.9)
-        
+
         # FP7b L1 降级：非上市/降级场景 DCF 敏感性属锦上添花（非上市无公开 DCF 数据），
         # 降为 advisory；正常模式保持硬阻断
         severity = "warning" if self._allow_placeholder_degradation else "error"
@@ -1287,7 +1287,7 @@ class IronGate:
             details='DCF sensitivity: %.2f (patterns: %d/6, matrix: %s)' % (score, hits, has_matrix),
             severity=severity,
         )
-    
+
     def _check_so_what_chain(self) -> 'GateCheckResult':
         """增强版：检查报告中So What链的完整性和密度（逐段扫描）"""
         text = self.report_text if hasattr(self, 'report_text') and self.report_text else ''
@@ -1334,7 +1334,7 @@ class IronGate:
             r'\u7efc\u5408\u5224\u65ad', r'\u6982\u7387\u8bc4\u4f30', r'\u8bc1\u4f2a\u6761\u4ef6',
             r'\u53cd\u65b9\u8bba\u8bc1', r'\u5224\u65ad[：:]',
         ]
-        
+
         # Score per section
         section_scores = []
         for sec in sections:
@@ -1344,26 +1344,26 @@ class IronGate:
             expected = max(2, len(sec) // 300)
             sec_score = min(hits / expected if expected > 0 else 0.3, 1.0)
             section_scores.append(sec_score)
-        
+
         if not section_scores:
             return GateCheckResult('so_what_chain', False, 0.3, 'No analyzable sections')
-        
+
         avg_score = sum(section_scores) / len(section_scores)
         min_score = min(section_scores)
-        
+
         # P1-3 修复（2026-08-01 审计）：min_score >= 0.3 约束防止均值掩盖短板，
         # 并将 min_score 纳入 final_score 计算（加权：avg 60% + min 40%）。
         passed = avg_score >= 0.6 and min_score >= 0.3
         final_score = min(avg_score * 0.6 + min_score * 0.4 + (0.1 if avg_score >= 0.7 else 0), 1.0)
-        
+
         detail = 'So What: %.2f avg/%d sections (min: %.2f)' % (avg_score, len(section_scores), min_score)
         # FP7b L1 降级：数据受限导致 LLM 推理链密度不足，So What 链降为 advisory（不阻断），
         # 由整体 score 反映质量水平；非降级模式保持硬阻断
         severity = "warning" if self._allow_placeholder_degradation else "error"
         return GateCheckResult('so_what_chain', passed, final_score, detail, severity=severity)
-    
 
-    
+
+
     def _check_ai_tone_by_llm(self) -> GateCheckResult:
         """FP4: Use LLM to detect AI tone beyond regex patterns
 
@@ -1376,7 +1376,7 @@ class IronGate:
         if len(text) < 500:
             return GateCheckResult("ai_tone_llm", True, 1.0, "Text too short, skipped",
                                     severity="warning")
-        
+
         sample = text[:3000].replace('"', "'")[:2500]
         prompt = (
             'System: 你是独立的第三方审计评委（你本身不是生成这份报告的大模型）。'
@@ -1420,7 +1420,7 @@ class IronGate:
                 score_match = _re.search(r'(\d+\.\d+)', output)
                 score = float(score_match.group(1)) if score_match else 0.5
                 reason = output[:30]
-            
+
             # 机构特征兜底：含评级/目标价/风险提示等机构表达时，避免因结构化误判
             inst_markers = re.findall(r'(?:评级|目标价|风险提示|买入|增持|来源[：:]|Wind|公告)', text[:4000])
             if score < 0.4 and len(inst_markers) >= 3:
@@ -1443,36 +1443,36 @@ class IronGate:
                                     severity="error")
     def _check_human_impossible_dimension(self) -> GateCheckResult:
         """FP4: Verify report contains at least one dimension beyond human analyst capability.
-        
+
         检查三个维度：数据密度（>50来源）、推理深度（>5层归因）、覆盖广度（>20家）。
         至少满足一个即通过上阈。
         """
         text = self.report_text or ""
         if len(text) < 1000:
             return GateCheckResult("human_impossible", False, 0.0, "text too short, cannot verify")
-        
+
         import re as _re
-        
+
         # 1. 数据密度: 检查不同的来源引用数
         sources = set(_re.findall(r'(?:来源[：:]|数据来源[：:]|Source[：:]|sourced from|据[一-鿿]+报告)', text))
         source_density = len(sources)
-        
+
         # 2. 推理深度: 检查 So What 链的层次
         reasoning_layers = _re.findall(r'(?:因此|这意味着|这导致|其根本原因|更深层次|本质上|推论|由此得出)', text)
         reasoning_depth = len(reasoning_layers)
-        
+
         # 3. 覆盖广度: 检查提到的公司/竞争对手数
         companies = _re.findall(r'(?:公司|集团|[A-Z][a-z]+(?:\.[A-Z]{2})?)', text)
         company_count = len(set(companies))
-        
+
         # Score each dimension
         density_score = min(1.0, source_density / 10)  # 10+ sources = 1.0
         depth_score = min(1.0, reasoning_depth / 8)     # 8+ layers = 1.0
         breadth_score = min(1.0, company_count / 20)    # 20+ companies = 1.0
-        
+
         max_score = max(density_score, depth_score, breadth_score)
         passed = max_score >= 0.5  # At least one dimension at 50%+
-        
+
         details = (
             f"Sources={source_density}({density_score:.2f}) "
             f"Depth={reasoning_depth}({depth_score:.2f}) "
@@ -1525,65 +1525,65 @@ class IronGate:
 
     def _check_attribution_depth(self) -> GateCheckResult:
         """FP6 L3: Check that analysis contains multi-factor attribution with weights.
-        
+
         验证报告是否有"归因分析"——将结果归因到多个驱动因素并给出各因素权重。
         """
         text = self.report_text or ""
         if len(text) < 500:
             return GateCheckResult("attribution_depth", False, 0.0, "text too short")
-        
+
         import re as _re
-        
+
         # Check for multi-factor attribution patterns
         has_factor_analysis = bool(_re.search(r'(?:驱动因素|驱动因子|归因|attribution|主要原因|核心驱动|关键变量|多重因素|增长驱动|成长驱动|发展驱动|增长动力|驱动逻辑)', text))
         has_weight = bool(_re.search(r'(?:权重|占比|贡献|bps|百分点|主要|核心|关键|主导).{0,20}(?:因素|驱动|原因)', text))
         has_sub_factor = bool(_re.search(r'(?:子因素|二级|细分|拆解)(?:分析|维度|指标)', text))
         has_causal_chain = bool(_re.search(r'(?:A.{0,10}导致B|因为.{0,20}所以.{0,20}|传递|传导|连锁)', text))
-        
+
         # Check for 3+ explicit factors
         factors = _re.findall(r'(?:第一个|第二|第三|首先|其次|再次|另外|此外|同时)[^。]{0,50}(?:原因|因素|驱动|因为)', text)
         has_3plus_factors = len(factors) >= 2  # "首先...其次..." counts as 2, implying at least 2 more
-        
+
         elements = sum([has_factor_analysis, has_weight, has_sub_factor, has_causal_chain, has_3plus_factors])
         score = elements / 5.0
         # FP7b L1 降级：数据受限报告归因框架不完整不阻断交付（warning），正常模式仍硬把关
         threshold = 0.2 if self._allow_placeholder_degradation else 0.4
         passed = score >= threshold
         severity = "warning" if self._allow_placeholder_degradation else "error"
-        
+
         details = f"FactorAnalysis={'Y' if has_factor_analysis else 'N'} Weight={'Y' if has_weight else 'N'} SubFactor={'Y' if has_sub_factor else 'N'} CausalChain={'Y' if has_causal_chain else 'N'} 3+Factors={'Y' if has_3plus_factors else 'N'} = {score:.2f}"
         return GateCheckResult("attribution_depth", passed, score, details, severity=severity)
 
 
     def _check_data_type_annotation(self) -> GateCheckResult:
         """FP2a: Verify that (A)/(E)/(F)/(B) annotations are used throughout the report.
-        
+
         Checks for data type markers: (A)=Actual, (E)=Estimate, (F)=Forecast, (B)=Benchmark.
         """
         text = self.report_text or ""
         if len(text) < 500:
             return GateCheckResult("data_type_annotation", True, 1.0, "Text too short, skipped", severity="warning")
-        
+
         import re
         # Count (A), (E), (F), (B) annotations
         a_count = len(re.findall(r'A', text))
         e_count = len(re.findall(r'E(?!\w)', text))
         f_count = len(re.findall(r'F(?!\w)', text))
         b_count = len(re.findall(r'B(?!\w)', text))
-        
+
         # Also check for the explicit forms (half-width + full-width)
         explicit_a = len(re.findall(r'\(A\)|（A）|Actual', text))
         explicit_e = len(re.findall(r'\(E\)|（E）|Estimate', text))
         explicit_f = len(re.findall(r'\(F\)|（F）|Forecast', text))
         explicit_b = len(re.findall(r'\(B\)|（B）|Benchmark', text))
-        
+
         total = explicit_a + explicit_e + explicit_f + explicit_b
         coverage = min(1.0, total / 5.0)  # Expect at least 5 annotations
         has_all_types = (explicit_a > 0 and explicit_e > 0) or (explicit_a > 2 and explicit_e > 1)
-        
+
         passed = total >= 3  # At least 3 total annotations
         score = min(1.0, total / 5.0)
-        
+
         details = f"A={explicit_a} E={explicit_e} F={explicit_f} B={explicit_b} total={total} score={score:.2f}"
         return GateCheckResult("data_type_annotation", passed, score, details)
 
@@ -1593,14 +1593,14 @@ class IronGate:
         text = self.report_text or ""
         if len(text) < 500:
             return GateCheckResult("evidence_layer", True, 1.0, "text too short, skipped", severity="warning")
-        
+
         import re
         # Find numeric claims (in Chinese financial context)
         # Match: numbers with 亿/万/百分比 or standalone large numbers
         claims = re.findall(r'(?:\d+\.?\d*[亿万千百]|\d+\.?\d*%|\d{4,}[\u4e00-\u9fff]*)', text)
         if len(claims) < 3:
             return GateCheckResult("evidence_layer", True, 0.7, f"only {len(claims)} claims found")
-        
+
         covered = 0
         for claim in claims:
             # Find position and check surrounding 100 chars for source
@@ -1612,11 +1612,11 @@ class IronGate:
             context = text[start:end]
             if re.search(r'(?:来源|据|数据|source|根据|年报|报告|公告|研报|数据来源)', context):
                 covered += 1
-        
+
         ratio = covered / len(claims)
         score = min(1.0, ratio)
         passed = score >= 0.3  # 30%+ of claims have source nearby
-        return GateCheckResult("evidence_layer", passed, score, 
+        return GateCheckResult("evidence_layer", passed, score,
                               f"{covered}/{len(claims)} claims sourced ({score:.2f})")
 
     def _check_falsification_conditions(self) -> GateCheckResult:
@@ -1624,7 +1624,7 @@ class IronGate:
         text = self.report_text or ""
         if len(text) < 500:
             return GateCheckResult("falsification_conditions", True, 1.0, "text too short, skipped", severity="warning")
-        
+
         import re
         # Check for if-then falsification structures
         patterns = [
@@ -1634,7 +1634,7 @@ class IronGate:
             r'(?:如果).{0,30}(?:风险|下跌|不及预期|低于)',
         ]
         has_falsification = any(re.search(p, text) for p in patterns)
-        
+
         # Check that Bold Call has falsification nearby
         bold_pos = re.search(r'(?:Bold Call|核心理念|核心判断|核心观点)', text)
         falsified_bold = False
@@ -1643,7 +1643,7 @@ class IronGate:
             end = min(len(text), bold_pos.end() + 500)
             bold_context = text[start:end]
             falsified_bold = any(re.search(p, bold_context) for p in patterns)
-        
+
         score = 0.4 if has_falsification else 0.0
         if falsified_bold:
             score = max(score, 0.7)
@@ -1678,14 +1678,14 @@ class IronGate:
         text = self.report_text or ""
         if len(text) < 500:
             return GateCheckResult("meta_cognition", True, 1.0, "text too short, skipped", severity="warning")
-        
+
         import re
         # Count confidence markers
         confidence = len(re.findall(r'(?:H=High|M=Medium|L=Low|\d+%|置信度|confidence|确信度)', text))
-        
+
         # Check for blind spots / uncertainty / limitations
         has_blind_spot = bool(re.search(r'(?:不确定|局限|盲区|未覆盖|假设|风险因素|未知|未考虑|局限)', text))
-        
+
         score = 0.0
         if confidence >= 3:
             score = 0.4
@@ -1694,7 +1694,7 @@ class IronGate:
         if confidence >= 5:
             score += 0.2
         score = min(1.0, score)
-        
+
         passed = score >= 0.4  # At least 3 confidence markers OR blind spot mention
         return GateCheckResult("meta_cognition", passed, score,
                               f"confidence={confidence} blind_spot={'Y' if has_blind_spot else 'N'}")
@@ -1704,7 +1704,7 @@ class IronGate:
         text = self.report_text or ""
         if len(text) < 500:
             return GateCheckResult("so_what_per_judgment", True, 1.0, "text too short, skipped", severity="warning")
-        
+
         import re
         # Find judgment sentences (allow So What to follow in next sentence)
         judgments = re.findall(r'[^。]*?(?:我们认为|我们判断|我们预计|我们建议|核心判断|核心结论|判断[：:])[^。]*。[^。]*?(?:因此|这意味着|所以|导致|从而|影响|So\s*What|数据表明|对投资者意味着|综合判断|证伪条件)[^。]*。', text)
@@ -3574,4 +3574,3 @@ def _detect_value_conflicts(report_text: str, data_dict: dict) -> list:
                 conflicts.append(f"{label_zh}{year}年 正文写{body_val:.0f}{unit} vs 数据层{known_vals[0]:.0f}")
                 break  # 每标签只报一处
     return conflicts[:5]
-

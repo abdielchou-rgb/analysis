@@ -9,9 +9,9 @@ Strangler Fig 纪律：拆出后 data_quality_mixin 委托调用本函数，
 
 from __future__ import annotations
 
-from pipeline.checks.base import GateCheckResult
-
 import re as _re
+
+from pipeline.checks.base import GateCheckResult
 
 
 def check_numeric_chain_consistency(report_text: str) -> "GateCheckResult":
@@ -34,13 +34,10 @@ def check_numeric_chain_consistency(report_text: str) -> "GateCheckResult":
       4. 细分合计 vs 总量："A+B+C+D=约E" → 验算累加一致
          （覆盖"4450+8520+7530+9350=约2.99万亿"）
     """
-    import re as _re
 
     text = report_text or ""
     if len(text) < 300:
-        return GateCheckResult(
-            "numeric_chain_consistency", True, 1.0, "text too short, skipped", severity="warning"
-        )
+        return GateCheckResult("numeric_chain_consistency", True, 1.0, "text too short, skipped", severity="warning")
     issues = []
     _TOL = 0.05
 

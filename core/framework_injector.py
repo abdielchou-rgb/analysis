@@ -67,21 +67,35 @@ def inject_framework_prompt(
         return ""
 
     parts = ["[外部分析方法论注入——必须用具体分析步骤应用于本报告标的]"]
-    # R81（2026-08-06）：关键框架优先排序——bottleneck/ma_valuation/scenario 等
-    # 对行业分析最关键的框架即使 priority 不高也排前，且注入数量从 4 扩到 6。
-    # 只含 core/frameworks YAML 真实存在的框架（bottleneck/ma_valuation 走 analyst_planner 另一套）
-    _KEY_FRAMEWORKS = {
-        "moat_analysis",
-        "competition_demystified",
-        "value_driver",
-        "strategy_engine",
-        "cycle_thinking",
-        "expectations_investing",
-        "signal_noise",
-        "accounting_for_value",
-    }
-    _sorted = sorted(frameworks[:8], key=lambda f: (f.get("id") in _KEY_FRAMEWORKS, f.get("_priority", 9)))
-    for fw in _sorted[:6]:  # Top 6（关键框架优先）
+
+    # S4-2: 数据驱动排序——如有实测数据，按 get_framework_ranking 排序
+    _fw_by_id = {fw.get("id", ""): fw for fw in frameworks}
+    _data_ranked_ids = []
+    try:
+        from core.method_reflection import get_framework_ranking
+        ranking = get_framework_ranking(report_type)
+        _data_ranked_ids = [r["framework"] for r in ranking]
+    except Exception:
+        pass
+
+    def _sort_key(fw):
+        fid = fw.get("id", "")
+        # 有实测排名的排前面，按排名顺序
+        if fid in _data_ranked_ids:
+            return (0, _data_ranked_ids.index(fid))
+        # 关键框架次优先
+        _KEY_FRAMEWORKS = {
+            "moat_analysis", "competition_demystified", "value_driver",
+            "strategy_engine", "cycle_thinking", "expectations_investing",
+            "signal_noise", "accounting_for_value",
+        }
+        if fid in _KEY_FRAMEWORKS:
+            return (1, 0)
+        # 其余按 YAML priority
+        return (2, fw.get("_priority", 9))
+
+    _sorted = sorted(frameworks[:8], key=_sort_key)
+    for fw in _sorted[:6]:  # Top 6
         name = fw.get("name", "?")
         core = fw.get("core_thesis", "")[:150]
         chain = fw.get("logic_chain", [])
@@ -149,3 +163,39 @@ def list_available_frameworks() -> list[dict]:
             }
         )
     return result
+
+
+def inject_framework_rationale(report_type: str | None = None) -> str:
+    """生成数据驱动的框架选择依据说明（S4-3）。
+
+    输出格式：
+    > 本报告选用【{framework}】框架（依据：同行业此前 N 份报告用此框架 Gate 通过率 Y%，高于全量均值 Z%）。
+
+    无实测数据时返回空字符串。
+    """
+    try:
+        from core.method_reflection import get_framework_ranking
+        ranking = get_framework_ranking(report_type)
+    except Exception:
+        return ""
+
+    if not ranking:
+        return ""
+
+    top = ranking[0]
+    fw_name = top["framework"]
+    pass_rate = top["pass_rate"]
+    avg_gate = top["avg_gate"]
+    count = top["count"]
+
+    # 计算全量均值
+    all_rates = [r["pass_rate"] for r in ranking]
+    overall_pass_rate = sum(all_rates) / len(all_rates) if all_rates else 0
+
+    return (
+        f"\n> 本报告选用【{fw_name}】框架"
+        f"（依据：同行业此前 {count} 份报告用此框架 Gate 通过率 {pass_rate:.0%}，"
+        f"平均 Gate 分 {avg_gate:.2f}，"
+        f"{'高于' if pass_rate > overall_pass_rate else '接近'}"
+        f"全量均值 {overall_pass_rate:.0%}）。\n"
+    )

@@ -11,10 +11,8 @@ pipeline/sac_coverage.py — SAC维度覆盖检测器
 from __future__ import annotations
 
 import logging
-import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional
 
 logger = logging.getLogger("2hao.sac_coverage")
 
@@ -95,16 +93,12 @@ class SACCoverageDetector:
                 report.covered_dimensions += 1
 
         report.coverage_rate = (
-            report.covered_dimensions / report.total_dimensions
-            if report.total_dimensions > 0
-            else 0.0
+            report.covered_dimensions / report.total_dimensions if report.total_dimensions > 0 else 0.0
         )
 
         # 计算整体分数
         if report.dimensions:
-            report.overall_score = sum(
-                d.coverage_score for d in report.dimensions
-            ) / len(report.dimensions)
+            report.overall_score = sum(d.coverage_score for d in report.dimensions) / len(report.dimensions)
 
         return report
 
@@ -186,8 +180,7 @@ class SACCoverageDetector:
         for dim in report.dimensions:
             if not dim.covered:
                 suggestions.append(
-                    f"维度 '{dim.dimension_name}' 覆盖不足，"
-                    f"建议添加以下关键词: {', '.join(dim.gaps[:3])}"
+                    f"维度 '{dim.dimension_name}' 覆盖不足，建议添加以下关键词: {', '.join(dim.gaps[:3])}"
                 )
 
         return suggestions

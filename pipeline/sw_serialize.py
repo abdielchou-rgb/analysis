@@ -28,6 +28,26 @@ def serialize_chart_data(data):
             lines.append("=== 实时新闻/动态 ===")
             lines.append(f"  {spotlight_untrusted(news, source_label='news_feed', max_chars=300)}")
             lines.append("")
+        # S2-4: last30days 舆情注入（从 chart_data 提取 fig_recent_news/fig_sentiment）
+        cd = live.get("chart_data", {}) if isinstance(live.get("chart_data"), dict) else {}
+        recent_news = cd.get("fig_recent_news")
+        sentiment = cd.get("fig_sentiment")
+        if recent_news or sentiment:
+            lines.append("=== 近30天舆情信号(last30days) ===")
+            if recent_news:
+                clusters = recent_news.get("clusters", [])
+                evidence = recent_news.get("evidence", "")
+                if clusters:
+                    for i, cl in enumerate(clusters[:5], 1):
+                        lines.append(f"  [{i}] {cl.get('title', '')} (score={cl.get('score', 0)}, 来源={cl.get('sources', '')})")
+                if evidence:
+                    lines.append(f"  证据摘要: {evidence[:400]}")
+                lines.append(f"  数据截至: {recent_news.get('collected_at', '')[:10]}")
+            if sentiment:
+                lines.append(f"  情绪摘要: {sentiment.get('summary', '')}")
+                if sentiment.get("freshness"):
+                    lines.append(f"  时效性: {sentiment['freshness']} 项来自最近7天")
+            lines.append("")
 
     # ═══ 参考知识层(REFERENCE) — 标注非实时 ═══
     ref = data.get("reference", {}) if isinstance(data, dict) else {}

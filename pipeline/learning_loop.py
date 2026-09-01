@@ -189,6 +189,54 @@ class LearningLoop:
         except Exception as e:
             logger.debug("add_lesson: %s", e)
 
+    def add_failure_pattern(self, lesson: dict) -> bool:
+        """P4-1 (2026-09-01): 预测验证归因经验写入学习库。
+
+        接收 verify_predictions.py 产出的归因条目，写入 report_failures + learning_lessons，
+        供后续 before_report / auto_apply_lessons 读取。
+
+        Args:
+            lesson: {
+                "asset": str, "industry": str, "bold_call_type": str,
+                "made_date": str, "outcome": str, "attribution": str,
+                "attribution_cn": str, "alpha": float,
+                "key_variables": list, "falsification": list,
+                "lesson": str, "created_at": str
+            }
+        """
+        try:
+            c = self._get_conn()
+            # 写入 report_failures（供 recurrence_rate 统计）
+            c.execute(
+                """INSERT OR IGNORE INTO report_failures
+                   (asset, report_type, failure_type, details, severity)
+                   VALUES (?, ?, ?, ?, ?)""",
+                (
+                    lesson.get("asset", ""),
+                    lesson.get("bold_call_type", ""),
+                    lesson.get("attribution", "unknown"),
+                    lesson.get("lesson", "")[:500],
+                    "warning" if lesson.get("outcome") == "miss" else "info",
+                ),
+            )
+            # 写入 learning_lessons（供 build_lesson_prompt 读取）
+            c.execute(
+                """INSERT INTO learning_lessons
+                   (asset, report_type, lesson, severity)
+                   VALUES (?, ?, ?, ?)""",
+                (
+                    lesson.get("asset", ""),
+                    lesson.get("bold_call_type", ""),
+                    f"预测验证归因: {lesson.get('attribution_cn', '')} — {lesson.get('lesson', '')[:300]}",
+                    "prediction_verified",
+                ),
+            )
+            c.commit()
+            return True
+        except Exception as e:
+            logger.debug("add_failure_pattern: %s", e)
+            return False
+
     def recurrence_rate(self, months: int = 3) -> dict:
         """FP5: Calculate recurrence rate for each failure pattern（真实实现，P1-2 2026-09-01）。
 
@@ -256,11 +304,7 @@ class LearningLoop:
         try:
             rates = self.recurrence_rate(months=months)
             # 按复发与否 + 近况次数排序，取 top_k 个真实失败类型（排除 _summary）
-            candidates = [
-                (ft, v)
-                for ft, v in rates.items()
-                if ft != "_summary" and v["recurred"] and v["recent"] > 0
-            ]
+            candidates = [(ft, v) for ft, v in rates.items() if ft != "_summary" and v["recurred"] and v["recent"] > 0]
             candidates.sort(key=lambda x: (-x[1]["recent"], x[0]))
             c = self._get_conn()
             for ft, _v in candidates[:top_k]:

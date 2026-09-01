@@ -94,7 +94,7 @@ def dim_parallel() -> bool:
 
 def llm_http_timeout() -> int:
     """单次 HTTP 调用超时秒数。消费方: deepseek_client.call_llm"""
-    return max(10, _int("LLM_HTTP_TIMEOUT", 90))
+    return max(10, _int("LLM_HTTP_TIMEOUT", 180))
 
 
 def llm_response_cache() -> bool:

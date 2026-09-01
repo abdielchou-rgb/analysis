@@ -114,10 +114,62 @@ def get_reflection_stats() -> dict:
     }
 
 
+def get_framework_ranking(report_type: str | None = None) -> list[dict]:
+    """按实测效果排序框架。
+
+    效果 = 平均 Gate 分 × 通过率 × 使用量加权
+    供 section_writer._build_framework_injection 按排序注入。
+
+    Returns:
+        [{"framework": str, "avg_gate": float, "pass_rate": float, "count": int, "score": float}]
+    """
+    log = _load_json(REFLECTION_LOG_PATH)
+    entries = log.get("entries", [])
+
+    # 按报告类型筛选
+    if report_type:
+        entries = [e for e in entries if e.get("report_type") == report_type]
+
+    if not entries:
+        return []
+
+    # 聚合每个框架的统计
+    fw_stats: dict[str, list[float]] = {}
+    for e in entries:
+        for fw in e.get("frameworks", []):
+            fw_stats.setdefault(fw, []).append(e.get("gate_score", 0))
+
+    ranking = []
+    for fw, scores in fw_stats.items():
+        count = len(scores)
+        avg_gate = sum(scores) / count if count else 0
+        pass_rate = sum(1 for s in scores if s >= 0.85) / count if count else 0
+
+        # 综合得分 = 平均Gate分 × 通过率 × log(使用量+1)
+        import math
+        score = avg_gate * pass_rate * math.log(count + 1)
+
+        ranking.append({
+            "framework": fw,
+            "avg_gate": round(avg_gate, 4),
+            "pass_rate": round(pass_rate, 4),
+            "count": count,
+            "score": round(score, 4),
+        })
+
+    # 按综合得分降序
+    ranking.sort(key=lambda x: -x["score"])
+    return ranking
+
+
 if __name__ == "__main__":
     import sys
 
     if len(sys.argv) > 1 and sys.argv[1] == "--stats":
         print(json.dumps(get_reflection_stats(), ensure_ascii=False, indent=2))
+    elif len(sys.argv) > 1 and sys.argv[1] == "--ranking":
+        rt = sys.argv[2] if len(sys.argv) > 2 else None
+        ranking = get_framework_ranking(rt)
+        print(json.dumps(ranking, ensure_ascii=False, indent=2))
     else:
-        print("用法: python core/method_reflection.py --stats")
+        print("用法: python core/method_reflection.py --stats|--ranking [report_type]")

@@ -2,9 +2,10 @@
 
 Phase 3: Plan-and-Execute 模式 + Human-in-the-loop 接口
 """
-from dataclasses import dataclass, field
-from typing import Optional
+
 import logging
+from dataclasses import dataclass
+from typing import Optional
 
 logger = logging.getLogger("2hao.plan_and_execute")
 
@@ -12,6 +13,7 @@ logger = logging.getLogger("2hao.plan_and_execute")
 @dataclass
 class ReportPlan:
     """报告计划"""
+
     asset: str
     report_type: str
     dimensions: list[dict]  # [{"id": "headline", "weight": 1.5, "focus": True}]
@@ -104,11 +106,13 @@ class PlanAndExecuteOrchestrator:
         outline = []
         for dim in dimensions:
             if isinstance(dim, dict):
-                outline.append({
-                    "id": dim.get("id", ""),
-                    "weight": 1.0,
-                    "focus": False,
-                })
+                outline.append(
+                    {
+                        "id": dim.get("id", ""),
+                        "weight": 1.0,
+                        "focus": False,
+                    }
+                )
 
         return outline
 
@@ -199,9 +203,9 @@ class HumanInTheLoop:
         # 等待用户输入
         response = input("\n是否继续执行？(y/n/修改建议): ")
 
-        if response.lower() == 'y':
+        if response.lower() == "y":
             return True
-        elif response.lower() == 'n':
+        elif response.lower() == "n":
             return False
         else:
             # 用户提供修改建议
@@ -221,9 +225,9 @@ class HumanInTheLoop:
 
         response = input("\n是否通过？(y/n/修改建议): ")
 
-        if response.lower() == 'y':
+        if response.lower() == "y":
             return True, report
-        elif response.lower() == 'n':
+        elif response.lower() == "n":
             return False, report
         else:
             return False, response  # 返回修改建议

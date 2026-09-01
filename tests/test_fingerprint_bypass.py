@@ -7,6 +7,7 @@
 3. 指纹 JSON 损坏 → 必须阻断（此前 fail-open 放行）
 4. 通配扫描被移除：无精确指纹文件时，即使目录里有其他资产指纹 → 必须阻断
 """
+
 import json
 import sys
 from pathlib import Path

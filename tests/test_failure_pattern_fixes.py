@@ -10,6 +10,7 @@
    → 表格上下文要求连续 2 行首尾|才进入
 4. so_what_chain prompt 词表与 Gate 检查词表不一致 → 对齐
 """
+
 import sys
 from pathlib import Path
 
@@ -17,7 +18,6 @@ _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-import pytest
 
 from pipeline.checks.analysis_mixin import AnalysisChecksMixin
 from pipeline.checks.content_format_mixin import ContentFormatChecksMixin
@@ -103,6 +103,7 @@ class TestSacCoverageFix:
             "公司产品技术领先，全球市场逐步打开，管理层决策聚焦主业。",
             "unlisted_company",
         )
+
         # 模拟 SAC 维度：只缺 capital_efficiency（PE/VC 豁免类）
         class FakeSac:
             _data = {

@@ -29,6 +29,7 @@ logger = logging.getLogger("2hao.smart_router")
 @dataclass
 class CreditBalance:
     """Provider 信用余额"""
+
     provider: str
     total_cents: int  # 总额度（美分）
     used_cents: int = 0  # 已用额度
@@ -57,6 +58,7 @@ class CreditBalance:
 @dataclass
 class ModelConfig:
     """模型配置"""
+
     name: str
     provider: str
     base_url: str
@@ -303,6 +305,23 @@ class SmartRouter:
                 self._failures[provider],
             )
 
+    def _record_timeout(self, provider: str):
+        """超时计为半次失败——并行请求容易同时超时，避免误触熔断。"""
+        prev = self._failures.get(provider, 0)
+        self._failures[provider] = prev + 0.5
+        if self._failures[provider] >= self.CIRCUIT_BREAK_THRESHOLD:
+            cooldown = min(
+                self.CIRCUIT_BREAK_COOLDOWN_BASE * (2 ** (int(self._failures[provider]) - self.CIRCUIT_BREAK_THRESHOLD)),
+                self.CIRCUIT_BREAK_COOLDOWN_MAX,
+            )
+            self._circuit_broken_until[provider] = time.time() + cooldown
+            logger.warning(
+                "Provider %s circuit-broken for %.0fs (consecutive=%.1f)",
+                provider,
+                cooldown,
+                self._failures[provider],
+            )
+
     def _record_success(self, provider: str):
         """记录成功"""
         self._failures[provider] = 0
@@ -324,6 +343,7 @@ class SmartRouter:
 
         # 转换为整数美分（向上取整，确保至少记录 1 美分如果有成本）
         import math
+
         cost_cents = math.ceil(cost_cents_float) if cost_cents_float > 0 else 0
 
         credit.used_cents += cost_cents
@@ -451,17 +471,19 @@ class SmartRouter:
         for name, config in sorted(self._configs.items(), key=lambda x: x[1].priority):
             credit = self._credits.get(name)
             api_key = os.environ.get(config.api_key_env, "")
-            result.append({
-                "name": name,
-                "priority": config.priority,
-                "is_free": config.is_free,
-                "has_api_key": bool(api_key),
-                "credit_usd": credit.remaining_usd if credit else 0,
-                "credit_pct": credit.usage_pct if credit else 0,
-                "failures": self._failures.get(name, 0),
-                "circuit_broken": self._failures.get(name, 0) >= self.CIRCUIT_BREAK_THRESHOLD,
-                "models": config.models,
-            })
+            result.append(
+                {
+                    "name": name,
+                    "priority": config.priority,
+                    "is_free": config.is_free,
+                    "has_api_key": bool(api_key),
+                    "credit_usd": credit.remaining_usd if credit else 0,
+                    "credit_pct": credit.usage_pct if credit else 0,
+                    "failures": self._failures.get(name, 0),
+                    "circuit_broken": self._failures.get(name, 0) >= self.CIRCUIT_BREAK_THRESHOLD,
+                    "models": config.models,
+                }
+            )
         return result
 
     def reset_circuit_breaker(self, provider: str):
@@ -511,6 +533,11 @@ def record_success(provider: str):
 def record_failure(provider: str):
     """便捷函数：记录失败"""
     get_router()._record_failure(provider)
+
+
+def record_timeout(provider: str):
+    """便捷函数：记录超时（计为半次失败）"""
+    get_router()._record_timeout(provider)
 
 
 def get_provider_status() -> list[dict]:

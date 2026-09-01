@@ -224,15 +224,15 @@ class TrackRecordManager:
     def log_run(self, job_id: str, asset: str, report_type: str, style: str, result: dict):
         """Log pipeline run and extract bold calls for track record."""
         from core.bold_call_extractor import BoldCallExtractor
-        
+
         try:
             text = result.get("final_text", "") or result.get("report_text", "")
             if not text:
                 return
-            
+
             bce = BoldCallExtractor()
             calls = bce.extract(text)
-            
+
             for call in calls:
                 # Determine direction from call
                 direction = "bullish"
@@ -240,10 +240,10 @@ class TrackRecordManager:
                     direction = "bearish"
                 elif any(kw in call.get("text", "").lower() for kw in ["中性", "持有", "观望"]):
                     direction = "neutral"
-                
+
                 # Extract industry from asset or report context
                 industry = call.get("industry", "")
-                
+
                 pred = self.register_prediction(
                     asset=asset,
                     report_type=report_type,
@@ -260,11 +260,7 @@ class TrackRecordManager:
     def list_recent(self, limit: int = 50) -> list:
         """List recent runs from track record."""
         # Sort by made_date descending
-        sorted_preds = sorted(
-            self.record.predictions, 
-            key=lambda p: p.made_date, 
-            reverse=True
-        )
+        sorted_preds = sorted(self.record.predictions, key=lambda p: p.made_date, reverse=True)
         return [
             {
                 "id": p.id,
@@ -289,26 +285,26 @@ class TrackRecordManager:
         resolved = [p for p in self.record.predictions if p.outcome in ("correct", "incorrect")]
         total = len(resolved)
         correct = sum(1 for p in resolved if p.outcome == "correct")
-        
+
         directional_acc = correct / total if total > 0 else 0
-        
+
         # Calculate avg PnL (mock for now - would need price data)
         avg_pnl = 0.0
         if resolved:
             # Simplified: assume correct = +10%, incorrect = -5%
             avg_pnl = (correct * 10 - (total - correct) * 5) / total
-        
+
         # Group by sector
         by_sector = {}
         for p in self.record.predictions:
             if p.industry:
                 by_sector[p.industry] = by_sector.get(p.industry, 0) + 1
-        
+
         # Group by type
         by_type = {}
         for p in self.record.predictions:
             by_type[p.report_type] = by_type.get(p.report_type, 0) + 1
-        
+
         return {
             "total_calls": len(self.record.predictions),
             "resolved_calls": total,

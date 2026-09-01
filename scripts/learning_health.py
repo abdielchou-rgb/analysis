@@ -16,10 +16,11 @@ FP5 宪法要求："同类型 Gate 失败的复发率必须逐月下降（目标
     python scripts/learning_health.py --weeks 12
     python scripts/learning_health.py --out report.md
 """
+
 import argparse
 import sqlite3
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
@@ -125,8 +126,9 @@ def render_md(weeks_data: list[dict], weeks: int) -> str:
     lines.append("")
     lines.append("## 结论")
     lines.append("")
-    lines.append("> FP5 要求复发率逐月下降 50%。本曲线是收敛指标的第一份基线——"
-                 "后续每周跑一次，观察 top 失败项是否随修复递减。")
+    lines.append(
+        "> FP5 要求复发率逐月下降 50%。本曲线是收敛指标的第一份基线——后续每周跑一次，观察 top 失败项是否随修复递减。"
+    )
     lines.append("> 铁律：复发项必须先归因（gate_failure_triage.py）再修，禁止盲改。")
     return "\n".join(lines)
 
@@ -142,7 +144,9 @@ def main():
         print("[HEALTH] 无失败数据")
         return
     md = render_md(data, args.weeks)
-    out_path = Path(args.out) if args.out else _ROOT / "output" / f"learning_health_{datetime.now().strftime('%Y%m%d')}.md"
+    out_path = (
+        Path(args.out) if args.out else _ROOT / "output" / f"learning_health_{datetime.now().strftime('%Y%m%d')}.md"
+    )
     out_path.write_text(md, encoding="utf-8")
     print(f"[HEALTH] 报告已写入: {out_path}")
     # 控制台摘要

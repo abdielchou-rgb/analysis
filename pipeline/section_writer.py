@@ -2464,7 +2464,9 @@ class SectionWriter:
                 "分析师不对其准确性作出保证。数据不足之处已明确标注「数据有限」或「待尽调核实」。"
                 "非上市企业分析结果仅供参考，不构成投资建议。\n\n"
             )
-        _compliance_text = _rating_table + _conflict + _important_notice + _no_guarantee + _analyst_cert + _data_disclaimer
+        _compliance_text = (
+            _rating_table + _conflict + _important_notice + _no_guarantee + _analyst_cert + _data_disclaimer
+        )
         _first_h2 = re.search(r"\n## ", report)
         if _first_h2:
             _pos = _first_h2.start()
@@ -2496,9 +2498,18 @@ class SectionWriter:
                                     _sec_pos = _sec_match.start()
                                     _after_sec = _body[_sec_pos:]
                                     _last_dim = max(
-                                        [_after_sec.find(x) for x in re.findall(r"\n###? \[DIM:", _after_sec) if _after_sec.find(x) > 0] or [0]
+                                        [
+                                            _after_sec.find(x)
+                                            for x in re.findall(r"\n###? \[DIM:", _after_sec)
+                                            if _after_sec.find(x) > 0
+                                        ]
+                                        or [0]
                                     )
-                                    _insert_pos = _sec_pos + _last_dim if _last_dim > 0 else _sec_pos + len(_after_sec.split("\n")[0]) + 1
+                                    _insert_pos = (
+                                        _sec_pos + _last_dim
+                                        if _last_dim > 0
+                                        else _sec_pos + len(_after_sec.split("\n")[0]) + 1
+                                    )
                                     _chart_markdown = f"\n\n![{_alias}]({_path})\n"
                                     _body = _body[:_insert_pos] + _chart_markdown + _body[_insert_pos:]
                                 break
@@ -2927,7 +2938,9 @@ class SectionWriter:
                 "分析师不对其准确性作出保证。数据不足之处已明确标注「数据有限」或「待尽调核实」。"
                 "非上市企业分析结果仅供参考，不构成投资建议。\n\n"
             )
-        _compliance_text = _rating_table + _conflict + _important_notice + _no_guarantee + _analyst_cert + _data_disclaimer
+        _compliance_text = (
+            _rating_table + _conflict + _important_notice + _no_guarantee + _analyst_cert + _data_disclaimer
+        )
         # 找到第一个 ## 标题的位置（即 section A 开头），在其前插入合规章节
         _first_h2 = _re.search(r"\n## ", report)
         if _first_h2:
@@ -2964,9 +2977,18 @@ class SectionWriter:
                                     _sec_pos = _sec_match.start()
                                     _after_sec = _body[_sec_pos:]
                                     _last_dim = max(
-                                        [_after_sec.find(x) for x in _re.findall(r"\n###? \[DIM:", _after_sec) if _after_sec.find(x) > 0] or [0]
+                                        [
+                                            _after_sec.find(x)
+                                            for x in _re.findall(r"\n###? \[DIM:", _after_sec)
+                                            if _after_sec.find(x) > 0
+                                        ]
+                                        or [0]
                                     )
-                                    _insert_pos = _sec_pos + _last_dim if _last_dim > 0 else _sec_pos + len(_after_sec.split("\n")[0]) + 1
+                                    _insert_pos = (
+                                        _sec_pos + _last_dim
+                                        if _last_dim > 0
+                                        else _sec_pos + len(_after_sec.split("\n")[0]) + 1
+                                    )
                                     _chart_markdown = f"\n\n![{_alias}]({_path})\n"
                                     _body = _body[:_insert_pos] + _chart_markdown + _body[_insert_pos:]
                                 break

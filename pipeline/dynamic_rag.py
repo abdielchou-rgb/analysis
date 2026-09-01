@@ -16,7 +16,7 @@ import logging
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 logger = logging.getLogger("2hao.dynamic_rag")
 
@@ -178,9 +178,7 @@ class DynamicRAG:
 
         return result
 
-    def _retrieve_from_knowledge_base(
-        self, query: str, context: Optional[dict] = None
-    ) -> list[Evidence]:
+    def _retrieve_from_knowledge_base(self, query: str, context: Optional[dict] = None) -> list[Evidence]:
         """从知识库检索"""
         evidences = []
 
@@ -189,21 +187,25 @@ class DynamicRAG:
             if isinstance(data, dict):
                 for key, value in data.items():
                     if self._is_relevant(query, str(key) + " " + str(value)):
-                        evidences.append(Evidence(
-                            content=str(value)[:500],
-                            source=f"knowledge_base/{name}/{key}",
-                            relevance=self._calculate_relevance(query, str(value)),
-                            evidence_type="knowledge",
-                        ))
+                        evidences.append(
+                            Evidence(
+                                content=str(value)[:500],
+                                source=f"knowledge_base/{name}/{key}",
+                                relevance=self._calculate_relevance(query, str(value)),
+                                evidence_type="knowledge",
+                            )
+                        )
             elif isinstance(data, list):
                 for i, item in enumerate(data):
                     if self._is_relevant(query, str(item)):
-                        evidences.append(Evidence(
-                            content=str(item)[:500],
-                            source=f"knowledge_base/{name}/{i}",
-                            relevance=self._calculate_relevance(query, str(item)),
-                            evidence_type="knowledge",
-                        ))
+                        evidences.append(
+                            Evidence(
+                                content=str(item)[:500],
+                                source=f"knowledge_base/{name}/{i}",
+                                relevance=self._calculate_relevance(query, str(item)),
+                                evidence_type="knowledge",
+                            )
+                        )
 
         return evidences
 
@@ -241,7 +243,7 @@ class DynamicRAG:
         evidences.sort(key=lambda e: e.relevance, reverse=True)
 
         # 限制数量
-        return evidences[:self.max_evidences]
+        return evidences[: self.max_evidences]
 
     def _identify_gaps(
         self,
@@ -254,20 +256,24 @@ class DynamicRAG:
 
         # 检查是否有足够的证据
         if len(evidences) < 3:
-            gaps.append(EvidenceGap(
-                topic=query,
-                description=f"证据不足，仅有 {len(evidences)} 条",
-                priority=0.8,
-            ))
+            gaps.append(
+                EvidenceGap(
+                    topic=query,
+                    description=f"证据不足，仅有 {len(evidences)} 条",
+                    priority=0.8,
+                )
+            )
 
         # 检查证据类型多样性
         types = set(e.evidence_type for e in evidences)
         if len(types) < 2:
-            gaps.append(EvidenceGap(
-                topic=query,
-                description="证据类型单一，需要更多数据源",
-                priority=0.6,
-            ))
+            gaps.append(
+                EvidenceGap(
+                    topic=query,
+                    description="证据类型单一，需要更多数据源",
+                    priority=0.6,
+                )
+            )
 
         return gaps
 
@@ -277,6 +283,7 @@ class DynamicRAG:
 
         # 检查是否有数据支撑
         import re
+
         data_patterns = [
             r"(\d+\.?\d*)\s*%",
             r"(\d+\.?\d*)\s*亿",
@@ -285,19 +292,23 @@ class DynamicRAG:
 
         has_data = any(re.search(pat, argument) for pat in data_patterns)
         if not has_data:
-            gaps.append(EvidenceGap(
-                topic=f"{side} 论点数据支撑",
-                description=f"{side} 论点缺乏具体数据支撑",
-                priority=0.9,
-            ))
+            gaps.append(
+                EvidenceGap(
+                    topic=f"{side} 论点数据支撑",
+                    description=f"{side} 论点缺乏具体数据支撑",
+                    priority=0.9,
+                )
+            )
 
         # 检查是否有来源标注
         if "(A)" not in argument and "(E)" not in argument and "(F)" not in argument:
-            gaps.append(EvidenceGap(
-                topic=f"{side} 论点来源",
-                description=f"{side} 论点缺乏来源标注",
-                priority=0.7,
-            ))
+            gaps.append(
+                EvidenceGap(
+                    topic=f"{side} 论点来源",
+                    description=f"{side} 论点缺乏来源标注",
+                    priority=0.7,
+                )
+            )
 
         return gaps
 
@@ -349,15 +360,13 @@ class DynamicRAG:
         # 重排序
         reranked_results = self._rerank(filtered_results, query)
 
-        result.evidences = reranked_results[:self.max_evidences]
+        result.evidences = reranked_results[: self.max_evidences]
         result.gaps = self._identify_gaps(query, result.evidences, context)
         result.total_duration_ms = (time.time() - start_time) * 1000
 
         return result
 
-    def _bm25_retrieve(
-        self, query: str, context: Optional[dict] = None
-    ) -> list[tuple[Evidence, float]]:
+    def _bm25_retrieve(self, query: str, context: Optional[dict] = None) -> list[tuple[Evidence, float]]:
         """
         BM25 关键词检索
 
@@ -407,9 +416,7 @@ class DynamicRAG:
 
         return score / len(query_words)
 
-    def _semantic_retrieve(
-        self, query: str, context: Optional[dict] = None
-    ) -> list[tuple[Evidence, float]]:
+    def _semantic_retrieve(self, query: str, context: Optional[dict] = None) -> list[tuple[Evidence, float]]:
         """
         语义向量检索
 

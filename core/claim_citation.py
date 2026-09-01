@@ -198,3 +198,83 @@ def annotate_inline(report_text: str, collected_data: dict, max_markers: int = 4
         marked_text += "。"
     appendix = render_numbered_appendix(claims)
     return marked_text + "\n" + appendix, claims
+
+
+def render_jsonld_ledger(claims: list[dict], provenance: dict | None = None) -> str:
+    """生成 JSON-LD claim→source ledger，嵌入报告尾部。
+
+    <script type="application/ld+json"> 块，每个 claim 带 source URL。
+    符合 FP2a 诚实标注：有来源填 URL，无来源标 "unavailable"。
+
+    Args:
+        claims: build_claim_citation_map 的输出
+        provenance: data_provenance 字典（可选），用于匹配数据键到原始 URL
+    Returns:
+        JSON-LD 字符串，无 claims 时返回空字符串
+    """
+    if not claims:
+        return ""
+
+    provenance = provenance or {}
+    source_map = {}
+    # 从 provenance.sources 提取 {数据键: URL} 映射
+    for src in provenance.get("sources", []):
+        key = src.get("key", src.get("data_key", ""))
+        url = src.get("url", src.get("source_url", ""))
+        if key and url:
+            source_map[key] = url
+
+    ledger = []
+    for claim in claims:
+        claim_text = claim.get("claim", "")
+        data_key = claim.get("key", "")
+        source_url = source_map.get(data_key, "unavailable")
+
+        ledger.append({
+            "@type": "Claim",
+            "claim": claim_text,
+            "source": {
+                "url": source_url,
+                "data_key": data_key,
+                "confidence": claim.get("confidence", "matched"),
+            },
+        })
+
+    import json
+    return f'\n<script type="application/ld+json">\n{json.dumps(ledger, ensure_ascii=False, indent=2)}\n</script>\n'
+
+
+def build_footnote_url_map(claims: list[dict], provenance: dict | None = None) -> dict[str, str]:
+    """构建 [注N] → 来源 URL 映射，供 exporter 超链接使用。
+
+    Returns:
+        {"1": "https://...", "2": "https://...", ...}
+    """
+    if not claims:
+        return {}
+
+    provenance = provenance or {}
+    source_map = {}
+    for src in provenance.get("sources", []):
+        key = src.get("key", src.get("data_key", ""))
+        url = src.get("url", src.get("source_url", ""))
+        if key and url:
+            source_map[key] = url
+
+    url_map = {}
+    for i, claim in enumerate(claims, 1):
+        refs = claim.get("refs", [])
+        for ref in refs:
+            url = source_map.get(ref, "")
+            if url:
+                url_map[str(i)] = url
+                break
+        # 如果没有精确匹配，尝试从 sources 列表取第一个 URL
+        if str(i) not in url_map:
+            sources = claim.get("sources", [])
+            for src in sources:
+                if src.startswith("http"):
+                    url_map[str(i)] = src
+                    break
+
+    return url_map

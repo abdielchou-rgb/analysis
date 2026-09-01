@@ -3,10 +3,9 @@ Golden Sample Regression Tests — 30 real institutional reports as quality base
 Run: pytest tests/test_golden_regression.py -v -m golden
 """
 
-import pytest
-import tempfile
-import os
 from pathlib import Path
+
+import pytest
 
 # Golden sample corpus: 30 real reports across 5 types x 6 styles
 # User must populate benchmark/golden/{type}/ with real PDF→MD conversions
@@ -75,51 +74,42 @@ CRITICAL_CHECKS = [
 def test_golden_regression(asset, rtype, style, tmp_path):
     """Run full pipeline on golden sample, verify gate passes with minimum score."""
     from main import run_pipeline
-    
+
     output_dir = tmp_path / f"{asset}_{rtype}_{style}"
     output_dir.mkdir(parents=True, exist_ok=True)
-    
+
     result = run_pipeline(
         asset=asset,
         report_type=rtype,
         style=style,
         output_dir=str(output_dir),
     )
-    
+
     # 1. Pipeline must complete successfully
-    assert result["status"] == "ok", (
-        f"{asset} [{rtype}/{style}] pipeline failed: {result.get('error')}"
-    )
-    
+    assert result["status"] == "ok", f"{asset} [{rtype}/{style}] pipeline failed: {result.get('error')}"
+
     # 2. Gate score meets type-specific threshold
     gate_score = result.get("gate_score", 0.0)
     min_score = MIN_GATE_SCORE.get(rtype, 0.80)
-    assert gate_score >= min_score, (
-        f"{asset} [{rtype}/{style}] gate_score={gate_score:.3f} < {min_score}"
-    )
-    
+    assert gate_score >= min_score, f"{asset} [{rtype}/{style}] gate_score={gate_score:.3f} < {min_score}"
+
     # 3. All critical checks must pass
     gate_checks = result.get("gate_checks", {})
     for check_name in CRITICAL_CHECKS:
-        check_passed = any(
-            c.get("name") == check_name and c.get("passed") 
-            for c in gate_checks.get("checks", [])
-        )
-        assert check_passed, (
-            f"{asset} [{rtype}/{style}] CRITICAL CHECK FAILED: {check_name}"
-        )
-    
+        check_passed = any(c.get("name") == check_name and c.get("passed") for c in gate_checks.get("checks", []))
+        assert check_passed, f"{asset} [{rtype}/{style}] CRITICAL CHECK FAILED: {check_name}"
+
     # 4. Output files exist
     assert result.get("md"), f"{asset} MD output missing"
     assert result.get("docx"), f"{asset} DOCX output missing"
     assert Path(result["md"]).exists(), f"{asset} MD file not found"
     assert Path(result["docx"]).exists(), f"{asset} DOCX file not found"
-    
+
     # 5. Basic content sanity
     md_text = Path(result["md"]).read_text(encoding="utf-8")
     assert len(md_text) > 5000, f"{asset} report too short: {len(md_text)} chars"
     assert "目标价" in md_text or "评级" in md_text, f"{asset} missing rating/target"
-    
+
     print(f"✓ {asset} [{rtype}/{style}] gate={gate_score:.3f} md={len(md_text)} chars")
 
 
@@ -128,19 +118,20 @@ def test_golden_summary():
     """Summary test - prints aggregate statistics (run last)."""
     # This test just ensures the suite runs; individual parametrized tests do the work
     assert len(GOLDEN_SAMPLES) == 30
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Golden Regression Suite: {len(GOLDEN_SAMPLES)} samples")
-    print(f"Types: listed_company(6), industry_deep(6), unlisted_company(6)")
-    print(f"       earnings_notes(6), decision_memo(6)")
-    print(f"Styles: cicc, gs, ms, jpm, mck, bcg")
+    print("Types: listed_company(6), industry_deep(6), unlisted_company(6)")
+    print("       earnings_notes(6), decision_memo(6)")
+    print("Styles: cicc, gs, ms, jpm, mck, bcg")
     print(f"Critical checks: {len(CRITICAL_CHECKS)}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
 
 # Helper to check golden sample readiness
 def check_golden_readiness():
     """Check if golden samples are populated."""
     from pathlib import Path
+
     base = Path("benchmark/golden")
     ready = {}
     for rtype in ["listed_company", "industry_deep", "unlisted_company", "earnings_notes", "decision_memo"]:

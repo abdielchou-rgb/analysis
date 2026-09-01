@@ -30,7 +30,7 @@ def main():
 
     from core.forward_picks import ForwardPick, ForwardPicksDB
 
-    csv_path = _ROOT / "data" / "forward_picks.csv"
+    csv_path = _ROOT / "data" / "forward_picks" / "forward_picks.csv"
     if not csv_path.exists():
         print(f"[ERR] {csv_path} 不存在")
         return 1

@@ -313,6 +313,29 @@ def schedule(
         result["status"] = "error"
         result["_scheduler"] = True
         result["_env_checks"] = ENV_CHECKS
+        # P1-1 (2026-09-01): 测量层通电——错误路径同样记录失败观测，避免主链路停摆时无数据
+        try:
+            import datetime
+            from core.metrics import ObservabilityDB, ValidateHistory
+
+            _obs = ObservabilityDB()
+            _obs.log_validation(
+                ValidateHistory(
+                    timestamp=datetime.datetime.now().isoformat(),
+                    report_id=str(asset or "unknown"),
+                    sac_coverage={"covered": 0, "required": 0, "passed": False},
+                    judgment_density=0.0,
+                    style_deviation_score=0.0,
+                    modification_count=0,
+                    generation_duration_seconds=0.0,
+                    passed=False,
+                    notes="auto-log from scheduler: orchestrator error (" + str(result.get("message", "unknown"))[:80] + ")",
+                )
+            )
+            _obs.record_quality_trend("gate_score_avg", 0.0, sample_size=1)
+            _obs.record_quality_trend("gate_pass_rate", 0.0, sample_size=1)
+        except Exception as _e:
+            logger.debug("[P1-1] scheduler error 路径观测记录失败: %s", _e)
         # L3 LLM 兜底信号透传（agent 可感知并介入）
         if result.get("needs_agent"):
             result["status"] = "needs_agent"
@@ -334,6 +357,32 @@ def schedule(
     else:
         print("  Iron Gate: 跳过（无报告文本）")
         result["gate_passed"] = True
+        # P1-1 (2026-09-01): 测量层通电——报告未生成（LLM 不可用/orchestrator 失败）时
+        # 主链路不会跑到 IronGate.run_all，观测写入随之停摆（validate_history 停在 7 月）。
+        # 在跳过路径同样记录一条失败历史，保证每次调度必有观测数据。
+        try:
+            import datetime
+            from core.metrics import ObservabilityDB, ValidateHistory
+
+            _obs = ObservabilityDB()
+            _obs.log_validation(
+                ValidateHistory(
+                    timestamp=datetime.datetime.now().isoformat(),
+                    report_id=str(asset or "unknown"),
+                    sac_coverage={"covered": 0, "required": 0, "passed": False},
+                    judgment_density=0.0,
+                    style_deviation_score=0.0,
+                    modification_count=0,
+                    generation_duration_seconds=0.0,
+                    passed=False,
+                    notes="auto-log from scheduler: no report text (LLM unavailable / orchestrator failed)",
+                )
+            )
+            _obs.record_quality_trend("gate_score_avg", 0.0, sample_size=1)
+            _obs.record_quality_trend("gate_pass_rate", 0.0, sample_size=1)
+            logger.info("[P1-1] scheduler 跳过路径已记录失败观测")
+        except Exception as _e:
+            logger.debug("[P1-1] scheduler 跳过路径观测记录失败: %s", _e)
 
     result["status"] = "ok"
     result["_scheduler"] = True

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """P2-4 / P0-2 (2026-09-01): 出口质量红线测试——乱码/裸来源锚点拦截。"""
+
 import sys
 from pathlib import Path
 
@@ -7,9 +8,7 @@ _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-import pytest
 
-from pipeline.checks.base import GateCheckResult
 from pipeline.checks.content_format_mixin import ContentFormatChecksMixin
 
 

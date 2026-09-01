@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import re
 from functools import lru_cache
 
 logger = logging.getLogger("2hao.semantic_match")
@@ -14,6 +13,7 @@ def _get_vectorizer():
     """懒加载 TF-IDF 向量化器（避免冷启动开销）。"""
     try:
         from sklearn.feature_extraction.text import TfidfVectorizer
+
         return TfidfVectorizer(ngram_range=(1, 2), max_features=2000, min_df=1)
     except Exception as e:
         logger.warning("[SEMANTIC] sklearn 不可用，降级关键词匹配: %s", e)

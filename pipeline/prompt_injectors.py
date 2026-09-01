@@ -643,6 +643,41 @@ def _inj_tm_str(ctx):
 # ── 注册表 ──────────────────────────────────────────────────
 # (变量名, 注入器)。section_writer 侧按变量名取回，下游 prompt 组装零改动。
 
+def _inj_sentiment_str(ctx):
+    """S2-4：last30days 舆情信号注入（近30天动态 + 情绪摘要）。"""
+    try:
+        data = ctx.get("data_context", {}) or {}
+        cd = data.get("chart_data", {}) if isinstance(data.get("chart_data"), dict) else {}
+        recent_news = cd.get("fig_recent_news")
+        sentiment = cd.get("fig_sentiment")
+        if not recent_news and not sentiment:
+            return ""
+        lines = ["## 近30天舆情信号(last30days)", ""]
+        if recent_news:
+            clusters = recent_news.get("clusters", [])
+            evidence = recent_news.get("evidence", "")
+            if clusters:
+                lines.append(f"**新闻簇**（共{len(clusters)}条，按信号强度排序）：")
+                for i, cl in enumerate(clusters[:5], 1):
+                    lines.append(f"{i}. {cl.get('title', '')} — 来源: {cl.get('sources', '')}, 信号强度: {cl.get('score', 0)}")
+            if evidence:
+                lines.append("")
+                lines.append(f"**证据摘要**: {evidence[:500]}")
+            lines.append("")
+        if sentiment:
+            summary = sentiment.get("summary", "")
+            if summary:
+                lines.append(f"**情绪判断**: {summary}")
+            freshness = sentiment.get("freshness")
+            if freshness:
+                lines.append(f"**时效性**: {freshness} 条数据来自最近7天")
+            lines.append("")
+        return "\n".join(lines)
+    except Exception as e:
+        logger.warning("[INJECTOR] sentiment_str 失败: %s", str(e)[:60])
+        return ""
+
+
 # P3-B：追加注入器（方法论置信度 / [E#] 证据清单 / 研究问题树）从子模块挂载
 from pipeline.prompt_injectors_p3b import (  # noqa: E402
     _inj_analogy_str,
@@ -706,6 +741,7 @@ INJECTORS = [
     ("consulting_str", _inj_consulting_str),
     ("market_seg_str", _inj_market_seg_str),
     ("analogy_str", _inj_analogy_str),
+    ("sentiment_str", _inj_sentiment_str),
 ]
 
 

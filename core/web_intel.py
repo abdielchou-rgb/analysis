@@ -259,18 +259,19 @@ def intel_to_context(result: WebIntelResult) -> dict:
 
 def web_intel_to_datapoints(result: WebIntelResult, asset: str) -> list:
     """Convert WebIntelResult to DataPoint list with full provenance."""
-    from core.models import DataPoint
-    from datetime import datetime, timezone
     import hashlib
-    
+    from datetime import datetime, timezone
+
+    from core.models import DataPoint
+
     dps = []
     all_items = (
-        [("news", r) for r in result.news] +
-        [("industry", r) for r in result.industry] +
-        [("competitors", r) for r in result.competitors] +
-        [("catalysts", r) for r in result.catalysts] +
-        [("risks", r) for r in result.risks] +
-        [("macro", r) for r in result.macro]
+        [("news", r) for r in result.news]
+        + [("industry", r) for r in result.industry]
+        + [("competitors", r) for r in result.competitors]
+        + [("catalysts", r) for r in result.catalysts]
+        + [("risks", r) for r in result.risks]
+        + [("macro", r) for r in result.macro]
     )
     for category, item in all_items:
         url = item.get("url", "")
@@ -280,7 +281,8 @@ def web_intel_to_datapoints(result: WebIntelResult, asset: str) -> list:
             continue
         # Try to extract a numeric value
         import re
-        numbers = re.findall(r'[\d,]+\.?\d*\s*[%亿元万倍]', content)
+
+        numbers = re.findall(r"[\d,]+\.?\d*\s*[%亿元万倍]", content)
         val = numbers[0] if numbers else content[:100]
         excerpt = f"{title}: {content[:200]}"
         dps.append(

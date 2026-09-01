@@ -6,16 +6,15 @@
 2. record_quality_trend 写 quality_trends（此前 0 条）
 3. 写入失败不阻塞主流程（write-and-forget）
 """
+
 import sqlite3
 import sys
-import tempfile
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-import pytest
 
 from core.metrics import ObservabilityDB, ValidateHistory
 
@@ -71,9 +70,7 @@ class TestObservabilityWiring:
         obs = ObservabilityDB(str(db))
         obs.log_llm_call_simple("test_module", "sec", 100, 50, 10, status="success", provider="deepseek")
         conn = sqlite3.connect(str(db))
-        rows = conn.execute(
-            "SELECT module, provider, total_tokens, status FROM llm_calls"
-        ).fetchall()
+        rows = conn.execute("SELECT module, provider, total_tokens, status FROM llm_calls").fetchall()
         conn.close()
         assert len(rows) == 1
         assert rows[0][1] == "deepseek"

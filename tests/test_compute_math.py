@@ -9,6 +9,7 @@ run_dcf / run_comparable / run_scenario 是全仓最值钱的纯数值资产，
 - 可比：implied = eps * mean(peer_pe)
 - 情景：weighted = bull*p_bull + base*p_base + bear*p_bear
 """
+
 import sys
 from pathlib import Path
 
@@ -51,20 +52,21 @@ class TestDCF:
         终值 = 205.54*1.03/(0.10-0.03) = 3025.3
         PV_终端 = 3025.3 / 1.1^10 = 3025.3/2.5937 = 1166.4
         """
-        r = run_dcf(DCFInput(free_cash_flow=100.0, growth_years_1_5=0.10, growth_years_6_10=0.05,
-                             terminal_growth=0.03, wacc=0.10))
+        r = run_dcf(
+            DCFInput(
+                free_cash_flow=100.0, growth_years_1_5=0.10, growth_years_6_10=0.05, terminal_growth=0.03, wacc=0.10
+            )
+        )
         # 用精确递推手算验证范围
-        fcf5 = 100 * 1.1 ** 5  # 161.051
-        fcf10 = fcf5 * 1.05 ** 5  # 205.54
+        fcf5 = 100 * 1.1**5  # 161.051
+        fcf10 = fcf5 * 1.05**5  # 205.54
         tv = fcf10 * 1.03 / (0.10 - 0.03)
-        pv_tv = tv / (1.1 ** 10)
+        pv_tv = tv / (1.1**10)
         assert r.present_value_terminal == pytest.approx(pv_tv, rel=0.01)
 
     def test_enterprise_equity_value(self):
         """EV = PV_FCF + PV_TV；Equity = EV - net_debt；每股 = Equity/shares。"""
-        r = run_dcf(
-            DCFInput(free_cash_flow=100.0, wacc=0.10, net_debt=50.0, shares_outstanding=10.0)
-        )
+        r = run_dcf(DCFInput(free_cash_flow=100.0, wacc=0.10, net_debt=50.0, shares_outstanding=10.0))
         ev = r.present_value_fcf + r.present_value_terminal
         assert r.enterprise_value == pytest.approx(ev, abs=0.1)
         assert r.equity_value == pytest.approx(ev - 50.0, abs=0.1)

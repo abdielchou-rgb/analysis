@@ -50,6 +50,11 @@ class ReportExporter:
         self.style_id = style_id
         self.title = title
         self._doc: Document | None = None
+        self._footnote_urls: dict[str, str] = {}  # S3-2: 注N → 来源 URL 映射
+
+    def set_footnote_urls(self, urls: dict[str, str]):
+        """设置 [注N] → 来源 URL 映射。"""
+        self._footnote_urls = urls
 
     # ═══════════════════════════════════════════════
     # Word 导出
@@ -307,9 +312,9 @@ class ReportExporter:
         rFonts.set(qn("w:eastAsia"), "SimHei")
 
     def _add_formatted_text(self, paragraph, text: str):
-        """解析行内格式（粗体、斜体）。"""
-        # Split by bold (**text**), italic (*text*), and inline code (`text`)
-        parts = re.split(r"(\*\*.*?\*\*|\*.*?\*|`.*?`)", text)
+        """解析行内格式（粗体、斜体、[注N]脚注引用→超链接）。"""
+        # Split by bold (**text**), italic (*text*), inline code (`text`), and footnote refs [注N]
+        parts = re.split(r"(\*\*.*?\*\*|\*.*?\*|`.*?`|\[注\d+\])", text)
         for part in parts:
             if not part:
                 continue
@@ -323,8 +328,45 @@ class ReportExporter:
                 run = paragraph.add_run(part[1:-1])
                 run.font.name = "Courier New"
                 run.font.size = Pt(9)
+            elif re.match(r"^\[注\d+\]$", part):
+                # [注N] → 超链接指向来源 URL（如有），否则上标
+                note_num = re.search(r"\d+", part).group(0)
+                url = self._footnote_urls.get(note_num, "")
+                if url:
+                    self._add_hyperlink(paragraph, url, part, superscript=True)
+                else:
+                    run = paragraph.add_run(part)
+                    run.font.superscript = True
+                    run.font.size = Pt(7)
+                    run.font.color.rgb = RGBColor(0x33, 0x66, 0x99)
             else:
                 paragraph.add_run(part)
+
+    def _add_hyperlink(self, paragraph, url: str, text: str, superscript: bool = False):
+        """在段落中添加超链接（python-docx OPC 层实现）。"""
+        part = paragraph.part
+        r_id = part.relate_to(url, "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink", is_external=True)
+
+        hyperlink = parse_xml(
+            f'<w:hyperlink xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"'
+            f' r:id="{r_id}" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+            f'</w:hyperlink>'
+        )
+        _vert_align = '<w:vertAlign w:val="superscript"/>' if superscript else ""
+        new_run = parse_xml(
+            f'<w:r xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+            f'<w:rPr>'
+            f'<w:rStyle w:val="Hyperlink"/>'
+            f'<w:color w:val="0563C1"/>'
+            f'<w:u w:val="single"/>'
+            f'<w:sz w:val="14"/>'
+            f'{_vert_align}'
+            f'</w:rPr>'
+            f'<w:t xml:space="preserve">{text}</w:t>'
+            f'</w:r>'
+        )
+        hyperlink.append(new_run)
+        paragraph._p.append(hyperlink)
 
     def _is_table_row(self, line: str) -> bool:
         return bool(re.match(r"^\|.+\|$", line))

@@ -14,7 +14,7 @@ import logging
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 logger = logging.getLogger("2hao.traceability")
 
@@ -181,9 +181,7 @@ class TraceabilityEngine:
         self._reasoning_steps.append(step)
         return step
 
-    def link_claim_to_data(
-        self, claim_id: str, data_source: DataSource
-    ) -> bool:
+    def link_claim_to_data(self, claim_id: str, data_source: DataSource) -> bool:
         """
         链接观点到数据源
 
@@ -200,9 +198,7 @@ class TraceabilityEngine:
                 return True
         return False
 
-    def link_claim_to_reasoning(
-        self, claim_id: str, reasoning_step: ReasoningStep
-    ) -> bool:
+    def link_claim_to_reasoning(self, claim_id: str, reasoning_step: ReasoningStep) -> bool:
         """
         链接观点到推理步骤
 
@@ -295,8 +291,7 @@ class TraceabilityEngine:
                     "type": c.claim_type,
                     "confidence": c.confidence,
                     "data_sources": [
-                        {"name": ds.name, "type": ds.type, "reliability": ds.reliability}
-                        for ds in c.data_sources
+                        {"name": ds.name, "type": ds.type, "reliability": ds.reliability} for ds in c.data_sources
                     ],
                     "reasoning_steps": [
                         {
@@ -312,8 +307,7 @@ class TraceabilityEngine:
                 for c in self._claims
             ],
             "data_sources": [
-                {"name": ds.name, "type": ds.type, "reliability": ds.reliability}
-                for ds in self._data_sources
+                {"name": ds.name, "type": ds.type, "reliability": ds.reliability} for ds in self._data_sources
             ],
             "reasoning_steps": [
                 {
@@ -352,9 +346,7 @@ class TraceabilityEngine:
             # 数据源可靠性加权
             source_reliability = 1.0
             if claim.data_sources:
-                avg_reliability = sum(
-                    ds.reliability for ds in claim.data_sources
-                ) / len(claim.data_sources)
+                avg_reliability = sum(ds.reliability for ds in claim.data_sources) / len(claim.data_sources)
                 source_reliability = avg_reliability
 
             weight = source_reliability
@@ -453,9 +445,7 @@ class TraceabilityEngine:
             # 基于数据源质量调整
             source_quality = 1.0
             if claim.data_sources:
-                avg_reliability = sum(
-                    ds.reliability for ds in claim.data_sources
-                ) / len(claim.data_sources)
+                avg_reliability = sum(ds.reliability for ds in claim.data_sources) / len(claim.data_sources)
                 source_quality = avg_reliability
 
             # 基于推理步骤数量调整
@@ -466,20 +456,22 @@ class TraceabilityEngine:
 
             # 综合校准
             calibrated_confidence = (
-                original_confidence * 0.4 +
-                source_quality * 0.3 +
-                reasoning_depth * 0.2 +
-                falsification_completeness * 0.1
+                original_confidence * 0.4
+                + source_quality * 0.3
+                + reasoning_depth * 0.2
+                + falsification_completeness * 0.1
             )
 
-            calibration_results.append({
-                "claim_id": claim.claim_id,
-                "original_confidence": original_confidence,
-                "calibrated_confidence": calibrated_confidence,
-                "source_quality": source_quality,
-                "reasoning_depth": reasoning_depth,
-                "falsification_completeness": falsification_completeness,
-            })
+            calibration_results.append(
+                {
+                    "claim_id": claim.claim_id,
+                    "original_confidence": original_confidence,
+                    "calibrated_confidence": calibrated_confidence,
+                    "source_quality": source_quality,
+                    "reasoning_depth": reasoning_depth,
+                    "falsification_completeness": falsification_completeness,
+                }
+            )
 
             # 更新置信度
             claim.confidence = calibrated_confidence

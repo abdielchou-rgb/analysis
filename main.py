@@ -26,7 +26,7 @@ if str(_ROOT) not in sys.path:
 
 # Observability
 try:
-    from core.observability import PIPELINE_RUNS, PIPELINE_DURATION
+    from core.observability import PIPELINE_DURATION, PIPELINE_RUNS
 except ImportError:
     PIPELINE_RUNS = PIPELINE_DURATION = None
 
@@ -99,7 +99,7 @@ def run_pipeline(
     # Observability: Track pipeline run
     _pipeline_start = time.time()
     _pipeline_status = "error"
-    
+
     result = {
         "status": "ok",
         "asset": asset,
@@ -204,9 +204,14 @@ def run_pipeline(
     if os.environ.get("REPORT_CITATION_APPENDIX", "1") != "0":
         try:
             if os.environ.get("REPORT_CITATION_INLINE", "0") == "1":
-                from core.claim_citation import annotate_inline
+                from core.claim_citation import annotate_inline, build_footnote_url_map
 
                 cleaned_md, _claims = annotate_inline(cleaned_md, pipe_result.get("collected_data", {}) or {})
+                # S3-2: 构建 [注N] → 来源 URL 映射，供 docx 超链接使用
+                _provenance = pipe_result.get("data_provenance", {}) or {}
+                _fn_urls = build_footnote_url_map(_claims, _provenance)
+                if _fn_urls:
+                    result["footnote_urls"] = _fn_urls
             else:
                 from core.claim_citation import append_citation_appendix
 

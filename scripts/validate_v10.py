@@ -7,11 +7,10 @@ Final Validation Script for 2hao-analyst v10.0
 """
 
 import json
-import os
 import subprocess
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -24,10 +23,7 @@ def run_cmd(cmd, cwd=None, timeout=300):
             shell = False
         else:
             shell = True
-        result = subprocess.run(
-            cmd, shell=shell, cwd=cwd or ROOT,
-            capture_output=True, text=True, timeout=timeout
-        )
+        result = subprocess.run(cmd, shell=shell, cwd=cwd or ROOT, capture_output=True, text=True, timeout=timeout)
         return result.returncode == 0, result.stdout + result.stderr
     except subprocess.TimeoutExpired:
         return False, f"Timeout after {timeout}s"
@@ -73,7 +69,7 @@ def run_pytest(test_path, markers=None, description=""):
     if markers:
         cmd += f" -m {' or '.join(markers)}"
     cmd += " --tb=short -x"
-    
+
     print(f"\n  Running: {description}")
     print(f"  Command: {cmd}")
     success, output = run_cmd(cmd, timeout=600)
@@ -91,95 +87,109 @@ def main():
     print(f"Time: {datetime.now().isoformat()}")
     print(f"Root: {ROOT}")
     print("=" * 70)
-    
+
     all_passed = True
     results = {}
-    
+
     # === Phase 0: Baseline ===
     print("\n[Phase 0] Baseline Freeze")
-    results["phase0"] = all([
-        check_file_exists("benchmark/calibrated_thresholds.v9.38.json", "Baseline thresholds frozen"),
-        check_dir_exists("benchmark/golden", "Golden samples dir", min_files=0),
-    ])
-    
+    results["phase0"] = all(
+        [
+            check_file_exists("benchmark/calibrated_thresholds.v9.38.json", "Baseline thresholds frozen"),
+            check_dir_exists("benchmark/golden", "Golden samples dir", min_files=0),
+        ]
+    )
+
     # === Phase 1: Golden Regression + Provenance ===
     print("\n[Phase 1] Golden Regression + Data Provenance")
-    results["phase1"] = all([
-        check_file_exists("tests/test_golden_regression.py", "Golden regression test"),
-        check_file_exists("core/models.py", "DataPoint provenance fields"),
-        check_file_exists("pipeline/data_collector.py", "DataCollector provenance"),
-        check_file_exists("core/web_intel.py", "WebIntel provenance"),
-        check_file_exists("pipeline/iron_gate.py", "IronGate provenance check"),
-    ])
-    
+    results["phase1"] = all(
+        [
+            check_file_exists("tests/test_golden_regression.py", "Golden regression test"),
+            check_file_exists("core/models.py", "DataPoint provenance fields"),
+            check_file_exists("pipeline/data_collector.py", "DataCollector provenance"),
+            check_file_exists("core/web_intel.py", "WebIntel provenance"),
+            check_file_exists("pipeline/iron_gate.py", "IronGate provenance check"),
+        ]
+    )
+
     # === Phase 2: Compliance + Containerization ===
     print("\n[Phase 2] CSRC Compliance + Docker/Helm/Observability")
-    results["phase2"] = all([
-        check_file_exists("pipeline/iron_gate.py", "CSRC compliance checks"),
-        check_file_exists("Dockerfile", "Dockerfile"),
-        check_file_exists("helm/2hao-analyst/Chart.yaml", "Helm Chart"),
-        check_file_exists("helm/2hao-analyst/values.yaml", "Helm values"),
-        check_file_exists("helm/2hao-analyst/templates/deployment.yaml", "Helm deployment"),
-        check_file_exists("core/observability.py", "Observability module"),
-    ])
-    
+    results["phase2"] = all(
+        [
+            check_file_exists("pipeline/iron_gate.py", "CSRC compliance checks"),
+            check_file_exists("Dockerfile", "Dockerfile"),
+            check_file_exists("helm/2hao-analyst/Chart.yaml", "Helm Chart"),
+            check_file_exists("helm/2hao-analyst/values.yaml", "Helm values"),
+            check_file_exists("helm/2hao-analyst/templates/deployment.yaml", "Helm deployment"),
+            check_file_exists("core/observability.py", "Observability module"),
+        ]
+    )
+
     # === Phase 3: Private Data + Portfolio SAC ===
     print("\n[Phase 3] Private Data Providers + Portfolio SAC")
     # Providers are in single __init__.py, check for 4 provider classes
     providers_ok = True
     try:
-        from core.private_data import ITJuziProvider, Zero2IPOProvider, PitchBookProvider, PreqinProvider
+        from core.private_data import ITJuziProvider, PitchBookProvider, PreqinProvider, Zero2IPOProvider
     except ImportError:
         providers_ok = False
-    results["phase3"] = all([
-        providers_ok,
-        check_file_exists("pipeline/data_enrichment.py", "Enrich node private data integration"),
-        check_file_exists("core/sacs/sac_portfolio_relative.yaml", "Portfolio relative SAC"),
-    ])
-    
+    results["phase3"] = all(
+        [
+            providers_ok,
+            check_file_exists("pipeline/data_enrichment.py", "Enrich node private data integration"),
+            check_file_exists("core/sacs/sac_portfolio_relative.yaml", "Portfolio relative SAC"),
+        ]
+    )
+
     # === Phase 4: Web Workbench + Track Record ===
     print("\n[Phase 4] Web Workbench + Track Record")
-    results["phase4"] = all([
-        check_file_exists("web/app.py", "FastAPI app"),
-        check_file_exists("web/templates/index.html", "Main template"),
-        check_file_exists("web/templates/job_card.html", "Job card template"),
-        check_file_exists("web/templates/runs_list.html", "Runs list template"),
-        check_file_exists("web/templates/job_detail.html", "Job detail template"),
-        check_file_exists("web/templates/track_record.html", "Track record page"),
-        check_file_exists("web/templates/track_record_fragment.html", "Track record fragment"),
-        check_file_exists("web/static/style.css", "CSS styles"),
-        check_file_exists("core/tools/track_record.py", "TrackRecordManager extensions"),
-    ])
-    
+    results["phase4"] = all(
+        [
+            check_file_exists("web/app.py", "FastAPI app"),
+            check_file_exists("web/templates/index.html", "Main template"),
+            check_file_exists("web/templates/job_card.html", "Job card template"),
+            check_file_exists("web/templates/runs_list.html", "Runs list template"),
+            check_file_exists("web/templates/job_detail.html", "Job detail template"),
+            check_file_exists("web/templates/track_record.html", "Track record page"),
+            check_file_exists("web/templates/track_record_fragment.html", "Track record fragment"),
+            check_file_exists("web/static/style.css", "CSS styles"),
+            check_file_exists("core/tools/track_record.py", "TrackRecordManager extensions"),
+        ]
+    )
+
     # === Phase 5: Alt Data + Earnings Call + Semantic Dedup ===
     print("\n[Phase 5] Alt Data + Earnings Call NLP + Semantic Dedup")
     alt_connectors_ok = True
     try:
-        from core.alt_data import SatelliteConnector, CreditCardConnector, AppStoreConnector, SupplyChainConnector
+        from core.alt_data import AppStoreConnector, CreditCardConnector, SatelliteConnector, SupplyChainConnector
     except ImportError:
         alt_connectors_ok = False
-    results["phase5"] = all([
-        alt_connectors_ok,
-        check_file_exists("core/earnings_call_nlp.py", "Earnings call NLP"),
-        check_file_exists("pipeline/iron_gate.py", "Semantic dedup gate"),
-    ])
-    
+    results["phase5"] = all(
+        [
+            alt_connectors_ok,
+            check_file_exists("core/earnings_call_nlp.py", "Earnings call NLP"),
+            check_file_exists("pipeline/iron_gate.py", "Semantic dedup gate"),
+        ]
+    )
+
     # === Import Checks ===
     print("\n[Import Verification]")
-    imports_ok = all([
-        check_import("main", "Main entry"),
-        check_import("pipeline.iron_gate", "IronGate"),
-        check_import("pipeline.e2e_orchestrator", "E2E Orchestrator"),
-        check_import("core.models", "Core models"),
-        check_import("core.observability", "Observability"),
-        check_import("core.private_data", "Private data"),
-        check_import("core.alt_data", "Alt data"),
-        check_import("core.earnings_call_nlp", "Earnings call NLP"),
-        check_import("web.app", "Web app"),
-    ])
+    imports_ok = all(
+        [
+            check_import("main", "Main entry"),
+            check_import("pipeline.iron_gate", "IronGate"),
+            check_import("pipeline.e2e_orchestrator", "E2E Orchestrator"),
+            check_import("core.models", "Core models"),
+            check_import("core.observability", "Observability"),
+            check_import("core.private_data", "Private data"),
+            check_import("core.alt_data", "Alt data"),
+            check_import("core.earnings_call_nlp", "Earnings call NLP"),
+            check_import("web.app", "Web app"),
+        ]
+    )
     results["imports"] = imports_ok
-    
-# === Syntax/Lint Checks ===
+
+    # === Syntax/Lint Checks ===
     print("\n[Syntax & Lint]")
     # Only check new Python files added in v10
     new_files = [
@@ -203,26 +213,21 @@ def main():
     # Use current Python executable explicitly
     python_exe = sys.executable
     lint_ok, _ = run_cmd(
-        [python_exe, "-m", "ruff", "check", "--select=E9,F63,F7,F82"] + new_files, 
-        cwd=ROOT, timeout=120
+        [python_exe, "-m", "ruff", "check", "--select=E9,F63,F7,F82"] + new_files, cwd=ROOT, timeout=120
     )
     results["lint"] = lint_ok
     print(f"  {'PASS' if lint_ok else 'FAIL'} Ruff syntax check (new files only)")
-    
+
     # === Quick Pipeline Test ===
     print("\n[Quick Pipeline Test (dry-run)]")
     # Just test imports and basic initialization, not full run
     try:
-        from main import run_pipeline
-        from pipeline.iron_gate import IronGate
-        from core.models import DataPoint
-        from core.observability import GATE_RUNS, PIPELINE_RUNS
         print("  PASS Core modules import successfully")
         results["quick_test"] = True
     except Exception as e:
         print(f"  FAIL Quick test failed: {e}")
         results["quick_test"] = False
-    
+
     # === Golden Regression (if samples exist) ===
     print("\n[Golden Regression Readiness]")
     golden_ready = True
@@ -237,21 +242,21 @@ def main():
         else:
             print(f"  PASS {rtype}: {len(files)}/6 samples")
     results["golden_ready"] = golden_ready
-    
+
     # === Summary ===
     print("\n" + "=" * 70)
     print("VALIDATION SUMMARY")
     print("=" * 70)
-    
+
     for phase, passed in results.items():
         status = "PASS" if passed else "FAIL"
         print(f"  {phase:20s}: {status}")
-    
+
     overall = all(results.values())
     print("-" * 70)
     print(f"  OVERALL: {'ALL CHECKS PASSED' if overall else 'SOME CHECKS FAILED'}")
     print("=" * 70)
-    
+
     # Save results
     report = {
         "timestamp": datetime.now().isoformat(),
@@ -262,13 +267,13 @@ def main():
     report_path = ROOT / "validation_report_v10.json"
     report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2))
     print(f"\nReport saved to: {report_path}")
-    
+
     if not overall:
         print("\nNext steps:")
         for phase, passed in results.items():
             if not passed:
                 print(f"  - Fix {phase}")
-    
+
     return 0 if overall else 1
 
 

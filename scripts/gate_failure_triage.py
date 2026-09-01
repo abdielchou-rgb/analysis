@@ -12,8 +12,8 @@
 
 铁律（CLAUDE.md 工程方法论）：管线报错/Gate 失败先建反馈环再修——本脚本是反馈环第一步。
 """
+
 import argparse
-import json
 import re
 import sqlite3
 import sys
@@ -233,7 +233,7 @@ def main():
     out_path = Path(args.out) if args.out else out_dir / f"failure_triage_{datetime.now().strftime('%Y%m%d')}.md"
     out_path.write_text(md, encoding="utf-8")
     print(f"[TRIAGE] 报告已写入: {out_path}")
-    print(f"[TRIAGE] top 5 失败项:")
+    print("[TRIAGE] top 5 失败项:")
     for r in ranked[:5]:
         flag = " ⚠️复发" if r["recurred"] else ""
         print(f"  {r['failure_type']}: {r['recent']} 次{flag} → {r['fix_hint']}")

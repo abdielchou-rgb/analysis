@@ -4,10 +4,8 @@
 验证 recurrence_rate / auto_apply_lessons 从真实数据库计算而非返回空 stub，
 并确认 FP5 收敛指标（复发率）可被测量。
 """
-import os
-import sqlite3
+
 import sys
-import tempfile
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent

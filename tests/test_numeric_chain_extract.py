@@ -7,6 +7,7 @@ Strangler Fig 纪律：拆出后行为必须不变（golden 报告 diff 为空�
 2. 含算术硬伤（占比数量级错/乘积尾数错）→ 拦截
 3. 等价性：data_quality_mixin 委托调用 与 numeric_chain 独立函数 结果一致
 """
+
 import sys
 from pathlib import Path
 
@@ -14,7 +15,6 @@ _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-import pytest
 
 from pipeline.checks.numeric_chain import check_numeric_chain_consistency
 

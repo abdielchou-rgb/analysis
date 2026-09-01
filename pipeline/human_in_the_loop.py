@@ -14,7 +14,7 @@ import logging
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 logger = logging.getLogger("2hao.human_in_the_loop")
 
@@ -189,10 +189,7 @@ class HumanInTheLoop:
         Returns:
             list[DecisionPoint]: 待决策点列表
         """
-        return [
-            point for point in self._decision_points
-            if point.requires_human and not point.human_decision
-        ]
+        return [point for point in self._decision_points if point.requires_human and not point.human_decision]
 
     def get_decision_recommendation(
         self,

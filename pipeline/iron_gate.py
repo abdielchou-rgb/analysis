@@ -7,18 +7,18 @@
 - 校验通过 → 输出最终报告（md/docx）
 """
 
+import datetime
 import json
 import logging
 import os
 import re
 import sys
 import time as _time_module
-import datetime
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from core.knowledge_injector import KnowledgeInjector
-from core.observability import GATE_RUNS, GATE_SCORE, GATE_CHECK_LATENCY, GATE_CHECK_RESULT, REGISTRY
+from core.observability import GATE_CHECK_RESULT, GATE_RUNS, GATE_SCORE
 
 _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
@@ -558,7 +558,7 @@ class IronGate(
                 logger.info("[FP7a] Gate failure registered to LearningLoop")
             except Exception as e:
                 logger.debug("[FP7a] LearningLoop: %s", e)
-        
+
         # Observability: Record gate-level metrics
         try:
             GATE_RUNS.labels(report_type=self.report_type, result="pass" if report.passed else "fail").inc()
@@ -599,9 +599,7 @@ class IronGate(
                 )
             )
             _obs.record_quality_trend("gate_score_avg", report.overall_score, sample_size=1)
-            _obs.record_quality_trend(
-                "gate_pass_rate", 1.0 if report.passed else 0.0, sample_size=1
-            )
+            _obs.record_quality_trend("gate_pass_rate", 1.0 if report.passed else 0.0, sample_size=1)
         except Exception as e:
             logger.debug("[P1-1] validate/quality trend 记录失败: %s", e)
 
@@ -733,9 +731,10 @@ class IronGate(
 
     def _check_csrc_compliance(self):
         """CSRC/交易所研报合规五大硬性要求"""
-        from pipeline.checks.base import GateCheckResult
         import re
-        
+
+        from pipeline.checks.base import GateCheckResult
+
         _COMPLIANCE_RULES = [
             ("rating_definition", r"评级定义|评级说明|买入.*增持.*持有.*减持.*卖出", "必须包含评级定义表"),
             ("conflict_disclosure", r"利益冲突|无利益冲突|相关披露", "必须有利益冲突声明"),
@@ -743,7 +742,7 @@ class IronGate(
             ("no_guarantee", r"不构成.*投资建议|不保证.*收益|过往业绩不代表", "禁止承诺收益/保证语言"),
             ("analyst_certification", r"分析师.*资格|SAC.*执业|注册分析师", "需含分析师资格认证"),
         ]
-        
+
         failures = []
         for name, pattern, desc in _COMPLIANCE_RULES:
             if not re.search(pattern, self.report_text, re.I):
@@ -752,7 +751,6 @@ class IronGate(
             return GateCheckResult("csrc_compliance", False, 0.0, "; ".join(failures), "error")
         return GateCheckResult("csrc_compliance", True, 1.0, "all 5 rules present")
 
-
     # ============================================================
     # NEW: DataPoint Provenance Completeness Check (Phase 1.3)
     # ============================================================
@@ -761,7 +759,7 @@ class IronGate(
         """每个 DataPoint 必须有 source/access_ts/excerpt_sha256/confidence/unit"""
         from core.models import DataPoint
         from pipeline.checks.base import GateCheckResult
-        
+
         cd = getattr(self, "collected_data", {}) or {}
         dps = cd.get("data_points", [])
         missing = []
@@ -771,38 +769,39 @@ class IronGate(
                     if not getattr(dp, field, None):
                         missing.append(f"{dp.name}.{field}")
         if missing:
-            return GateCheckResult("data_point_provenance", False, 0.0,
-                                   f"{len(missing)} 字段缺失: {missing[:5]}", "error")
+            return GateCheckResult(
+                "data_point_provenance", False, 0.0, f"{len(missing)} 字段缺失: {missing[:5]}", "error"
+            )
         return GateCheckResult("data_point_provenance", True, 1.0, "all fields present")
 
     # ============================================================
     def _check_semantic_dedup(self):
         """语义去重：用 sentence-transformers 向量化段落，余弦相似度 >0.85 视为语义重复"""
         from pipeline.checks.base import GateCheckResult
-        
+
         try:
-            from sentence_transformers import SentenceTransformer
             import numpy as np
+            from sentence_transformers import SentenceTransformer
         except ImportError:
             return GateCheckResult("semantic_dedup", True, 1.0, "sentence-transformers not installed, skipped")
-        
+
         # Split into paragraphs
         paras = [p.strip() for p in self.report_text.split("\n\n") if len(p.strip()) > 60]
         if len(paras) < 2:
             return GateCheckResult("semantic_dedup", True, 1.0, "insufficient paragraphs")
-        
+
         # Load model (cache globally in production)
         try:
             model = SentenceTransformer("BAAI/bge-small-zh-v1.5")
         except Exception as e:
             return GateCheckResult("semantic_dedup", True, 0.5, f"model load failed: {e}")
-        
+
         # Encode paragraphs
         try:
             embeds = model.encode(paras, normalize_embeddings=True, show_progress_bar=False)
         except Exception as e:
             return GateCheckResult("semantic_dedup", True, 0.5, f"encoding failed: {e}")
-        
+
         # Find duplicates
         dup_pairs = []
         threshold = 0.85
@@ -811,18 +810,15 @@ class IronGate(
                 sim = float(np.dot(embeds[i], embeds[j]))
                 if sim > threshold:
                     dup_pairs.append((paras[i][:80], paras[j][:80], sim))
-        
+
         if dup_pairs:
             details = "; ".join([f"{a}... ~ {b}... (sim={s:.2f})" for a, b, s in dup_pairs[:5]])
-            return GateCheckResult("semantic_dedup", False, 0.0,
-                                   f"{len(dup_pairs)} 语义重复段落: {details}", "error")
-        
-        return GateCheckResult("semantic_dedup", True, 1.0, "no semantic duplicates")
+            return GateCheckResult("semantic_dedup", False, 0.0, f"{len(dup_pairs)} 语义重复段落: {details}", "error")
 
+        return GateCheckResult("semantic_dedup", True, 1.0, "no semantic duplicates")
 
     # ============================================================
     # NEW: Semantic Deduplication Gate (Phase 5.3)
-
 
     # ============================================================
     # NEW: DataPoint Provenance Completeness Check (Phase 1.3)
@@ -832,7 +828,7 @@ class IronGate(
         """每个 DataPoint 必须有 source/access_ts/excerpt_sha256/confidence/unit"""
         from core.models import DataPoint
         from pipeline.checks.base import GateCheckResult
-        
+
         cd = getattr(self, "collected_data", {}) or {}
         dps = cd.get("data_points", [])
         missing = []
@@ -842,8 +838,9 @@ class IronGate(
                     if not getattr(dp, field, None):
                         missing.append(f"{dp.name}.{field}")
         if missing:
-            return GateCheckResult("data_point_provenance", False, 0.0,
-                                   f"{len(missing)} 字段缺失: {missing[:5]}", "error")
+            return GateCheckResult(
+                "data_point_provenance", False, 0.0, f"{len(missing)} 字段缺失: {missing[:5]}", "error"
+            )
         return GateCheckResult("data_point_provenance", True, 1.0, "all fields present")
 
 

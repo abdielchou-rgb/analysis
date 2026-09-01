@@ -17,6 +17,7 @@ V5.0（2026-08-27）：新增并行执行模式
 from __future__ import annotations
 
 import hashlib
+import json
 import logging
 import os
 import threading
@@ -24,6 +25,7 @@ import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger("2hao.agent_graph")
@@ -33,6 +35,9 @@ NODE_RUNNING = "running"
 NODE_PASSED = "passed"
 NODE_FAILED = "failed"
 NODE_SKIPPED = "skipped"
+
+# S5-3: 节点级 checkpoint 目录
+_CHECKPOINT_DIR = Path(__file__).resolve().parent.parent / "data" / "checkpoints"
 
 
 @dataclass
@@ -76,6 +81,42 @@ class ThreadSafeContext:
     def to_dict(self) -> dict:
         with self._lock:
             return self._context.copy()
+
+
+# S5-4: PipelineContext 已迁移到 core/pipeline_context.py
+from core.pipeline_context import PipelineContext  # noqa: F401
+
+
+def save_checkpoint(pipeline_id: str, node_id: str, context: dict) -> Path:
+    """S5-3: 保存节点级 checkpoint。"""
+    _CHECKPOINT_DIR.mkdir(parents=True, exist_ok=True)
+    cp_path = _CHECKPOINT_DIR / f"{pipeline_id}.json"
+    state = {
+        "pipeline_id": pipeline_id,
+        "last_node": node_id,
+        "context": {k: str(v)[:200] for k, v in context.items()},  # 截断大对象
+    }
+    cp_path.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+    logger.info("[CHECKPOINT] Saved after node %s → %s", node_id, cp_path.name)
+    return cp_path
+
+
+def load_checkpoint(pipeline_id: str) -> dict | None:
+    """S5-3: 加载最近 checkpoint。"""
+    cp_path = _CHECKPOINT_DIR / f"{pipeline_id}.json"
+    if not cp_path.exists():
+        return None
+    try:
+        return json.loads(cp_path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+
+
+def clear_checkpoint(pipeline_id: str) -> None:
+    """S5-3: 清理 checkpoint。"""
+    cp_path = _CHECKPOINT_DIR / f"{pipeline_id}.json"
+    if cp_path.exists():
+        cp_path.unlink()
 
 
 class AgentGraph:
@@ -221,6 +262,13 @@ class AgentGraph:
                 result.error = f"validation: {'; '.join(all_issues[:5])}"
             else:
                 result.status = NODE_PASSED
+                # S5-3: 节点通过后保存 checkpoint
+                _cp_id = context.get("trace_id", "pipeline")
+                if _cp_id:
+                    try:
+                        save_checkpoint(_cp_id, node_id, context)
+                    except Exception:
+                        pass  # checkpoint 失败不应阻断管线
             logger.info("  [AgentGraph] %s: %s (%.0fms)", node_id, result.status, duration)
         except Exception as e:
             duration = (time.time() - t0) * 1000
@@ -239,11 +287,12 @@ class AgentGraph:
             return None
         return self._run_node(node_id, context)
 
-    def run(self, context: dict = None) -> GraphResult:
+    def run(self, context: dict = None, resume: bool = False) -> GraphResult:
         """执行管线
 
         Args:
             context: 管线上下文
+            resume: S5-3: 是否从 checkpoint 恢复（跳过已完成节点）
 
         Returns:
             GraphResult: 执行结果
@@ -251,6 +300,22 @@ class AgentGraph:
         self._start_time = time.time()
         ctx = context or {}
         node_delay = float(os.environ.get("AGENT_GRAPH_NODE_DELAY_S", "0"))
+
+        # S5-3: 恢复模式——加载 checkpoint，跳过已完成节点
+        _completed_nodes: set[str] = set()
+        if resume:
+            _cp_id = ctx.get("trace_id", "pipeline")
+            cp = load_checkpoint(_cp_id)
+            if cp:
+                _last_node = cp.get("last_node", "")
+                if _last_node and _last_node in self._nodes:
+                    # 找到 _last_node 在拓扑排序中的位置，跳过它及其之前的节点
+                    sorted_nodes = self._topological_sort() or []
+                    for nid in sorted_nodes:
+                        _completed_nodes.add(nid)
+                        if nid == _last_node:
+                            break
+                    logger.info("[AgentGraph] RESUME from checkpoint %s: skipping %d completed nodes", _cp_id, len(_completed_nodes))
 
         # 选择执行模式
         if self._parallel_mode:
@@ -265,6 +330,10 @@ class AgentGraph:
                 raise RuntimeError(f"cycle detected: {self.name}")
 
             for level_idx, level in enumerate(sorted_levels):
+                # S5-3: 过滤已完成节点
+                level = [nid for nid in level if nid not in _completed_nodes]
+                if not level:
+                    continue
                 if len(level) > 1:
                     # 并行执行同一层的节点
                     self._run_level_parallel(level, ctx, node_delay)
@@ -285,6 +354,12 @@ class AgentGraph:
             if sorted_nodes is None:
                 raise RuntimeError(f"cycle detected: {self.name}")
             for i, node_id in enumerate(sorted_nodes):
+                # S5-3: 跳过已完成节点
+                if node_id in _completed_nodes:
+                    self._results[node_id].status = NODE_PASSED
+                    self._results[node_id].output = ctx.get(node_id, {})
+                    logger.info("  [AgentGraph] %s: SKIPPED (checkpoint)", node_id)
+                    continue
                 dep_err = self._check_deps(node_id, ctx)
                 if dep_err:
                     self._results[node_id].status = NODE_SKIPPED
@@ -329,10 +404,7 @@ class AgentGraph:
 
         # 并行执行
         with ThreadPoolExecutor(max_workers=actual_workers, thread_name_prefix="ag-parallel") as executor:
-            futures = {
-                executor.submit(self._run_node, node_id, context): node_id
-                for node_id in executable
-            }
+            futures = {executor.submit(self._run_node, node_id, context): node_id for node_id in executable}
 
             for future in as_completed(futures):
                 node_id = futures[future]

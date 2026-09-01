@@ -20,8 +20,12 @@ from core import settings as _settings  # P3-audit: 配置单一事实源
 
 # 2026-08-29: 强制 IPv4 — 本机 Python socket.getaddrinfo 返回 IPv6 导致连接挂起
 _orig_getaddrinfo = socket.getaddrinfo
+
+
 def _force_ipv4_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
     return _orig_getaddrinfo(host, port, socket.AF_INET, type, proto, flags)
+
+
 socket.getaddrinfo = _force_ipv4_getaddrinfo
 
 logger = logging.getLogger("2hao.deepseek")
@@ -118,6 +122,21 @@ class ProviderRegistry:
             )
             self._circuit_broken_until[name] = time.time() + cooldown
             logger.warning("Provider %s circuit-broken for %.0fs (consecutive=%d)", name, cooldown, consecutive)
+
+    def record_timeout(self, name: str):
+        """超时计为半次失败——并行请求容易同时超时，避免误触熔断。"""
+        self._failures[name] = time.time()
+        prev = self._consecutive_failures.get(name, 0)
+        # 超时只加 0.5（向下取整），10 次连续超时才触发熔断
+        self._consecutive_failures[name] = prev + 0.5
+        logger.warning("Provider %s timeout (consecutive=%.1f)", name, self._consecutive_failures[name])
+        if self._consecutive_failures[name] >= self.CIRCUIT_BREAK_THRESHOLD:
+            cooldown = min(
+                self.CIRCUIT_BREAK_COOLDOWN_BASE * (2 ** (int(self._consecutive_failures[name]) - self.CIRCUIT_BREAK_THRESHOLD)),
+                self.CIRCUIT_BREAK_COOLDOWN_MAX,
+            )
+            self._circuit_broken_until[name] = time.time() + cooldown
+            logger.warning("Provider %s circuit-broken for %.0fs (consecutive=%.1f)", name, cooldown, self._consecutive_failures[name])
 
     def record_success(self, name: str):
         # 单次成功：清零连续失败计数和冷却时间
@@ -493,7 +512,7 @@ def call_llm(
         _ck = None
 
     # 使用智能路由器选择最优 provider
-    from core.smart_router import get_router, record_usage, record_success, record_failure
+    from core.smart_router import get_router, record_failure, record_usage
 
     router = get_router()
 
@@ -541,6 +560,7 @@ def call_llm(
                 (p for p in _registry._providers.values() if _registry._consecutive_failures.get(p.name, 0) < 5),
                 key=lambda x: x.priority,
             )
+
         providers = _active()
     else:
         # 当通过智能路由器或其他方式选择了 providers 时，仍定义 _active 供后续全量回退使用
@@ -641,7 +661,9 @@ def call_llm(
                 # R99: 调试 400 错误 —— 记录请求摘要
                 _msg_count = len(messages)
                 _total_chars = sum(len(str(m.get("content", ""))) for m in messages)
-                logger.debug("[LLM] %s request: model=%s, msgs=%d, total_chars=%d", pv.name, m, _msg_count, _total_chars)
+                logger.debug(
+                    "[LLM] %s request: model=%s, msgs=%d, total_chars=%d", pv.name, m, _msg_count, _total_chars
+                )
                 # R89（2026-08-25）：openrouter 走 SSE 流式——本机网络对非流式
                 # 长响应体在 ~7.8KB 处确定性截断，流式分块可穿透（OPENROUTER_STREAM=0 关闭）。
                 if pv.name == "openrouter" and os.environ.get("OPENROUTER_STREAM", "1") != "0":
@@ -711,7 +733,9 @@ def call_llm(
                         "total_chars": sum(len(str(m.get("content", ""))) for m in payload.get("messages", [])),
                         "max_tokens": payload.get("max_tokens"),
                     }
-                    logger.error("[LLM] %s HTTP %d: payload=%s body=%s", pv.name, resp.status_code, _payload_summary, _body)
+                    logger.error(
+                        "[LLM] %s HTTP %d: payload=%s body=%s", pv.name, resp.status_code, _payload_summary, _body
+                    )
                 resp.raise_for_status()
                 _latency_ms = int((time.perf_counter() - _t0) * 1000)
                 _registry.record_success(pv.name)
@@ -755,12 +779,14 @@ def call_llm(
             ) as e:
                 # 超时：快速失败到下一个 provider（不重试同一 provider）
                 logger.warning("[LLM] provider=%s timeout on attempt %d/2 (fail-fast to next)", pv.name, attempt + 1)
-                _registry.record_failure(pv.name)
+                _registry.record_timeout(pv.name)
                 break  # 跳出 attempt 循环，外层 provider 循环继续下一个
             except requests.exceptions.RequestException as e:
                 # 其他网络错误（连接拒绝等）——记录失败，继续重试
                 last_error = e
-                logger.warning("[LLM] provider=%s network error on attempt %d/2: %s", pv.name, attempt + 1, str(e)[:100])
+                logger.warning(
+                    "[LLM] provider=%s network error on attempt %d/2: %s", pv.name, attempt + 1, str(e)[:100]
+                )
                 if attempt < 1:
                     time.sleep(1)
         _registry.record_failure(pv.name)

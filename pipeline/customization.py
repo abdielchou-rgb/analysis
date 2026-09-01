@@ -3,7 +3,8 @@
 Phase 2.1: ReportCustomization 数据类
 支持维度权重、篇幅控制、风格定制等多维度定制化。
 """
-from dataclasses import dataclass, field
+
+from dataclasses import dataclass
 from typing import Optional
 
 
@@ -20,7 +21,7 @@ class ReportCustomization:
 
     # 3. 写作重点
     focus_dimensions: list[str] = None  # ["valuation", "risk"] 重点维度
-    skip_dimensions: list[str] = None   # ["governance"] 可跳过维度
+    skip_dimensions: list[str] = None  # ["governance"] 可跳过维度
 
     # 4. 风格定制
     style_preset: str = "cicc"  # cicc/gs/ms/mck/bcg/jpm
@@ -157,6 +158,7 @@ class ReportCustomization:
 @dataclass
 class ReportRequest:
     """用户报告请求"""
+
     asset: str
     report_type: str = "industry_deep"
     style: str = "cicc"

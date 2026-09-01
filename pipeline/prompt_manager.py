@@ -13,10 +13,9 @@ pipeline/prompt_manager.py — Prompt 管理器
 from __future__ import annotations
 
 import logging
-import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 logger = logging.getLogger("2hao.prompt_manager")
 

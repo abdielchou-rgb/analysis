@@ -11,10 +11,9 @@ pipeline/template_detector.py — 模板重复检测器
 from __future__ import annotations
 
 import logging
-import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 logger = logging.getLogger("2hao.template_detector")
 
@@ -110,11 +109,7 @@ class TemplateDetector:
                 report.matches.append(match)
                 report.matched_templates += 1
 
-        report.duplicate_rate = (
-            report.matched_templates / report.total_templates
-            if report.total_templates > 0
-            else 0.0
-        )
+        report.duplicate_rate = report.matched_templates / report.total_templates if report.total_templates > 0 else 0.0
 
         # 计算整体分数（越低越好）
         if report.matches:
@@ -195,10 +190,7 @@ class TemplateDetector:
 
         for match in report.matches:
             if match.severity in ("error", "warning"):
-                suggestions.append(
-                    f"模板 '{match.template_text}' 出现 {match.match_count} 次，"
-                    f"建议替换或删除"
-                )
+                suggestions.append(f"模板 '{match.template_text}' 出现 {match.match_count} 次，建议替换或删除")
 
         return suggestions
 

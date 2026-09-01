@@ -168,7 +168,7 @@ class E2ENodes:
         asset = context.get("asset", "")
         rt = context.get("report_type", "industry_deep")
         data = None
-        
+
         # Primary: DataCollectorV5 (Tavily+yfinance+akshare multi-phase)
         try:
             from pipeline.data_collector import DataCollectorV5
@@ -182,7 +182,7 @@ class E2ENodes:
                 logger.info("[DATA] DataCollectorV5: %d keys", len(data))
         except Exception as e:
             logger.warning("[DATA] DataCollectorV5 failed: %s", e)
-        
+
         # Fallback: DataPipeline
         if not data or len(data) < 2:
             try:
@@ -194,13 +194,13 @@ class E2ENodes:
                     logger.info("[DATA] DataPipeline fallback: merged %d keys", len(data_fb))
             except Exception as e2:
                 logger.warning("[DATA] DataPipeline fallback: %s", e2)
-        
+
         if not data:
             context["degradation_level"] = max(context.get("degradation_level", 0), 2)
             logger.warning("[L2 DEGRADATION] All data collectors failed")
             context["collected_data"] = {}
             return {"collected_data": {}}
-        
+
         context["collected_data"] = data
 
         # Also collect provenance
@@ -360,7 +360,7 @@ class E2ENodes:
             tavily_data = collected.get("tavily", []) if isinstance(collected, dict) else []
             data_points = financials if financials else sources
             text_data = " ".join(tavily_data[:3]) if tavily_data else ""
-            
+
             if data_points:
                 result = cv.validate(data_points, context.get("asset", ""), text_data)
                 cv_result = result if hasattr(result, 'to_dict') else {"passed": True}
@@ -368,7 +368,7 @@ class E2ENodes:
                 logger.info("[CROSSVALIDATE] Validated %d data points", len(data_points))
             else:
                 context["cross_validation"] = {"passed": True, "note": "no structured data"}
-            
+
             # FP2a: Run data credibility check on whatever data we have
             try:
                 from core.data_credibility import DataCredibilityEngine
@@ -379,7 +379,7 @@ class E2ENodes:
             except Exception as ce:
                 logger.debug("[CREDIBILITY] %s", ce)
                 context["data_credibility"] = {"score": 0.5, "note": "module unavailable"}
-                
+
         except Exception as e:
             logger.debug("[CROSSVALIDATE] %s", e)
             context["cross_validation"] = {"passed": True, "note": str(e)[:50]}
@@ -523,7 +523,7 @@ class E2ENodes:
                                "_gate_check.md")
         with open(tmp_path, "w", encoding="utf-8") as f:
             f.write(text)
-        
+
         from pipeline.iron_gate import IronGate
         dl = context.get("degradation_level", 0)
         ig = IronGate(tmp_path, report_type=context.get("report_type", "industry_deep"),
@@ -541,7 +541,7 @@ class E2ENodes:
             logger.warning("[L3 DEGRADATION] Core LLM unavailable — output blocked")
             context["gate_result"] = {"passed": False, "score": 0.0, "failures": ["L3: Core LLM unavailable"]}
             return {"gate_result": context["gate_result"]}
-        
+
         result = ig.run_all()
         context["gate_result"] = result
         context["ig_report"] = result.to_dict()
@@ -682,7 +682,7 @@ class E2ENodes:
                         logger.info("[FORWARDPICKS] %d predictions recorded", len(calls))
                     except Exception as e:
                         logger.debug("[FORWARDPICKS] failed: %s", e)
-            
+
             # FP5: Validate expired predictions against market data
             try:
                 from core.prediction_validator import validate_expired_predictions
@@ -692,7 +692,7 @@ class E2ENodes:
                     logger.info("[RECORD] Prediction validation: %s", str(pv_result)[:80])
             except Exception as e:
                 logger.debug("[RECORD] PredictionValidator: %s", e)
-            
+
             # FP5: Wire EditClassifier — absorb edits from case DB
             try:
                 from core.edit import EditClassifier
@@ -703,7 +703,7 @@ class E2ENodes:
                     logger.info("[RECORD] Edit classified as: %s", edit_type)
             except Exception as e:
                 logger.debug("[RECORD] EditClassifier: %s", e)
-            
+
             # FP5: Wire ReportCalibrator — auto-fix gate failures
             gate_passed = gate.get("passed", False)
             gate_score = gate.get("score", 0) if isinstance(gate.get("score"), (int,float)) else 0
@@ -721,7 +721,7 @@ class E2ENodes:
                             logger.info("[RECORD] Calibration plan: %d fixes", len(fix_plan))
                 except Exception as e:
                     logger.debug("[RECORD] CalibrationPlan: %s", e)
-                    
+
         except Exception as e:
             logger.debug("[RECORD] failed: %s", e)
         return {"_recorded": True}
@@ -1081,5 +1081,3 @@ def _build_output_contracts():
                    "critic_passed": {"type": bool, "required": False, "severity": "warning"}},
     }
     return contracts
-
-

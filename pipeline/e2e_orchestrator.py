@@ -361,8 +361,9 @@ class E2ENodes:
             if isinstance(data, list):
                 data = {"source": "data_pipeline"}
             if isinstance(data, dict) and data:
-                from datetime import datetime, timezone
                 import hashlib
+                from datetime import datetime, timezone
+
                 kp.data_points = []
                 for k, v in list(data.items())[:30]:
                     val = str(v)[:200] if not isinstance(v, (int, float)) else v
@@ -521,8 +522,9 @@ class E2ENodes:
                                 float(_val)
                             except (TypeError, ValueError):
                                 continue
-                            from datetime import datetime, timezone
                             import hashlib
+                            from datetime import datetime, timezone
+
                             excerpt = f"{_k}_{_yr}: {_val}"
                             data_points.append(
                                 DataPoint(
@@ -844,6 +846,16 @@ class E2ENodes:
         except Exception as _e_claim:
             logger.debug("[P3-2] claim citation 附录注入失败: %s", str(_e_claim)[:100])
 
+        # S6-3: 合规条款自动附加（替代 LLM 生成的免责——R42 已删 AI 免责）
+        try:
+            from core.compliance_clauses import get_clause
+            _rt = context.get("report_type", "listed_company")
+            _clause = get_clause(_rt)
+            if _clause and _clause not in final:
+                final = final.rstrip() + "\n\n---\n\n" + _clause
+        except Exception as _e_clause:
+            logger.debug("[S6-3] compliance clause 注入失败: %s", str(_e_clause)[:80])
+
         context["final_text"] = final
         return {"final_text": final}
 
@@ -934,6 +946,23 @@ class E2ENodes:
         if dl > 0:
             msg += " [L%d degradation]" % dl
         logger.info(msg)
+
+        # P1-3 (2026-09-01): quality_trends 写入——FP3 收敛曲线依赖此表。
+        # 每次 Gate 运行后记录 gate_score_avg + gate_pass_rate，供收敛趋势分析。
+        try:
+            from core.metrics import ObservabilityDB
+
+            _obs = ObservabilityDB()
+            _score = result.overall_score if isinstance(result.overall_score, (int, float)) else 0.0
+            _obs.log_quality_trend("gate_score_avg", _score, sample_size=1)
+            _obs.log_quality_trend("gate_pass_rate", 1.0 if result.passed else 0.0, sample_size=1)
+            # 记录失败数（如有）
+            _n_fail = len(result.failures) if hasattr(result, "failures") and result.failures else 0
+            if _n_fail:
+                _obs.log_quality_trend("failure_count", float(_n_fail), sample_size=1)
+        except Exception as _qt_e:
+            logger.debug("[QUALITY-TREND] 写入失败: %s", str(_qt_e)[:60])
+
         return {"gate_result": result.to_dict() if hasattr(result, "to_dict") else {}}
 
     @staticmethod
@@ -968,6 +997,28 @@ class E2ENodes:
             logger.warning("[EXPORT] gate blocked")
             context["_docx_path"] = ""
             return {"_docx_path": ""}
+
+        # S7-4: decision_memo 强制人工审核——无审核记录则阻断导出
+        _rt = context.get("report_type", "")
+        if _rt == "decision_memo":
+            _job_id = context.get("trace_id", context.get("asset", "unknown"))
+            _review_dir = _ROOT / "data" / "reviews"
+            _review_fp = _review_dir / f"{_job_id}.json"
+            if not _review_fp.exists():
+                logger.warning("[S7-4] decision_memo %s 无人工审核记录，阻断导出", _job_id)
+                context["_docx_path"] = ""
+                context["_review_required"] = True
+                return {"_docx_path": "", "_review_required": True}
+            try:
+                import json as _rjson
+                _review = _rjson.loads(_review_fp.read_text(encoding="utf-8"))
+                if _review.get("decision") != "approved":
+                    logger.warning("[S7-4] decision_memo %s 审核未通过: %s", _job_id, _review.get("decision"))
+                    context["_docx_path"] = ""
+                    return {"_docx_path": ""}
+            except Exception as _rev_err:
+                logger.debug("[S7-4] 审核状态读取失败: %s", str(_rev_err)[:60])
+
         output_dir = Path(context.get("output_dir", str(_ROOT / "output")))
         output_dir.mkdir(parents=True, exist_ok=True)
         asset = context.get("asset", "report")
@@ -1254,7 +1305,8 @@ def _repro_snapshot(output_dir: str, asset: str) -> str | None:
     def _file_hash(p):
         try:
             return hashlib.md5(_P(p).read_bytes()).hexdigest()[:12]
-        except Exception:            return None
+        except Exception:
+            return None
 
     root = _P(__file__).resolve().parent.parent
     snapshot = {

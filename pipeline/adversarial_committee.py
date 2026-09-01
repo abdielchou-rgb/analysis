@@ -14,7 +14,7 @@ import logging
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Optional
 
 from core.deepseek_client import call_deepseek
 
@@ -138,9 +138,7 @@ class AdversarialCommittee:
 
         return result
 
-    def _collect_opinions(
-        self, base_prompt: str, report_type: str
-    ) -> list[MemberOpinion]:
+    def _collect_opinions(self, base_prompt: str, report_type: str) -> list[MemberOpinion]:
         """并行收集意见"""
         opinions = []
 
@@ -193,9 +191,7 @@ class AdversarialCommittee:
 
         return challenges
 
-    def _build_member_prompt(
-        self, base_prompt: str, member: CommitteeMember, report_type: str
-    ) -> str:
+    def _build_member_prompt(self, base_prompt: str, member: CommitteeMember, report_type: str) -> str:
         """构建成员提示词"""
         role_prompts = {
             "bull": "从看多角度分析，给出核心论点、催化剂和预期回报。",
@@ -217,10 +213,7 @@ class AdversarialCommittee:
         report_type: str,
     ) -> str:
         """构建挑战提示词"""
-        challenges_text = "\n".join([
-            f"- {o.member.name} ({o.member.role}): {o.content[:200]}"
-            for o in other_opinions
-        ])
+        challenges_text = "\n".join([f"- {o.member.name} ({o.member.role}): {o.content[:200]}" for o in other_opinions])
 
         return (
             f"{base_prompt}\n\n"
@@ -264,9 +257,9 @@ class AdversarialCommittee:
         """综合共识"""
         # 加权平均置信度
         total_weight = sum(o.member.weight for o in opinions)
-        weighted_confidence = sum(
-            o.confidence * o.member.weight for o in opinions
-        ) / total_weight if total_weight > 0 else 0.5
+        weighted_confidence = (
+            sum(o.confidence * o.member.weight for o in opinions) / total_weight if total_weight > 0 else 0.5
+        )
 
         # 综合内容
         key_points = []
@@ -276,9 +269,7 @@ class AdversarialCommittee:
         # 去重
         unique_points = list(dict.fromkeys(key_points))[:10]
 
-        consensus_content = "综合委员会意见:\n" + "\n".join([
-            f"- {p}" for p in unique_points
-        ])
+        consensus_content = "综合委员会意见:\n" + "\n".join([f"- {p}" for p in unique_points])
 
         return MemberOpinion(
             member=CommitteeMember(name="Committee", role="consensus", provider=""),

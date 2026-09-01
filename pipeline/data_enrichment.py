@@ -33,6 +33,7 @@ logger = logging.getLogger("2hao.data_enrichment")
 # Private data providers (Phase 3.1)
 try:
     from core.private_data import get_provider
+
     _HAS_PRIVATE_DATA = True
 except ImportError:
     _HAS_PRIVATE_DATA = False
@@ -863,7 +864,7 @@ def enrich_node(node_id: str, context: dict) -> dict:
             universe_summary = _recompute_universe(asset, data, context, universe_summary)
         check = DataSufficiencyChecker.check(data, universe_summary=universe_summary, report_type=report_type)
         context["data_sufficiency"] = check
-    
+
     # Phase 3.2: Private data provider integration for unlisted/decision_memo
     if report_type in ("unlisted_company", "decision_memo") and _HAS_PRIVATE_DATA:
         provider = get_provider()
@@ -878,21 +879,21 @@ def enrich_node(node_id: str, context: dict) -> dict:
                     financing = provider.get_financing_history(company_id)
                     valuations = provider.get_valuation_rounds(company_id)
                     exits = provider.get_exit_comps(profiles[0].sector, profiles[0].stage)
-                    
+
                     # Convert to DataPoints with provenance
                     dps = []
                     for r in financing + valuations + exits:
                         dps.extend(provider.to_datapoints(r, asset))
-                    
+
                     cd = context.setdefault("collected_data", {})
                     existing = cd.get("data_points", [])
                     cd["data_points"] = existing + dps
                     logger.info(f"[PRIVATE-DATA] Added {len(dps)} DataPoints from {provider.name}")
-                    
+
                     # Also add exit comps for valuation reference
                     if exits:
                         cd["exit_comparables"] = exits
-                    
+
             except Exception as e:
                 logger.warning(f"[PRIVATE-DATA] Failed to fetch from {provider.name}: {e}")
 

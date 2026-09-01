@@ -19,10 +19,10 @@ import json
 import logging
 import re
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Optional
+from typing import Optional
 
 from core.deepseek_client import call_deepseek
 
@@ -137,14 +137,10 @@ class DebateEngine:
 
             # 多模型并行辩论（可选）
             if self.use_multi_model and round_num == 1:
-                bull_argument, bear_argument = self._multi_model_debate(
-                    base_prompt, report_type
-                )
+                bull_argument, bear_argument = self._multi_model_debate(base_prompt, report_type)
             else:
                 # Bull 论点
-                bull_prompt = self._build_bull_prompt(
-                    base_prompt, bear_argument, round_num, report_type
-                )
+                bull_prompt = self._build_bull_prompt(base_prompt, bear_argument, round_num, report_type)
                 bull_content = self._call_llm(bull_prompt, provider)
                 bull_confidence = self._extract_confidence(bull_content)
                 bull_argument = DebateArgument(
@@ -160,9 +156,7 @@ class DebateEngine:
                 result.arguments.append(bull_argument)
 
                 # Bear 论点
-                bear_prompt = self._build_bear_prompt(
-                    base_prompt, bull_argument, round_num, report_type
-                )
+                bear_prompt = self._build_bear_prompt(base_prompt, bull_argument, round_num, report_type)
                 bear_content = self._call_llm(bear_prompt, provider)
                 bear_confidence = self._extract_confidence(bear_content)
                 bear_argument = DebateArgument(
@@ -188,21 +182,21 @@ class DebateEngine:
             )
 
             # 记录收敛历史
-            result.convergence_history.append({
-                "round": round_num,
-                "bull_confidence": bull_argument.confidence,
-                "bear_confidence": bear_argument.confidence,
-                "diff": confidence_diff,
-            })
+            result.convergence_history.append(
+                {
+                    "round": round_num,
+                    "bull_confidence": bull_argument.confidence,
+                    "bear_confidence": bear_argument.confidence,
+                    "diff": confidence_diff,
+                }
+            )
 
             if confidence_diff < self.convergence_threshold and round_num > 1:
                 logger.info("[DEBATE] Converged at round %d", round_num)
                 break
 
         # Judge 裁决
-        judge_prompt = self._build_judge_prompt(
-            base_prompt, bull_argument, bear_argument, report_type
-        )
+        judge_prompt = self._build_judge_prompt(base_prompt, bull_argument, bear_argument, report_type)
         judge_content = self._call_llm(judge_prompt, provider)
         judge_argument = DebateArgument(
             role=DebateRole.JUDGE,
@@ -215,9 +209,7 @@ class DebateEngine:
 
         # 数学信号覆盖检查
         if compute_results:
-            math_override = self._check_math_signal_override(
-                bull_argument, bear_argument, compute_results
-            )
+            math_override = self._check_math_signal_override(bull_argument, bear_argument, compute_results)
             result.math_signal_override = math_override
             if math_override:
                 logger.info("[DEBATE] Math signal override activated")
@@ -232,17 +224,13 @@ class DebateEngine:
         result.target_price = self._extract_target_price(judge_content)
         result.rating = self._extract_rating(judge_content)
         result.catalysts = self._extract_catalysts(judge_content)
-        result.falsification_conditions = self._merge_falsification(
-            bull_argument, bear_argument
-        )
+        result.falsification_conditions = self._merge_falsification(bull_argument, bear_argument)
         result.rounds = round_num
         result.total_duration_ms = (time.time() - start_time) * 1000
 
         return result
 
-    def _multi_model_debate(
-        self, base_prompt: str, report_type: str
-    ) -> tuple[DebateArgument, DebateArgument]:
+    def _multi_model_debate(self, base_prompt: str, report_type: str) -> tuple[DebateArgument, DebateArgument]:
         """
         多模型并行辩论
 
@@ -253,12 +241,8 @@ class DebateEngine:
 
         # 并行调用不同模型
         with ThreadPoolExecutor(max_workers=2) as executor:
-            bull_future = executor.submit(
-                self._call_llm, bull_prompt, self.providers[0]
-            )
-            bear_future = executor.submit(
-                self._call_llm, bear_prompt, self.providers[1 % len(self.providers)]
-            )
+            bull_future = executor.submit(self._call_llm, bull_prompt, self.providers[0])
+            bear_future = executor.submit(self._call_llm, bear_prompt, self.providers[1 % len(self.providers)])
 
             bull_content = bull_future.result()
             bear_content = bear_future.result()
@@ -307,8 +291,7 @@ class DebateEngine:
 
         if bear_argument and round_num > 1:
             parts.append(
-                f"\n\n看空方上一轮论点:\n{bear_argument.content[:400]}\n\n"
-                "请针对看空论点进行反驳，并强化你的看多论点。"
+                f"\n\n看空方上一轮论点:\n{bear_argument.content[:400]}\n\n请针对看空论点进行反驳，并强化你的看多论点。"
             )
 
         if round_num > 1:
@@ -327,10 +310,7 @@ class DebateEngine:
         parts = [base_prompt]
 
         if bull_argument:
-            parts.append(
-                f"\n\n看多方论点:\n{bull_argument.content[:400]}\n\n"
-                "从看空角度反驳(300字以内),包含风险因素。"
-            )
+            parts.append(f"\n\n看多方论点:\n{bull_argument.content[:400]}\n\n从看空角度反驳(300字以内),包含风险因素。")
         else:
             parts.append("\n\n从看空角度给出核心论点(300字以内),包含风险因素。")
 
@@ -355,14 +335,10 @@ class DebateEngine:
             parts.append(f"\n\n看空:\n{bear_argument.content[:400]}")
 
         if report_type == "decision_memo":
-            parts.append(
-                "\n\n作为首席分析师,综合双方观点给出最终Bold Call(300字),"
-                "包含概率、时间窗口和证伪条件。"
-            )
+            parts.append("\n\n作为首席分析师,综合双方观点给出最终Bold Call(300字),包含概率、时间窗口和证伪条件。")
         else:
             parts.append(
-                "\n\n作为首席分析师,综合双方观点给出最终Bold Call(300字),"
-                "包含目标价、概率、时间窗口和证伪条件。"
+                "\n\n作为首席分析师,综合双方观点给出最终Bold Call(300字),包含目标价、概率、时间窗口和证伪条件。"
             )
 
         parts.append(
@@ -380,10 +356,7 @@ class DebateEngine:
     def _call_llm(self, prompt: str, provider: str = "opencode_go") -> str:
         """调用 LLM"""
         try:
-            system_prompt = (
-                "你是专业投资分析师。请基于数据给出结构化判断，"
-                "避免空洞表述，每个论点必须有数据支撑。"
-            )
+            system_prompt = "你是专业投资分析师。请基于数据给出结构化判断，避免空洞表述，每个论点必须有数据支撑。"
             r = call_deepseek(
                 [
                     {"role": "system", "content": system_prompt},

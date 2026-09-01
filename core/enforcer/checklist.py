@@ -167,18 +167,49 @@ class ComplianceChecklist:
         """Check that sources have credibility signals (distinguish company data from estimates)."""
         # 官方/高可信度信号：公司公告/披露/年报/季报/招股书/监管文件/交易所公告
         OFFICIAL_SIGNALS = [
-            "可信度", "公司公告", "官方数据", "公司披露", "公司披露",
-            "年报", "三季报", "半年报", "一季报", "招股书",
-            "年报披露", "季报披露", "半年报披露", "一季报披露",
-            "监管公告", "交易所公告", "官方公告", "监管披露",
-            "公司年报", "公司季报", "公司半年报", "公司一季报",
-            "正式披露", "正式公告", "披露公告",
+            "可信度",
+            "公司公告",
+            "官方数据",
+            "公司披露",
+            "公司披露",
+            "年报",
+            "三季报",
+            "半年报",
+            "一季报",
+            "招股书",
+            "年报披露",
+            "季报披露",
+            "半年报披露",
+            "一季报披露",
+            "监管公告",
+            "交易所公告",
+            "官方公告",
+            "监管披露",
+            "公司年报",
+            "公司季报",
+            "公司半年报",
+            "公司一季报",
+            "正式披露",
+            "正式公告",
+            "披露公告",
         ]
         has_credibility_signal = any(m in text for m in OFFICIAL_SIGNALS)
-        has_estimation_signal = any(m in text for m in [
-            "测算", "估算", "推测", "假设", "预测", "预期", "一致预期",
-            "机构预测", "券商预测", "共识预测", "市场预期"
-        ])
+        has_estimation_signal = any(
+            m in text
+            for m in [
+                "测算",
+                "估算",
+                "推测",
+                "假设",
+                "预测",
+                "预期",
+                "一致预期",
+                "机构预测",
+                "券商预测",
+                "共识预测",
+                "市场预期",
+            ]
+        )
         # Only meaningful if there are data sources AND some credibility distinction
         source_count = len(re.findall(r"来源[：:]", text))
         if source_count < 2:
