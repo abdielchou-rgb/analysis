@@ -93,7 +93,6 @@ ENV_BASE = {
         "4) 两轮融资估值锚点(7亿/2000万→10亿/1亿) "
         "5) 风险催化剂与行业配置建议"
     ),
-    "PYTHONIOENCODING": "utf-8",
 }
 
 
@@ -219,7 +218,6 @@ def run_pipeline(free_models_str):
                     "4) 两轮融资估值锚点(7亿/2000万→10亿/1亿) "
                     "5) 风险催化剂与行业配置建议"
                 ),
-                "PYTHONIOENCODING": "utf-8",
             },
         },
         stdout=open(out_log, "w", encoding="utf-8"),

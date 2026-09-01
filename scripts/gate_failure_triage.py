@@ -59,7 +59,6 @@ FIX_HINTS = {
     "attribution_depth": "归因深度 → So What 链+归因层注入",
     "data_dict_refs": "data_dict 引用 → 数据注入与正文对齐",
     "template_leak": "模板泄漏 → 模板去重",
-    "explicit_conclusion": "缺明确结论 → 结尾结论模板",
     "table_quality_md": "表格质量 → 表格生成检查",
     "md_artifacts": "MD 残留 → 导出清理",
     "synthesis_consistency": "综合一致性 → synthesis 检查",

@@ -108,8 +108,8 @@ class SyntaxValidator:
         bad = []
         for py_file in self.root.rglob("*.py"):
             rel = py_file.relative_to(self.root)
-            # Skip __pycache__ and output dirs
-            if any(p in py_file.parts for p in ("__pycache__", "output", "outputs")):
+            # Skip __pycache__, output dirs, and third-party code
+            if any(p in py_file.parts for p in ("__pycache__", "output", "outputs", "last30days")):
                 continue
             try:
                 ast.parse(py_file.read_text(encoding="utf-8"))
@@ -132,7 +132,7 @@ class ApiKeyLeakScanner:
         leaks = []
         for py_file in _ROOT.rglob("*.py"):
             rel = py_file.relative_to(_ROOT)
-            if any(p in py_file.parts for p in ("__pycache__", "output", "outputs", ".env")):
+            if any(p in py_file.parts for p in ("__pycache__", "output", "outputs", ".env", "last30days")):
                 continue
             try:
                 content = py_file.read_text(encoding="utf-8", errors="ignore")

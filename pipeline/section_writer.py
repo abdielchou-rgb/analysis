@@ -962,7 +962,7 @@ class SectionWriter:
             return text
 
         try:
-            from concurrent.futures import ThreadPoolExecutor, as_completed
+            from concurrent.futures import ThreadPoolExecutor
 
             _parallel = True
             # R13（2026-08-01 三算力架构/Phase4）：局部修订 —— rewrite_indices 指定要重写的段，
@@ -975,10 +975,15 @@ class SectionWriter:
 
             _seg_parallel = _os_seg.environ.get("SEG_PARALLEL", "1") != "0"
             with ThreadPoolExecutor(max_workers=(1 if not _seg_parallel else min(3, len(_target) or 1))) as pool:
-                futures = {pool.submit(_write_segment, idx, self.segments[idx], ""): idx for idx in _target}
+                import time as _t_seg
+
+                _submitted_seg = []
+                for idx in _target:
+                    _submitted_seg.append((pool.submit(_write_segment, idx, self.segments[idx], ""), idx))
+                    if len(_submitted_seg) < len(_target):
+                        _t_seg.sleep(2)  # stagger to avoid 429
                 seg_texts = {}
-                for fut in as_completed(futures):
-                    idx = futures[fut]
+                for fut, idx in _submitted_seg:
                     try:
                         seg_texts[idx] = fut.result()
                     except Exception as e:
@@ -2385,18 +2390,21 @@ class SectionWriter:
         # R23（2026-08-02 FM 差异化加速）：行业报告结构稳定放宽并发到 8，个股/非上市保持 6
         _max_workers = 8 if self.report_type == "industry_deep" else 6
         with ThreadPoolExecutor(max_workers=min(len(_target_groups) or 1, _max_workers)) as pool:
-            futures = {pool.submit(_write_group, g): g for g in _target_groups}
-            for fut in as_completed(futures):
-                g = futures[fut]
+            import time as _t
+
+            _submitted = []
+            for i, g in enumerate(_target_groups):
+                _submitted.append(pool.submit(_write_group, g))
+                if i < len(_target_groups) - 1:
+                    _t.sleep(2)  # stagger parallel writes to avoid 429
+            for fut in as_completed(_submitted):
                 try:
                     gname, text = fut.result()
                     group_texts[gname] = text
                 except Exception as e:
                     import traceback as _tb
 
-                    logger.warning(
-                        "[DIM-PARALLEL] 组 %s 失败: %s\n%s", g.get("group_name"), str(e)[:300], _tb.format_exc()[-1500:]
-                    )
+                    logger.warning("[DIM-PARALLEL] group failed: %s\n%s", str(e)[:300], _tb.format_exc()[-1500:])
 
         # 非目标组：尝试从 prev_report_text 提取复用（按组名标题定位）
         for g in _keep_groups:

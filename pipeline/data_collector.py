@@ -584,10 +584,12 @@ class DataCollectorV5:
                 logger.debug("[LAST30DAYS] Python 3.12 不可用——跳过舆情采集")
                 return chart_data
 
-            # 检测可用搜索源：有 Brave/Tavily key 时扩展
+            # 检测可用搜索源：有 Brave/Perplexity/Tavily key 时扩展
             search_sources = "hackernews"
             if os.environ.get("BRAVE_API_KEY") or os.environ.get("TAVILY_API_KEY"):
                 search_sources = "hackernews,web"
+            if os.environ.get("PERPLEXITY_API_KEY"):
+                search_sources = "hackernews,web,perplexity"
 
             # 30 天窗口 + compact 输出 + 快速模式
             with tempfile.TemporaryDirectory() as td:

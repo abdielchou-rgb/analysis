@@ -182,7 +182,6 @@ class SACLoader:
             "falsification": ["证伪", "推翻", "证伪条件", "如果"],
             "catalyst": ["催化剂", "触发", "时间窗口", "事件驱动"],
             "data_declaration": ["数据源声明", "基于", "估计值", "信息缺口"],
-            "company_profile": ["公司全称", "注册地", "成立时间", "主营业务"],
             "funding_history": ["融资历程", "股权结构", "实控人", "领投方"],
             "business_kpi": ["业务KPI", "营收规模", "单位经济", "核心用户"],
             "competitive_moat": ["竞争壁垒", "技术壁垒", "品牌", "网络效应", "许可"],
@@ -190,7 +189,6 @@ class SACLoader:
             "peer_benchmarking": ["行业对标分析", "同业对比", "同业估值", "可比公司", "同行", "peer"],
             "industry_chain": ["产业链定位", "产业链", "供应链", "价值链", "上下游", "议价权"],
             "exit_cycle_analysis": ["退出窗口", "周期相关", "退出时机", "宏观经济", "IPO窗口", "并购时机"],
-            "exit_analysis": ["退出路径", "IPO", "并购", "二级转让"],
             "due_diligence": [
                 "尽调清单",
                 "待核实",

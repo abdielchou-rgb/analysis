@@ -1,4 +1,4 @@
-"""batch_runner.py — 批量报告生成 + 归档。
+"""batch_runner.py — 批量报告生成 + 归档（支持并行）。
 
 用途：一次性跑多份报告，自动归档到 output/archive/，生成索引。
 
@@ -6,17 +6,22 @@
     python scripts/batch_runner.py --assets "宁德时代,比亚迪,中芯国际" --type listed_company
     python scripts/batch_runner.py --config batch_config.json
     python scripts/batch_runner.py --from-track-record  # 从 track_record 批量补跑
+    python scripts/batch_runner.py --assets "宁德时代,比亚迪" --parallel 2  # 并行2路
 """
+
 from __future__ import annotations
 
 import argparse
 import json
 import logging
+import shutil
 import subprocess
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
+from threading import Lock
 
 logging.basicConfig(
     level=logging.INFO,
@@ -29,9 +34,26 @@ OUTPUT_DIR = ROOT / "output"
 ARCHIVE_DIR = OUTPUT_DIR / "archive"
 INDEX_FILE = ARCHIVE_DIR / "index.json"
 
+# LLM 限流：防止并行请求压垮 provider
+_rate_lock = Lock()
+_last_request_time = 0.0
+_min_interval = 2.0  # 最小请求间隔秒数
+
+
+def _rate_limit():
+    """简单令牌桶限流：确保并行请求之间有最小间隔。"""
+    global _last_request_time
+    with _rate_lock:
+        now = time.time()
+        elapsed = now - _last_request_time
+        if elapsed < _min_interval:
+            time.sleep(_min_interval - elapsed)
+        _last_request_time = time.time()
+
 
 def run_single(asset: str, report_type: str, timeout: int = 900) -> dict:
     """运行单份报告，返回结果摘要。"""
+    _rate_limit()  # 并行限流
     logger.info("[BATCH] 开始: %s (%s)", asset, report_type)
     start = time.time()
     try:
@@ -90,7 +112,6 @@ def archive_report(result: dict) -> str:
     dest_dir.mkdir(parents=True, exist_ok=True)
 
     # 复制 docx 和 md
-    import shutil
     for key in ("docx", "md"):
         src = result.get(key, "")
         if src and Path(src).exists():
@@ -115,13 +136,15 @@ def update_index(results: list[dict]):
 
     reports = index.get("reports", [])
     for r in results:
-        reports.append({
-            "asset": r["asset"],
-            "report_type": r["report_type"],
-            "success": r["success"],
-            "elapsed": r.get("elapsed", 0),
-            "timestamp": r.get("timestamp", ""),
-        })
+        reports.append(
+            {
+                "asset": r["asset"],
+                "report_type": r["report_type"],
+                "success": r["success"],
+                "elapsed": r.get("elapsed", 0),
+                "timestamp": r.get("timestamp", ""),
+            }
+        )
     index["reports"] = reports[-200:]  # 保留最近 200 条
     index["last_updated"] = datetime.now().isoformat()
     INDEX_FILE.write_text(json.dumps(index, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -163,20 +186,48 @@ def main():
         logger.error("没有任务。用法: --assets '宁德时代,比亚迪' 或 --config batch_config.json")
         return
 
-    logger.info("批量任务: %d 份报告", len(tasks))
+    logger.info("批量任务: %d 份报告 (并行=%d)", len(tasks), args.parallel)
     results = []
-    for i, task in enumerate(tasks, 1):
+
+    def _run_and_archive(task):
         asset = task.get("asset", task) if isinstance(task, dict) else task
         rtype = task.get("type", args.type) if isinstance(task, dict) else args.type
-        logger.info("[%d/%d] %s (%s)", i, len(tasks), asset, rtype)
         result = run_single(asset, rtype, timeout=args.timeout)
-        results.append(result)
-        # 归档
         archive_dir = archive_report(result)
         if archive_dir:
             result["archive_dir"] = archive_dir
-        logger.info("[%d/%d] %s: %s (%.1fs)", i, len(tasks), asset,
-                     "OK" if result["success"] else "FAIL", result.get("elapsed", 0))
+        return result
+
+    if args.parallel > 1 and len(tasks) > 1:
+        # 并行模式
+        with ThreadPoolExecutor(max_workers=args.parallel) as pool:
+            futures = {pool.submit(_run_and_archive, t): t for t in tasks}
+            for i, future in enumerate(as_completed(futures), 1):
+                result = future.result()
+                results.append(result)
+                logger.info(
+                    "[%d/%d] %s: %s (%.1fs)",
+                    i,
+                    len(tasks),
+                    result["asset"],
+                    "OK" if result["success"] else "FAIL",
+                    result.get("elapsed", 0),
+                )
+    else:
+        # 串行模式
+        for i, task in enumerate(tasks, 1):
+            asset = task.get("asset", task) if isinstance(task, dict) else task
+            logger.info("[%d/%d] %s", i, len(tasks), asset)
+            result = _run_and_archive(task)
+            results.append(result)
+            logger.info(
+                "[%d/%d] %s: %s (%.1fs)",
+                i,
+                len(tasks),
+                result["asset"],
+                "OK" if result["success"] else "FAIL",
+                result.get("elapsed", 0),
+            )
 
     # 更新索引
     update_index(results)
@@ -185,11 +236,11 @@ def main():
     succeeded = sum(1 for r in results if r["success"])
     failed = len(results) - succeeded
     total_time = sum(r.get("elapsed", 0) for r in results)
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print(f"批量完成: {succeeded}/{len(results)} 成功, 总耗时 {total_time:.0f}s")
     for r in results:
         status = "✓" if r["success"] else "✗"
-        print(f"  {status} {r['asset']} ({r.get('elapsed',0):.0f}s)")
+        print(f"  {status} {r['asset']} ({r.get('elapsed', 0):.0f}s)")
 
 
 if __name__ == "__main__":
