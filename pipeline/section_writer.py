@@ -1898,12 +1898,14 @@ class SectionWriter:
 
     @staticmethod
     def _clean(text):
+        import re as _re_clean
+
         for p in ["好的，收到", "以下是为您呈现", "作为资深行业分析师", "好的，我将", "以下是我的"]:
             if p in text[:200]:
                 text = text.replace(p, "", 1)
                 break
-        text = re.sub(r"中金公司研究部|中金公司", "", text)
-        text = re.sub(r"作为行业分析师[^。]*，我[^。]*。", "", text)
+        text = _re_clean.sub(r"中金公司研究部|中金公司", "", text)
+        text = _re_clean.sub(r"作为行业分析师[^。]*，我[^。]*。", "", text)
         return text.strip()
 
     @staticmethod
@@ -2976,13 +2978,15 @@ class SectionWriter:
           1. 删除 LLM 生成的日期/署名行（匹配 '报告日期：.*分析师.*' 模式）
           2. 在 # 标题后插入系统日期 + 固定署名的标准头部行
         """
+        import re as _re_header
+
         now = datetime.now()
         date_str = f"{now.year}年{now.month:02d}月"
         header_line = f"报告日期：{date_str} | 报告级别：深度 | 分析师：2号分析师"
 
         # 1. 删除 LLM 自生成的日期/署名行（R81：删除所有"报告日期"行，含无分析师退化形态）
-        text = re.sub(r"^\s*报告日期：[^\n]*\n?", "", text, flags=re.MULTILINE)
-        text = re.sub(r"报告日期：\s*\d{4}年\d{1,2}月[^\n]*\n?", "", text)
+        text = _re_header.sub(r"^\s*报告日期：[^\n]*\n?", "", text, flags=_re_header.MULTILINE)
+        text = _re_header.sub(r"报告日期：\s*\d{4}年\d{1,2}月[^\n]*\n?", "", text)
 
         # 2. 在 # 标题后插入标准头部行
         lines = text.split("\n")
