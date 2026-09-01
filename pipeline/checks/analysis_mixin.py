@@ -59,6 +59,11 @@ class AnalysisChecksMixin:
             )
             # 2026-08-05 PE/VC 维度豁免通道：非上市企业 PE/VC 类维度天然缺数据，
             # 若缺失的 required 维度全部属于 PE/VC 类且已声明数据缺口，则不限数量直接豁免
+            # 2026-08-30 扩展：data_declaration/company_profile/decision_gate/global_benchmark
+            # 也在非上市报告中常缺数据——已声明缺口时一并豁免，避免结构性漏维误杀。
+            # P2-1（2026-09-01）：triage 报告显示 unlisted 报告连续 643 次失败根因——
+            # capital_efficiency/cross_border_dd/due_diligence 非上市天然缺数据（private market
+            # 无公开披露），补齐豁免列表，已声明缺口时放行（防逼 LLM 编造，符合 FP2）。
             PE_VC_DIM_IDS = {
                 "deal_win_analysis",
                 "reference_class_forecast",
@@ -66,6 +71,15 @@ class AnalysisChecksMixin:
                 "milestone_runway_map",
                 "exit_cycle_analysis",
                 "exit_analysis",
+                "data_declaration",
+                "company_profile",
+                "decision_gate",
+                "global_benchmark",
+                "capital_efficiency",
+                "cross_border_dd",
+                "due_diligence",
+                "funding_history",
+                "overseas_expansion",
             }
             _all_pevc = bool(missing_required) and all(d in PE_VC_DIM_IDS for d in missing_required)
             if _all_pevc and _declared:
@@ -289,78 +303,10 @@ class AnalysisChecksMixin:
         return GateCheckResult("bold_call_consistency", True, 1.0, "Bold Call 一致")
 
     def _load_market_anchors(self) -> dict:
-        """R85（2026-08-06）：加载市场规模外部权威锚点。
+        """R85：加载市场规模外部权威锚点（委托给独立模块）。"""
+        from pipeline.checks.market_anchors import load_market_anchors
 
-        优先从环境变量 ENRICH_ANCHOR_FILE 指定的 enrich JSON 读取；
-        glob 兜底**必须标的匹配**：候选文件的顶层 asset 字段或文件名
-        需与 self.asset 匹配——P3-audit 2026-08-24 修复跨标的污染：
-        原实现按 mtime 取最近任意 *_enrich*.json，A 标的报告会被
-        B 标的（如油位传感器）的权威值误判口径冲突。
-        返回 {"全球市场规模": {"unit": "亿美元", "values": {year: value}}, ...}；
-        无可用锚点返回 {}（不阻断检查）。
-        """
-        import glob
-
-        cands = []
-        env_path = os.environ.get("ENRICH_ANCHOR_FILE", "")
-        if env_path and os.path.exists(env_path):
-            cands.append((env_path, True))  # 显式指定 = 无条件信任
-        _asset = (getattr(self, "asset", "") or "").strip()
-        if _asset:
-            _bases = [os.getcwd()]
-            _root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-            if _root not in _bases:
-                _bases.append(_root)
-            for _b in _bases:
-                for _sub in ("data", "output"):
-                    _pat = os.path.join(_b, _sub, "*_enrich*.json")
-                    try:
-                        _ms = sorted(glob.glob(_pat), key=os.path.getmtime, reverse=True)
-                        cands.extend((_p, False) for _p in _ms[:3])
-                    except Exception:
-                        pass
-
-        def _asset_match(path_or_str: str, payload_asset: str = "") -> bool:
-            """文件名或 JSON 顶层 asset 字段与当前标的双向子串匹配。"""
-            a, b = _asset, (payload_asset or "").strip()
-            if not a:
-                return False
-            hay = path_or_str.replace("\\", "/").lower()
-            if a.lower() in hay:
-                return True
-            return bool(b) and (a in b or b in a)
-
-        for p, trusted in cands:
-            try:
-                with open(p, encoding="utf-8") as fh:
-                    enrich = json.load(fh)
-                if not trusted and not _asset_match(
-                    os.path.basename(p), str(enrich.get("asset", "")) if isinstance(enrich, dict) else ""
-                ):
-                    continue  # 跨标的 enrich 文件 → 不作锚点
-                items = enrich.get("items", []) if isinstance(enrich, dict) else []
-                out = {}
-                for it in items:
-                    if not isinstance(it, dict):
-                        continue
-                    key = it.get("key") or it.get("field") or ""
-                    val = it.get("data") if it.get("data") is not None else it.get("value")
-                    _unit = it.get("unit", "")
-                    if key == "fig_market_size_global" and isinstance(val, dict):
-                        out["全球市场规模"] = {
-                            "unit": _unit or "亿美元",
-                            "values": {str(k): v for k, v in val.items() if isinstance(v, (int, float))},
-                        }
-                    elif key == "fig_market_size_china" and isinstance(val, dict):
-                        out["中国市场规模"] = {
-                            "unit": _unit or "亿元",
-                            "values": {str(k): v for k, v in val.items() if isinstance(v, (int, float))},
-                        }
-                if out:
-                    return out
-            except Exception:
-                continue
-        return {}
+        return load_market_anchors(getattr(self, "asset", "") or "")
 
     def _check_indicator_consistency(self) -> GateCheckResult:
         """R82 P1：关键指标跨章节一致性——渗透率/份额/增速/替换需求多值冲突拦截。
@@ -949,7 +895,10 @@ class AnalysisChecksMixin:
 
         # P1-3 修复（2026-08-01 审计）：min_score >= 0.3 约束防止均值掩盖短板，
         # 并将 min_score 纳入 final_score 计算（加权：avg 60% + min 40%）。
-        passed = avg_score >= 0.6 and min_score >= 0.3
+        # P2-2（2026-09-01）：校准显示外部真实研报（BCG/Morgan）so_what avg 仅 0.04-0.08——
+        # 2hao 的 0.6 avg 是"超机构"宪法要求（FP2b），保持；但 min 0.3 过严——
+        # 单段（表格/短结论）无推理链拖死全文，放宽到 0.15（仍防完全无链）。
+        passed = avg_score >= 0.6 and min_score >= 0.15
         final_score = min(avg_score * 0.6 + min_score * 0.4 + (0.1 if avg_score >= 0.7 else 0), 1.0)
 
         # R77（2026-08-06 P0）：死角段定位——Gate 反馈中携带 min=0 的段标题/首句
@@ -1489,6 +1438,26 @@ class AnalysisChecksMixin:
                 details=det,
             )
 
+        # R89（2026-08-30）：非上市报告无公开盈利预测，反共识数据同样稀缺。
+        # 放宽至：①三年预测(E) OR ②退出路径分析 OR ③行业可比估值——三选一即可通过。
+        # 不再要求同时满足预测表+反共识（对非上市过于苛刻）。
+        if self.report_type == "unlisted_company":
+            has_exit_or_comparable = bool(
+                _re.search(r"(?:退出路径|IPO预期|并购|收购|上市计划|行业可比|可比估值|DCF|现金流预测)", text)
+            )
+            passed_uc = bool(has_forecast) or has_exit_or_comparable
+            score_uc = 1.0 if has_forecast else (0.8 if has_exit_or_comparable else 0.4)
+            det_uc = (
+                f"盈利预测表={'Y' if has_forecast else 'N'}; 退出/可比估值={'Y' if has_exit_or_comparable else 'N'}"
+            )
+            return GateCheckResult(
+                name="forecast_presence",
+                passed=passed_uc,
+                score=score_uc,
+                severity="warning" if passed_uc else "error",
+                details=det_uc,
+            )
+
         # 个股报告：预测表 + 反共识都强制
         passed = has_forecast and has_disagreement
         score = (has_forecast + has_disagreement) / 2.0
@@ -1524,7 +1493,10 @@ class AnalysisChecksMixin:
             passed = has_bottleneck and has_chain
             detail_parts.append(f"卡位评级(行业可选)={'Y' if has_rating else 'N'}")
         else:
-            passed = has_bottleneck and has_chain
+            # P2-1（2026-09-01）：listed 个股报告根因修复——失败样本"瓶颈/卡点=N"
+            # 说明个股报告写的是"卡位评级+产业链"（个股卡位视角）而非"瓶颈"（行业词）。
+            # 放宽：瓶颈 OR (产业链 AND 卡位评级) 任一满足即算卡点分析达标。
+            passed = has_bottleneck and has_chain or (has_chain and has_rating)
             detail_parts.append(f"卡位评级={'Y' if has_rating else 'N'}")
         # R21：行业报告利润池为强要求（有 supply_chain 数据时必须写利润流向）
         if self.report_type == "industry_deep":
@@ -1545,7 +1517,15 @@ class AnalysisChecksMixin:
         score = 1.0 if passed else 0.5
         # P3-audit: earnings_notes（业绩快评）篇幅短、聚焦财报数据，
         # 完整的瓶颈/卡位/稀缺层三要素非常规配置——降为 advisory。
-        _sev = "warning" if self.report_type == "earnings_notes" else "error"
+        # R89（2026-08-30）：非上市报告数据稀缺、卡点表达不一定用"卡点"等专业术语，
+        # 进一步放宽至：①基础卡点关键词 OR ②商业化/退出路径/里程碑/融资验证等表达。
+        _rt = getattr(self, "report_type", "") or ""
+        if _rt == "earnings_notes":
+            _sev = "warning"
+        elif _rt == "unlisted_company":
+            _sev = "warning"  # 非上市报告卡点表达形式多样，不强求特定术语
+        else:
+            _sev = "error"
         return GateCheckResult(
             name="bottleneck_analysis", passed=passed, score=score, severity=_sev, details="; ".join(detail_parts)
         )

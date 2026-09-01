@@ -61,6 +61,9 @@ def fetch_quote(ticker: str):
 
 
 def main():
+    global AS_OF
+    if "--as-of" in sys.argv:
+        AS_OF = sys.argv[sys.argv.index("--as-of") + 1]
     con = sqlite3.connect(DB_PATH)
     # 只处理 as_of 旧于目标日的行（幂等增量）
     tickers = [

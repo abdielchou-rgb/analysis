@@ -114,7 +114,7 @@ class E2ENodes:
             from core.data_stager import run_all_stagers, stager_summary
             from core.tools.business_model_classifier import classify_by_text
             from core.tools.macro_context import get_current_context
-            from core.web_intel import collect_all, intel_to_context
+            from core.web_intel import collect_all, intel_to_context, web_intel_to_datapoints
 
             asset = context.get("asset", "")
             report_type = context.get("report_type", "listed_company")
@@ -150,6 +150,12 @@ class E2ENodes:
                 context.update(wctx)
                 if wintel.search_count > 0:
                     logger.info("WebIntel: %d items from %d sources", wintel.search_count, len(wintel.raw_sources))
+                    # Convert to DataPoints with provenance
+                    web_dps = web_intel_to_datapoints(wintel, asset)
+                    cd = context.setdefault("collected_data", {})
+                    existing = cd.get("data_points", [])
+                    cd["data_points"] = existing + web_dps
+                    logger.info("WebIntel: added %d DataPoints with provenance", len(web_dps))
             except Exception as e:
                 logger.warning("WebIntel failed: %s", e)
                 context["web_summary"] = ""
@@ -295,7 +301,22 @@ class E2ENodes:
 
         try:
             ll = LearningLoop()
-            context["learning_findings"] = ll.before_report(context.get("asset", ""), context.get("report_type", ""))
+            asset = context.get("asset", "")
+            report_type = context.get("report_type", "")
+            # P2-1b (2026-09-01): 学习闭环三段注入——
+            # 1. auto_apply_lessons：把复发失败模式标记为 auto-applied（写入 learning_lessons）
+            # 2. build_lesson_prompt：组装"历史失败经验+已学教训+评分趋势"（含 auto 标记优先）
+            # 3. before_report：兼容既有接口（历史失败/教训/评分）
+            try:
+                ll.auto_apply_lessons(months=1, top_k=5)
+            except Exception:
+                pass
+            lesson_prompt = ll.build_lesson_prompt(asset=asset, report_type=report_type)
+            legacy = ll.before_report(asset, report_type)
+            combined = lesson_prompt
+            if legacy and lesson_prompt != legacy:
+                combined = (lesson_prompt + "\n" + legacy).strip()
+            context["learning_findings"] = combined
         except Exception as e:
             logger.warning("learning: %s", e)
             context["learning_findings"] = ""
@@ -340,15 +361,24 @@ class E2ENodes:
             if isinstance(data, list):
                 data = {"source": "data_pipeline"}
             if isinstance(data, dict) and data:
-                kp.data_points = [
-                    DataPoint(
-                        name=k,
-                        value=(str(v)[:200] if not isinstance(v, (int, float)) else v),
-                        source="data_pipeline",
-                        confidence="medium",
+                from datetime import datetime, timezone
+                import hashlib
+                kp.data_points = []
+                for k, v in list(data.items())[:30]:
+                    val = str(v)[:200] if not isinstance(v, (int, float)) else v
+                    excerpt = str(val)[:200]
+                    kp.data_points.append(
+                        DataPoint(
+                            name=k,
+                            value=val,
+                            source="data_pipeline",
+                            access_ts=datetime.now(timezone.utc).isoformat(),
+                            excerpt_sha256=hashlib.sha256(excerpt.encode()).hexdigest(),
+                            confidence=0.7,
+                            scope="company",
+                            unit="",
+                        )
                     )
-                    for k, v in list(data.items())[:30]
-                ]
             scaffold = ae.design(brief, kp)
             context["scaffold"] = scaffold
             n_sections = len(scaffold.sections) if hasattr(scaffold, "sections") else len(scaffold.get("sections", []))
@@ -491,12 +521,20 @@ class E2ENodes:
                                 float(_val)
                             except (TypeError, ValueError):
                                 continue
+                            from datetime import datetime, timezone
+                            import hashlib
+                            excerpt = f"{_k}_{_yr}: {_val}"
                             data_points.append(
                                 DataPoint(
                                     name=f"{_k}_{_yr}",
                                     value=float(_val),
                                     source=str(meta.get("source", "llm_collect")),
-                                    confidence=str(meta.get("confidence", 0.5)),
+                                    access_ts=datetime.now(timezone.utc).isoformat(),
+                                    excerpt_sha256=hashlib.sha256(excerpt.encode()).hexdigest(),
+                                    confidence=float(meta.get("confidence", 0.5)),
+                                    scope="company",
+                                    year=int(_yr) if _yr.isdigit() else None,
+                                    unit="",
                                 )
                             )
                     if meta:
@@ -590,7 +628,7 @@ class E2ENodes:
 
             draft_provider = os.environ.get("LLM_PROVIDER") or resolve_provider("write", _run_mode)
         except Exception:
-            draft_provider = os.environ.get("LLM_PROVIDER") or os.environ.get("DRAFT_PROVIDER", "deepseek")
+            draft_provider = os.environ.get("LLM_PROVIDER") or os.environ.get("DRAFT_PROVIDER", "opencode_go")
         # R23（2026-08-02 FM 差异化加速）：行业报告默认骨架先行（数据驱动、结构稳定），
         # 上市公司/非上市默认关闭（质量要求最高，保持全量直写）。
         # 骨架=FM 出结构，深化=DeepSeek 兜底，质量闸不变。
@@ -791,6 +829,21 @@ class E2ENodes:
         except Exception as _e89:
             logger.debug("[R89-SANITIZE] 清理器未生效: %s", str(_e89)[:100])
 
+        # P3-2 (2026-09-01): claim-level 溯源附录接线——此前 core/claim_citation.py
+        # 存在但 0 调用（AUDIT 2026-09-01 点名"引用粒度"差距）。现在 assemble 阶段
+        # 追加「关键数据溯源」附录：正文数值 × chart_data ±0.5% 确定性匹配。
+        # env REPORT_CITATION_APPENDIX=0 可关；幂等（重复调用不重复注入）。
+        try:
+            import os as _os
+
+            if _os.environ.get("REPORT_CITATION_APPENDIX", "1") != "0" and "附录：关键数据溯源" not in final:
+                from core.claim_citation import append_citation_appendix
+
+                _cd2 = context.get("collected_data", {})
+                final = append_citation_appendix(final, _cd2)
+        except Exception as _e_claim:
+            logger.debug("[P3-2] claim citation 附录注入失败: %s", str(_e_claim)[:100])
+
         context["final_text"] = final
         return {"final_text": final}
 
@@ -812,6 +865,7 @@ class E2ENodes:
             asset=context.get("asset", ""),
             chart_ids=set(context.get("chart_paths", {}).keys()),
             client_questions=context.get("client_questions", None),
+            collected_data=context.get("collected_data", {}),
         )  # R84
 
         # FP7b: Degradation-aware handling（P2-I 2026-07-31 审计修复）
@@ -940,6 +994,8 @@ class E2ENodes:
                             "gate_passed": True,
                             "via_pipeline": True,
                             "pipeline": "E2EOrchestratorV2",
+                            # P0-1: 正文哈希绑定——与 _write_pipeline_fingerprint 保持一致
+                            "report_sha256": _report_hash(context) or _report_hash({"report_text": text}),
                         },
                         ensure_ascii=False,
                         indent=2,
@@ -987,6 +1043,30 @@ class E2ENodes:
                     "attempt": context.get("attempt", 0),
                 },
             )
+
+            # P2-1b (2026-09-01): FP5 反馈闭环激活——on_report_delivered 原为死代码
+            # （0 调用者、HISTORY_PATH 从未写入）。现在报告交付后记录到 fp5_history.json，
+            # 与 learning_data.db 互补（db 存明细，json 存交付级快照）。
+            try:
+                from pipeline.fp5_feedback import FP5FeedbackLoop
+
+                _failures = []
+                _chk = gate.get("checks", []) if isinstance(gate, dict) else []
+                if isinstance(_chk, list):
+                    for _c in _chk:
+                        _n = getattr(_c, "name", "") if not isinstance(_c, dict) else _c.get("name", "")
+                        _p = getattr(_c, "passed", True) if not isinstance(_c, dict) else _c.get("passed", True)
+                        if not _p:
+                            _failures.append({"name": _n, "class": "", "severity": "warning"})
+                FP5FeedbackLoop().on_report_delivered(
+                    asset=context.get("asset", ""),
+                    report_type=context.get("report_type", ""),
+                    gate_passed=bool(gate.get("passed", False)),
+                    gate_score=gate.get("score", 0),
+                    failures=_failures,
+                )
+            except Exception as _e_fp5:
+                logger.debug("[FP5-FEEDBACK] %s", str(_e_fp5)[:80])
 
             # R77（2026-08-05 P0-3）：方法选择数据驱动初代——
             # Gate 通过后自动记录方法反思（用了什么框架、Gate 分多少），
@@ -1149,6 +1229,20 @@ def _record_predictions_safe(report_text: str, asset: str) -> int:
         return 0
 
 
+def _report_hash(ctx: dict) -> str:
+    """P0-1 (2026-09-01): 计算报告正文 SHA-256，写入管线指纹供出口校验比对。
+
+    优先取 ctx 中的最终文本；无则返回空串（由写入端 fallback 到 MD 文件）。
+    """
+    import hashlib
+
+    for key in ("final_text", "report_text"):
+        t = ctx.get(key)
+        if t:
+            return hashlib.sha256(str(t).encode("utf-8")).hexdigest()
+    return ""
+
+
 def _repro_snapshot(output_dir: str, asset: str) -> str | None:
     """T-12：运行时配置快照——pin 全部影响因子供事后复现。"""
     import hashlib
@@ -1160,8 +1254,7 @@ def _repro_snapshot(output_dir: str, asset: str) -> str | None:
     def _file_hash(p):
         try:
             return hashlib.md5(_P(p).read_bytes()).hexdigest()[:12]
-        except Exception:
-            return None
+        except Exception:            return None
 
     root = _P(__file__).resolve().parent.parent
     snapshot = {
@@ -1287,6 +1380,9 @@ class E2EOrchestratorV2:
             # FP7d: 证明经由 E2EOrchestratorV2 完整管线
             "via_pipeline": True,
             "pipeline": "E2EOrchestratorV2",
+            # P0-1 (2026-09-01): 报告正文哈希绑定——export_report 校验时重算比对，
+            # 防指纹被复制改名伪造 / 跨资产复用
+            "report_sha256": _report_hash(ctx),
         }
         fp_path.write_text(_json.dumps(fingerprint, ensure_ascii=False, indent=2), encoding="utf-8")
         logger.info("[FINGERPRINT] 管线指纹已写入: %s", fp_path)
@@ -1296,6 +1392,22 @@ class E2EOrchestratorV2:
         except Exception as e:
             logger.debug("[LINEAGE] 写入失败: %s", e)
         return str(fp_path)
+
+    def _report_text_for_hash(self, ctx: dict) -> str:
+        """取报告正文文本用于指纹哈希——优先 final/report_text，其次落盘 MD。"""
+        for key in ("final_text", "report_text"):
+            t = ctx.get(key)
+            if t:
+                return str(t)
+        try:
+            output_dir = Path(ctx.get("output_dir", str(_ROOT / "output")))
+            safe = re.sub(r"[^\w一-鿿]+", "_", str(self.asset)).strip("_") or "asset"
+            md = output_dir / f"{safe}.md"
+            if md.exists():
+                return md.read_text(encoding="utf-8", errors="ignore")
+        except Exception:
+            pass
+        return ""
 
     def _write_lineage(self, ctx: dict, gate: dict) -> str:
         """写血缘追踪 lineage.json — 记录报告的数据来源与变换链。
@@ -1369,7 +1481,7 @@ class E2EOrchestratorV2:
                 },
                 {
                     "stage": "write",
-                    "llm_provider": "agent_provider" if ctx.get("llm_degradation_level") == 3 else "deepseek",
+                    "llm_provider": "agent_provider" if ctx.get("llm_degradation_level") == 3 else "opencode_go",
                     "text_len": len(ctx.get("final_text", "") or ctx.get("report_text", "")),
                 },
                 {
@@ -1567,6 +1679,7 @@ class E2EOrchestratorV2:
                 E2ENodes.research_plan,
                 deps=["enrich"],
                 desc="question tree + conflict early-warning + followup queries",
+                timeout_s=600,
             )
             g.add_node("cross_validate", E2ENodes.cross_validate, deps=["enrich"], desc="cross validate")
             g.add_node("argument", E2ENodes.argument_engine, deps=["enrich"], desc="argument engine")
@@ -1587,11 +1700,12 @@ class E2EOrchestratorV2:
                     "argument",
                     "scarcity",
                     "cross_validate",
+                    "research_planner",
                 ],
                 # R89（2026-08-25）：串行慢速 provider（免费/stealth 推理模型）下
                 # 一组 3 段写作可达 20+ 分钟，默认 300s 必超时。可用环境变量放宽。
-                timeout_s=int(os.environ.get("WRITE_NODE_TIMEOUT_S", "300")),
-                desc="write",
+                timeout_s=int(os.environ.get("WRITE_NODE_TIMEOUT_S", "600")),
+                desc="write (dimension-level parallel)",
             )
             g.add_node("style", E2ENodes.style_compile, deps=["write_sections", "charts"], desc="style compile")
             g.add_node(

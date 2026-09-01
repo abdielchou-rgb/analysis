@@ -66,6 +66,12 @@ def build_claim_citation_map(report_text: str, collected_data: dict) -> list[dic
     for fig_key, payload in chart_data.items():
         for leaf, val in _walk_numbers(payload, str(fig_key)):
             candidates[f"{leaf}={val:g}"] = val
+    # P3-2 (2026-09-01): 兼容非 chart_data 结构（data_dict.json 顶层为数值键，
+    # 无 chart_data 容器）——直接展平顶层数值，作为 fig_* 的替代候选源
+    if not candidates:
+        for leaf, val in _walk_numbers(cd, "data"):
+            if isinstance(val, (int, float)) and not isinstance(val, bool):
+                candidates[f"{leaf}={val:g}"] = val
     if not candidates:
         return []
 
@@ -123,7 +129,13 @@ def render_citation_appendix(claims: list[dict], max_rows: int = 30) -> str:
 
 
 def append_citation_appendix(report_text: str, collected_data: dict) -> str:
-    """主入口：返回附了溯源附录的报告文本（无命中则原样返回）。"""
+    """主入口：返回附了溯源附录的报告文本（无命中则原样返回）。
+
+    P3-2 (2026-09-01) 幂等加固：若文本已含附录标记则原样返回，
+    防止 assemble 节点在 write-revise 循环中被多次调用导致附录重复注入。
+    """
+    if "附录：关键数据溯源" in (report_text or ""):
+        return report_text
     claims = build_claim_citation_map(report_text, collected_data)
     appendix = render_citation_appendix(claims)
     if not appendix:
@@ -150,26 +162,39 @@ def render_numbered_appendix(claims: list[dict], max_rows: int = 30) -> str:
     return "\n".join(lines)
 
 
+def _split_sentences(text: str) -> list[str]:
+    """统一句子切分——build_claim_citation_map 和 annotate_inline 共用。"""
+    return [s.strip() for s in re.split(r"[。！？\n]", text or "") if s.strip()]
+
+
 def annotate_inline(report_text: str, collected_data: dict, max_markers: int = 40) -> tuple[str, list[dict]]:
     """命中句尾追加 [注N] 脚注标记 + 返回编号后的完整文本与 claims。
 
     与 append_citation_appendix 二选一；无命中时原文返回。
+    幂等：已含 [注1] 或附录标题时原样返回。
     """
+    if not report_text:
+        return report_text, []
+    # 幂等 guard
+    if "[注1]" in report_text or "附录：数据溯源注释" in report_text:
+        return report_text, []
     claims = build_claim_citation_map(report_text, collected_data)
     if not claims:
         return report_text, []
     id_by_claim = {c["claim"]: i + 1 for i, c in enumerate(claims)}
-    # 以保留分隔符的方式切分（与 build 的句子边界一致：句末标点+换行）
-    parts = re.split(r"([。！？]|\n)", report_text)
+    # 用统一句子切分，再按原文顺序重组并注入标记
+    sentences = _split_sentences(report_text)
     n_marked = 0
-    out: list[str] = []
-    for seg in parts:
-        out.append(seg)
-        key = seg.strip()[:100]
-        if seg.strip() and len(seg.strip()) >= 8 and key in id_by_claim and n_marked < max_markers:
-            # 仅在非分隔符段后加标记
-            out.append(f"[注{id_by_claim[key]}]")
+    out_parts: list[str] = []
+    for sent in sentences:
+        out_parts.append(sent)
+        key = sent[:100]
+        if len(sent) >= 8 and key in id_by_claim and n_marked < max_markers:
+            out_parts.append(f"[注{id_by_claim[key]}]")
             n_marked += 1
-    marked_text = "".join(out).rstrip()
+    # 重组：用句号连接（原始分隔符已丢失，统一用。重建）
+    marked_text = "。".join(out_parts)
+    if not marked_text.endswith("。"):
+        marked_text += "。"
     appendix = render_numbered_appendix(claims)
     return marked_text + "\n" + appendix, claims

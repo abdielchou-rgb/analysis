@@ -16,12 +16,19 @@ import json
 import logging
 import os
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
+
+# Observability
+try:
+    from core.observability import PIPELINE_RUNS, PIPELINE_DURATION
+except ImportError:
+    PIPELINE_RUNS = PIPELINE_DURATION = None
 
 logging.basicConfig(
     level=logging.INFO,
@@ -89,6 +96,10 @@ def run_pipeline(
     print(f"  输出: {output_dir}")
     print(f"{'=' * 60}\n")
 
+    # Observability: Track pipeline run
+    _pipeline_start = time.time()
+    _pipeline_status = "error"
+    
     result = {
         "status": "ok",
         "asset": asset,
@@ -240,6 +251,7 @@ def run_pipeline(
     # MD 仍写盘供人工审计，但 status=error 让调用方/调度器感知失败。
     print("[4/5] 汇总结果...")
     result["status"] = "ok" if result.get("gate_passed", False) else "error"
+    _pipeline_status = result["status"]
     if result["status"] != "ok":
         result["error"] = result.get("gate_error", "Iron Gate 未通过，报告未交付")
     print(f"\n{'=' * 60}")
@@ -249,6 +261,15 @@ def run_pipeline(
         if result.get(k):
             print(f"  {k.upper()}: {result[k]}")
     print(f"{'=' * 60}\n")
+
+    # Observability: Record pipeline metrics
+    if PIPELINE_RUNS and PIPELINE_DURATION:
+        try:
+            _pipeline_duration = time.time() - _pipeline_start
+            PIPELINE_RUNS.labels(report_type=report_type, style=style, result=_pipeline_status).inc()
+            PIPELINE_DURATION.labels(report_type=report_type, style=style).observe(_pipeline_duration)
+        except Exception as e:
+            logger.debug("Pipeline metrics recording failed: %s", e)
 
     return result
 

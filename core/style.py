@@ -127,6 +127,112 @@ class StyleCompiler:
         }
         return result
 
+    def blend_styles(self, styles: dict[str, float]) -> dict:
+        """混合多种机构风格
+
+        Args:
+            styles: 风格权重映射，如 {"cicc": 0.7, "gs": 0.3}
+
+        Returns:
+            混合后的风格配置
+        """
+        blended = {
+            "sentence_openers": [],
+            "vocabulary": [],
+            "format_rules": [],
+            "writing": {},
+        }
+
+        # 预定义的机构风格配置
+        style_configs = {
+            "cicc": {
+                "sentence_openers": ["我们认为", "我们判断", "基于分析"],
+                "vocabulary": ["估值", "盈利预测", "投资评级", "目标价"],
+                "format_rules": ["结论先行", "数据支撑", "反方论证"],
+                "writing": {"min_judgment_density": 1.0},
+            },
+            "gs": {
+                "sentence_openers": ["We estimate", "Our analysis suggests", "We believe"],
+                "vocabulary": ["growth driver", "margin expansion", "upside potential"],
+                "format_rules": ["data-driven", "quantitative focus"],
+                "writing": {"min_judgment_density": 0.8},
+            },
+            "ms": {
+                "sentence_openers": ["Our view", "We forecast", "Key insight"],
+                "vocabulary": ["catalyst", "overweight", "price target"],
+                "format_rules": ["thesis-driven", "risk-reward framework"],
+                "writing": {"min_judgment_density": 0.9},
+            },
+            "mck": {
+                "sentence_openers": ["The evidence suggests", "Analysis indicates", "Key finding"],
+                "vocabulary": ["market opportunity", "competitive advantage", "value creation"],
+                "format_rules": ["evidence-based", "structured analysis"],
+                "writing": {"min_judgment_density": 0.7},
+            },
+            "bcg": {
+                "sentence_openers": ["Strategic assessment", "Market analysis", "Competitive position"],
+                "vocabulary": ["market share", "competitive landscape", "strategic positioning"],
+                "format_rules": ["strategic framework", "competitive analysis"],
+                "writing": {"min_judgment_density": 0.6},
+            },
+            "jpm": {
+                "sentence_openers": ["We recommend", "Our outlook", "Key metrics"],
+                "vocabulary": ["overweight", "earnings estimate", "price objective"],
+                "format_rules": ["recommendation-driven", "earnings focus"],
+                "writing": {"min_judgment_density": 1.2},
+            },
+        }
+
+        # 按权重混合风格
+        for style_name, weight in styles.items():
+            if style_name in style_configs:
+                style_config = style_configs[style_name]
+                for key in ["sentence_openers", "vocabulary", "format_rules"]:
+                    if key in style_config:
+                        # 按权重添加风格元素
+                        count = max(1, int(len(style_config[key]) * weight))
+                        blended[key].extend(style_config[key][:count])
+
+                # 合并 writing 配置
+                if "writing" in style_config:
+                    for k, v in style_config["writing"].items():
+                        if k not in blended["writing"]:
+                            blended["writing"][k] = v
+                        else:
+                            # 按权重加权平均
+                            blended["writing"][k] = blended["writing"][k] * (1 - weight) + v * weight
+
+        # 去重
+        for key in ["sentence_openers", "vocabulary", "format_rules"]:
+            blended[key] = list(set(blended[key]))
+
+        return blended
+
+    def apply_customization(self, text: str, customization: dict) -> str:
+        """应用定制化配置到文本
+
+        Args:
+            text: 原始文本
+            customization: 定制化配置字典
+
+        Returns:
+            应用定制化后的文本
+        """
+        if not customization:
+            return text
+
+        # 应用风格混合
+        style_blend = customization.get("style_blend")
+        if style_blend:
+            blended = self.blend_styles(style_blend)
+            # 将混合风格注入 profile
+            profile = dict(self.profile)
+            profile.update(blended)
+            result = self.compile(text, profile)
+            return result.compiled
+
+        return text
+
     @staticmethod
     def _rule_conclusion_first(text, profile):
         if not profile.get("conclusion_first", True):

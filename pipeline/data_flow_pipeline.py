@@ -4,20 +4,13 @@ from __future__ import annotations
 
 import json
 import logging
-from dataclasses import dataclass
+from datetime import datetime, timezone
+import hashlib
 from pathlib import Path
 
+from core.models import DataPoint
+
 logger = logging.getLogger("2hao.data_flow")
-
-
-@dataclass
-class DataPoint:
-    name: str
-    value: float
-    unit: str
-    timestamp: str
-    source: str
-    confidence: float = 0.7
 
 
 class DataFlowPipeline:
@@ -38,16 +31,31 @@ class DataFlowPipeline:
             try:
                 data = json.loads(fp.read_text(encoding="utf-8"))
                 if stock_code in data:
+                    val = float(data[stock_code].get("pe_forward", 0))
+                    excerpt = f"{stock_code}_pe_fwd: {val}"
                     return DataPoint(
-                        f"{stock_code}_pe_fwd",
-                        float(data[stock_code].get("pe_forward", 0)),
-                        "倍",
-                        "latest",
-                        "consensus_prices.json",
+                        name=f"{stock_code}_pe_fwd",
+                        value=val,
+                        unit="倍",
+                        source="consensus_prices.json",
+                        access_ts=datetime.now(timezone.utc).isoformat(),
+                        excerpt_sha256=hashlib.sha256(excerpt.encode()).hexdigest(),
+                        confidence=0.7,
+                        scope="company",
                     )
             except Exception:
                 pass
-        return DataPoint("consensus", 0, "", "", "fallback(无数据)")
+        excerpt = "consensus: no data"
+        return DataPoint(
+            name="consensus",
+            value=0,
+            unit="倍",
+            source="fallback",
+            access_ts=datetime.now(timezone.utc).isoformat(),
+            excerpt_sha256=hashlib.sha256(excerpt.encode()).hexdigest(),
+            confidence=0.1,
+            scope="company",
+        )
 
     def get_macro(self, indicator: str) -> DataPoint:
         for base in [Path(__file__).resolve().parent.parent.parent, Path(__file__).resolve().parent.parent]:
@@ -57,12 +65,31 @@ class DataFlowPipeline:
                     data = json.loads(fp.read_text())
                     if indicator in data:
                         v = data[indicator]
+                        val = float(v["value"])
+                        excerpt = f"{indicator}: {val}"
                         return DataPoint(
-                            indicator, float(v["value"]), v.get("unit", ""), v.get("date", ""), "macro_highfreq.json"
+                            name=indicator,
+                            value=val,
+                            unit=v.get("unit", ""),
+                            source="macro_highfreq.json",
+                            access_ts=datetime.now(timezone.utc).isoformat(),
+                            excerpt_sha256=hashlib.sha256(excerpt.encode()).hexdigest(),
+                            confidence=0.8,
+                            scope="global",
                         )
                 except Exception:
                     pass
-        return DataPoint(indicator, 0, "", "", "fallback")
+        excerpt = f"{indicator}: fallback"
+        return DataPoint(
+            name=indicator,
+            value=0,
+            unit="",
+            source="fallback",
+            access_ts=datetime.now(timezone.utc).isoformat(),
+            excerpt_sha256=hashlib.sha256(excerpt.encode()).hexdigest(),
+            confidence=0.1,
+            scope="global",
+        )
 
     def status_report(self) -> str:
         lines = ["=== 数据流管线状态 ==="]

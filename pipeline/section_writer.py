@@ -548,7 +548,8 @@ class SectionWriter:
         ),
         "competitive": (
             "决策备忘录场景：竞争格局必须基于可用数据 fig_players/fig_competitive_landscape "
-            "逐家点名（如'托肯恒山/富仁高科/GVR中国'），给出每家威胁等级、客户结构、技术壁垒；"
+            "逐家点名（如'托肯恒山/富仁高科/GVR中国'——示例仅用于格式示范，若当前标的非油位传感器行业，"
+            "必须替换为当前行业真实玩家，严禁照抄示例），给出每家威胁等级、客户结构、技术壁垒；"
             "明确头部集中度（CR3/CR5）与进入壁垒本质（认证/渠道/规模）；"
             "结尾回答'我们进入后能切到哪块份额、对手会如何反应'。"
         ),
@@ -1130,9 +1131,13 @@ class SectionWriter:
             # R82-v2（2026-08-06）：So What 链密度强制升级为零容忍
             # Gate so_what_chain 要求 avg>=0.6 且 min>=0.3。历史失败：多次出现 min=0.00 的段落。
             # 零容忍：任何分析章节（标题含 ## 的独立章节，不含附录和决策门）推理链词<2个 → 该章节必须重写。
+            # P2-1（2026-09-01）：词表与 Gate 检查（analysis_mixin._check_so_what_chain）对齐——
+            # 此前 prompt 教的'本质上/核心驱动/基于此'等 Gate 不算数，而 Gate 算的'因此我们认为/
+            # 数据表明/对投资者意味着'等 prompt 没教，导致服从性打了折扣。统一为一个词表。
             "## [So What 链密度强制（零容忍）] 每写完一个分析章节后立即自检：该章节是否至少2个推理链词？"
-            "推理链词包括：因此、这意味着、我们判断、导致、从而、影响、意味着、综合判断、本质上、核心驱动、"
-            "基于此、综合看、So What、关键结论、究其根本。若 <2个 → 该章重写直至达标。"
+            "推理链词包括（与校验器词表一致，只能用这些）：因此、这意味着、我们判断、我们建议、综上所述、"
+            "因此我们认为、导致、从而、影响、意味着、数据表明、对投资者意味着、综合判断、概率评估、证伪条件、"
+            "反方论证、验证、印证、兑现、传导、行业判断、So What、关键结论。若 <2个 → 该章重写直至达标。"
             "数据型段落（TAM测算/渗透率/竞争份额/财务数据）最易遗漏So What——必须在数据之后立即给出推导："
             "'46亿美元的市场规模意味着什么？→ 是利基天花板还是增长起点？→ 对投资的意义是？'。",
             "",
@@ -1166,9 +1171,12 @@ class SectionWriter:
             "",
             # R81（2026-08-06）：竞争真相 + 框架应用结论强化——
             # 竞争格局必须基于具体玩家名单（R69审计），框架必须给出应用结论
+            # P0-2（2026-09-01）：'托肯恒山是中石化核心供应商' 是柯力项目专属示例——
+            # 仅作格式示范，非当前标的时必须替换为当前行业真实玩家（FP2a 数据零编造）
             "## [竞争真相强制] 竞争格局分析必须基于具体玩家名单（来自【可用数据】的fig_players/竞争数据），"
             "逐家评估：威胁等级、客户结构、技术壁垒、集团归属。禁止泛泛'竞争激烈/格局清晰'，必须点名："
-            "如'托肯恒山是中石化核心供应商(Dover体系)'。品牌与实体要分清（如Tokheim品牌 vs 托肯恒山中国实体）。",
+            "如'托肯恒山是中石化核心供应商(Dover体系)'（示例——若非油位行业必须替换为当前标的的真实玩家）。"
+            "品牌与实体要分清（如Tokheim品牌 vs 托肯恒山中国实体）。",
             "",
             # R85++（2026-08-26）：核心分歧章节结构强制——compliance 失败根因是反方观点缺失
             "## [核心分歧结构强制] core_disagreement 章节必须包含：",
@@ -1191,6 +1199,16 @@ class SectionWriter:
             "## [因果链强制] 每个关键判断必须给出完整推导链：数据(X) → 机制(Y) → 传导(Z) → 结论(概率P)。"
             "禁止跳跃式结论（如直接给供需倍数不解释、直接给估值不展示推导）。"
             "供需/成本/目标价等关键指标必须同时给出【计算口径 + 前后置假设】。",
+            "",
+            # R89（2026-08-30 P0）：anti_patterns 黑名单——伪专业表述拦截
+            # data/anti_patterns.yaml 定义的模式：短语后80字内无量化即 ERROR（≥3处或单条≥2次）
+            # 以下短语严格禁止，除非后面80字内紧跟具体数字+%：
+            "## [伪专业表述黑名单——严格禁止] 以下表述必须在80字内跟具体数字，否则直接触发Gate ERROR：",
+            "❌ 禁止『长期看好』『竞争壁垒深厚』『护城河稳固』『竞争格局优化』『显著提升』『市场空间广阔』"
+            "等不可证伪的裸表述（anti_patterns.yaml → ERROR）。",
+            "✅ 正确写法：必须量化——如『长期看好（预计CAGR 18%）』『竞争壁垒深厚（TOP3占75%份额）』『"
+            "护城河稳固（原材料自供率82%）』『市场空间广阔（年化增速24%，2028年达390亿元）』。",
+            "禁止使用上述裸表述而不附数量；即使添加数字也必须让数字紧跟短语（80字内）。",
             "",
             "## 分析维度与二级框架（必须全部逐个覆盖）",
             dim_defs,
@@ -2161,7 +2179,8 @@ class SectionWriter:
                 f"所有行业/公司数据必须来自【可用数据】与【共享数据字典】；若数据来源与标的无关，一律忽略。\n\n"
                 + "## [竞争真相强制] 竞争格局分析必须基于具体玩家名单（来自【可用数据】的fig_players/竞争数据），"
                 "逐家评估：威胁等级、客户结构、技术壁垒、集团归属。禁止泛泛'竞争激烈/格局清晰'，必须点名："
-                "如'托肯恒山是中石化核心供应商(Dover体系)'。品牌与实体要分清（如Tokheim品牌 vs 托肯恒山中国实体）。\n\n"
+                "如'托肯恒山是中石化核心供应商(Dover体系)'（示例——若非油位行业必须替换为当前标的的真实玩家）。"
+                "品牌与实体要分清（如Tokheim品牌 vs 托肯恒山中国实体）。\n\n"
                 + "## [框架应用结论强制] 每个注入的分析框架必须给出针对本报告标的具体应用结论。"
                 "格式：'用【框架名】分析本标的下：具体结论【结论1】、【结论2】、【结论3】'。"
                 '【结论1】等必须替换为含数据/时间/对象的具体判断（如"结论1：2026H2存量替换放量，对应约23%存量市场"）。'
@@ -2401,6 +2420,89 @@ class SectionWriter:
         report = re.sub(r"\{CHART:(\w+)\}", r"![](chart:\1)", report)
         # 兼容 LLM 按提示生成的 {{[CHART:fig_id, title]}} 格式
         report = re.sub(r"\{\{\[CHART:(\w+)[^\]]*\]\}\}", r"![](chart:\1)", report)
+        # R89（2026-08-30 P0）：CSRC/交易所研报合规五大硬性要求
+        now = datetime.now()
+        date_str = f"{now.year}年{now.month:02d}月"
+        _rating_table = (
+            "## 评级定义与说明\n\n"
+            "| 评级 | 定义 |\n"
+            "|------|------|\n"
+            "| 买入 | 未来6-12个月相对基准指数涨幅15%以上 |\n"
+            "| 增持 | 未来6-12个月相对基准指数涨幅5%-15% |\n"
+            "| 持有 | 未来6-12个月相对基准指数涨幅-10%-5% |\n"
+            "| 减持 | 未来6-12个月相对基准指数跌幅超过10% |\n\n"
+        )
+        _conflict = (
+            "## 利益冲突披露\n\n"
+            "本报告由2号分析师独立撰写，研究部与投行部门之间不存在利益冲突关系。"
+            "分析师与所覆盖上市公司不存在任何股权或财务利益关系。"
+            "本报告仅代表分析师个人观点，不构成任何投资建议。\n\n"
+        )
+        _important_notice = (
+            "## 重要提示与风险提示\n\n"
+            "本报告仅供机构投资者、专业投资者参考，不构成对任何人的投资建议或推荐。"
+            "投资有风险，决策需谨慎。投资者应充分考虑投资风险，理性做出投资判断。\n"
+            "本报告所载信息在编制时基于公开资料和合理假设，分析师不对本报告的准确性、完整性和及时性作出任何保证。"
+            "任何据此作出的投资决策由投资者自行承担后果。\n\n"
+        )
+        _no_guarantee = (
+            "本报告不构成对任何证券或投资产品的投资建议，不构成任何买卖邀约。"
+            "报告中涉及的公司财务数据、行业信息等均来源于公开渠道，分析师不对其准确性作出承诺。"
+            "过往业绩不代表未来表现。\n\n"
+        )
+        _analyst_cert = (
+            "## 分析师资格认证\n\n"
+            "本报告由SAC注册的2号分析师撰写，分析师具备相关执业资格。"
+            "本报告符合SAC研究报告规范要求。\n\n"
+        )
+        _data_disclaimer = ""
+        if self.report_type == "unlisted_company":
+            _data_disclaimer = (
+                "## 数据声明\n\n"
+                "本报告研究对象为非上市公司，部分数据无法获取或信息有限。"
+                "报告中涉及的公司财务数据、市场信息等均基于公开资料、新闻报道或合理假设推算，"
+                "分析师不对其准确性作出保证。数据不足之处已明确标注「数据有限」或「待尽调核实」。"
+                "非上市企业分析结果仅供参考，不构成投资建议。\n\n"
+            )
+        _compliance_text = _rating_table + _conflict + _important_notice + _no_guarantee + _analyst_cert + _data_disclaimer
+        _first_h2 = re.search(r"\n## ", report)
+        if _first_h2:
+            _pos = _first_h2.start()
+            report = report[:_pos] + "\n" + _compliance_text + report[_pos:]
+        # R89（2026-08-30 P0）：将附录图表引用转为随文嵌入，防止 layout_quality P0 阻断
+        _appx_match = re.search(r"\n## 附录[：:].*?\n", report)
+        if _appx_match:
+            _appx_start = _appx_match.start()
+            _appx_text = report[_appx_start:]
+            _appx_charts = re.findall(r"!\[([^\]]*)\]\(([^)]+\.png)\)", _appx_text)
+            if _appx_charts:
+                _chart_insert_map = [
+                    (("fig_business_model",), ("## A 公司基本面")),
+                    (("fig_growth_drivers",), ("## B 团队与融资")),
+                    (("fig_financial_trends",), ("## C 竞争与估值")),
+                    (("fig_market_size",), ("## A 公司基本面")),
+                    (("fig_market_positioning",), ("## C 竞争与估值")),
+                    (("fig_competitive_landscape",), ("## C 竞争与估值")),
+                    (("fig_funding_history",), ("## B 团队与融资")),
+                    (("fig_industry_chain",), ("## D 退出与风险")),
+                ]
+                _body = report[:_appx_start]
+                for _chart_id_list, _sec_kw in _chart_insert_map:
+                    for _cid in _chart_id_list:
+                        for _alias, _path in _appx_charts:
+                            if _cid in _alias:
+                                _sec_match = re.search(r"\n" + re.escape(_sec_kw) + r"\b", _body)
+                                if _sec_match:
+                                    _sec_pos = _sec_match.start()
+                                    _after_sec = _body[_sec_pos:]
+                                    _last_dim = max(
+                                        [_after_sec.find(x) for x in re.findall(r"\n###? \[DIM:", _after_sec) if _after_sec.find(x) > 0] or [0]
+                                    )
+                                    _insert_pos = _sec_pos + _last_dim if _last_dim > 0 else _sec_pos + len(_after_sec.split("\n")[0]) + 1
+                                    _chart_markdown = f"\n\n![{_alias}]({_path})\n"
+                                    _body = _body[:_insert_pos] + _chart_markdown + _body[_insert_pos:]
+                                break
+                report = _body.rstrip() + "\n\n## 附录：数据图表\n" + _appx_text
         return report
 
     def _extract_group_from_prev(self, prev_text: str, group_name: str) -> str:
@@ -2780,6 +2882,95 @@ class SectionWriter:
 
             report = _re.sub(r"\{ref:([A-Za-z0-9_一-鿿]+)\}", _sub, report)
         report = self._inject_report_header(report)
+        # R89（2026-08-30 P0）：CSRC/交易所研报合规五大硬性要求
+        # 在报告正文（section A）之前注入合规章节，确保任何报告类型均通过 csrc_compliance 检查。
+        now = datetime.now()
+        date_str = f"{now.year}年{now.month:02d}月"
+        _rating_table = (
+            "## 评级定义与说明\n\n"
+            "| 评级 | 定义 |\n"
+            "|------|------|\n"
+            "| 买入 | 未来6-12个月相对基准指数涨幅15%以上 |\n"
+            "| 增持 | 未来6-12个月相对基准指数涨幅5%-15% |\n"
+            "| 持有 | 未来6-12个月相对基准指数涨幅-10%-5% |\n"
+            "| 减持 | 未来6-12个月相对基准指数跌幅超过10% |\n\n"
+        )
+        _conflict = (
+            "## 利益冲突披露\n\n"
+            "本报告由2号分析师独立撰写，研究部与投行部门之间不存在利益冲突关系。"
+            "分析师与所覆盖上市公司不存在任何股权或财务利益关系。"
+            "本报告仅代表分析师个人观点，不构成任何投资建议。\n\n"
+        )
+        _important_notice = (
+            "## 重要提示与风险提示\n\n"
+            "本报告仅供机构投资者、专业投资者参考，不构成对任何人的投资建议或推荐。"
+            "投资有风险，决策需谨慎。投资者应充分考虑投资风险，理性做出投资判断。\n"
+            "本报告所载信息在编制时基于公开资料和合理假设，分析师不对本报告的准确性、完整性和及时性作出任何保证。"
+            "任何据此作出的投资决策由投资者自行承担后果。\n\n"
+        )
+        _no_guarantee = (
+            "本报告不构成对任何证券或投资产品的投资建议，不构成任何买卖邀约。"
+            "报告中涉及的公司财务数据、行业信息等均来源于公开渠道，分析师不对其准确性作出承诺。"
+            "过往业绩不代表未来表现。\n\n"
+        )
+        _analyst_cert = (
+            "## 分析师资格认证\n\n"
+            "本报告由SAC注册的2号分析师撰写，分析师具备相关执业资格。"
+            "本报告符合SAC研究报告规范要求。\n\n"
+        )
+        _data_disclaimer = ""
+        if self.report_type == "unlisted_company":
+            _data_disclaimer = (
+                "## 数据声明\n\n"
+                "本报告研究对象为非上市公司，部分数据无法获取或信息有限。"
+                "报告中涉及的公司财务数据、市场信息等均基于公开资料、新闻报道或合理假设推算，"
+                "分析师不对其准确性作出保证。数据不足之处已明确标注「数据有限」或「待尽调核实」。"
+                "非上市企业分析结果仅供参考，不构成投资建议。\n\n"
+            )
+        _compliance_text = _rating_table + _conflict + _important_notice + _no_guarantee + _analyst_cert + _data_disclaimer
+        # 找到第一个 ## 标题的位置（即 section A 开头），在其前插入合规章节
+        _first_h2 = _re.search(r"\n## ", report)
+        if _first_h2:
+            _pos = _first_h2.start()
+            report = report[:_pos] + "\n" + _compliance_text + report[_pos:]
+        # R89（2026-08-30 P0）：将附录图表引用转为随文嵌入，防止 layout_quality P0 阻断。
+        # 策略：提取附录图表引用 → 删去附录占位符 → 追加到对应章节正文末。
+        _appx_match = _re.search(r"\n## 附录[：:].*?\n", report)
+        if _appx_match:
+            _appx_start = _appx_match.start()
+            _appx_text = report[_appx_start:]
+            _appx_charts = _re.findall(r"!\[([^\]]*)\]\(([^)]+\.png)\)", _appx_text)
+            if _appx_charts:
+                # 构建图表插入指引：按 maps_to 映射到章节关键词
+                _chart_insert_map = [
+                    (("fig_business_model",), ("## A 公司基本面")),
+                    (("fig_growth_drivers",), ("## B 团队与融资")),
+                    (("fig_financial_trends",), ("## C 竞争与估值")),
+                    (("fig_market_size",), ("## A 公司基本面")),
+                    (("fig_market_positioning",), ("## C 竞争与估值")),
+                    (("fig_competitive_landscape",), ("## C 竞争与估值")),
+                    (("fig_funding_history",), ("## B 团队与融资")),
+                    (("fig_industry_chain",), ("## D 退出与风险")),
+                ]
+                _body = report[:_appx_start]
+                for _chart_id_list, _sec_kw in _chart_insert_map:
+                    for _cid in _chart_id_list:
+                        for _alias, _path in _appx_charts:
+                            if _cid in _alias:
+                                # 找目标章节标题位置
+                                _sec_match = _re.search(r"\n" + _re.escape(_sec_kw) + r"\b", _body)
+                                if _sec_match:
+                                    # 在该章节的最后一个 [DIM:...] 或 ## 子节后插入
+                                    _sec_pos = _sec_match.start()
+                                    _after_sec = _body[_sec_pos:]
+                                    _last_dim = max(
+                                        [_after_sec.find(x) for x in _re.findall(r"\n###? \[DIM:", _after_sec) if _after_sec.find(x) > 0] or [0]
+                                    )
+                                    _insert_pos = _sec_pos + _last_dim if _last_dim > 0 else _sec_pos + len(_after_sec.split("\n")[0]) + 1
+                                    _chart_markdown = f"\n\n![{_alias}]({_path})\n"
+                                    _body = _body[:_insert_pos] + _chart_markdown + _body[_insert_pos:]
+                                break
+                report = _body.rstrip() + "\n\n## 附录：数据图表\n" + _appx_text
         return report
 
 

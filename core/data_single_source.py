@@ -31,22 +31,24 @@ _INDICATOR_PATTERNS = {
 def validate_indicators(text: str, tolerance: float = 0.20) -> list[str]:
     """扫描文本，检测同一关键指标的多值冲突（偏差>20%）。
 
-    R91（2026-08-06）：上下文分组——按 单位+年份+限定词 拆簇，消除跨口径误报。
+    R91（2026-08-06）：上下文分组——按 单位+年份+限定词+来源 拆簇，消除跨口径误报。
     v9 事故的 40%vs50% 渗透率冲突发生在同一口径（行业整体渗透率），必须拦截；
     但不同技术路线（磁致伸缩/雷达）、不同年份、不同地域口径（全球 vs 中国）的
     数值本就不是同一指标，混为一簇会产生大量误报（油位报告渗透率 5%-95% 实为
     智能液位仪/磁致伸缩/雷达多口径并存）。分组后仅同簇多值偏差>20% 才判冲突。
+    R95（2026-08-27）：引入来源标签分组——仅同一来源内的多值才判冲突。
     """
     if not text:
         return []
     issues = []
+    # 来源识别模式：匹配"据/来源/基于/来自 + 实体名"
+    _SOURCE_PAT = re.compile(r"(据|来源|基于|来自)\s*([^，。；\n]{2,20})")
+
     for label, pat in _INDICATOR_PATTERNS.items():
         matches = list(re.finditer(pat, text))
         if len(matches) < 2:
             continue
-        # 分组键：unit|year|ctx —— 单位 + 前30字内年份 + 匹配前4字限定词
-        # ctx 去数字标点，<2字视为无明确限定词（归入默认簇），保证"渗透率为40%，渗透率50%"
-        # 这类同口径列举仍能被拦截；有明确限定词（磁致伸缩/雷达/中国市场等）才拆簇。
+        # 分组键：unit|year|ctx|source —— 单位 + 年份 + 限定词 + 来源
         groups: dict[str, list[float]] = {}
         for m in matches:
             try:
@@ -63,11 +65,16 @@ def validate_indicators(text: str, tolerance: float = 0.20) -> list[str]:
             # CAGR 为多年复合口径，与单年增速/增长率不同，单独成簇
             mname = m.group(1) if m.lastindex and m.lastindex >= 1 else ""
             cal = "|CAGR" if "CAGR" in mname.upper() or "复合" in mname else ""
-            # 额外：如果上下文含"十年""复合""CAGR"，强制标记为CAGR
             ctx_text = text[max(0, m.start() - 20) : m.end() + 20]
             if any(kw in ctx_text for kw in ("十年", "复合", "CAGR", "十年复合")):
                 cal = "|CAGR"
-            key = f"{unit}|{year}|{ctx}{cal}"
+            # 来源提取：前40字内找"据/来源/基于/来自 + 实体"
+            before40 = text[max(0, m.start() - 40) : m.start()]
+            src_m = _SOURCE_PAT.search(before40)
+            source = src_m.group(2).strip() if src_m else "unknown"
+            # 来源归一化：常见别名合并
+            source = _normalize_source(source)
+            key = f"{unit}|{year}|{ctx}{cal}|{source}"
             groups.setdefault(key, []).append(num)
         for key, values in groups.items():
             if len(values) < 2:
@@ -76,6 +83,35 @@ def validate_indicators(text: str, tolerance: float = 0.20) -> list[str]:
             if mn > 0 and (mx - mn) / mn > tolerance:
                 issues.append(f"{label}多值冲突[{key}]: {sorted(values)}（偏差>{tolerance:.0%}）")
     return issues
+
+
+def _normalize_source(src: str) -> str:
+    """来源归一化：常见别名合并。"""
+    src = src.strip()
+    aliases = {
+        "公司": "公司公告",
+        "年报": "年报",
+        "三季报": "三季报",
+        "半年报": "半年报",
+        "一季报": "一季报",
+        "招股书": "招股书",
+        "中信": "中信证券",
+        "高盛": "高盛",
+        "摩根": "摩根士丹利",
+        "中金": "中金公司",
+        "华泰": "华泰证券",
+        "国泰": "国泰君安",
+        "安信": "安信证券",
+        "东方财富": "东方财富",
+        "同花顺": "同花顺",
+        "Wind": "Wind",
+        "SMM": "SMM",
+        "SNE": "SNE Research",
+    }
+    for k, v in aliases.items():
+        if k in src:
+            return v
+    return src
 
 
 def single_source_prompt() -> str:

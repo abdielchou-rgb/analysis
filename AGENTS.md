@@ -31,7 +31,7 @@ scheduler.py / main.py (入口)
        ├→ compute pipeline (DCF + 可比 + 场景 + SOTP)
        ├→ section_writer (SAC 3段式 DeepSeek 写作)
        ├→ StyleCompiler (8条确定性规则去AI化)
-       ├→ IronGate (78项注册检查，0.55阈值——以 pipeline/iron_gate.py 注册表为准)
+       ├→ IronGate (101项注册检查，0.55阈值——以 pipeline/iron_gate.py 注册表为准，实时数见 docs/PIPELINE_FACTS.md)
        └→ export (DOCX + VisualGate + 门禁)
 ```
 
@@ -72,5 +72,5 @@ scheduler.py / main.py (入口)
 
 1. 数据采集依赖外部 API（Tavily / akshare / yfinance），网络异常时降级
 2. PDF 导出依赖 fpdf2，复杂排版（图表混排、自定义字体）有限
-3. IronGate 78项注册检查中一部分是 heuristic 判定（非 LLM 评估）
+3. IronGate 101项注册检查中一部分是 heuristic 判定（非 LLM 评估）
 4. 版本管理目前手动，CLAUDE.md 需与 harness/pipeline_contract.py 同步

@@ -1,0 +1,111 @@
+# P4-1 (2026-09-01): R 规则中央注册表
+# 用法：python scripts/scan_rules.py 扫描 docs+代码的 R 编号，与此注册表对比，
+#       输出"未登记规则"清单——废弃/失联规则机械可查（FP5 演化审计前提）。
+#
+# 登记规则结构：{rule_id: {status, description, superseded_by, evidence}}
+# status: active / superseded / deprecated
+# evidence: 代码或文档中的证明位置（文件:行号或文档名）
+#
+# 注意：本文件只登记"有明确行为约束"的规则；纯 commit 史/版本标记不登记。
+rules:
+  R1: {status: active, description: 调度≠固定流程，Agent 负责方法选择（FP8 映射）}
+  R2: {status: active, description: 数据兜底必须走桥接节点回流管线（第〇原则）}
+  R3: {status: active, description: 有营收/利润分解→瀑布图; BLOCK级violations必须真正阻断管线}
+  R4: {status: active, description: Conviction Matrix有WACC→龙卷风图; 后续写改轮次复用网络采集避免重跑}
+  R5: {status: active, description: Conviction Matrix有概率分配→叠加柱状图; 幂等性——来源附录只允许注入一次}
+  R6: {status: active, description: 有行业对标分布数据→箱形图; 未知单位数据点不静默裸比}
+  R7: {status: active, description: 有历史+预测数据→组合图; 收敛锚点+共享数据字典}
+  R8: {status: active, description: 有股权结构/股东分析→饼图; 跨轮质量退化报警}
+  R9: {status: active, description: 有多维评分数据→雷达图; 目标价金额按情景前缀分流}
+  R10: {status: active, description: 有ROE分解数据→瀑布图(DuPont); 解析未处理占位符}
+  R11: {status: active, description: chart_failures标记(chart_pipeline记录失败原因)}
+  R12: {status: active, description: chart_failures标记; unlisted/industry豁免DCF; 排除附录段}
+  R13: {status: active, description: PE_VC豁免; 三算力架构; 骨架先行; 局部修订}
+  R14: {status: active, description: LLM调用超时处理与降级策略}
+  R15: {status: active, description: LLM检查并行执行; 维度级并行写→编辑合并}
+  R16: {status: active, description: 盈利预测模型; 反共识信号; 正文完整性扫描}
+  R17: {status: active, description: 方法论规则(按报告类型映射主题到methodology_rules)}
+  R18: {status: active, description: 数据采集重试与熔断机制}
+  R19: {status: active, description: 三表勾稽模型; 哈佛分析框架}
+  R20: {status: active, description: 供应链瓶颈分析存在性校验; 行业/非上市专属模块}
+  R21: {status: active, description: 利润池+TOC约束迭代两套表达校验}
+  R22: {status: active, description: 非上市报告校验稀缺性评估表达}
+  R23: {status: active, description: 王牌方法——反向DCF+催化剂日历+多空逻辑表+非上市反向定价}
+  R24: {status: active, description: 中文名→代码映射(_lookup_code_by_name); 增量同步}
+  R25: {status: active, description: scripts/sync_all_data.py一键5阶段数据同步}
+  R26: {status: active, description: 5大缺陷修复——resolve_asset统一资产解析+语义充足性+生成护栏+Gate收敛}
+  R27: {status: active, description: 沪深300+中证1000全量财务明细(字段映射10→38)}
+  R28: {status: active, description: Agent对事实负责——数据矛盾必须管线层拦截}
+  R29: {status: active, description: 部署5个skill：deep-research/root-cause/context-guard/context-engineering/skill-forge}
+  R30: {status: active, description: forward_picks质量门槛}
+  R31: {status: active, description: 排版根治——clean_empty_paragraphs接线+IronGate排版门禁}
+  R32: {status: active, description: R30模块接线根因修复; 估值锚交叉验证; 多目标价矛盾检测}
+  R33: {status: active, description: EPS/评级/分析师数同步(1264只); target_price_avg全为None}
+  R34: {status: active, description: 跳过纯表格/短结论段; 估值/判断组必须产出明确评级+目标价}
+  R35: {status: active, description: 算术校验层——报告数字反向验算; 模板句高重复检测; 数值纪律}
+  R36: {status: active, description: 产业链数据补强(69行业); ai_search采集key_players}
+  R37: {status: active, description: 数据补采——financials.db 535万行/99.2%覆盖}
+  R38: {status: active, description: 财务数值一致性——报告中毛利率/营收/净利与data_dict冲突检测}
+  R39: {status: active, description: 统一提取层(数据契约); 预测模型产出EPS/毛利率无幻觉}
+  R40: {status: active, description: 渲染层目检——空段/分页符/图表分布(docx检测)}
+  R41: {status: active, description: 豁免frontmatter——AIGC水印YAML头不计入检查}
+  R42: {status: active, description: 清除所有AI免责声明 + 静态目录+拟人化}
+  R43: {status: active, description: 目录渲染目检(R42新增静态目录后的完整性校验)}
+  R44: {status: active, description: 渲染层目检在真实docx上的端到端验证}
+  R45: {status: active, description: 双字连接词正则升级; sufficiency判定收紧; 分簇过细优化}
+  R46: {status: active, description: 不变量断言层——物理不可能事件拦截(市值/股本/PE/持股勾稽)}
+  R47: {status: active, description: 激励倒挂发现——系统奖励"看起来完整"惩罚诚实留白}
+  R48: {status: active, description: SQLite统一连接层; LLM_PROVIDER环境变量; 迭代上限支持环境变量}
+  R49: {status: active, description: 即使有口径标注,若同一数据源冲突仍报错}
+  R50: {status: active, description: Marvis多实例并行(ThreadPoolExecutor)}
+  R51: {status: active, description: 断点修复——compute_engine年份键兼容; 产业链子串误匹配修复}
+  R52: {status: active, description: 宏观知识库深度吸收(methodology_macro_deep.json)}
+  R53: {status: active, description: 深度检测修复——维度切SAC; 组级局部重写; 字数对标投行; LLM健康预检}
+  R54: {status: active, description: 圆桌审计修复——估值勾稽硬规则; 市占率正则; 语义重复检测}
+  R55: {status: superseded, description: EPS快照估值基线, superseded_by: R63/R64}
+  R56: {status: active, description: 知识库深度吸收(2517篇→7个deep.json); 判断密度/数据密度阈值}
+  R57: {status: active, description: 顶级机构视角——SAC 23→26维; MBB+四大方法论吸收; 并购估值模块}
+  R58: {status: active, description: 后续工作接线——consolidation接compute; 审计规则确定性检查}
+  R59: {status: active, description: 接线验收——SAC脏ID清理; check_wiring.py接线率验证; 5工具接线}
+  R60: {status: active, description: 遗留顶级打法——证据链门禁; LLM泛写三维标注; 预测验证闭环激活}
+  R61: {status: active, description: iron_gate完整迁移(3537→587行, 4mixin+base, 67检查零破坏)}
+  R62: {status: active, description: 油位传感器数据回填(Marvis数据任务产出)}
+  R63: {status: active, description: pick_id自动生成+记录完整度不变量}
+  R64: {status: active, description: actual_price用净值口径(anchor_nav)}
+  R65: {status: active, description: FP8元认知选择——分析方案注入context}
+  R66: {status: active, description: 柯力写作失败修复——score读取bug; charts失败短路→全段局部重写}
+  R67: {status: active, description: SELF_AUDIT BOM容错; COMPLIANCE纳入修订; agent_provider质量护栏}
+  R68: {status: active, description: 模块审计与补丁纪律}
+  R69: {status: active, description: 竞争格局必须基于具体玩家名单}
+  R70: {status: active, description: 行业/非上市框架接线——ma_str/ut_str/_tm_str/us_str/data_context}
+  R71: {status: active, description: 方法论规则行业topic_map扩展至10主题; 行业戴维斯双击/双杀注入}
+  R72: {status: active, description: AI免责声明硬拦截加固}
+  R73: {status: active, description: 分析标的锚定——全文围绕唯一标的撰写}
+  R74: {status: active, description: 全量工程计划——防御纵深; SAC度量免疫(子要素覆盖率检查)}
+  R75: {status: active, description: 跨报告关联——同赛道标的互相对照}
+  R76: {status: active, description: 5维缺失维度新建——做空者视角/监管合规成本/系统失效状态/资金面四层剥离}
+  R77: {status: active, description: P0修复工作流与验证}
+  R78: {status: active, description: 出口门禁语义修复}
+  R79: {status: active, description: 反模板/盲区playbooks}
+  R80: {status: active, description: 机构级评审修复}
+  R81: {status: active, description: 竞争真相+框架应用结论强化}
+  R82: {status: active, description: 权限部署与Gate失败SOP}
+  R83: {status: active, description: decision_memo全量修复}
+  R84: {status: active, description: 全量修复——委托方实体锚定; 决策引擎数值引用; enrich text键场景继承}
+  R85: {status: active, description: 核心分歧章节结构强制}
+  R86: {status: active, description: 口径与单位标注铁律——全文涉及市场规模表述必须标注口径}
+  R87: {status: active, description: enrich可信度治理——数据源可信度检查; verified/corrected/unverified三级分级}
+  R88: {status: active, description: 数值链一致性检查}
+  R89: {status: active, description: 数值链条目修复}
+  R90: {status: active, description: 模板变体/去重}
+  R91: {status: active, description: 行业报告口径豁免——渗透率/份额多值正常结构; 财务多值豁免}
+  R92: {status: active, description: 定向验证+失败分类; 来源上下文窗口扩至整段}
+  R93: {status: active, description: 行业分析框架重构——判断驱动结构(行业评级+受益环节排序)}
+  R95: {status: active, description: 全量优化升级方案V2(2号分析师胜任力自查)}
+  R96: {status: active, description: IronGate检查项注册表统一}
+  R97: {status: active, description: 全量调用入口(report_generator)}
+  R98: {status: active, description: 非上市流程深化}
+  R99: {status: active, description: 后续迭代版本标记}
+  R100: {status: active, description: "框架三件套——若使用了分析框架,先给主框架结论([FW:框架名]标记)"}
+  R101: {status: active, description: "维度覆盖标记——本组覆盖的全部维度需列出"}
+  R102: {status: active, description: "So What链模板——每段末尾推理链必须遵循特定结构并满足深度标准"}

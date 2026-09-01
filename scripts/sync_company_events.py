@@ -475,19 +475,26 @@ def main():
     parser.add_argument("--all", action="store_true", help="全量更新（沪深300成分股）")
     parser.add_argument("--ticker", help="指定股票代码")
     parser.add_argument("--days", type=int, default=30, help="公告回溯天数")
+    parser.add_argument("--only-announcements", action="store_true", help="仅同步公告（跳过财报/分红/增减持）")
+    parser.add_argument("--only-share-changes", action="store_true", help="仅同步股东增减持（跳过财报/分红/公告）")
     args = parser.parse_args()
 
-    if not args.all and not args.ticker:
+    if not args.all and not args.ticker and not args.only_announcements and not args.only_share_changes:
         parser.print_help()
         return 1
 
     conn = ensure_db()
     total = 0
 
-    total += sync_earnings(conn, args.ticker)
-    total += sync_dividends(conn, args.ticker)
-    total += sync_share_changes(conn, args.ticker)
-    total += sync_announcements(conn, args.ticker, args.days)
+    if args.only_announcements:
+        total += sync_announcements(conn, args.ticker, args.days)
+    elif args.only_share_changes:
+        total += sync_share_changes(conn, args.ticker)
+    else:
+        total += sync_earnings(conn, args.ticker)
+        total += sync_dividends(conn, args.ticker)
+        total += sync_share_changes(conn, args.ticker)
+        total += sync_announcements(conn, args.ticker, args.days)
 
     conn.close()
     print(f"\n[完成] 总计同步 {total} 条记录 → {DB_PATH}")

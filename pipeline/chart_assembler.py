@@ -32,10 +32,12 @@ CHART_TEMPLATES = {
         {"id": "market_position", "type": "pie", "title": "市场地位", "min": 1},
     ],
     "unlisted_company": [
-        {"id": "business_model", "type": "bar", "title": "商业模式拆解", "min": 1},
-        {"id": "growth_metrics", "type": "line", "title": "增长指标", "min": 1},
-        {"id": "competitive_edge", "type": "radar", "title": "竞争力雷达图", "min": 1},
-        {"id": "market_opportunity", "type": "pie", "title": "市场机会", "min": 1},
+        {"id": "fig_business_model", "type": "bar", "title": "商业模式拆解", "min": 1},
+        {"id": "fig_growth_drivers", "type": "line", "title": "增长指标", "min": 1},
+        {"id": "fig_financial_trends", "type": "dual_axis", "title": "财务趋势", "min": 1},
+        {"id": "fig_market_size", "type": "bar", "title": "市场规模与预测", "min": 1},
+        {"id": "fig_competitive_landscape", "type": "bar_cluster", "title": "竞争格局", "min": 1},
+        {"id": "fig_funding_history", "type": "bar", "title": "融资历程与估值", "min": 1},
     ],
     "decision_memo": [  # R83: 决策备忘录轻量图
         {"id": "market_size", "type": "bar", "title": "市场规模与预测", "min": 1},
@@ -181,6 +183,15 @@ class ChartAssembler:
                     (("unlisted_threat",), ("威胁", "新进入")),
                     (("revenue",), ("营收", "收入")),
                     (("profitability",), ("盈利", "利润率")),
+                    # R89（2026-08-30）：unlisted_company charts — maps_to keys from sac_unlisted_company.yaml
+                    (("fig_business_model",), ("公司基本面", "商业模式", "业务")),
+                    (("fig_growth_drivers",), ("增长", "市场牵引", " traction")),
+                    (("fig_financial_trends",), ("财务", "营收", "利润")),
+                    (("fig_market_size",), ("市场规模", "TAM", "市场")),
+                    (("fig_market_positioning",), ("市场定位", "竞争", "护城河")),
+                    (("fig_competitive_landscape",), ("竞争格局", "竞争对手")),
+                    (("fig_funding_history",), ("融资", "资本", "投资")),
+                    (("fig_industry_chain",), ("产业链", "价值链", "供应链")),
                 ]
 
                 def _find_section(text, keywords):

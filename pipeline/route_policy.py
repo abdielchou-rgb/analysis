@@ -22,25 +22,26 @@ import os
 
 logger = logging.getLogger("2hao.route_policy")
 
-# 模式 → 节点 → provider 路由策略
+# 模式 → 节点 → provider 路由策略（2026-08-30: opencode_go 已损坏，写作任务切 zhipu）
 ROUTE_POLICY = {
     "perf": {
-        "write": "deepseek",  # 论点单元写作：DeepSeek L2
-        "skeleton": "deepseek",  # 骨架/大纲：DeepSeek L1
-        "merge": "deepseek",  # 合并组装：DeepSeek L2（质量红线）
-        "revise": "deepseek",  # 修订（Gate 反馈）：DeepSeek
+        "write": "zhipu",  # 论点单元写作：zhipu/glm-4.7
+        "skeleton": "zhipu",  # 骨架/大纲：zhipu
+        "merge": "deepseek",  # 合并组装：DeepSeek（质量红线）
+        "revise": "zhipu",  # 修订（Gate 反馈）：zhipu
         "extract": "openrouter",  # 轻量提取/分类：OpenRouter flash
         "prefetch": "agent_provider",  # 后台预取：Marvis 免费
-        "roundtable": "openrouter",  # 终局圆桌：OpenRouter 异源
+        "roundtable": "opencode_zen",  # 终局圆桌：OpenCode Zen 异源
+        "research_planner": "zhipu",  # 研究规划：zhipu（快速）
     },
     "train": {
         "write": "agent_provider",  # 论点单元写作：Marvis（免费训练）
         "skeleton": "agent_provider",  # 骨架：Marvis
-        "merge": "deepseek",  # 合并组装：DeepSeek（质量红线，永不 Marvis）
+        "merge": "openrouter",  # 合并组装：OpenRouter（质量红线，永不 Marvis）
         "revise": "agent_provider",  # 修订：Marvis（训练用）
         "extract": "agent_provider",  # 提取：Marvis
         "prefetch": "",  # 训练模式不需要预取（自己就是免费）
-        "roundtable": "deepseek",  # 圆桌：DeepSeek（异于训练源 Marvis）
+        "roundtable": "openrouter",  # 圆桌：OpenRouter（异于训练源 Marvis）
     },
 }
 
@@ -62,6 +63,7 @@ _NODE_ALIASES = {
     "skeleton": "skeleton",
     "outline": "skeleton",
     "plan": "skeleton",
+    "research_planner": "research_planner",
     "roundtable": "roundtable",
     "critic": "roundtable",
     "review": "roundtable",
@@ -69,11 +71,11 @@ _NODE_ALIASES = {
 }
 
 
-def resolve_provider(node_type: str, mode: str = "", fallback: str = "deepseek") -> str:
+def resolve_provider(node_type: str, mode: str = "", fallback: str = "opencode_go") -> str:
     """按节点类型 + 模式解析 provider。
 
     优先级：环境变量（NODE_PROVIDER_<节点> 可覆盖）> 路由策略 > fallback。
-    未配置/空 → fallback（deepseek，保证质量红线兜底）。
+    未配置/空 → fallback（opencode_go，免费 provider）。
     """
     mode = mode or os.environ.get("RUN_MODE", "") or "perf"
     node = _NODE_ALIASES.get(node_type, node_type)

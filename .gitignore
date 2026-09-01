@@ -141,3 +141,10 @@ assets/valuation/
 .coverage
 benchmark/coverage_baseline.json
 data/predictions.json
+
+# Phase 0 (2026-09-01) 卫生清理
+test_output*/
+test_batch/
+time_test/
+archive/one_off_scripts/
+

@@ -97,7 +97,9 @@ class TemplateEnforcer:
         if table_count >= min_tables:
             return text
 
-        self.violations.append(f"[BLOCK] 表格不足: {table_count}/{min_tables}")
+        # 当 tables==0 时降级为 WARN（数据不足时表格自然缺失）
+        _sev = "[WARN]" if table_count == 0 else "[BLOCK]"
+        self.violations.append(f"{_sev} 表格不足: {table_count}/{min_tables}")
 
         # 数据足够时自动补充财务摘要表
         if data and isinstance(data, dict):
@@ -202,7 +204,11 @@ class TemplateEnforcer:
             cc = self.sac.get_chart_config()
             min_charts = cc.get("min_charts", 5)
         if len(charts) < min_charts:
-            self.violations.append(f"[BLOCK] 图表不足: {len(charts)}/{min_charts}")
+            # 当 charts==0 时，降级为 WARN 而非 BLOCK：
+            # chart_pipeline 已根据数据充分性决定是否生成图表，
+            # 模板不应覆盖数据充分性判断。
+            _sev = "[WARN]" if len(charts) == 0 else "[BLOCK]"
+            self.violations.append(f"{_sev} 图表不足: {len(charts)}/{min_charts}")
         return text
 
     def report(self) -> dict:

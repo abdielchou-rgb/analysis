@@ -1,0 +1,17 @@
+{
+  "_meta": {
+    "description": "R78 默认校准档（2026-08-05 全量审计 Phase1.4）",
+    "note": "此前该文件缺失，Gate 降级到硬编码默认。此档为基线，FP5 回测可回写",
+    "source": "docs/full-audit-and-engineering-plan-20260805.md"
+  },
+  "min_chars": 10420,
+  "min_judgment_density": 1.2,
+  "min_data_density": 5.0,
+  "min_charts": 12,
+  "min_tables": 4,
+  "coverage_enrich_threshold": 0.7,
+  "llm_verify_min_pass": 0.7,
+  "llm_verify_min_block": 0.4,
+  "des_min_strong_ratio": 0.3,
+  "sub_element_coverage": 0.7
+}

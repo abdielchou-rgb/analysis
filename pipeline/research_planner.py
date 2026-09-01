@@ -8,6 +8,7 @@ v2 升级：问题树从模板匹配升级为 LLM 生成——每维度产出资
 from __future__ import annotations
 
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 logger = logging.getLogger("2hao.research_planner")
 
@@ -140,25 +141,28 @@ def question_tree_v2(
 
     tree = []
     dc = data_context or {}
-    for dim in dims or []:
+
+    def _process_dim(dim):
+        """为单个维度生成问题（供并行调用）"""
         llm_qs = _llm_generate_questions(asset, dim, report_type, dc)
         if llm_qs:
-            tree.append({"dim": dim, "questions": llm_qs, "source": "llm"})
-        else:
-            # 回退到模板
-            fallback = question_tree([dim])
-            if fallback:
-                tree.append(fallback[0])
-            else:
-                tree.append(
-                    {
-                        "dim": dim,
-                        "questions": [
-                            f"{dim}：当前事实与数据支撑是什么？",
-                            f"{dim}：市场共识与本报告的分歧点在哪？",
-                        ],
-                    }
-                )
+            return {"dim": dim, "questions": llm_qs, "source": "llm"}
+        fallback = question_tree([dim])
+        if fallback:
+            return fallback[0]
+        return {
+            "dim": dim,
+            "questions": [
+                f"{dim}：当前事实与数据支撑是什么？",
+                f"{dim}：市场共识与本报告的分歧点在哪？",
+            ],
+        }
+
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        futures = {pool.submit(_process_dim, dim): dim for dim in (dims or [])}
+        for fut in as_completed(futures):
+            tree.append(fut.result())
+
     return tree
 
 

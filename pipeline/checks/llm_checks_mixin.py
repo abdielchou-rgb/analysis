@@ -134,13 +134,18 @@ class LlmChecksMixin:
         max_score = max(density_score, depth_score, breadth_score)
         passed = max_score >= 0.5  # At least one dimension at 50%+
 
+        # R89（2026-08-30）：非上市报告数据稀缺，三项指标天然偏低。
+        # 降至 warning，不阻断 Gate。
+        _rt = getattr(self, "report_type", "") or ""
+        _is_unlisted = _rt == "unlisted_company"
+        _sev = "warning" if _is_unlisted else "error"
         details = (
             f"Sources={source_density}({density_score:.2f}) "
             f"Depth={reasoning_depth}({depth_score:.2f}) "
             f"Breadth={company_count}({breadth_score:.2f}) "
             f"max={max_score:.2f}"
         )
-        return GateCheckResult("human_impossible", passed, max_score, details, severity="error")
+        return GateCheckResult("human_impossible", passed, max_score, details, severity=_sev)
 
     def _check_llm_data_verification(self) -> "GateCheckResult":
         """R55（2026-08-03 Phase E）：LLM 数据交叉验证——独立于生成的校验层。

@@ -205,6 +205,7 @@ def run_pipeline(free_models_str):
                 "DIM_PARALLEL": "0",
                 "SEG_PARALLEL": "0",
                 "SEG_WRITE_DELAY_S": "30",
+                "AGENT_GRAPH_NODE_DELAY_S": "120",
                 "AGENT_GRAPH_NODE_TIMEOUT_S": "7200",
                 "WRITE_NODE_TIMEOUT_S": "7200",
                 "MAX_ATTEMPTS": "3",

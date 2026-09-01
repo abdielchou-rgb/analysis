@@ -12,13 +12,13 @@
 
 **问题**: `workflow.py._step_charts()` 使用 `ChartRunner` 生成图表文件名为 `bar_cicc.png`、`line_cicc.png`，但 `ReportWriter.write_report()` 硬编码引用 `fig_market_size_global`、`fig_market_size_china` 等ID。两者完全不匹配 → DOCX中的图片全部断裂。
 
-**修复**: 
+**修复**:
 - `_step_charts()` 改为使用 `ChartPlanner`（与 ReportWriter 共享相同图表ID方案）
 - `ChartPlanner` 返回 `{chart_id: absolute_path}` 字典，key = `fig_market_size_global` 等
 - `ReportWriter.write_report()` 的路径回退逻辑改为多候选搜索（优先用传入路径，然后 search 文件系统）
 - 新增 `_get_plan_for_type()` 方法解决 `PLANS` 类属性引用 `self` 的问题
 
-**验证**: 
+**验证**:
 - 6类图表全部正确生成 → `fig1_fig_market_size_global_cicc.png` 等
 - ChartPlanner 返回6个正确ID的报告路径
 - ReportWriter 能正确使用传入的路径字典

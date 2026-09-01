@@ -47,6 +47,13 @@ def generate_pipeline_facts() -> str:
                 defined.add(node.name)
     ig_src = (_ROOT / "pipeline" / "iron_gate.py").read_text(encoding="utf-8")
     executed = set(re.findall(r"self\.(_check_[A-Za-z0-9_]+)", ig_src))
+    # P4-2（2026-09-01）：iron_gate 本体也定义了 3 个检查
+    # （csrc_compliance/data_point_provenance/semantic_dedup），把本体定义并入 defined
+    # 使"迁移完整性"对比真实反映 run_all 引用的全部检查。
+    ig_tree = ast.parse(ig_src)
+    for node in ast.walk(ig_tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith("_check_"):
+            defined.add(node.name)
     lines += [
         "## IronGate",
         f"- 注册检查方法数（checks/）：{len(defined)}",

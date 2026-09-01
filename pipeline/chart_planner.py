@@ -1,7 +1,7 @@
 """
-2鍙峰垎鏋愬笀 Chart Planner - 鍥捐〃棰勮鍒掑櫒(SAC椹卞姩鐗?
-浠?SAC YAML 鍔犺浇鍥捐〃閰嶇疆(鍗曚竴浜嬪疄婧?;
-V56 鍗囩骇: 鏁版嵁鏍煎紡褰掍竴鍖?SAC椹卞姩+涓枃鍗曚綅瑙ｆ瀽)
+2号分析师 Chart Planner - 图表规划器(SAC驱动版)
+从 SAC YAML 加载图表配置(单一事实源);
+V56 升级: 数据格式归一化(SAC驱动+中文单位解析)
 """
 
 import re as _re
@@ -16,7 +16,7 @@ from core.sacs import SACLoader
 
 
 class ChartPlanner:
-    """鍥捐〃瑙勫垝鍣?- 浠嶴AC鍔犺浇鍥捐〃閰嶇疆"""
+    """图表规划器 - 从SAC加载图表配置"""
 
     def __init__(self, report_type="industry_deep", style="cicc", output_dir="output/charts", industry=""):
         self.report_type = report_type

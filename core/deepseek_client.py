@@ -11,11 +11,18 @@ deepseek_client.py — Multi-Model Provider Layer (V2)
 import json
 import logging
 import os
+import socket
 import threading
 import time
 from dataclasses import dataclass, field
 
 from core import settings as _settings  # P3-audit: 配置单一事实源
+
+# 2026-08-29: 强制 IPv4 — 本机 Python socket.getaddrinfo 返回 IPv6 导致连接挂起
+_orig_getaddrinfo = socket.getaddrinfo
+def _force_ipv4_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+    return _orig_getaddrinfo(host, port, socket.AF_INET, type, proto, flags)
+socket.getaddrinfo = _force_ipv4_getaddrinfo
 
 logger = logging.getLogger("2hao.deepseek")
 
@@ -145,93 +152,121 @@ _registry = ProviderRegistry()
 
 
 def _register_default_providers(registry: ProviderRegistry):
-    """注册默认 Provider（Nit: 从模块级移至函数，支持运行时切换）
+    """注册默认 Provider（集成智能路由器）
 
-    P2-8 Nit (audit 2026-08-01): 将环境变量路由检测从模块级
-    （仅在 import 时执行一次）移至 ProviderRegistry 实例化时，
-    支持运行时通过修改环境变量切换 provider 路由。
+    优先级：
+    1. OpenCode Go 免费模型（$10/月套餐）
+    2. OpenRouter 免费模型（$10 信用）
+    3. OpenCode Zen 付费模型（$10/月套餐）
+    4. DeepSeek（付费兜底）
     """
-    _deepseek_key = os.environ.get("DEEPSEEK_API_KEY") or ""
-    _or_key = os.environ.get("OPENROUTER_API_KEY") or ""
+    # 使用智能路由器获取配置
+    from core.smart_router import get_router
 
-    # P0 主力：DeepSeek（若 DEEPSEEK_API_KEY 存在）
-    # 兼容旧逻辑：若 DEEPSEEK_API_KEY 本身是 OpenRouter key（sk-or-v1- 开头）则当 OpenRouter 用
-    _is_or_key = _deepseek_key.startswith("sk-or-v1-")
-    if _is_or_key:
-        _deepseek_base = os.environ.get("DEEPSEEK_BASE_URL", "https://openrouter.ai/api/v1")
-        _deepseek_models = ["deepseek/deepseek-chat", "deepseek/deepseek-reasoner"]
-        logger.info("DEEPSEEK_API_KEY detected as OpenRouter key, routing via OpenRouter")
-    else:
-        _deepseek_base = os.environ.get("DEEPSEEK_BASE_URL", DEEPSEEK_BASE_URL)
-        _deepseek_models = [DEFAULT_MODEL, REASONER_MODEL]
-    if _deepseek_key and not _is_or_key:
+    router = get_router()
+
+    # 注册 OpenCode Go（优先级 1，免费）
+    go_config = router.get_config("opencode_go")
+    go_key = os.environ.get(go_config.api_key_env, "") if go_config else ""
+    if go_key and go_config:
+        registry.register(
+            "opencode_go",
+            ProviderConfig(
+                name="opencode_go",
+                api_key=go_key,
+                base_url=go_config.base_url,
+                models=go_config.models,
+                priority=go_config.priority,
+            ),
+        )
+        logger.info("OpenCode Go provider registered (priority=1, free)")
+
+    # 注册 OpenRouter（优先级 2）
+    or_config = router.get_config("openrouter")
+    or_key = os.environ.get(or_config.api_key_env, "") if or_config else ""
+    if or_key and or_config:
+        registry.register(
+            "openrouter",
+            ProviderConfig(
+                name="openrouter",
+                api_key=or_key,
+                base_url=or_config.base_url,
+                models=or_config.models,
+                priority=or_config.priority,
+            ),
+        )
+        logger.info("OpenRouter provider registered (priority=2, free)")
+
+    # 注册 OpenCode Zen（优先级 3）
+    zen_config = router.get_config("opencode_zen")
+    zen_key = os.environ.get(zen_config.api_key_env, "") if zen_config else ""
+    if zen_key and zen_config:
+        registry.register(
+            "opencode_zen",
+            ProviderConfig(
+                name="opencode_zen",
+                api_key=zen_key,
+                base_url=zen_config.base_url,
+                models=zen_config.models,
+                priority=zen_config.priority,
+            ),
+        )
+        logger.info("OpenCode Zen provider registered (priority=3, paid)")
+
+    # 注册 Zhipu（优先级 1，付费主力）
+    zhipu_config = router.get_config("zhipu")
+    zhipu_key = os.environ.get(zhipu_config.api_key_env, "") if zhipu_config else ""
+    if zhipu_key and zhipu_config:
+        registry.register(
+            "zhipu",
+            ProviderConfig(
+                name="zhipu",
+                api_key=zhipu_key,
+                base_url=zhipu_config.base_url,
+                models=zhipu_config.models,
+                priority=zhipu_config.priority,
+            ),
+        )
+        logger.info("Zhipu provider registered (priority=1, paid)")
+
+    # 注册 DeepSeek（优先级 4，兜底）
+    ds_config = router.get_config("deepseek")
+    ds_key = os.environ.get(ds_config.api_key_env, "") if ds_config else ""
+    if ds_key and ds_config:
         registry.register(
             "deepseek",
             ProviderConfig(
                 name="deepseek",
-                api_key=_deepseek_key,
-                base_url=_deepseek_base,
-                models=_deepseek_models,
-                priority=PROVIDER_PRIORITY.get("deepseek", 0),
+                api_key=ds_key,
+                base_url=ds_config.base_url,
+                models=ds_config.models,
+                priority=ds_config.priority,
             ),
         )
-        logger.info("DeepSeek provider registered (key length=%d, base=%s)", len(_deepseek_key), _deepseek_base)
+        logger.info("DeepSeek provider registered (priority=4, fallback)")
 
-    # P1 兜底+圆桌：OpenRouter（若 OPENROUTER_API_KEY 存在）
-    if _or_key:
-        registry.register(
-            "openrouter",
-            ProviderConfig(
-                name="openrouter",
-                api_key=_or_key,
-                base_url=os.environ.get("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"),
-                models=os.environ.get(
-                    "OPENROUTER_MODELS", "deepseek/deepseek-chat,deepseek/deepseek-reasoner,qwen/qwen3-turbo"
-                ).split(","),
-                priority=PROVIDER_PRIORITY.get("openrouter", 1),
-            ),
-        )
-        logger.info(
-            "OpenRouter provider registered (key length=%d, models=%s)",
-            len(_or_key),
-            os.environ.get("OPENROUTER_MODELS", "deepseek/deepseek-chat,..."),
-        )
-    elif _is_or_key:
-        # 兼容：DEEPSEEK_API_KEY 是 OpenRouter key 时注册为 openrouter
-        registry.register(
-            "openrouter",
-            ProviderConfig(
-                name="openrouter",
-                api_key=_deepseek_key,
-                base_url=_deepseek_base,
-                models=_deepseek_models,
-                priority=PROVIDER_PRIORITY.get("openrouter", 1),
-            ),
-        )
-        logger.info("OpenRouter provider registered from DEEPSEEK_API_KEY (legacy)")
+    # 注册本地 Ollama（如果可用）
+    _ollama_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1")
+    try:
+        import requests as _req
 
-        # 注册本地Ollama(如果宿主机上运行了Ollama)
-        _ollama_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1")
-        try:
-            import requests as _req
-
-            _r = _req.get(_ollama_url.replace("/v1", "/api/tags"), timeout=3)
-            if _r.status_code == 200:
-                _models = [m["name"] for m in _r.json().get("models", [])]
-                if _models:
-                    registry.register(
-                        "ollama_local",
-                        ProviderConfig(
-                            name="ollama_local",
-                            api_key="",
-                            base_url=_ollama_url,
-                            models=_models,
-                            priority=0,
-                        ),
-                    )
-                    logger.info("Ollama registered: %s", _models)
-        except Exception:
-            logger.info("No local Ollama detected")
+        _r = _req.get(_ollama_url.replace("/v1", "/api/tags"), timeout=3)
+        if _r.status_code == 200:
+            _models = [m["name"] for m in _r.json().get("models", [])]
+            if _models:
+                registry.register(
+                    "ollama_local",
+                    ProviderConfig(
+                        name="ollama_local",
+                        api_key="",
+                        base_url=_ollama_url,
+                        models=_models,
+                        priority=0,
+                    ),
+                )
+                logger.info("Ollama registered: %s", _models)
+    except Exception:
+        logger.info("No local Ollama detected")
 
 
 _register_default_providers(_registry)
@@ -432,14 +467,15 @@ def call_llm(
     temperature: float = 0.3,
     max_tokens: int = 8192,
     stream: bool = False,
-    provider: str = "deepseek",
+    provider: str = "opencode_go",
 ) -> dict:
     """统一LLM调用接口（多provider自动切换）
 
     用法与 call_deepseek 一致，但会自动处理provider故障切换。
     R13（2026-08-01 三算力架构）：新增 provider 参数强制指定提供方——
-      "deepseek" = 云端（默认）
-      "ollama_local" = 本地 Ollama（机械任务：评分/格式检查）
+      "opencode_go" = OpenCode Go（免费，默认）
+      "openrouter" = OpenRouter（免费）
+      "opencode_zen" = OpenCode Zen（免费）
       "agent_provider" = Marvis 队列（起草/修订，多实例并行）
     provider 指定的资源不可用时，回退到可用 provider（容错）。
     """
@@ -456,22 +492,64 @@ def call_llm(
     else:
         _ck = None
 
-    # R13: 强制指定 provider（若存在且未熔断）；否则按优先级取全部可用
-    def _active():
-        return sorted(
-            (p for p in _registry._providers.values() if _registry._consecutive_failures.get(p.name, 0) < 5),
-            key=lambda x: x.priority,
-        )
+    # 使用智能路由器选择最优 provider
+    from core.smart_router import get_router, record_usage, record_success, record_failure
 
+    router = get_router()
+
+    # 确定任务类型
+    task_type = "general"
+    if model and ("reasoner" in model.lower() or "think" in model.lower()):
+        task_type = "reasoning"
+    elif any(kw in str(messages[:2]).lower() for kw in ["写", "撰写", "报告", "分析"]):
+        task_type = "writing"
+
+    # 使用智能路由器选择 provider
     if provider and provider != "auto":
+        # 强制指定 provider
         target = _registry._providers.get(provider)
         if target and _registry._consecutive_failures.get(provider, 0) < 5:
             providers = [target]
         else:
-            logger.warning("[LLM] 指定 provider=%s 不可用，回退按优先级", provider)
-            providers = _active()
+            logger.warning("[LLM] 指定 provider=%s 不可用，使用智能路由", provider)
+            result = router.select_provider(task_type=task_type, prefer_free=True)
+            if result:
+                config, model_name = result
+                providers = [_registry._providers.get(config.name)]
+                if providers[0]:
+                    model = model_name
+            else:
+                providers = []
     else:
+        # 使用智能路由器选择
+        result = router.select_provider(task_type=task_type, prefer_free=True)
+        if result:
+            config, model_name = result
+            providers = [_registry._providers.get(config.name)]
+            if providers[0]:
+                model = model_name
+                logger.info("[LLM] Smart router selected: %s (model=%s)", config.name, model)
+            else:
+                providers = []
+        else:
+            providers = []
+
+    if not providers:
+        # 回退到原有逻辑
+        def _active():
+            return sorted(
+                (p for p in _registry._providers.values() if _registry._consecutive_failures.get(p.name, 0) < 5),
+                key=lambda x: x.priority,
+            )
         providers = _active()
+    else:
+        # 当通过智能路由器或其他方式选择了 providers 时，仍定义 _active 供后续全量回退使用
+        def _active():
+            return sorted(
+                (p for p in _registry._providers.values() if _registry._consecutive_failures.get(p.name, 0) < 5),
+                key=lambda x: x.priority,
+            )
+
     if not providers:
         raise RuntimeError("No available LLM provider (all circuit-broken)")
 
@@ -560,6 +638,10 @@ def call_llm(
         for attempt in range(2):
             try:
                 _t0 = time.perf_counter()  # P2-audit 2026-08-24: 单次调用真延迟
+                # R99: 调试 400 错误 —— 记录请求摘要
+                _msg_count = len(messages)
+                _total_chars = sum(len(str(m.get("content", ""))) for m in messages)
+                logger.debug("[LLM] %s request: model=%s, msgs=%d, total_chars=%d", pv.name, m, _msg_count, _total_chars)
                 # R89（2026-08-25）：openrouter 走 SSE 流式——本机网络对非流式
                 # 长响应体在 ~7.8KB 处确定性截断，流式分块可穿透（OPENROUTER_STREAM=0 关闭）。
                 if pv.name == "openrouter" and os.environ.get("OPENROUTER_STREAM", "1") != "0":
@@ -620,10 +702,30 @@ def call_llm(
                     json=payload,
                     timeout=_settings.llm_http_timeout(),
                 )
+                # R99: 捕获响应体用于调试 400 错误
+                if resp.status_code >= 400:
+                    _body = resp.text[:500] if resp.text else "(empty)"
+                    _payload_summary = {
+                        "model": payload.get("model"),
+                        "msg_count": len(payload.get("messages", [])),
+                        "total_chars": sum(len(str(m.get("content", ""))) for m in payload.get("messages", [])),
+                        "max_tokens": payload.get("max_tokens"),
+                    }
+                    logger.error("[LLM] %s HTTP %d: payload=%s body=%s", pv.name, resp.status_code, _payload_summary, _body)
                 resp.raise_for_status()
                 _latency_ms = int((time.perf_counter() - _t0) * 1000)
                 _registry.record_success(pv.name)
                 _resp = _normalize_llm_response(resp.json())
+                # 记录使用量到智能路由器
+                try:
+                    _usage = _resp.get("usage", {})
+                    record_usage(
+                        pv.name,
+                        _usage.get("prompt_tokens", 0),
+                        _usage.get("completion_tokens", 0),
+                    )
+                except Exception as _ue:
+                    logger.debug("[SMART-ROUTER] usage record failed: %s", str(_ue)[:50])
                 # P3-2 成本日志（2026-08-07）：记录每次调用 token/通道/耗时，可观测性
                 try:
                     from core.metrics import ObservabilityDB
@@ -646,12 +748,27 @@ def call_llm(
                     except Exception:
                         pass
                 return _resp
+            except (
+                requests.exceptions.Timeout,
+                requests.exceptions.ConnectTimeout,
+                requests.exceptions.ReadTimeout,
+            ) as e:
+                # 超时：快速失败到下一个 provider（不重试同一 provider）
+                logger.warning("[LLM] provider=%s timeout on attempt %d/2 (fail-fast to next)", pv.name, attempt + 1)
+                _registry.record_failure(pv.name)
+                break  # 跳出 attempt 循环，外层 provider 循环继续下一个
             except requests.exceptions.RequestException as e:
+                # 其他网络错误（连接拒绝等）——记录失败，继续重试
                 last_error = e
-                logger.warning("LLM call attempt %d/2 failed (provider=%s model=%s): %s", attempt + 1, pv.name, m, e)
+                logger.warning("[LLM] provider=%s network error on attempt %d/2: %s", pv.name, attempt + 1, str(e)[:100])
                 if attempt < 1:
                     time.sleep(1)
         _registry.record_failure(pv.name)
+        # 记录失败到智能路由器
+        try:
+            record_failure(pv.name)
+        except Exception as _fe:
+            logger.debug("[SMART-ROUTER] failure record failed: %s", str(_fe)[:50])
 
     # R77（2026-08-05）：强制指定的 provider 失败 → 按优先级全量回退一轮
     # （此前单元素 providers 失败即 raise；agent_provider 队列积压/DeepSeek 网络抖动
@@ -697,9 +814,9 @@ def call_deepseek(
     max_tokens: int = 8192,
     api_key: str = "",
     stream: bool = False,
-    provider: str = "deepseek",
+    provider: str = "opencode_go",
 ) -> dict:
-    """兼容旧接口（provider 默认 deepseek；三算力架构传其他值路由）"""
+    """兼容旧接口（provider 默认 opencode_go；三算力架构传其他值路由）"""
     return call_llm(
         messages, model=model, temperature=temperature, max_tokens=max_tokens, stream=stream, provider=provider
     )

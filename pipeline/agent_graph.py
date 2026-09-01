@@ -1,11 +1,17 @@
 """
-2号分析师 Agent Graph — 轻量级状态机引擎
+2号分析师 Agent Graph — 轻量级状态机引擎（支持并行执行）
 
 架构设计原则：
 1. 图结构强制执行 — 每个节点注册后必须执行，不可跳过
 2. 硬失败 — 任何节点失败立即抛异常，不静默吞错误
 3. 逐级验证 — 每个节点输出后立即验证，不通过不往下走
 4. 审计追踪 — 每个节点记录执行状态、耗时、输出哈希
+5. 并行执行 — 无依赖节点可并行执行，提升管线速度
+
+V5.0（2026-08-27）：新增并行执行模式
+- 分层拓扑排序：识别可并行执行的节点层
+- 并行执行器：同层节点并行执行
+- 线程安全：context 使用锁保护
 """
 
 from __future__ import annotations
@@ -13,8 +19,10 @@ from __future__ import annotations
 import hashlib
 import logging
 import os
+import threading
 import time
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -46,12 +54,50 @@ class GraphResult:
     failed_nodes: list = field(default_factory=list)
 
 
+class ThreadSafeContext:
+    """线程安全的 context 包装器"""
+
+    def __init__(self, context: dict):
+        self._context = context
+        self._lock = threading.RLock()
+
+    def get(self, key: str, default=None):
+        with self._lock:
+            return self._context.get(key, default)
+
+    def set(self, key: str, value):
+        with self._lock:
+            self._context[key] = value
+
+    def update(self, data: dict):
+        with self._lock:
+            self._context.update(data)
+
+    def to_dict(self) -> dict:
+        with self._lock:
+            return self._context.copy()
+
+
 class AgentGraph:
-    def __init__(self, name: str = "default"):
+    def __init__(self, name: str = "default", parallel_mode: bool = None):
+        """初始化 AgentGraph
+
+        Args:
+            name: 图名称
+            parallel_mode: 是否启用并行模式（None 时从环境变量 PARALLEL_MODE 读取，默认 True）
+        """
         self.name = name
         self._nodes: dict[str, dict] = {}
         self._results: dict[str, NodeResult] = {}
         self._start_time: float = 0.0
+        self._parallel_mode = parallel_mode
+        if self._parallel_mode is None:
+            self._parallel_mode = os.environ.get("PARALLEL_MODE", "1") != "0"
+        # 并行度限制
+        try:
+            self._max_workers = int(os.environ.get("MAX_PARALLEL_WORKERS", "8"))
+        except (TypeError, ValueError):
+            self._max_workers = 8
 
     def add_node(
         self,
@@ -90,7 +136,7 @@ class AgentGraph:
         }
         self._results[node_id] = NodeResult(node_id=node_id)
 
-    def _check_deps(self, node_id: str) -> str | None:
+    def _check_deps(self, node_id: str, context: dict = None) -> str | None:
         deps = self._nodes[node_id]["deps"]
         for dep_id in deps:
             dep_result = self._results.get(dep_id)
@@ -115,7 +161,6 @@ class AgentGraph:
             # 但管线可立即按失败处理并 SKIP 下游节点。
             _timeout_s = int(node.get("timeout_s") or 0)
             if _timeout_s > 0:
-                from concurrent.futures import ThreadPoolExecutor
                 from concurrent.futures import TimeoutError as _FutureTimeout
 
                 with ThreadPoolExecutor(max_workers=1, thread_name_prefix=f"ag-{node_id}") as _ex:
@@ -185,26 +230,130 @@ class AgentGraph:
             logger.error("  [AgentGraph] %s FAILED: %s", node_id, e)
         return result.output
 
+    def _run_node_with_deps_check(self, node_id: str, context: dict) -> Any:
+        """带依赖检查的节点执行（用于并行模式）"""
+        dep_err = self._check_deps(node_id, context)
+        if dep_err:
+            self._results[node_id].status = NODE_SKIPPED
+            self._results[node_id].error = dep_err
+            return None
+        return self._run_node(node_id, context)
+
     def run(self, context: dict = None) -> GraphResult:
+        """执行管线
+
+        Args:
+            context: 管线上下文
+
+        Returns:
+            GraphResult: 执行结果
+        """
         self._start_time = time.time()
         ctx = context or {}
-        logger.info("[AgentGraph] run: %s (%d nodes)", self.name, len(self._nodes))
-        sorted_nodes = self._topological_sort()
-        if sorted_nodes is None:
-            raise RuntimeError(f"cycle detected: {self.name}")
-        for node_id in sorted_nodes:
-            dep_err = self._check_deps(node_id)
-            if dep_err:
-                self._results[node_id].status = NODE_SKIPPED
-                self._results[node_id].error = dep_err
-                continue
-            self._run_node(node_id, ctx)
+        node_delay = float(os.environ.get("AGENT_GRAPH_NODE_DELAY_S", "0"))
+
+        # 选择执行模式
+        if self._parallel_mode:
+            logger.info(
+                "[AgentGraph] run (PARALLEL): %s (%d nodes, max_workers=%d)",
+                self.name,
+                len(self._nodes),
+                self._max_workers,
+            )
+            sorted_levels = self._topological_sort_levels()
+            if sorted_levels is None:
+                raise RuntimeError(f"cycle detected: {self.name}")
+
+            for level_idx, level in enumerate(sorted_levels):
+                if len(level) > 1:
+                    # 并行执行同一层的节点
+                    self._run_level_parallel(level, ctx, node_delay)
+                else:
+                    # 单节点，串行执行
+                    node_id = level[0]
+                    dep_err = self._check_deps(node_id, ctx)
+                    if dep_err:
+                        self._results[node_id].status = NODE_SKIPPED
+                        self._results[node_id].error = dep_err
+                        continue
+                    if level_idx > 0 and node_delay > 0:
+                        time.sleep(node_delay)
+                    self._run_node(node_id, ctx)
+        else:
+            logger.info("[AgentGraph] run (SERIAL): %s (%d nodes)", self.name, len(self._nodes))
+            sorted_nodes = self._topological_sort()
+            if sorted_nodes is None:
+                raise RuntimeError(f"cycle detected: {self.name}")
+            for i, node_id in enumerate(sorted_nodes):
+                dep_err = self._check_deps(node_id, ctx)
+                if dep_err:
+                    self._results[node_id].status = NODE_SKIPPED
+                    self._results[node_id].error = dep_err
+                    continue
+                if i > 0 and node_delay > 0:
+                    time.sleep(node_delay)
+                self._run_node(node_id, ctx)
+
         total_time = (time.time() - self._start_time) * 1000
         failed = [nid for nid, r in self._results.items() if r.status == NODE_FAILED]
         passed = all(r.status == NODE_PASSED for r in self._results.values() if r.status != NODE_SKIPPED)
         return GraphResult(passed=passed, nodes=self._results, total_duration_ms=total_time, failed_nodes=failed)
 
+    def _run_level_parallel(self, level: list[str], context: dict, node_delay: float = 0):
+        """并行执行同一层的节点
+
+        Args:
+            level: 同一层的节点 ID 列表
+            context: 管线上下文
+            node_delay: 节点间延迟
+        """
+        logger.info("  [PARALLEL] Level execution: %d nodes [%s]", len(level), ", ".join(level))
+        t0 = time.time()
+
+        # 过滤可执行的节点（依赖满足）
+        executable = []
+        for node_id in level:
+            dep_err = self._check_deps(node_id, context)
+            if dep_err:
+                self._results[node_id].status = NODE_SKIPPED
+                self._results[node_id].error = dep_err
+                logger.info("  [PARALLEL] %s SKIPPED: %s", node_id, dep_err)
+            else:
+                executable.append(node_id)
+
+        if not executable:
+            return
+
+        # 限制并行度
+        actual_workers = min(len(executable), self._max_workers)
+
+        # 并行执行
+        with ThreadPoolExecutor(max_workers=actual_workers, thread_name_prefix="ag-parallel") as executor:
+            futures = {
+                executor.submit(self._run_node, node_id, context): node_id
+                for node_id in executable
+            }
+
+            for future in as_completed(futures):
+                node_id = futures[future]
+                try:
+                    future.result(timeout=self._nodes[node_id].get("timeout_s", 300))
+                except TimeoutError as e:
+                    logger.error("  [PARALLEL] %s TIMEOUT: %s", node_id, e)
+                except Exception as e:
+                    logger.error("  [PARALLEL] %s FAILED: %s", node_id, e)
+
+        duration = (time.time() - t0) * 1000
+        passed_count = sum(1 for nid in executable if self._results[nid].status == NODE_PASSED)
+        logger.info(
+            "  [PARALLEL] Level done: %d/%d passed in %.0fms",
+            passed_count,
+            len(executable),
+            duration,
+        )
+
     def _topological_sort(self) -> list[str] | None:
+        """串行拓扑排序（保持向后兼容）"""
         in_degree = {nid: 0 for nid in self._nodes}
         for nid, node in self._nodes.items():
             for dep in node["deps"]:
@@ -223,20 +372,85 @@ class AgentGraph:
                         queue.append(other_nid)
         return sorted_list if len(sorted_list) == len(self._nodes) else None
 
+    def _topological_sort_levels(self) -> list[list[str]] | None:
+        """分层拓扑排序，返回可并行执行的层级
+
+        Returns:
+            层级列表，每层包含可并行执行的节点 ID
+        """
+        in_degree = {nid: 0 for nid in self._nodes}
+        for nid, node in self._nodes.items():
+            for dep in node["deps"]:
+                if dep not in in_degree:
+                    in_degree[dep] = 0
+                in_degree[nid] = in_degree.get(nid, 0) + 1
+
+        levels = []
+        queue = [nid for nid, deg in in_degree.items() if deg == 0]
+
+        while queue:
+            levels.append(queue[:])
+            next_queue = []
+            for nid in queue:
+                for other_nid, other_node in self._nodes.items():
+                    if nid in other_node["deps"]:
+                        in_degree[other_nid] -= 1
+                        if in_degree[other_nid] == 0:
+                            next_queue.append(other_nid)
+            queue = next_queue
+
+        # 验证所有节点都被处理
+        total_nodes = sum(len(level) for level in levels)
+        if total_nodes != len(self._nodes):
+            return None
+
+        return levels
+
     def get_result(self, node_id: str) -> NodeResult | None:
         return self._results.get(node_id)
 
     def summary(self) -> str:
         lines = [f"AgentGraph: {self.name}"]
-        for nid, r in self._results.items():
-            icon = {"passed": "+", "failed": "-", "pending": ".", "running": ">", "skipped": "x"}.get(r.status, "?")
-            desc = self._nodes[nid]["description"][:50] if nid in self._nodes else nid
-            lines.append(f"  [{icon}] {nid}: {desc} ({r.duration_ms:.0f}ms)")
-            if r.validation_issues:
-                for issue in r.validation_issues[:3]:
-                    lines.append(f"     issue: {issue[:80]}")
-            if r.error:
-                lines.append(f"     error: {r.error[:80]}")
+        if self._parallel_mode:
+            # 并行模式下按层级显示
+            levels = self._topological_sort_levels()
+            if levels:
+                for level_idx, level in enumerate(levels):
+                    lines.append(f"  [Level {level_idx}]")
+                    for node_id in level:
+                        r = self._results.get(node_id)
+                        if r:
+                            icon = {
+                                "passed": "+",
+                                "failed": "-",
+                                "pending": ".",
+                                "running": ">",
+                                "skipped": "x",
+                            }.get(r.status, "?")
+                            desc = self._nodes[node_id]["description"][:50] if node_id in self._nodes else node_id
+                            lines.append(f"    [{icon}] {node_id}: {desc} ({r.duration_ms:.0f}ms)")
+                            if r.validation_issues:
+                                for issue in r.validation_issues[:3]:
+                                    lines.append(f"       issue: {issue[:80]}")
+                            if r.error:
+                                lines.append(f"       error: {r.error[:80]}")
+        else:
+            # 串行模式
+            for nid, r in self._results.items():
+                icon = {
+                    "passed": "+",
+                    "failed": "-",
+                    "pending": ".",
+                    "running": ">",
+                    "skipped": "x",
+                }.get(r.status, "?")
+                desc = self._nodes[nid]["description"][:50] if nid in self._nodes else nid
+                lines.append(f"  [{icon}] {nid}: {desc} ({r.duration_ms:.0f}ms)")
+                if r.validation_issues:
+                    for issue in r.validation_issues[:3]:
+                        lines.append(f"     issue: {issue[:80]}")
+                if r.error:
+                    lines.append(f"     error: {r.error[:80]}")
         return "\n".join(lines)
 
 

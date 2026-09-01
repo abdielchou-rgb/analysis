@@ -199,8 +199,11 @@ class ContentFormatChecksMixin:
             "推荐",
         ]
         _n_judgments = sum(len(_re.findall(w, text)) for w in _judgment_words)
-        # 数据点计数：数字+单位
-        _data_pats = re.findall(r"\d+(?:\.\d+)?\s*(?:%|亿元|亿|倍|万股|万股|元|万吨|万台|万部|家|个)", text)
+        # 数据点计数：数字+单位（2026-08-29 扩展单位列表，提升检出率）
+        _data_pats = re.findall(
+            r"\d+(?:\.\d+)?\s*(?:%|‰|亿元|万元|亿元|万|元|倍|人|家|个|项|次|条|篇|页|天|月|年|小时|分钟|吨|公斤|千克|米|公里|平方|立方)",
+            text,
+        )
         _n_data = len(_data_pats)
 
         _jd = _n_judgments / _kchars if _kchars > 0 else 0
@@ -573,15 +576,22 @@ class ContentFormatChecksMixin:
         #       (b) 表格上下文内行以 | 开头但未以 | 结尾（多出未闭合 cell）→ 截断
         # 注意：只有首尾都有 | 的行才进入表格上下文，避免把正文中以 | 开头
         #       的普通句子误判为表格（真实报告正文可能以 | 强调）。
+        # P2-1（2026-09-01）：误报修复——失败样本 '...） |。'（正文句子含竖线分隔符）
+        # 被当表格行未闭合。现在表格上下文要求"连续 2+ 行首尾 | 且管道数一致"才算
+        # 真表格；单行以 | 开头未闭合只有在前一行已确认表头时才报警。
         _in_table = False
         _header_pipes = 0
+        _table_streak = 0
         for _i, _ln in enumerate(lines):
             _s = _ln.strip()
             if _s.startswith("|") and _s.endswith("|"):
                 _pipe_count = _s.count("|")
                 if not _in_table:
-                    _in_table = True
-                    _header_pipes = _pipe_count
+                    _table_streak += 1
+                    # 连续两行首尾 | 才算进入表格上下文（防正文单行竖线误判）
+                    if _table_streak >= 2:
+                        _in_table = True
+                        _header_pipes = _pipe_count
                 elif _pipe_count < _header_pipes - 1:
                     issues.append(
                         f"表格半cell(L{_i + 1}): 管道符{_pipe_count}个 < 表头{_header_pipes}个"
@@ -589,11 +599,14 @@ class ContentFormatChecksMixin:
                     )
             elif _in_table and _s.startswith("|") and not _s.endswith("|"):
                 # 已在表格上下文内，遇到未闭合行 → cell 截断
+                # P2-1：仅当该行管道数 ≥ 表头管道数-1（确实是表格数据行截断）才报警；
+                # 管道数很少的正文句子（如 '| 见图3'）不是表格截断
                 _pipe_count = _s.count("|")
                 if _pipe_count >= _header_pipes - 1:
                     issues.append(f"表格行未闭合(L{_i + 1}): '...{_s[-30:]}'（cell 截断或多余内容）")
             elif _s and not _s.startswith("|"):
                 _in_table = False
+                _table_streak = 0
 
         # ── 3. 年份截断（"2025-202" 后无后续数字）──────────────
         # 模式：20XX - 后跟不足 4 位的年份（20YY 只到 2-3 位即截断）。
@@ -642,8 +655,6 @@ class ContentFormatChecksMixin:
                 continue
             if len(_s) < 15:
                 continue
-            # R81（2026-08-06）：跳过头部元信息行——"报告级别：深度""分析师：2号分析师"
-            # 等模板头部行无标点结尾且末字为汉字，会被误判为段落截断。
             if re.search(
                 r"^(?:报告级别|报告日期|分析师|分析周期|报告标题|股票代码|"
                 r"评级|行业|日期|编制|机构)\s*[:：]",
@@ -652,11 +663,17 @@ class ContentFormatChecksMixin:
                 continue
             if _s[-1] not in _sentence_enders and not _s.endswith("."):
                 _next = lines[_i + 1].strip() if _i + 1 < len(lines) else ""
-                if not _next or _next.startswith("#"):
-                    if _s[-1].isalpha() or ("一" <= _s[-1] <= "鿿"):
-                        issues.append(f"段落截断(L{_i + 1}): 末词'...{_s[-20:]}'无标点且无后续（疑似截半）")
-
-        # 去重
+                # R89（2026-08-30）：段落末词+标题衔接、头部模板行衔接 → 正常段落结构，不算截断
+                if _s[-1].isalpha() or ("一" <= _s[-1] <= "鿿"):
+                    if not _next or _next.startswith("#"):
+                        continue
+                    if re.search(
+                        r"^(?:报告级别|报告日期|分析师|分析周期|报告标题|股票代码|"
+                        r"评级|行业|日期|编制|机构)\s*[:：]",
+                        _next,
+                    ):
+                        continue
+                issues.append(f"段落截断(L{_i + 1}): 末词'...{_s[-20:]}'无标点且无后续（疑似截半）")
         _seen = set()
         _uniq = []
         for _i in issues:
@@ -667,7 +684,10 @@ class ContentFormatChecksMixin:
         passed = len(_uniq) == 0
         score = 1.0 if passed else max(0.3, 1.0 - 0.25 * len(_uniq))
         det = f"完整性扫描: {len(_uniq)} 项" + (": " + "; ".join(_uniq[:3]) if _uniq else "无")
-        return GateCheckResult("completeness_scan", passed, score, det, severity="error")
+        # R89（2026-08-30）：非上市报告数据稀缺、段落短，段落截断误报率高。
+        _rt = getattr(self, "report_type", "") or ""
+        _sev = "warning" if _rt == "unlisted_company" and len(_uniq) <= 2 else "error"
+        return GateCheckResult("completeness_scan", passed, score, det, severity=_sev)
 
     def _check_template_repeat(self) -> GateCheckResult:
         """R35（2026-08-02）：模板句高重复检测。
@@ -836,6 +856,69 @@ class ContentFormatChecksMixin:
         passed = len(found) == 0
         score = 1.0 if passed else 0.3
         return GateCheckResult(name="禁止词检测", passed=passed, score=score, details=str(found) if found else "无")
+
+    def _check_gbk_encoding(self) -> GateCheckResult:
+        """P2-4 (2026-09-01): 出口质量红线——检测乱码/编码损坏。
+
+        触发条件（审计 2026-09-01 实测 output/_gate_prev.md 含 GBK 错乱）：
+        1. U+FFFD 替换字符（解码失败的标准信号）
+        2. 常见 GBK 乱码 mojibake 模式：'å'/'æ'/'ç'/'è' 等拉丁扩展跟随 CJK 的形态
+           （UTF-8 文本被 GBK 解码产生的典型乱码），如 'æµæ±è§çº¤'
+        3. 报告头部声明 UTF-8 但正文含 \x00-\x08 控制字符
+
+        乱码是"系统性事实错误"（R28：Agent 对事实负责）——含乱码的报告不可交付。
+        """
+        import re
+
+        text = self.report_text or ""
+        issues = []
+        # 1. 替换字符
+        n_repl = text.count("�")
+        if n_repl >= 1:
+            issues.append(f"U+FFFD 替换字符 {n_repl} 处")
+        # 2. GBK mojibake 模式：乱码通常成串出现（>=4 个连续 latin 扩展字符）
+        mojibake = re.findall(r"(?:[\xc0-\xff][\x80-\xbf]){4,}", text)
+        if len(mojibake) >= 1:
+            issues.append(f"疑似 GBK 乱码 {len(mojibake)} 处（如 '{mojibake[0][:20]}...'）")
+        # 3. 控制字符（除 \n\r\t）
+        ctrl = [c for c in text if ord(c) < 9 or 13 < ord(c) < 32]
+        if ctrl:
+            issues.append(f"非法控制字符 {len(ctrl)} 个")
+
+        passed = len(issues) == 0
+        score = 1.0 if passed else 0.0
+        severity = "error" if not passed else "info"
+        return GateCheckResult(
+            name="gbk_encoding",
+            passed=passed,
+            score=score,
+            details="; ".join(issues) if issues else "无乱码",
+            severity=severity,
+        )
+
+    def _check_placeholder_source(self) -> GateCheckResult:
+        """P0-2 (2026-09-01): 出口质量红线——拦截裸来源锚点。
+
+        审计发现失败产物含 '目标价38.40元（数据来源：公司年度报告）' 这类
+        无具体来源的锚点数字（FP2a 数据零编造违反）。检测：
+        1. '（数据来源：X）' 中 X 是泛称（公司年度报告/公告/官网/公开资料/网络）
+        2. '（来源：X）' 同上
+        """
+        import re
+
+        text = self.report_text or ""
+        bad = re.findall(
+            r"[（(]\s*(?:数据来源|来源|资料来源)\s*[：:]\s*(?:公司|公司年度报告|公司公告|年报|半年报|季报|官网|公开资料|公开信息|网络|百度|搜索|招股说明书)\s*[）)]",
+            text,
+        )
+        # 具体来源（如 '来源：2025年年报' '数据来源：wind'）不拦截——带具体主体的来源是合法锚
+        passed = len(bad) == 0
+        score = 1.0 if passed else 0.3
+        severity = "error" if not passed else "info"
+        det = "裸来源锚点: %d 处" % len(bad)
+        if bad:
+            det += "（如 '%s'——必须替换为具体来源+日期）" % bad[0]
+        return GateCheckResult(name="placeholder_source", passed=passed, score=score, details=det, severity=severity)
 
     def _check_markdown_artifacts(self):
         """Check for residual markdown syntax in report."""

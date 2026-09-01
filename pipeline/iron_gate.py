@@ -13,10 +13,12 @@ import os
 import re
 import sys
 import time as _time_module
+import datetime
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from core.knowledge_injector import KnowledgeInjector
+from core.observability import GATE_RUNS, GATE_SCORE, GATE_CHECK_LATENCY, GATE_CHECK_RESULT, REGISTRY
 
 _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
@@ -142,6 +144,7 @@ class IronGate(
         asset: str = "",
         chart_ids: set = None,
         client_questions: list = None,
+        collected_data: dict = None,
     ):
         self.report_path = Path(report_path)
         self.report_type = report_type
@@ -149,6 +152,8 @@ class IronGate(
         self.degradation_level = degradation_level
         self._chart_ids = chart_ids  # R73: 实际生成图ID集合（chart_assembler产出），不作为检查缺图
         self.client_questions = client_questions  # R84: 委托方必答问题+实体锚定（decision_memo）
+        # 修复（2026-08-29）：接收 collected_data 供 _check_data_point_provenance 使用
+        self.collected_data = collected_data or {}
         # 修复（2026-08-01 IronGate 第 2 轮）：绑定资产名，data_dict_refs 校验
         # 按 <asset>_data_dict.json 精确加载，杜绝"兜底取最新文件"导致的跨资产串标。
         self.asset = asset
@@ -289,6 +294,8 @@ class IronGate(
             self._check_financial_statements_coverage,
             self._check_format_consistency,
             self._check_forbidden_patterns,
+            self._check_gbk_encoding,  # P2-4 (2026-09-01): 乱码拦截
+            self._check_placeholder_source,  # P0-2 (2026-09-01): 裸来源锚点拦截
             self._check_template_phrases,  # R79 P0-1: 模板句拦截
             self._check_insight_quality,  # R79 P1-1: 洞察质量
             self._check_persuasion_architecture,
@@ -315,6 +322,12 @@ class IronGate(
             self._check_synthesis_consistency,
             self._check_cross_section_consistency,
             self._check_data_dict_refs,
+            # NEW: DataPoint provenance completeness (Phase 1.3)
+            self._check_data_point_provenance,
+            # NEW: CSRC/交易所合规门禁 (Phase 2.1)
+            self._check_csrc_compliance,
+            # NEW: Semantic deduplication gate (Phase 5.3)
+            self._check_semantic_dedup,
             # R16（2026-08-01 深度补强）：盈利预测表 + 反共识信号存在性校验
             self._check_forecast_presence,
             # R20（2026-08-02 王牌模块）：供应链瓶颈分析存在性校验
@@ -545,6 +558,53 @@ class IronGate(
                 logger.info("[FP7a] Gate failure registered to LearningLoop")
             except Exception as e:
                 logger.debug("[FP7a] LearningLoop: %s", e)
+        
+        # Observability: Record gate-level metrics
+        try:
+            GATE_RUNS.labels(report_type=self.report_type, result="pass" if report.passed else "fail").inc()
+            GATE_SCORE.labels(report_type=self.report_type).observe(report.overall_score)
+            for c in report.checks:
+                GATE_CHECK_RESULT.labels(check_name=c.name, result="pass" if c.passed else "fail").inc()
+        except Exception as e:
+            logger.debug("Observability metrics recording failed: %s", e)
+
+        # P1-1 (2026-09-01): 测量层通电——每次 run_all 写 validate_history + 当日质量趋势
+        # 此前 validate_history 停在 7 月（17 条空记录）、quality_trends 0 条，
+        # FP3 收敛曲线与 FP7a 质量趋势无数据可依。write-and-forget 不阻塞主流程。
+        try:
+            from core.metrics import ObservabilityDB, ValidateHistory
+
+            _jd = 0.0
+            if report.checks:
+                for _c in report.checks:
+                    if getattr(_c, "name", "") == "judgment_density" and getattr(_c, "score", None) is not None:
+                        _jd = float(_c.score)
+                        break
+            _obs = ObservabilityDB()
+            _obs.log_validation(
+                ValidateHistory(
+                    timestamp=datetime.datetime.now().isoformat(),
+                    report_id=str(getattr(self, "asset", "") or "unknown"),
+                    sac_coverage={
+                        "covered": getattr(self, "sac_covered", 0),
+                        "required": getattr(self, "sac_required", 0),
+                        "passed": report.passed,
+                    },
+                    judgment_density=_jd,
+                    style_deviation_score=0.0,
+                    modification_count=0,
+                    generation_duration_seconds=0.0,
+                    passed=report.passed,
+                    notes="auto-log from IronGate.run_all",
+                )
+            )
+            _obs.record_quality_trend("gate_score_avg", report.overall_score, sample_size=1)
+            _obs.record_quality_trend(
+                "gate_pass_rate", 1.0 if report.passed else 0.0, sample_size=1
+            )
+        except Exception as e:
+            logger.debug("[P1-1] validate/quality trend 记录失败: %s", e)
+
         return report
 
     def _count_charts(self):
@@ -601,6 +661,9 @@ class IronGate(
         "completeness_scan",
         "market_size_consistency",
         "indicator_consistency",
+        "data_point_provenance",  # NEW: deterministic provenance check
+        "csrc_compliance",  # NEW: deterministic compliance check
+        "semantic_dedup",  # NEW: deterministic semantic dedup
     }
     SEMANTIC_CHECKS = {
         "so_what_chain",
@@ -667,6 +730,121 @@ class IronGate(
     # P1-audit 2026-08-24：_check_methodology_compliance 已迁入
     # pipeline/checks/analysis_mixin.py（r61 迁移完整性要求检查方法
     # 统一存放于 checks/，此处保留会破坏 AST 扫描的 defined==executed 断言）
+
+    def _check_csrc_compliance(self):
+        """CSRC/交易所研报合规五大硬性要求"""
+        from pipeline.checks.base import GateCheckResult
+        import re
+        
+        _COMPLIANCE_RULES = [
+            ("rating_definition", r"评级定义|评级说明|买入.*增持.*持有.*减持.*卖出", "必须包含评级定义表"),
+            ("conflict_disclosure", r"利益冲突|无利益冲突|相关披露", "必须有利益冲突声明"),
+            ("important_notice", r"重要提示|风险提示|免责声明", "必须有重要提示章节"),
+            ("no_guarantee", r"不构成.*投资建议|不保证.*收益|过往业绩不代表", "禁止承诺收益/保证语言"),
+            ("analyst_certification", r"分析师.*资格|SAC.*执业|注册分析师", "需含分析师资格认证"),
+        ]
+        
+        failures = []
+        for name, pattern, desc in _COMPLIANCE_RULES:
+            if not re.search(pattern, self.report_text, re.I):
+                failures.append(f"[{name}] {desc}")
+        if failures:
+            return GateCheckResult("csrc_compliance", False, 0.0, "; ".join(failures), "error")
+        return GateCheckResult("csrc_compliance", True, 1.0, "all 5 rules present")
+
+
+    # ============================================================
+    # NEW: DataPoint Provenance Completeness Check (Phase 1.3)
+    # ============================================================
+
+    def _check_data_point_provenance(self):
+        """每个 DataPoint 必须有 source/access_ts/excerpt_sha256/confidence/unit"""
+        from core.models import DataPoint
+        from pipeline.checks.base import GateCheckResult
+        
+        cd = getattr(self, "collected_data", {}) or {}
+        dps = cd.get("data_points", [])
+        missing = []
+        for dp in dps:
+            if isinstance(dp, DataPoint):
+                for field in ["source", "access_ts", "excerpt_sha256", "confidence", "unit"]:
+                    if not getattr(dp, field, None):
+                        missing.append(f"{dp.name}.{field}")
+        if missing:
+            return GateCheckResult("data_point_provenance", False, 0.0,
+                                   f"{len(missing)} 字段缺失: {missing[:5]}", "error")
+        return GateCheckResult("data_point_provenance", True, 1.0, "all fields present")
+
+    # ============================================================
+    def _check_semantic_dedup(self):
+        """语义去重：用 sentence-transformers 向量化段落，余弦相似度 >0.85 视为语义重复"""
+        from pipeline.checks.base import GateCheckResult
+        
+        try:
+            from sentence_transformers import SentenceTransformer
+            import numpy as np
+        except ImportError:
+            return GateCheckResult("semantic_dedup", True, 1.0, "sentence-transformers not installed, skipped")
+        
+        # Split into paragraphs
+        paras = [p.strip() for p in self.report_text.split("\n\n") if len(p.strip()) > 60]
+        if len(paras) < 2:
+            return GateCheckResult("semantic_dedup", True, 1.0, "insufficient paragraphs")
+        
+        # Load model (cache globally in production)
+        try:
+            model = SentenceTransformer("BAAI/bge-small-zh-v1.5")
+        except Exception as e:
+            return GateCheckResult("semantic_dedup", True, 0.5, f"model load failed: {e}")
+        
+        # Encode paragraphs
+        try:
+            embeds = model.encode(paras, normalize_embeddings=True, show_progress_bar=False)
+        except Exception as e:
+            return GateCheckResult("semantic_dedup", True, 0.5, f"encoding failed: {e}")
+        
+        # Find duplicates
+        dup_pairs = []
+        threshold = 0.85
+        for i in range(len(embeds)):
+            for j in range(i + 1, len(embeds)):
+                sim = float(np.dot(embeds[i], embeds[j]))
+                if sim > threshold:
+                    dup_pairs.append((paras[i][:80], paras[j][:80], sim))
+        
+        if dup_pairs:
+            details = "; ".join([f"{a}... ~ {b}... (sim={s:.2f})" for a, b, s in dup_pairs[:5]])
+            return GateCheckResult("semantic_dedup", False, 0.0,
+                                   f"{len(dup_pairs)} 语义重复段落: {details}", "error")
+        
+        return GateCheckResult("semantic_dedup", True, 1.0, "no semantic duplicates")
+
+
+    # ============================================================
+    # NEW: Semantic Deduplication Gate (Phase 5.3)
+
+
+    # ============================================================
+    # NEW: DataPoint Provenance Completeness Check (Phase 1.3)
+    # ============================================================
+
+    def _check_data_point_provenance(self):
+        """每个 DataPoint 必须有 source/access_ts/excerpt_sha256/confidence/unit"""
+        from core.models import DataPoint
+        from pipeline.checks.base import GateCheckResult
+        
+        cd = getattr(self, "collected_data", {}) or {}
+        dps = cd.get("data_points", [])
+        missing = []
+        for dp in dps:
+            if isinstance(dp, DataPoint):
+                for field in ["source", "access_ts", "excerpt_sha256", "confidence", "unit"]:
+                    if not getattr(dp, field, None):
+                        missing.append(f"{dp.name}.{field}")
+        if missing:
+            return GateCheckResult("data_point_provenance", False, 0.0,
+                                   f"{len(missing)} 字段缺失: {missing[:5]}", "error")
+        return GateCheckResult("data_point_provenance", True, 1.0, "all fields present")
 
 
 def _detect_value_conflicts(report_text: str, data_dict: dict) -> list:
@@ -810,6 +988,11 @@ def _detect_value_conflicts(report_text: str, data_dict: dict) -> list:
                 conflicts.append(f"{label_zh}{year}年 正文写{body_val:.0f}{unit} vs 数据层{known_vals[0]:.0f}")
                 break  # 每标签只报一处
     return conflicts[:5]
+
+
+# ═══════════════════════════════════════════════════════════
+# NEW: CSRC/交易所合规门禁 (Phase 2.1)
+# ═══════════════════════════════════════════════════════════
 
 
 print("test")

@@ -148,11 +148,15 @@ def collect_akshare(code: str) -> dict:
 
 
 def collect_yfinance(code: str) -> dict:
-    """yfinance引擎(如果可用)"""
+    """yfinance引擎(A股/港股/美股通用)"""
     if not HAS_YFINANCE:
         return {}
     try:
-        tk = f"{code}.SS" if code.startswith(("6", "9")) else f"{code}.SZ"
+        from core.data_backends import _to_yfinance_ticker
+
+        tk = _to_yfinance_ticker(code)
+        if not tk:
+            return {}
         info = _yf.Ticker(tk).info or {}
         return {k: info[k] for k in ["marketCap", "trailingPE", "returnOnEquity", "sector", "industry"] if k in info}
     except Exception:

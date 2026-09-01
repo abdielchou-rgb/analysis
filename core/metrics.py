@@ -194,7 +194,7 @@ class ObservabilityDB:
     # ─── Validate 历史 ─────────────────────
 
     def log_validation(self, entry: ValidateHistory):
-        """记录一次 validate"""
+        """记录一次 validate（P1-1 2026-09-01：接通 IronGate 每轮 run_all，替代 7 月停更）"""
         conn = sqlite3.connect(self.db_path)
         conn.execute(
             """
@@ -222,6 +222,26 @@ class ObservabilityDB:
         )
         conn.commit()
         conn.close()
+
+    # ─── 质量趋势（P1-1 新增写入，2026-09-01）──
+
+    def record_quality_trend(self, metric_name: str, metric_value: float, sample_size: int = 1):
+        """写入一条质量趋势记录（每日聚合由脚本/定时任务调用）。
+
+        metric_name 取值建议：gate_score_avg / gate_pass_rate / judgment_density_avg
+        / failure_count / recurrence_rate。质量趋势表此前 0 条——FP3 收敛曲线
+        依赖此表，必须开始积累。
+        """
+        try:
+            conn = sqlite3.connect(self.db_path)
+            conn.execute(
+                "INSERT INTO quality_trends (date, metric_name, metric_value, sample_size) VALUES (?, ?, ?, ?)",
+                (datetime.now().strftime("%Y-%m-%d"), metric_name, float(metric_value), int(sample_size)),
+            )
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            logger.debug("[METRICS] quality_trend 写入失败: %s", e)
 
     # ─── 查询 ────────────────────────────
 
@@ -383,14 +403,14 @@ class ObservabilityDB:
 
 
 class FailureRegistry:
-    """璺熻釜鍚勬ā鍧楃殑杩炵画澶辫触娆℃暟锛?3 娆¤繛缁け璐ユ椂鎻愪緵鍛婅銆?
-    鐢ㄦ硶锛堝湪琚?try/except 鍖呰９鐨?except 鍧楀唴璋冪敤锛?
+    """跟踪各模块的连续失败次数（3 次连续失败时提供告警。
+    用法（在被 try/except 包裹的 except 块内调用）
         from core.metrics import FailureRegistry
         except Exception as e:
             FailureRegistry.record("compute_pipeline", str(e))
             ...
 
-    鍦?workflow.run() 鏈熬缁熶竴鎷夊彇鍛婅锛?        fails = FailureRegistry.report()
+    在 workflow.run() 末尾统一拉取告警）        fails = FailureRegistry.report()
         if fails:
             for f in fails:
                 logger.warning(...)
@@ -414,18 +434,18 @@ class FailureRegistry:
 
     @classmethod
     def success(cls, module: str):
-        """閲嶇疆杩炵画澶辫触璁℃暟"""
+        """重置连续失败计数"""
         if module in cls._failures:
             cls._failures[module]["consecutive"] = 0
 
     @classmethod
     def report(cls) -> list[dict]:
-        """杩斿洖鎵€鏈夎繛缁け璐?>= 3 娆＄殑妯″潡"""
+        """返回所有连续失败 >= 3 次的模块"""
         return [{"module": m, **v} for m, v in cls._failures.items() if v["consecutive"] >= 3]
 
     @classmethod
     def snapshot(cls) -> dict:
-        """杩斿洖鍏ㄩ噺蹇収锛堜笉鍚繛缁憡璀﹂槇鍊艰繃婊わ級"""
+        """返回全量快照（不含连续告警阈值过滤）"""
         return dict(cls._failures)
 
     @classmethod

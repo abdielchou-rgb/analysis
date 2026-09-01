@@ -391,13 +391,27 @@ def query_macro() -> dict:
 
 
 def _to_yfinance_ticker(code: str) -> str | None:
-    """将A股代码转为yfinance格式"""
-    code = code.strip()[:6]
-    if code.isdigit():
-        if code.startswith(("6", "9")):
-            return f"{code}.SS"
-        elif code.startswith(("0", "3")):
-            return f"{code}.SZ"
+    """将股票代码转为yfinance格式（A股/港股/美股通用）。
+
+    A股: 6x/9x→.SS, 0x/2x/3x→.SZ
+    港股: 5位数字→.HK (如 00700→0700.HK)
+    美股: 字母代码直接返回 (如 AAPL, MSFT)
+    """
+    code = code.strip()
+    # 美股：字母开头直接返回
+    if code and code[0].isalpha():
+        return code.upper()
+    # 港股：5位数字 (00700, 09988 等)
+    clean = code.replace(".HK", "").replace(".hk", "")
+    if clean.isdigit() and len(clean) == 5:
+        return f"{clean}.HK"
+    # A股：6位数字
+    clean6 = code[:6]
+    if clean6.isdigit() and len(clean6) == 6:
+        if clean6.startswith(("6", "9")):
+            return f"{clean6}.SS"
+        elif clean6.startswith(("0", "2", "3")):
+            return f"{clean6}.SZ"
     return None
 
 

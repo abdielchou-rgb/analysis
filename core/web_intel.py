@@ -255,3 +255,46 @@ def intel_to_context(result: WebIntelResult) -> dict:
         summaries.append(f"[催化剂] {r['title']}: {r['content'][:200]}")
     ctx["web_summary"] = "\n".join(summaries)
     return ctx
+
+
+def web_intel_to_datapoints(result: WebIntelResult, asset: str) -> list:
+    """Convert WebIntelResult to DataPoint list with full provenance."""
+    from core.models import DataPoint
+    from datetime import datetime, timezone
+    import hashlib
+    
+    dps = []
+    all_items = (
+        [("news", r) for r in result.news] +
+        [("industry", r) for r in result.industry] +
+        [("competitors", r) for r in result.competitors] +
+        [("catalysts", r) for r in result.catalysts] +
+        [("risks", r) for r in result.risks] +
+        [("macro", r) for r in result.macro]
+    )
+    for category, item in all_items:
+        url = item.get("url", "")
+        content = item.get("content", "")
+        title = item.get("title", "")
+        if not url or not content:
+            continue
+        # Try to extract a numeric value
+        import re
+        numbers = re.findall(r'[\d,]+\.?\d*\s*[%亿元万倍]', content)
+        val = numbers[0] if numbers else content[:100]
+        excerpt = f"{title}: {content[:200]}"
+        dps.append(
+            DataPoint(
+                name=f"{asset}_{category}_{title[:30]}",
+                value=val,
+                source=url,
+                access_ts=datetime.now(timezone.utc).isoformat(),
+                excerpt_sha256=hashlib.sha256(excerpt.encode()).hexdigest(),
+                confidence=0.6,
+                scope="company" if category in ("news", "catalysts", "risks") else "industry",
+                unit="",
+                source_level="L2_media",
+                note=f"category={category}; query_reason={item.get('query_reason', '')}",
+            )
+        )
+    return dps

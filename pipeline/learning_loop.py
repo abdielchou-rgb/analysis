@@ -190,12 +190,98 @@ class LearningLoop:
             logger.debug("add_lesson: %s", e)
 
     def recurrence_rate(self, months: int = 3) -> dict:
-        """FP5: Calculate recurrence rate for each failure pattern"""
-        return {}  # Stub
+        """FP5: Calculate recurrence rate for each failure pattern（真实实现，P1-2 2026-09-01）。
 
-    def auto_apply_lessons(self) -> int:
-        """FP5: Auto-apply top failure patterns"""
-        return 0  # Stub
+        复发率定义：最近 N 个月内出现的失败类型中，"上期也出现过"（即未根治）的占比。
+        - 每个 failure_type 返回 {recent, previous, recurred}
+        - _summary 返回整体复发率（recurred_failures / total_recent）
+
+        Returns:
+            {failure_type: {"recent": int, "previous": int, "recurred": bool},
+             "_summary": {"total_recent": int, "recurred_failures": int, "recurrence_rate": float}}
+        """
+        result: dict = {}
+        try:
+            c = self._get_conn()
+            # 两个窗口在同一查询内 CASE 计算——不能把 WHERE 限定在近窗，
+            # 否则 prev 窗口的行被提前过滤，prev_cnt 永远为 0
+            rows = c.execute(
+                """
+                SELECT failure_type,
+                       SUM(CASE WHEN created_at >= datetime('now', ?) THEN 1 ELSE 0 END) as recent_cnt,
+                       SUM(CASE WHEN created_at >= datetime('now', ?) AND created_at < datetime('now', ?)
+                                THEN 1 ELSE 0 END) as prev_cnt
+                FROM report_failures
+                GROUP BY failure_type
+                """,
+                (f"-{months} months", f"-{months * 2} months", f"-{months} months"),
+            ).fetchall()
+            total_recent = 0
+            recurred_cnt = 0
+            for r in rows:
+                recent = int(r["recent_cnt"])
+                prev = int(r["prev_cnt"])
+                if recent == 0:
+                    continue  # 只关心近窗内出现过的类型
+                total_recent += recent
+                # 类型级复发判定：近 N 月出现且上期（N..2N 月前）也出现
+                is_recur = prev > 0
+                if is_recur:
+                    recurred_cnt += recent
+                result[str(r["failure_type"])] = {
+                    "recent": recent,
+                    "previous": prev,
+                    "recurred": is_recur,
+                }
+            result["_summary"] = {
+                "total_recent": total_recent,
+                "recurred_failures": recurred_cnt,
+                "recurrence_rate": round(recurred_cnt / total_recent, 3) if total_recent else 0.0,
+            }
+        except Exception as e:
+            logger.debug("recurrence_rate: %s", e)
+        return result
+
+    def auto_apply_lessons(self, months: int = 3, top_k: int = 5) -> int:
+        """FP5: Auto-apply top failure patterns（真实实现，P1-2 2026-09-01）。
+
+        找到最近 N 个月复发率最高的 top_k 个失败类型，为每个类型注入一条
+        "auto-applied" 学习标记（写入 learning_lessons，severity='auto'），
+        供后续 before_report / build_lesson_prompt 读取时优先引用。
+
+        Returns:
+            int: 实际自动应用（写入标记）的失败类型数
+        """
+        applied = 0
+        try:
+            rates = self.recurrence_rate(months=months)
+            # 按复发与否 + 近况次数排序，取 top_k 个真实失败类型（排除 _summary）
+            candidates = [
+                (ft, v)
+                for ft, v in rates.items()
+                if ft != "_summary" and v["recurred"] and v["recent"] > 0
+            ]
+            candidates.sort(key=lambda x: (-x[1]["recent"], x[0]))
+            c = self._get_conn()
+            for ft, _v in candidates[:top_k]:
+                # 避免重复标记：同一类型已有最新 auto 标记则跳过
+                existing = c.execute(
+                    "SELECT COUNT(*) as n FROM learning_lessons WHERE lesson LIKE ? AND severity='auto'",
+                    (f"auto-applied:{ft}%",),
+                ).fetchone()
+                if existing and existing["n"] > 0:
+                    continue
+                c.execute(
+                    "INSERT INTO learning_lessons (asset,report_type,lesson,severity) VALUES (?,?,?,?)",
+                    ("*", "*", f"auto-applied:{ft} — 复发失败模式，需在写作中重点规避", "auto"),
+                )
+                applied += 1
+            c.commit()
+            if applied:
+                logger.info("LearningLoop: auto-applied %d recurring failure patterns", applied)
+        except Exception as e:
+            logger.debug("auto_apply_lessons: %s", e)
+        return applied
 
     def get_lessons(
         self, asset: str = "*", report_type: str = "*", limit: int = 10, by_failure_type: bool = True

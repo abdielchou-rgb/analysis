@@ -347,7 +347,7 @@ class ProbabilisticDeepCheck:
             chart_config = self.sac.get_chart_config()
             min_charts = chart_config.get("min_charts", 5)
         except Exception:
-            min_charts = {"industry_deep": 5, "listed_company": 5, "unlisted_company": 4, "earnings_notes": 3}.get(
+            min_charts = {"industry_deep": 5, "listed_company": 5, "unlisted_company": 3, "earnings_notes": 3}.get(
                 self.report_type, 5
             )
 

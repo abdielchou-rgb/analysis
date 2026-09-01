@@ -1,0 +1,163 @@
+id: sac_portfolio_relative
+name: 组合相对价值/扇贝分析
+applies_to:
+- portfolio_relative
+logic_chain:
+- step: 标的池筛选
+  description: 基于流动性/市值/相关性筛选可投标的池
+  maps_to:
+  - universe_screen
+- step: 关键指标对标表
+  description: PE/ROE/增速/FCF yield等核心指标横向对标
+  maps_to:
+  - peer_benchmarking
+- step: 估值分位数分布
+  description: 标的池估值分位数、尾部风险识别
+  maps_to:
+  - valuation_distribution
+- step: 贡献度归因
+  description: 超额收益来源分解：选股 vs 配时 vs 因子
+  maps_to:
+  - attribution
+- step: 相关性/集中度风险
+  description: 行业/因子/流动性集中度压力测试
+  maps_to:
+  - risk_concentration
+- step: 调仓建议
+  description: 具体增减仓建议、触发条件、止损线
+  maps_to:
+  - rebalancing
+pre_workflow:
+- step: 组合诊断
+  description: 当前组合结构、风险敞口、绩效归因全景扫描
+- step: 基准锚定
+  description: 选定基准指数（沪深300/中证500/中证1000/自定义）
+- step: 因子正交化
+  description: 规模/价值/动量/质量/波动率因子正交化处理
+writing_rhythm:
+  name: 组合相对价值报告写作节奏
+  description: 从诊断到建议的闭环逻辑
+  flow_diagram: 组合诊断 -> 基准锚定 -> 指标对标 -> 估值分位 -> 归因分解 -> 风险压测 -> 调仓建议
+  principles:
+  - 第一页必须包含：组合诊断结论 + 核心调仓建议 + 预期超额收益
+  - 旗帜逻辑：诊断 -> 对标 -> 分位 -> 归因 -> 压测 -> 建议
+  - 每个标的建议必须给出：方向/比例/触发条件/止损线/时间窗口
+  - 归因分析必须量化：选股贡献/配时贡献/因子贡献/残差
+  - 压力测试必须给出：最大回撤/流动性缺口/相关性冲击
+  - 字数分配：诊断15% + 对标25% + 分位15% + 归因20% + 压测10% + 建议15%
+  - So What三层链：每个板块必须回答 - 数据说明什么? 对组合意味着什么? 具体怎么调?
+required_dimensions:
+- id: universe_screen
+  question: 纳入标的池的筛选逻辑与结果——流动性门槛、市值分层、相关性去重
+  evidence_min: 3
+  sub_questions:
+  - 总股票池多少只？流动性过滤后剩余多少？
+  - 市值分层：大盘/中盘/小盘各多少？
+  - 相关性去重：高相关(>0.8)标的如何处理？
+- id: peer_benchmarking
+  question: 核心指标横向对标——PE/ROE/营收增速/FCF yield/股息率
+  evidence_min: 5
+  required_elements:
+  - 对标指标表（PE_TTM/PE_FY1/ROE/营收YoY/FCF_yield/股息率）
+  - 分位数定位（每个标的在行业/全市场的分位）
+  - 溢价/折价归因（基本面 vs 情绪 vs 流动性）
+  sub_questions:
+  - 组合加权PE vs 基准PE？
+  - 核心标的估值分位数分布？
+  - 哪些标的存在显著错配？
+- id: valuation_distribution
+  question: 标的池估值分位数分布与尾部风险
+  evidence_min: 2
+  sub_questions:
+  - 组合PE/PB/PS分位数分布图（P10/P25/P50/P75/P90）
+  - 尾部风险：P10以下标的占比、最大隐性亏损
+  - 估值密集区是否拥挤（拥挤度指标）
+- id: attribution
+  question: 超额收益来源分解：选股 vs 配时 vs 因子
+  evidence_min: 3
+  required_elements:
+  - Brinson归因：配置效应/选择效应/交互效应
+  - 因子归因：规模/价值/动量/质量/波动率/成长
+  - 残差分析：Alpha来源、显著性、持续性
+  sub_questions:
+  - 过去1/3/6/12月超额收益多少？
+  - 选股贡献占比多少？主要来自哪些标的？
+  - 因子暴露是否有意图？还是隐性风险？
+- id: risk_concentration
+  question: 行业/因子/流动性集中度风险压力测试
+  evidence_min: 2
+  sub_questions:
+  - 行业集中度：前3大行业权重、HHI指数
+  - 因子集中度：单一因子暴露是否超限
+  - 流动性压测：T+1/T+5清仓成本、冲击成本
+  - 相关性冲击：极端场景下组合相关性飙升影响
+- id: rebalancing
+  question: 具体调仓建议：增减仓标的、比例、触发条件、止损线
+  evidence_min: 3
+  required_elements:
+  - 增仓名单：标的/建议权重/当前权重/增仓理由/触发价/止损价
+  - 减仓名单：标的/建议权重/当前权重/减仓理由/止盈价/止损价
+  - 新增标的：标的/建议权重/入场理由/入场区间/止损线
+  - 调仓日历：分批执行节奏、流动性约束
+  sub_questions:
+  - 本次调仓预期超额收益bps？
+  - 调仓成本（佣金/冲击/税费）预估？
+  - 如果判断错误，最大回撤控制在多少？
+evidence_requirements:
+  min_sources: 8
+  primary_source_min: 3
+  counter_evidence_required: true
+forbidden_patterns:
+- SAC
+- 11维
+- 8阶
+- 范式路由
+- 研究方法论
+- AI生成
+- AI辅助
+- 本报告由系统生成
+- 模型生成
+chart_config:
+  min_charts: 8
+  min_tables: 4
+  charts:
+  - id: portfolio_diagnosis
+    num: 1
+    type: waterfall
+    caption: 组合诊断：收益/风险/归因分解
+    source: 内部计算
+  - id: valuation_distribution
+    num: 2
+    type: box_plot
+    caption: 组合估值分位数分布
+    source: Wind/内部计算
+  - id: peer_benchmarking
+    num: 3
+    type: scatter
+    caption: 核心指标对标：PE vs ROE
+    source: Wind/内部计算
+  - id: factor_exposure
+    num: 4
+    type: bar
+    caption: 因子暴露热力图
+    source: 内部计算
+  - id: attribution_brinson
+    num: 5
+    type: waterfall
+    caption: Brinson归因分解
+    source: 内部计算
+  - id: risk_concentration
+    num: 6
+    type: radar
+    caption: 风险集中度雷达图
+    source: 内部计算
+  - id: liquidity_stress
+    num: 7
+    type: bar
+    caption: 流动性压力测试：清仓成本
+    source: 内部计算
+  - id: rebalancing_plan
+    num: 8
+    type: table
+    caption: 调仓执行计划表
+    source: 内部计算

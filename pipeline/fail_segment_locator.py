@@ -96,14 +96,29 @@ def locate_failed_segments(context: dict, sw) -> list | None:
         "market_size_consistency": r"(market_size_consistency|市场规模.*口径|市场规模.*不一致)",
         "source_entity": r"(source_entity|来源标注空泛)",
     }
-    # R77（2026-08-06 P0）：失败指纹检测——同一指纹连续出现>2次降级为警告
+    # R77（2026-08-06 P0）：失败指纹检测——同一指纹连续出现>1次降级为警告
     # AgentGuard-LLM 模式：fault-signature-based retry，防无效全量重写
+    # R85++：阈值 3→2 + 模板归一化哈希（去除资产名/数字/标点），同模板跨轮视为同一指纹
     _fail_fingerprints = context.get("_fail_fingerprints", {})
+
+    def _norm_tpl(tpl: str) -> str:
+        """模板归一化：去除资产名/数字/标点/常见连接词。"""
+        tpl = re.sub(r"[宁德时代|比亚迪|中芯国际|茅台|工行|中信|高盛|摩根|华泰|中金|海通|国泰|安信|东方财富|同花顺|Wind|SMM|SNE]", "", tpl)
+        tpl = re.sub(r"\d+(?:\.\d+)?[%倍元亿万千]", "", tpl)
+        tpl = re.sub(r"[。，、；：:.!?、\(\)（）【】\[\]\"\']", "", tpl)
+        return tpl.strip()[:60]
+
     for ftype, pat in _global_fail_pats.items():
-        if _re.search(pat, fb):
-            fp_key = f"{ftype}:{_re.search(pat, fb).group(0)[:30]}"
+        m = _re.search(pat, fb)
+        if m:
+            matched = m.group(0)
+            # 模板类归一化：去除具体数值/资产名，跨轮同模板视为同一指纹
+            if ftype == "template_repeat":
+                fp_key = f"{ftype}:{_norm_tpl(matched)}"
+            else:
+                fp_key = f"{ftype}:{matched[:30]}"
             _fail_fingerprints[fp_key] = _fail_fingerprints.get(fp_key, 0) + 1
-            if _fail_fingerprints[fp_key] >= 3:
+            if _fail_fingerprints[fp_key] >= 2:  # 3→2：更快降级避免无效重写
                 logger.warning("[REVISE-LOCAL] 失败指纹重复%d次→降级警告: %s", _fail_fingerprints[fp_key], fp_key)
                 continue  # skip this fail_type, don't trigger full rewrite
             fail_types.append(ftype)

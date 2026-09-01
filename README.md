@@ -45,7 +45,7 @@
 
 ### 质量保障
 
-- **IronGate**：78 项注册检查（以 `pipeline/iron_gate.py` 注册表为唯一事实源）+ 意图符合性门禁
+- **IronGate**：101 项注册检查（以 `pipeline/iron_gate.py` 注册表为唯一事实源，实时数量见 `docs/PIPELINE_FACTS.md`）+ 意图符合性门禁
 - **专业怀疑**：写手默认假设数据可能有错（四大审计姿态）
 - **异源圆桌**：OpenRouter 异源模型终审 + 信誉加权（评审不担责 → 信誉分）
 - **语义早停**：修订收敛即停（省 38% token）
@@ -146,7 +146,7 @@ scripts/
 |------|------|------|
 | L0 | 语法 + import 链 | CI |
 | L1 | 意图符合性（intent_gate） | validate 节点 |
-| L2 | IronGate 78 项注册检查 | 导出前 |
+| L2 | IronGate 101 项注册检查（实时数见 PIPELINE_FACTS） | 导出前 |
 | L3 | StyleCompiler（去 AI 化） | 写作后 |
 | L4 | 异源圆桌 + 信誉加权 | 终审 |
 | L5 | 成本日志（cost_audit） | 全程 |

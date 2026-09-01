@@ -171,12 +171,30 @@ class DataPoint:
     name: str = ""
     value: Any = None
     unit: str = ""
-    source: str = ""
-    source_level: str = ""
-    confidence: str = "medium"
+    source: str = ""                    # 必填：URL 或 文档路径
+    access_ts: str = ""                 # 必填：ISO8601 抓取时间
+    excerpt_sha256: str = ""            # 必填：原文片段 SHA256（前 200 字）
+    confidence: float = 0.5             # 0-1
+    scope: str = ""                     # 公司/行业/全球
+    year: int | None = None
+    unit: str = ""                      # 亿元/元/倍/%
+    source_level: str = ""              # L1_filing / L2_media / L3_estimate / L4_analyst / L5_inference
     is_estimate: bool = False
     fiscal_year: int | None = None
     note: str = ""
+
+    def __post_init__(self):
+        """Validate provenance completeness."""
+        if not self.source:
+            raise ValueError(f"DataPoint {self.name}: source is required")
+        if not self.access_ts:
+            raise ValueError(f"DataPoint {self.name}: access_ts is required")
+        if not self.excerpt_sha256:
+            raise ValueError(f"DataPoint {self.name}: excerpt_sha256 is required")
+        if not self.unit:
+            raise ValueError(f"DataPoint {self.name}: unit is required")
+        if not 0 <= self.confidence <= 1:
+            raise ValueError(f"DataPoint {self.name}: confidence must be 0-1")
 
 
 @dataclass

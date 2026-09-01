@@ -26,27 +26,26 @@ class GateBlockedError(Exception):
         super().__init__(msg)
 
 
-def _verify_pipeline_fingerprint(output_path, asset) -> None:
+def _verify_pipeline_fingerprint(output_path, asset, report_text=None) -> None:
     """FP7d 校验：报告必须携带管线指纹（证明经由 E2EOrchestratorV2 产出）。
 
     agent 绕过管线直接生成的文件（用 python-docx/pandoc/手写 MD）无指纹 → 阻断。
+
+    P0-1 修复（2026-09-01）：堵三个绕过洞——
+    1. 通配扫描取 matches[0]（跨资产复用指纹可绕过）→ 改为仅精确匹配本资产指纹
+    2. 指纹解析失败"放行"（fail-open）→ 改为硬失败（fail-closed）
+    3. 明文 JSON 无正文绑定（复制改名即可伪造）→ 指纹必须携带 report_sha256，
+       校验时重算报告文本哈希比对（写入端哈希 ctx.final_text，出口端哈希 md_text），
+       正文被改或跨资产复用即失效
     """
     out_dir = Path(output_path).parent
-    # 查找本资产的指纹文件
+    # 查找本资产的指纹文件 —— 只接受精确命名，拒绝通配扫描（防跨资产复用）
     safe = re.sub(r"[^\w一-鿿]+", "_", str(asset)).strip("_") or "asset"
     candidates = [
         out_dir / f"{safe}_pipeline_fingerprint.json",
         out_dir / f"{Path(output_path).stem}_pipeline_fingerprint.json",
     ]
-    # 也支持通配扫描（报告名可能带风格后缀）
     fp = next((c for c in candidates if c.exists()), None)
-    if fp is None:
-        try:
-            matches = list(out_dir.glob("*_pipeline_fingerprint.json"))
-            if matches:
-                fp = matches[0]
-        except Exception:
-            fp = None
     if fp is None:
         logger.warning("[FINGERPRINT] 未找到管线指纹 %s — 报告疑似绕过管线直接生成", [str(c) for c in candidates])
         raise GateBlockedError(
@@ -54,18 +53,70 @@ def _verify_pipeline_fingerprint(output_path, asset) -> None:
             0.0,
             ["未找到管线指纹。报告必须经由 E2EOrchestratorV2 完整管线生成，禁止绕过管线直接写报告。"],
         )
-    # 校验指纹内容
+    # 校验指纹内容 —— 解析失败即硬阻断（fail-closed），不再放行
     try:
-        import json as _json
-
-        data = _json.loads(fp.read_text(encoding="utf-8"))
-        if not data.get("via_pipeline"):
-            raise GateBlockedError("PipelineFingerprint", 0.0, ["管线指纹无效（via_pipeline=false）"])
-        logger.info("[FINGERPRINT] 管线指纹校验通过: %s (gate=%.2f)", fp.name, data.get("gate_score", 0))
-    except GateBlockedError:
-        raise
+        data = json.loads(fp.read_text(encoding="utf-8"))
     except Exception as e:
-        logger.warning("[FINGERPRINT] 指纹解析失败(放行): %s", e)
+        logger.warning("[FINGERPRINT] 指纹解析失败(阻断): %s", e)
+        raise GateBlockedError("PipelineFingerprint", 0.0, [f"管线指纹损坏（解析失败）: {e}"])
+
+    if not data.get("via_pipeline"):
+        raise GateBlockedError("PipelineFingerprint", 0.0, ["管线指纹无效（via_pipeline=false）"])
+
+    # 指纹归属校验：指纹记录的 asset 必须与当前输出资产一致（防跨资产复用）
+    fp_asset = str(data.get("asset", "") or "")
+    if fp_asset and safe not in fp_asset.replace(" ", "_") and fp_asset not in str(asset):
+        logger.warning("[FINGERPRINT] 指纹资产不匹配: fp_asset=%s vs output=%s", fp_asset, asset)
+        raise GateBlockedError(
+            "PipelineFingerprint", 0.0, [f"管线指纹资产不匹配（fp={fp_asset}, output={asset}）——疑似跨资产复用指纹"]
+        )
+
+    # 正文哈希绑定：指纹携带 report_sha256（写入端哈希 ctx.final_text），
+    # 出口端用 md_text 重算比对；正文被篡改 / 指纹复制改名 → 哈希不符 → 阻断
+    report_hash = data.get("report_sha256")
+    if report_hash:
+        try:
+            if report_text is not None:
+                # 归一化：剥离导出时追加的 DATA_PROVENANCE 注释，与写入端哈希的正文对齐
+                import re as _re
+
+                _norm = _re.sub(r"<!--\s*DATA_PROVENANCE:.*?-->", "", str(report_text), flags=_re.S).strip()
+                actual = _sha256(_norm.encode("utf-8"))
+            else:
+                actual = _sha256(_report_md_bytes(out_dir, asset))
+            if actual != report_hash:
+                logger.warning("[FINGERPRINT] 报告正文哈希不匹配（正文被改或指纹非本报告）")
+                raise GateBlockedError(
+                    "PipelineFingerprint",
+                    0.0,
+                    ["管线指纹与报告正文不匹配（report_sha256 不符）——指纹疑似复用或正文被篡改"],
+                )
+        except GateBlockedError:
+            raise
+        except Exception as e:
+            # 报告正文无法读取等环境异常——指纹有哈希但无法比对时，出于安全考虑阻断
+            logger.warning("[FINGERPRINT] 哈希比对不可用(阻断): %s", e)
+            raise GateBlockedError("PipelineFingerprint", 0.0, [f"指纹哈希比对失败: {e}"])
+
+    logger.info("[FINGERPRINT] 管线指纹校验通过: %s (gate=%.2f)", fp.name, data.get("gate_score", 0))
+
+
+def _report_md_bytes(out_dir, asset):
+    """尽力定位同名 .md 报告作为哈希比对内容（DOCX 与 MD 同名时用 MD）。"""
+    safe = re.sub(r"[^\w一-鿿]+", "_", str(asset)).strip("_") or "asset"
+    for cand in (out_dir / f"{safe}.md", out_dir / f"{asset}.md"):
+        try:
+            if Path(cand).exists():
+                return Path(cand).read_bytes()
+        except Exception:
+            continue
+    raise FileNotFoundError(f"报告正文不存在: {asset}")
+
+
+def _sha256(content) -> str:
+    import hashlib
+
+    return hashlib.sha256(content).hexdigest()
 
 
 class GatesConfig:
@@ -163,8 +214,9 @@ def export_report(
 
     # Step 0.5: FP7d 管线指纹校验 — 报告必须经由 E2EOrchestratorV2 完整管线
     # agent 绕过管线直接生成的报告文件无指纹 → 阻断
+    # P0-1: 传入 md_text 做正文哈希比对（写入端哈希 ctx.final_text，两端一致）
     try:
-        _verify_pipeline_fingerprint(output_path, company_name or title)
+        _verify_pipeline_fingerprint(output_path, company_name or title, report_text=md_text)
     except GateBlockedError:
         raise
     except Exception as e:

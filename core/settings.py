@@ -139,7 +139,7 @@ def min_data_density() -> float:
 def editor_llm_merge_max_chars() -> int:
     """低于该总字数走确定性拼接（LLM 输出 token 上限会静默丢尾部维度）。
     消费方: section_writer._editor_merge"""
-    return _int("EDITOR_LLM_MERGE_MAX_CHARS", 12_000)
+    return _int("EDITOR_LLM_MERGE_MAX_CHARS", 50_000)
 
 
 def editor_bucket_chars() -> int:
