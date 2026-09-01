@@ -4,7 +4,6 @@ R61（2026-08-03 迁移）：由 scripts/migrate_iron_gate.py 自动生成。
 方法原样迁移自 pipeline/iron_gate.py，签名不变，IronGate 继承后行为零变化。
 """
 
-import json
 import os
 import re
 
@@ -37,7 +36,9 @@ class AnalysisChecksMixin:
             missing = []
             missing_required = []
             for dim, keywords in dim_keywords.items():
-                if any(kw in self.report_text for kw in keywords):
+                # P2 (2026-09-02): 双重检测——关键词匹配 + [DIM:维度名] 标记匹配
+                _dim_marker = f"[DIM:{dim}]"
+                if any(kw in self.report_text for kw in keywords) or _dim_marker in self.report_text:
                     covered += 1
                 else:
                     missing.append(dim)
@@ -1773,7 +1774,6 @@ class AnalysisChecksMixin:
 
     def _check_placeholder_charts(self) -> GateCheckResult:
         """Detect placeholder charts (stub images with placeholder text or tiny file size)"""
-        import os
         import re
 
         placeholder_alts = len(

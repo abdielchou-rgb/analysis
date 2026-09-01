@@ -113,20 +113,24 @@ class SACCoverageDetector:
             dimension_name=dim_name,
         )
 
-        # 检查关键词匹配
+        # P2 (2026-09-02): 双重检测——关键词匹配 + [DIM:维度id] 标记匹配
         matched_keywords = []
+        dim_marker = f"[DIM:{dim_id}]"
+        marker_found = dim_marker in text
         for keyword in keywords:
             if keyword in text:
                 matched_keywords.append(keyword)
 
-        # 计算覆盖分数
-        if keywords:
+        # 计算覆盖分数（标记命中视为全覆盖）
+        if marker_found:
+            coverage.coverage_score = 1.0
+            coverage.covered = True
+        elif keywords:
             coverage.coverage_score = len(matched_keywords) / len(keywords)
+            coverage.covered = coverage.coverage_score >= 0.3  # 30% 阈值
         else:
             coverage.coverage_score = 0.0
-
-        # 判断是否覆盖
-        coverage.covered = coverage.coverage_score >= 0.3  # 30% 阈值
+            coverage.covered = False
 
         # 收集证据
         coverage.evidence = matched_keywords[:5]

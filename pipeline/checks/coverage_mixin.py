@@ -397,7 +397,8 @@ class CoverageChecksMixin:
             # 否则"写了维度但缺子要素"仍被拦截，杜绝软覆盖伪装。
             _dim_probe = dim.get("question", "") or dim.get("name", "")
             _probe_words = [w for w in re.findall(r"[一-龥]{2,6}", _dim_probe)[:4] if w]
-            if _probe_words and not any(w in report_text for w in _probe_words):
+            _dim_marker = f"[DIM:{dim_id}]"
+            if _probe_words and not any(w in report_text for w in _probe_words) and _dim_marker not in report_text:
                 continue  # 维度被裁剪，豁免其子要素
             total_sub_elements += len(sub_elems)
             dim_uncovered = []

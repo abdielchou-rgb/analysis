@@ -2406,6 +2406,34 @@ class SectionWriter:
 
                     logger.warning("[DIM-PARALLEL] group failed: %s\n%s", str(e)[:300], _tb.format_exc()[-1500:])
 
+        # P1 (2026-09-02): 维度级自愈——空组自动重写（换 provider + 简化 prompt）
+        _failed_groups = [g for g in _target_groups if g["group_name"] not in group_texts]
+        if _failed_groups:
+            logger.info("[SELF-HEAL] %d groups failed, retrying with fallback provider...", len(_failed_groups))
+            for g in _failed_groups:
+                gname = g["group_name"]
+                try:
+                    dims = g.get("dimensions", [])
+                    dim_ids = [d.get("id", "") for d in dims if isinstance(d, dict)]
+                    retry_prompt = (
+                        f"写 {gname}，覆盖以下维度：{', '.join(dim_ids)}\n直接写正文，Markdown 标题。每段至少200字。"
+                    )
+                    retry_text = self._call_llm(
+                        retry_prompt,
+                        0,
+                        learning_findings,
+                        style_override,
+                        data_injection,
+                        provider="deepseek",  # fallback to deepseek
+                    )
+                    if retry_text and len(retry_text.strip()) >= 100:
+                        group_texts[gname] = retry_text
+                        logger.info("[SELF-HEAL] group %s recovered (%d chars)", gname, len(retry_text))
+                    else:
+                        logger.warning("[SELF-HEAL] group %s still empty after retry", gname)
+                except Exception as _re:
+                    logger.warning("[SELF-HEAL] group %s retry failed: %s", gname, str(_re)[:200])
+
         # 非目标组：尝试从 prev_report_text 提取复用（按组名标题定位）
         for g in _keep_groups:
             gname = g["group_name"]

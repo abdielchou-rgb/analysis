@@ -159,6 +159,36 @@ class SACLoader:
     def get_forbidden_patterns(self) -> list[str]:
         return self._data.get("forbidden_patterns", [])
 
+    # P0 (2026-09-02): 同义词扩展表——解决"写了但关键词不匹配"的覆盖误判
+    _SYNONYM_EXPANSION: dict[str, list[str]] = {
+        "bold_call": ["判断", "预期", "预计", "目标价", "评级", "看多", "看空"],
+        "core_disagreement": ["分歧点", "对立观点", "矛盾", "争议点", "分歧看法"],
+        "industry_boundary": ["行业范围", "产业边界", "赛道", "细分行业"],
+        "life_cycle": ["阶段", "周期", "初期", "快速成长", "稳定期", "衰退期"],
+        "policy": ["政策环境", "监管环境", "合规", "政策风险", "政策利好"],
+        "market_size": ["市场总量", "行业规模", "市场容量", "渗透率"],
+        "supply_demand": ["供给端", "需求端", "供需平衡", "供需缺口", "产能利用率"],
+        "profit_pool": ["利润分布", "利润结构", "毛利", "净利", "盈利能力", "盈利质量"],
+        "competitive": ["竞争", "市占率", "市场份额", "龙头", "行业格局", "集中度CR"],
+        "technology": ["技术", "研发", "专利", "技术壁垒", "技术储备"],
+        "capital_market": ["估值水平", "PE", "PB", "PS", "市值", "股价", "目标价"],
+        "business_model": ["盈利来源", "收入模式", "核心能力", "价值主张"],
+        "financial_analysis": ["财务", "营收增速", "净利润", "ROE", "ROIC", "资产负债"],
+        "competitive_position": ["市场地位", "行业地位", "排名", "护城河", "竞争优势"],
+        "growth_drivers": ["增长动力", "增长逻辑", "驱动因素", "增长空间"],
+        "governance_esg": ["公司治理", "ESG", "信息披露", "独立董事", "股东权益"],
+        "valuation_assessment": ["估值", "合理估值", "估值区间", "估值水平", "隐含空间"],
+        "falsification": ["证伪", "风险点", "反转条件", "看错的可能", "假设失效"],
+        "catalyst": ["催化剂", "触发因素", "时间窗口", "关键事件", "拐点"],
+        "capital_flow": ["资金", "北向资金", "机构持仓", "主力", "流入", "流出"],
+        "global_peer_comparison": ["全球", "国际", "海外", "对标", "可比"],
+        "overseas_revenue": ["海外", "境外", "出口", "国际化"],
+        "management_quality": ["管理层", "高管", "团队", "治理", "执行力"],
+        "accounting_penetration": ["会计", "审计", "应收", "商誉", "减值", "收入确认"],
+        "peer_benchmarking": ["同业", "同行", "可比", "对标", "benchmark"],
+        "industry_chain": ["产业链", "供应链", "上游", "下游", "价值链"],
+    }
+
     def get_dimension_keywords(self) -> dict[str, list[str]]:
         """Generate keyword match set for each dimension (for coverage checking)"""
         base_keywords = {
@@ -612,6 +642,9 @@ class SACLoader:
             if not dim_id:
                 continue
             keywords = list(base_keywords.get(dim_id, [dim_id]))
+            # P0: 同义词扩展——同义词表中匹配的词也加入关键词集合
+            if dim_id in self._SYNONYM_EXPANSION:
+                keywords.extend(self._SYNONYM_EXPANSION[dim_id])
             q = dim.get("question", "")
             if q:
                 # 2026-08-30 修复：原只取前30字，漏掉问题尾部的关键词；

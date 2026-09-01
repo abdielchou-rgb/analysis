@@ -1,0 +1,147 @@
+{
+  "reports": [
+    {
+      "asset": "宁德时代",
+      "report_type": "listed_company",
+      "timestamp": "2026-09-01T22:46:03.795218",
+      "gate_passed": false,
+      "gate_score": 0,
+      "failures": [
+        {
+          "name": "AIGC痕迹",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "source_entity",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "so_what_chain",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "chart_analysis_quality",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "cross_section_consistency",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "data_dict_refs",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "layout_quality",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "completeness_scan",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "financial_value_consistency",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "inline_citations",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "anti_patterns",
+          "class": "",
+          "severity": "warning"
+        }
+      ]
+    },
+    {
+      "asset": "宁德时代",
+      "report_type": "listed_company",
+      "timestamp": "2026-09-01T23:29:51.203737",
+      "gate_passed": false,
+      "gate_score": 0,
+      "failures": [
+        {
+          "name": "AIGC痕迹",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "source_entity",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "so_what_chain",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "chart_analysis_quality",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "cross_section_consistency",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "data_dict_refs",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "layout_quality",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "completeness_scan",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "methodology_compliance",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "inline_citations",
+          "class": "",
+          "severity": "warning"
+        },
+        {
+          "name": "anti_patterns",
+          "class": "",
+          "severity": "warning"
+        }
+      ]
+    }
+  ],
+  "failure_patterns": {
+    "AIGC痕迹": 2,
+    "source_entity": 2,
+    "so_what_chain": 2,
+    "chart_analysis_quality": 2,
+    "cross_section_consistency": 2,
+    "data_dict_refs": 2,
+    "layout_quality": 2,
+    "completeness_scan": 2,
+    "financial_value_consistency": 1,
+    "inline_citations": 2,
+    "anti_patterns": 2,
+    "methodology_compliance": 1
+  },
+  "rule_updates": []
+}
