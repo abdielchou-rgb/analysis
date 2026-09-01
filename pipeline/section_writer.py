@@ -2470,12 +2470,14 @@ class SectionWriter:
             raise RuntimeError("维度并行全部失败")
 
         # 4. 编辑合并：DeepSeek 读所有组输出 → 合成连贯报告（治重复/乱序/补 Bold Call）
+        import re as _re_local
+
         merged = self._editor_merge(asset, ordered, _dd_str, draft_provider)
         report = self._remove_md_artifacts(merged)
         report = self._inject_report_header(report)
-        report = re.sub(r"\{CHART:(\w+)\}", r"![](chart:\1)", report)
+        report = _re_local.sub(r"\{CHART:(\w+)\}", r"![](chart:\1)", report)
         # 兼容 LLM 按提示生成的 {{[CHART:fig_id, title]}} 格式
-        report = re.sub(r"\{\{\[CHART:(\w+)[^\]]*\]\}\}", r"![](chart:\1)", report)
+        report = _re_local.sub(r"\{\{\[CHART:(\w+)[^\]]*\]\}\}", r"![](chart:\1)", report)
         # R89（2026-08-30 P0）：CSRC/交易所研报合规五大硬性要求
         now = datetime.now()
         date_str = f"{now.year}年{now.month:02d}月"
@@ -2523,16 +2525,16 @@ class SectionWriter:
         _compliance_text = (
             _rating_table + _conflict + _important_notice + _no_guarantee + _analyst_cert + _data_disclaimer
         )
-        _first_h2 = re.search(r"\n## ", report)
+        _first_h2 = _re_local.search(r"\n## ", report)
         if _first_h2:
             _pos = _first_h2.start()
             report = report[:_pos] + "\n" + _compliance_text + report[_pos:]
         # R89（2026-08-30 P0）：将附录图表引用转为随文嵌入，防止 layout_quality P0 阻断
-        _appx_match = re.search(r"\n## 附录[：:].*?\n", report)
+        _appx_match = _re_local.search(r"\n## 附录[：:].*?\n", report)
         if _appx_match:
             _appx_start = _appx_match.start()
             _appx_text = report[_appx_start:]
-            _appx_charts = re.findall(r"!\[([^\]]*)\]\(([^)]+\.png)\)", _appx_text)
+            _appx_charts = _re_local.findall(r"!\[([^\]]*)\]\(([^)]+\.png)\)", _appx_text)
             if _appx_charts:
                 _chart_insert_map = [
                     (("fig_business_model",), ("## A 公司基本面")),
@@ -2549,14 +2551,14 @@ class SectionWriter:
                     for _cid in _chart_id_list:
                         for _alias, _path in _appx_charts:
                             if _cid in _alias:
-                                _sec_match = re.search(r"\n" + re.escape(_sec_kw) + r"\b", _body)
+                                _sec_match = _re_local.search(r"\n" + _re_local.escape(_sec_kw) + r"\b", _body)
                                 if _sec_match:
                                     _sec_pos = _sec_match.start()
                                     _after_sec = _body[_sec_pos:]
                                     _last_dim = max(
                                         [
                                             _after_sec.find(x)
-                                            for x in re.findall(r"\n###? \[DIM:", _after_sec)
+                                            for x in _re_local.findall(r"\n###? \[DIM:", _after_sec)
                                             if _after_sec.find(x) > 0
                                         ]
                                         or [0]
