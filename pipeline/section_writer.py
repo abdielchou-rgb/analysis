@@ -1273,6 +1273,11 @@ class SectionWriter:
             "## 图表",
             chart_md,
             self._build_chart_assignments(),
+            # P4-H: 图表嵌入强制——SAC声明的每张图必须嵌入正文
+            "## [图表嵌入强制] 上方【图表分配】中分配给本组的每张图必须在正文中嵌入。",
+            "嵌入格式：![](chart:fig_id)（放在对应分析段落后）。"
+            "缺少任何一张分配图会触发 chart_completeness ERROR。"
+            "即使图表数据不完美，也必须嵌入（可标注'数据有限'）。",
         ]
         rhythm = self.rhythm
         if rhythm and rhythm.get("principles"):
