@@ -906,6 +906,7 @@ class SectionWriter:
         # R13（2026-08-01 三算力架构）：起草段可用 draft_provider 指定资源
         # （Marvis=agent_provider 多实例并行 / local=Ollama），编辑合并仍走 DeepSeek。
         def _write_segment(idx, seg, prev_s):
+
             logger.info("Writing seg %d/3: %s (provider=%s)", idx + 1, seg["label"][:40], draft_provider)
             dim_defs = self._build_dimension_defs_full(seg["dimension_ids"])
             # FP3-D5: Bold Call辩论(bull→bear→judge) — 在前瞻层触发
@@ -1029,7 +1030,9 @@ class SectionWriter:
                 texts.append(text)
                 summaries.append(self._extract_summary(text))
         report = self._assemble(asset, texts)
-        report = re.sub(r"\{CHART:(\w+)\}", r"![](chart:\1)", report)
+        import re as _re_local
+
+        report = _re_local.sub(r"\{CHART:(\w+)\}", r"![](chart:\1)", report)
         report = self._remove_md_artifacts(report)
         return report
 
@@ -1934,7 +1937,9 @@ class SectionWriter:
 
     @staticmethod
     def _extract_summary(text):
-        m = re.findall(r"[^。]*?(?:我们认为|我们判断|核心判断|核心结论|我们预计)[^。]*。", text)
+        import re as _re_summ
+
+        m = _re_summ.findall(r"[^。]*?(?:我们认为|我们判断|核心判断|核心结论|我们预计)[^。]*。", text)
         return " | ".join(m[:3]) if m else text[:200].replace("\n", " ") + "…"
 
     @staticmethod
