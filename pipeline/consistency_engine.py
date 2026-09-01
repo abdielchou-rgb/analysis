@@ -217,6 +217,15 @@ class ConsistencyEngine:
         if not report_text:
             return {"passed": True, "conflicts": [], "clusters": {}}
 
+        # R98: 排除评级定义表——表内"15%/5%-15%/-10%-5%"是评级阈值模板，
+        # 非数据点，不应与正文目标价涨幅做一致性检查（误报根因）。
+        _cleaned = re.sub(
+            r"## 评级定义与说明.*?(?=\n## |\Z)",
+            "",
+            report_text,
+            flags=re.DOTALL,
+        )
+
         # 1. 按语义簇提取数值
         cluster_map: dict[str, ValueCluster] = {}
         for item in self.CLUSTERS:
@@ -225,7 +234,7 @@ class ConsistencyEngine:
             threshold = item[3] if len(item) > 3 else self.threshold_ratio
             region_group = item[4] if len(item) > 4 else None
 
-            for m in re.finditer(pattern, report_text):
+            for m in re.finditer(pattern, _cleaned):
                 # 组结构：区域前缀可能在第1组（有区域组时），数字/单位在后
                 if region_group is not None:
                     # 有区域捕获组：(区域)(数字)(单位)
@@ -240,7 +249,7 @@ class ConsistencyEngine:
                 # 市场规模按区域分流
                 if label == "市场规模":
                     # 派生口径排除：前 15 字含"对应/约合/隐含" → 派生值，跳过
-                    before_15 = report_text[max(0, m.start() - 15) : m.start()]
+                    before_15 = _cleaned[max(0, m.start() - 15) : m.start()]
                     if re.search(r"对应|约合|隐含|折合", before_15):
                         continue
                     # R84（2026-08-06）：句内过滤强化——排除"若按X%增速建模/预计/预测"的
@@ -252,31 +261,31 @@ class ConsistencyEngine:
                     if region:
                         actual_label = f"市场规模_{'中国' if region in ('中国', '国内') else '全球'}"
                     else:
-                        actual_label = self._split_market_by_sentence(report_text, m)
+                        actual_label = self._split_market_by_sentence(_cleaned, m)
                 elif label == "出货量":
                     # R8：出货量按区域分流，与市场规模对称
                     if region:
                         actual_label = f"出货量_{'中国' if region in ('中国', '国内') else '全球'}"
                     else:
-                        actual_label = self._split_volume_by_sentence(report_text, m)
+                        actual_label = self._split_volume_by_sentence(_cleaned, m)
                 # R9（2026-08-02）：目标价金额按情景前缀分流
                 # "基准目标价52元" vs "悲观目标价38元" 属不同情景，非冲突。
                 # 在目标价前10字窗口扫描情景限定词，命中则追加 _情景名 后缀。
                 elif label == "目标价金额":
-                    before_10 = report_text[max(0, m.start() - 10) : m.start()]
+                    before_10 = _cleaned[max(0, m.start() - 10) : m.start()]
                     # R88c（2026-08-06）：情景窗口从 10 字扩展至 40 字，
                     # 覆盖"悲观情景（PE压缩至20x）对应目标价27元"——情景词
                     # "悲观情景"位于目标价前 18 字符，"对应"等修饰词夹在中间，
                     # 原 10 字窗口漏检导致双情景披露被判冲突。
-                    _scen_win = report_text[max(0, m.start() - 40) : m.start()] + m.group(0)
+                    _scen_win = _cleaned[max(0, m.start() - 40) : m.start()] + m.group(0)
                     scenario = re.search(r"(基准|悲观|乐观|中性|保守|激进|核心|下修|上调|下调|回撤|情景)", _scen_win)
                     if scenario:
                         actual_label = f"目标价金额_{scenario.group(1)}"
                 start = max(0, m.start() - 20)
-                end = min(len(report_text), m.end() + 20)
-                ctx = report_text[start:end].replace("\n", " ")
+                end = min(len(_cleaned), m.end() + 20)
+                ctx = _cleaned[start:end].replace("\n", " ")
                 # 年份捕获：匹配前 30 字找最近的 20XX（不是第一个）
-                before = report_text[max(0, m.start() - 30) : m.start()]
+                before = _cleaned[max(0, m.start() - 30) : m.start()]
                 years = list(re.finditer(r"(20\d{2})", before))
                 year = years[-1].group(1) if years else ""
                 if actual_label not in cluster_map:
@@ -289,7 +298,7 @@ class ConsistencyEngine:
         # 修复：归一化指标名——去掉公司名/主体前缀，只保留核心指标词（如"海外收入占比"）。
         # R53审计（2026-08-03 P0-2）：同义词归一化——市占率/市场份额/市场占有率/份额
         # 归一到"市占率"，防止措辞规避（"市场份额"→"市占率"）绕过检测。
-        for m in re.finditer(self.RATIO_PATTERN, report_text):
+        for m in re.finditer(self.RATIO_PATTERN, _cleaned):
             metric = m.group(1)
             # 归一化指标名：去掉公司名/主体前缀，只保留核心指标词
             # 核心指标词 = 以"占比/份额/渗透率"结尾的核心短语
@@ -313,17 +322,17 @@ class ConsistencyEngine:
                     break
             val_str = m.group(2)
             start = max(0, m.start() - 20)
-            end = min(len(report_text), m.end() + 20)
-            ctx = report_text[start:end].replace("\n", " ")
-            before = report_text[max(0, m.start() - 30) : m.start()]
+            end = min(len(_cleaned), m.end() + 20)
+            ctx = _cleaned[start:end].replace("\n", " ")
+            before = _cleaned[max(0, m.start() - 30) : m.start()]
             years = list(re.finditer(r"(20\d{2})", before))
             year = years[-1].group(1) if years else ""
             # R81（2026-08-06）：占比类按区域主体分簇——"德国当前智能化渗透率80%"与
             # "中国当前智能化渗透率40%"是不同主体，值不可比，不应判为同一指标冲突。
             # 区域判定取匹配所在句窗口（对标市场规模分流语义）：含海外主体词→_海外簇，
             # 含中国/国内→_中国簇；无区域主体词的保持原簇（现有矛盾检测不降级）。
-            _wstart = max(0, report_text.rfind("。", 0, m.start()) + 1, report_text.rfind("\n", 0, m.start()) + 1)
-            _window = report_text[_wstart : m.start()]
+            _wstart = max(0, _cleaned.rfind("。", 0, m.start()) + 1, _cleaned.rfind("\n", 0, m.start()) + 1)
+            _window = _cleaned[_wstart : m.start()]
             _region_suffix = ""
             if re.search(r"德国|美国|日本|欧洲|海外|全球|韩国|英国|法国|意大利", _window):
                 _region_suffix = "_海外"

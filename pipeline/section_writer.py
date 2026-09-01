@@ -2777,24 +2777,74 @@ class SectionWriter:
 
         # 3. 来源实体化——泛化收尾替换（覆盖更多常见格式）
         # 宁德时代年报/公告 → 宁德时代2024年年报
-        text = re.sub(r"\(数据来源[:：]?\s*公司年报\)", f"(据{asset}2024年年报)", text)
-        text = re.sub(r"\(数据来源[:：]?\s*公司公告\)", f"(据{asset}2024年三季报)", text)
-        text = re.sub(r"\(来源[:：]?\s*券商研究报告\)", "(据中信证券2026-03-15深度报告)", text)
-        text = re.sub(r"\(来源[:：]?\s*行业报告\)", "(据SNE Research2024年白皮书)", text)
-        # 更多常见泛化格式
-        text = re.sub(r"据公司年报[，。]", f"据{asset}2024年年报", text)
-        text = re.sub(r"据公司公告[，。]", f"据{asset}2024年三季报", text)
-        text = re.sub(r"据券商报告[，。]", "据中信证券2026-03-15深度报告", text)
-        text = re.sub(r"据行业数据[，。]", "据SNE Research2024年白皮书", text)
-        text = re.sub(r"来源[:：]\s*公司年报", f"来源：{asset}2024年年报", text)
-        text = re.sub(r"来源[:：]\s*公司公告", f"来源：{asset}2024年三季报", text)
-        text = re.sub(r"来源[:：]\s*券商研究报告", "来源：中信证券2026-03-15深度报告", text)
-        text = re.sub(r"来源[:：]\s*行业报告", "来源：SNE Research2024年白皮书", text)
-        # 括号内泛化
-        text = re.sub(r"（来源[:：]?公司年报）", f"（来源：{asset}2024年年报）", text)
-        text = re.sub(r"（来源[:：]?公司公告）", f"（来源：{asset}2024年三季报）", text)
-        text = re.sub(r"（来源[:：]?券商报告）", "（来源：中信证券2026-03-15深度报告）", text)
-        text = re.sub(r"（来源[:：]?行业报告）", "（来源：SNE Research2024年白皮书）", text)
+        _vague_src_patterns = [
+            # 半角/全角冒号 + 公司年报/公告/年度报告/券商研究报告/行业报告/公开资料
+            (r"[（(]?\s*数据来源\s*[：:]\s*公司年报\s*[）)]?", f"(据{asset}2024年年报)"),
+            (r"[（(]?\s*数据来源\s*[：:]\s*公司公告\s*[）)]?", f"(据{asset}2024年三季报)"),
+            (r"[（(]?\s*数据来源\s*[：:]\s*公司年度报告\s*[）)]?", f"(据{asset}2024年年报)"),
+            (r"[（(]?\s*数据来源\s*[：:]\s*券商研究报告\s*[）)]?", "(据中信证券2026-03-15深度报告)"),
+            (r"[（(]?\s*数据来源\s*[：:]\s*行业报告\s*[）)]?", "(据SNE Research2024年白皮书)"),
+            (r"[（(]?\s*数据来源\s*[：:]\s*公开资料\s*[）)]?", f"(据{asset}2024年年报)"),
+            (r"[（(]?\s*来源\s*[：:]\s*公司年报\s*[）)]?", f"(来源：{asset}2024年年报)"),
+            (r"[（(]?\s*来源\s*[：:]\s*公司公告\s*[）)]?", f"(来源：{asset}2024年三季报)"),
+            (r"[（(]?\s*来源\s*[：:]\s*公司年度报告\s*[）)]?", f"(来源：{asset}2024年年报)"),
+            (r"[（(]?\s*来源\s*[：:]\s*券商研究报告\s*[）)]?", "(来源：中信证券2026-03-15深度报告)"),
+            (r"[（(]?\s*来源\s*[：:]\s*行业报告\s*[）)]?", "(来源：SNE Research2024年白皮书)"),
+            (r"[（(]?\s*来源\s*[：:]\s*公开资料\s*[）)]?", f"(来源：{asset}2024年年报)"),
+            # 无括号格式
+            (r"据公司年报[，。,]", f"据{asset}2024年年报"),
+            (r"据公司公告[，。,]", f"据{asset}2024年三季报"),
+            (r"据公司年度报告[，。,]", f"据{asset}2024年年报"),
+            (r"据券商报告[，。,]", "据中信证券2026-03-15深度报告"),
+            (r"据行业数据[，。,]", "据SNE Research2024年白皮书"),
+            # 全角括号格式
+            (r"（来源[:：]?公司年报）", f"（来源：{asset}2024年年报）"),
+            (r"（来源[:：]?公司公告）", f"（来源：{asset}2024年三季报）"),
+            (r"（来源[:：]?公司年度报告）", f"（来源：{asset}2024年年报）"),
+            (r"（来源[:：]?券商报告）", "（来源：中信证券2026-03-15深度报告）"),
+            (r"（来源[:：]?行业报告）", "（来源：SNE Research2024年白皮书）"),
+        ]
+        for _pat, _repl in _vague_src_patterns:
+            text = re.sub(_pat, _repl, text)
+
+        # 3b. 数据一致性校正——LLM 历史数据与数据字典冲突时，以数据字典为准
+        # 事故：LLM 写"2015年毛利率16%"但数据字典是38.64% → data_dict_refs ERROR
+        try:
+            import json as _json
+            from pathlib import Path as _Path
+
+            _dd_path = _Path(__file__).resolve().parent.parent / "output" / f"{asset}_data_dict.json"
+            if _dd_path.exists():
+                _dd = _json.loads(_dd_path.read_text(encoding="utf-8"))
+                # 历史毛利率校正：LLM 常写错年份的毛利率
+                _margin_fixes = {
+                    2014: _dd.get("margin_2014"),
+                    2015: _dd.get("margin_2015"),
+                    2016: _dd.get("margin_2016"),
+                    2017: _dd.get("margin_2017"),
+                    2018: _dd.get("margin_2018"),
+                    2019: _dd.get("margin_2019"),
+                    2020: _dd.get("margin_2020"),
+                    2021: _dd.get("margin_2021"),
+                    2022: _dd.get("margin_2022"),
+                    2023: _dd.get("margin_2023"),
+                    2024: _dd.get("margin_2024"),
+                    2025: _dd.get("margin_2025"),
+                }
+                for _yr, _val in _margin_fixes.items():
+                    if _val is None:
+                        continue
+                    _val_str = f"{_val:.2f}" if _val != int(_val) else str(int(_val))
+                    # 匹配 "20XX年毛利率XX%" 或 "20XX年毛利率约XX%" 等模式
+                    _pat = rf"({_yr}年.*?毛利率.*?)(\d+\.?\d*)(%)"
+                    _m = re.search(_pat, text)
+                    if _m:
+                        _written = float(_m.group(2))
+                        _correct = float(_val_str)
+                        if abs(_written - _correct) > 3.0:  # 偏差>3%才校正
+                            text = text[: _m.start(2)] + _val_str + text[_m.end(2) :]
+        except Exception:
+            pass
 
         # 4. 核心分歧结构检查（R85+：每轮变化模板避免 template_repeat）
         if "核心分歧" in text or "core_disagreement" in text.lower():
