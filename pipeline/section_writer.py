@@ -1141,7 +1141,7 @@ class SectionWriter:
             f"你是资深分析师，为《{asset}深度研究报告》第{seg_idx + 1}部分「{seg['label']}」生成章节骨架。\n\n"
             f"## 分析维度（必须全部出现在骨架中）\n{dim_defs[:1500]}\n\n"
             f"## 可用数据（骨架中的数据点从以下引用）\n{data_str[:800]}\n\n"
-            + self._build_data_anchor_card(data_context, asset) + "\n\n"
+            + self._build_data_anchor_card(self._last_data_context or {}, asset) + "\n\n"
             f"## 图表\n{chart_md[:500]}\n\n"
             f"请只输出本章节的**章节骨架**（Markdown 标题 + 每小节 1-2 行要点 + 计划引用的数据），"
             f"不要展开成正文。格式：\n"
@@ -1342,7 +1342,7 @@ class SectionWriter:
             # 数值锚卡（2026-09-02）：锁定全文关键数值，禁止 LLM 自由发挥
             # 根因：LLM 在不同章节写不同数值（目标价310/387/175、增速12%/15%/20%），
             # 导致 indicator_consistency / cross_section_consistency / rating_target 三项 ERROR。
-            self._build_data_anchor_card(data_context, asset),
+            self._build_data_anchor_card(self._last_data_context or {}, asset),
             "",
             # R7 共享数据字典：正文数值必须引用 {ref:key}，禁止自由输出数字。
             # 这是"收敛机制"第二块 —— 数据一致性从架构上保证，不靠 LLM 自觉。
