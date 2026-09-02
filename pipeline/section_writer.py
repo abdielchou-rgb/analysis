@@ -210,6 +210,39 @@ class SectionWriter:
             prev = s
         return segs
 
+    def _replace_placeholders(self, text: str) -> str:
+        """B1: 占位符替换——只替换 LLM 显式发的标记，绝不猜数。
+
+        白名单标记 → compute 值映射：
+        - {{tp_primary}} → primary_target_price（目标价）
+        - 后续可扩展：{{eps_primary}}、{{pe_primary}} 等
+
+        吸取 NUM-FIX 教训：只替换标记、不猜测数字。
+        """
+        import re as _re
+
+        if not text or "{{" not in text:
+            return text
+
+        _cd = self._last_data_context or {}
+        _replacements = {}
+
+        # 目标价占位符
+        _tp = _cd.get("target_price")
+        if _tp and isinstance(_tp, (int, float)) and _tp > 0:
+            _replacements["{{tp_primary}}"] = str(_tp)
+
+        # Gate 断言：正文无残留 {{}}
+        for placeholder, value in _replacements.items():
+            text = text.replace(placeholder, value)
+
+        # 检测残留占位符（LLM 可能自创 {{xxx}}）
+        _residual = _re.findall(r"\{\{[a-z_]+\}\}", text)
+        if _residual:
+            logger.warning("[B1-PLACEHOLDER] Residual placeholders in text: %s", _residual[:5])
+
+        return text
+
     def _build_data_anchor_card(self, data_context: dict, asset: str) -> str:
         """数值锚卡：从 compute pipeline 结果中提取关键数值，锁定全文。
 
@@ -1050,7 +1083,7 @@ class SectionWriter:
                     )
                     text = self._call_llm(prompt, idx, learning_findings, style_override, data_injection)
                     if text and len(text.strip()) > 100:
-                        return text
+                        return self._replace_placeholders(text)
             prompt = self._build_prompt_v4(
                 idx,
                 seg,
@@ -1070,7 +1103,7 @@ class SectionWriter:
             )
             if not text or len(text.strip()) < 50:
                 raise RuntimeError("SectionWriter produced empty output for segment %d" % idx)
-            return text
+            return self._replace_placeholders(text)
 
         try:
             from concurrent.futures import ThreadPoolExecutor
@@ -1360,6 +1393,14 @@ class SectionWriter:
             # 根因：LLM 在不同章节写不同数值（目标价310/387/175、增速12%/15%/20%），
             # 导致 indicator_consistency / cross_section_consistency / rating_target 三项 ERROR。
             self._build_data_anchor_card(self._last_data_context or {}, asset),
+            "",
+            # B1: 占位符协议——目标价必须用 {{tp_primary}}，后处理替换为 compute 值
+            # 只替换 LLM 显式发的标记，绝不猜数（吸取 NUM-FIX 教训）
+            "## [占位符协议] 目标价必须使用占位符",
+            "全文引用目标价时，必须使用占位符 `{{tp_primary}}`（双花括号），禁止直接写数字。"
+            "后处理会自动替换为管线计算的真实目标价。若锚卡中有目标价，仍须用占位符。"
+            "示例：'我们给出增持评级，12个月目标价{{tp_primary}}元'。"
+            "禁止编造目标价数字；占位符是唯一允许的目标价表达方式。",
             "",
             "【数值一致性强制】全文所有章节必须使用锚卡中的统一数值。"
             "禁止在同一报告中对同一指标写不同数字（如目标价不得出现310和387两个值）。"
@@ -2526,6 +2567,9 @@ class SectionWriter:
                 )
             if not text or len(text.strip()) < 100:
                 raise RuntimeError(f"组 {gname} 产出为空")
+            # B1: 占位符替换——{{tp_primary}} → 管线计算的真实目标价
+            # 只替换 LLM 显式发的标记，绝不猜数（吸取 NUM-FIX 教训）
+            text = self._replace_placeholders(text)
             return gname, text
 
         group_texts = {}

@@ -124,7 +124,7 @@ class ContentFormatChecksMixin:
 
         # 占位符模式：XXX/TODO/待填写/TBD/FIXME/xxx/___/… 等
         placeholder_patterns = [
-            # R77（2026-08-05 验证）： 边界在中文上下文不生效（ 只认 ASCII word
+            # R77（2026-08-05 验证）： 边界在中文上下文不生效（ 只认 ASCII word
             # boundary），"我们判断XXX技术路线"的 XXX 会漏检。改用直接匹配，
             # 中文报告中 XXX/TODO 等大写占位符是未替换标记的主流形态。
             (r"XXX", "XXX占位符"),
@@ -133,6 +133,8 @@ class ContentFormatChecksMixin:
             (r"TBD", "TBD标记"),
             (r"FIXME", "FIXME标记"),
             (r"_{3,}", "下划线占位（___）"),
+            # B1: 占位符协议残留——LLM 未替换的 {{tp_primary}} 等标记
+            (r"\{\{[a-z_]+\}\}", "占位符协议残留（B1 {{xxx}}）"),
             # R77（2026-08-05 验证）：中文省略号"……"是正常标点（语意延续），
             # 不是占位符，不应拦截。真实占位符由 XXX/TODO/待填写/TBD/FIXME 覆盖。
         ]
