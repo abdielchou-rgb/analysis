@@ -25,15 +25,15 @@ logger = logging.getLogger("2hao.route_policy")
 # 模式 → 节点 → provider 路由策略（2026-08-30: opencode_go 已损坏，写作任务切 zhipu）
 ROUTE_POLICY = {
     "perf": {
-        "write": "zhipu",  # 论点单元写作：zhipu/glm-4.7
-        "skeleton": "zhipu",  # 骨架/大纲：zhipu
+        "write": "deepseek",  # 论点单元写作：DeepSeek（zhipu 429 频繁，切 deepseek 兜底）
+        "skeleton": "deepseek",  # 骨架/大纲：DeepSeek（zhipu 429 兜底）
         "merge": "deepseek",  # 合并组装：DeepSeek（质量红线）
-        "revise": "zhipu",  # 修订（Gate 反馈）：zhipu
+        "revise": "deepseek",  # 修订（Gate 反馈）：DeepSeek（zhipu 429 兜底）
         "gate_review": "deepseek",  # Gate 失败审稿：DeepSeek（双模型对抗）
         "extract": "openrouter",  # 轻量提取/分类：OpenRouter flash
         "prefetch": "agent_provider",  # 后台预取：Marvis 免费
         "roundtable": "opencode_zen",  # 终局圆桌：OpenCode Zen 异源
-        "research_planner": "zhipu",  # 研究规划：zhipu（快速）
+        "research_planner": "deepseek",  # 研究规划：DeepSeek（zhipu 429 兜底）
     },
     "train": {
         "write": "agent_provider",  # 论点单元写作：Marvis（免费训练）
