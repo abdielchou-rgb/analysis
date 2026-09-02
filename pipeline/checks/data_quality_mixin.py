@@ -1408,3 +1408,13 @@ class DataQualityChecksMixin:
                 severity=_sev,
             )
         return GateCheckResult("anti_patterns", True, 0.8, f"{detail}（轻度，提示）", severity="warning")
+
+    def _check_numerical_tier(self) -> GateCheckResult:
+        """B2: Tier 数值分级——Tier-1 数字必须有 canonical 来源或 [注N] 标注。
+
+        Tier-1：目标价/估值/财务指标/评级 → 必须 ∈ canonical 或带 [注N]→URL
+        Tier-2：评论性数字 → 要求 source token
+        """
+        from pipeline.checks.numerical_tier import check_numerical_tier_classification
+
+        return check_numerical_tier_classification(self.report_text or "")
