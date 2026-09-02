@@ -1637,7 +1637,8 @@ class E2EOrchestratorV2:
             "pipeline": "E2EOrchestratorV2",
             # P0-1 (2026-09-01): 报告正文哈希绑定——export_report 校验时重算比对，
             # 防指纹被复制改名伪造 / 跨资产复用
-            "report_sha256": _report_hash(ctx),
+            # W3 修复：用当前 context 中的 final_text 重新计算哈希，确保与 export 时一致
+            "report_sha256": _report_hash(ctx) or _report_hash({"report_text": ctx.get("report_text", "")}),
         }
         fp_path.write_text(_json.dumps(fingerprint, ensure_ascii=False, indent=2), encoding="utf-8")
         logger.info("[FINGERPRINT] 管线指纹已写入: %s", fp_path)
