@@ -1,0 +1,108 @@
+{
+  "version": "v2026-09-02",
+  "description": "Golden truth set for 2hao-analyst Gate regression testing. Each case has known correct values from real reports or compute engine output.",
+  "cases": [
+    {
+      "id": "G001",
+      "asset": "宁德时代",
+      "report_type": "listed_company",
+      "category": "target_price",
+      "field": "primary_target_price",
+      "expected_source": "DCF",
+      "expected_range": [200, 400],
+      "notes": "DCF fair_value from compute engine"
+    },
+    {
+      "id": "G002",
+      "asset": "宁德时代",
+      "report_type": "listed_company",
+      "category": "rating",
+      "field": "rating",
+      "expected_value": "增持",
+      "expected_range": null,
+      "notes": "Standard listed company rating"
+    },
+    {
+      "id": "G003",
+      "asset": "宁德时代",
+      "report_type": "listed_company",
+      "category": "financial",
+      "field": "revenue_2024",
+      "expected_range": [3000, 5000],
+      "unit": "亿元",
+      "notes": "Revenue from annual report"
+    },
+    {
+      "id": "G004",
+      "asset": "宁德时代",
+      "report_type": "listed_company",
+      "category": "financial",
+      "field": "net_profit_2024",
+      "expected_range": [400, 600],
+      "unit": "亿元",
+      "notes": "Net profit from annual report"
+    },
+    {
+      "id": "G005",
+      "asset": "宁德时代",
+      "report_type": "listed_company",
+      "category": "consistency",
+      "field": "target_price_uniqueness",
+      "expected_value": true,
+      "notes": "Report must have exactly one target price, not multiple conflicting ones"
+    },
+    {
+      "id": "G006",
+      "asset": "宁德时代",
+      "report_type": "listed_company",
+      "category": "consistency",
+      "field": "rating_target_alignment",
+      "expected_value": true,
+      "notes": "Rating must align with target price upside (bullish → ≥10% upside)"
+    },
+    {
+      "id": "G007",
+      "asset": "宁德时代",
+      "report_type": "listed_company",
+      "category": "source",
+      "field": "source_annotation_rate",
+      "expected_min": 0.3,
+      "notes": "At least 30% of key claims must have source annotations"
+    },
+    {
+      "id": "G008",
+      "asset": "宁德时代",
+      "report_type": "listed_company",
+      "category": "format",
+      "field": "no_ai_disclaimer",
+      "expected_value": true,
+      "notes": "No 'AI generated' or similar disclaimers"
+    },
+    {
+      "id": "G009",
+      "asset": "宁德时代",
+      "report_type": "listed_company",
+      "category": "format",
+      "field": "no_placeholder_residual",
+      "expected_value": true,
+      "notes": "No XXX/TODO/TBD/___ or {{xxx}} residuals"
+    },
+    {
+      "id": "G010",
+      "asset": "宁德时代",
+      "report_type": "listed_company",
+      "category": "dimension",
+      "field": "sac_coverage",
+      "expected_min": 0.7,
+      "notes": "SAC dimension coverage ≥70%"
+    }
+  ],
+  "metadata": {
+    "created": "2026-09-02",
+    "last_updated": "2026-09-02",
+    "total_cases": 10,
+    "target_cases": 50,
+    "categories": ["target_price", "rating", "financial", "consistency", "source", "format", "dimension"],
+    "notes": "Expand to 50 cases by adding more assets and edge cases from real delivery reports"
+  }
+}
