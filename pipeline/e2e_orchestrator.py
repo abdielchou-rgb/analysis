@@ -1360,7 +1360,11 @@ class E2ENodes:
 
                 bce = BoldCallExtractor()
                 tm = TrackRecordManager()
-                calls = bce.extract_and_register(text, context.get("asset", ""), context.get("report_type"), tm=tm)
+                # W1.1: 传入 collected_data 供 target_price fallback 使用
+                calls = bce.extract_and_register(
+                    text, context.get("asset", ""), context.get("report_type"),
+                    tm=tm, collected_data=context.get("collected_data", {})
+                )
                 logger.info("[RECORD] %d bold calls registered", len(calls))
 
                 # ForwardPicksDB: persistent prediction record (V82 merge)
