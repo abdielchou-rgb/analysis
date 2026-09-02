@@ -1257,24 +1257,24 @@ class E2ENodes:
 
             safe = re.sub(r"[^\w一-鿿]+", "_", str(asset)).strip("_") or "asset"
             fp_path = output_dir / f"{safe}_pipeline_fingerprint.json"
-            if not fp_path.exists():
-                fp_path.write_text(
-                    _json.dumps(
-                        {
-                            "asset": asset,
-                            "report_type": context.get("report_type"),
-                            "style": style,
-                            "timestamp": _dt.datetime.now().isoformat(),
-                            "attempt": context.get("attempt", 0),
-                            "gate_score": gate.get("overall_score", gate.get("score", 0)),
-                            "gate_passed": True,
-                            "via_pipeline": True,
-                            "pipeline": "E2EOrchestratorV2",
-                            # P0-1: 正文哈希绑定——与 _write_pipeline_fingerprint 保持一致
-                            "report_sha256": _report_hash(context) or _report_hash({"report_text": text}),
-                        },
-                        ensure_ascii=False,
-                        indent=2,
+            # 始终覆写指纹——旧指纹的 hash 可能已过期（ctx["final_text"] 在 assemble 后被修改）
+            fp_path.write_text(
+                _json.dumps(
+                    {
+                        "asset": asset,
+                        "report_type": context.get("report_type"),
+                        "style": style,
+                        "timestamp": _dt.datetime.now().isoformat(),
+                        "attempt": context.get("attempt", 0),
+                        "gate_score": gate.get("overall_score", gate.get("score", 0)),
+                        "gate_passed": True,
+                        "via_pipeline": True,
+                        "pipeline": "E2EOrchestratorV2",
+                        # P0-1: 正文哈希绑定——用当前 text（与 export 一致）
+                        "report_sha256": _report_hash(context) or _report_hash({"report_text": text}),
+                    },
+                    ensure_ascii=False,
+                    indent=2,
                     ),
                     encoding="utf-8",
                 )
