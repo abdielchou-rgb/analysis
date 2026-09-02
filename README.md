@@ -140,6 +140,42 @@ scripts/
 
 ---
 
+## 最近更新 (2026-09-03)
+
+### 质量门 & 鲁棒性
+
+| 功能 | 文件 | 说明 |
+|------|------|------|
+| A1: Gate fail-closed | `pipeline/checks/base.py` | 空 error checks → 阻断，不放行 |
+| A2: judge_ver versioning | `pipeline/checks/base.py` | GateReport 含版本号+配置哈希 |
+| B1: placeholder protocol | `pipeline/e2e_orchestrator.py` | `{{tp_primary}}` 自动填充+残余检测 |
+| D1+D2: node contract | `pipeline/e2e_orchestrator.py` | 节点完成合约：空字段→整链失败 |
+| D3: retry by error class | `core/retry_policy.py` | 错误分类（速率限制/超时/未知）→不同重试策略 |
+| D4: 幂等台账 | `core/idempotent_ledger.py` | 侧效应先写 pending→执行→标记 done，崩溃恢复 |
+| D5: HITL durable | `core/hitl_durable.py` | 审批请求持久化，崩溃后可续跑 |
+| D6: fault injection tests | `tests/test_fault_injection.py` | 故障注入：验证 fail-closed 行为 |
+
+### 效度 & 校准
+
+| 功能 | 文件 | 说明 |
+|------|------|------|
+| C1: calibration panel | `core/calibration/` | 校准面板：按置信度段/Brier score |
+| C2: posterior recalibration | `core/calibration/` | 事后重校准：系统性偏差自动修正 |
+| C3: MC significance | `core/significance.py` | N=1000 随机模拟，报告 p-value |
+| C4: live-forward cohort | `core/cohort.py` | 按 made_date 冻结，到期日取数，防止幸存者偏差 |
+| C5: dimension attribution | `core/attribution.py` | 维度/框架归因：IC + hit rate 分析 |
+| C6: prediction timeline | `core/prediction_timeline.py` | 预测更新事件记录+时间线 |
+
+### 集成 & 可观测
+
+| 功能 | 文件 | 说明 |
+|------|------|------|
+| integration tests | `tests/test_integration.py` | 20 个端到端测试覆盖全部新功能 |
+| summary dashboard | `core/dashboard.py` | 一键汇总：校准+显著性+归因+队列 |
+| CI import checks | `.github/workflows/ci.yml` | 13 个模块导入验证 |
+
+---
+
 ## 质量保证体系
 
 | 层级 | 机制 | 触发 |
