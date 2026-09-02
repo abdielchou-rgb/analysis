@@ -211,6 +211,43 @@ class ComputeEngine:
         ok_modules = [k for k, v in result.items() if isinstance(v, dict) and v.get("status") == "ok"]
         error_modules = [k for k, v in result.items() if isinstance(v, dict) and v.get("status") == "error"]
         result["_summary"] = {"ok": len(ok_modules), "error": len(error_modules), "modules_ok": ok_modules}
+
+        # W3.1: 聚合 primary_target_price — 单一目标价供锚卡/Gate 使用
+        # 优先级：DCF fair_value > SOTP target_price > scenario weighted_target > comparable implied_pe_price
+        _prices = []
+        _dcf = result.get("dcf_valuation", {})
+        if isinstance(_dcf, dict) and _dcf.get("status") == "ok":
+            _r = _dcf.get("result", {})
+            _fv = _r.get("fair_value")
+            if _fv and isinstance(_fv, (int, float)) and _fv > 0:
+                _prices.append(("DCF", float(_fv)))
+        _sotp = result.get("sotp_valuation", {})
+        if isinstance(_sotp, dict) and _sotp.get("status") == "ok":
+            _r = _sotp.get("result", {})
+            _tp = _r.get("target_price")
+            if _tp and isinstance(_tp, (int, float)) and _tp > 0:
+                _prices.append(("SOTP", float(_tp)))
+        _scen = result.get("scenario_analysis", {})
+        if isinstance(_scen, dict) and _scen.get("status") == "ok":
+            _r = _scen.get("result", {})
+            _wt = _r.get("weighted_target")
+            if _wt and isinstance(_wt, (int, float)) and _wt > 0:
+                _prices.append(("Scenario", float(_wt)))
+        _comp = result.get("comparable_valuation", {})
+        if isinstance(_comp, dict) and _comp.get("status") == "ok":
+            _r = _comp.get("result", {})
+            _ip = _r.get("implied_pe_price")
+            if _ip and isinstance(_ip, (int, float)) and _ip > 0:
+                _prices.append(("Comparable", float(_ip)))
+
+        if _prices:
+            _primary = _prices[0]
+            result["primary_target_price"] = _primary[1]
+            result["primary_target_source"] = _primary[0]
+            result["all_target_prices"] = {src: val for src, val in _prices}
+            logger.info("[COMPUTE] primary_target_price=%.2f (from %s), all=%s",
+                        _primary[1], _primary[0], {s: v for s, v in _prices})
+
         if ok_modules and not error_modules:
             result["status"] = "complete"
         elif ok_modules:

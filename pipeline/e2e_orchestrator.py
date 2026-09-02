@@ -336,6 +336,13 @@ class E2ENodes:
             )
             if result:
                 context["compute_results"] = result
+                # W3.1: 写入 primary_target_price 到 collected_data 供锚卡/Gate 使用
+                _ptp = result.get("primary_target_price")
+                if _ptp:
+                    _cd = context.setdefault("collected_data", {})
+                    _cd["target_price"] = _ptp
+                    _cd["target_price_source"] = result.get("primary_target_source", "")
+                    _cd["all_target_prices"] = result.get("all_target_prices", {})
                 logger.info("[COMPUTE] %d modules ran: %s", len(result), list(result.keys())[:5])
             else:
                 context["compute_results"] = {}
@@ -1011,20 +1018,31 @@ class E2ENodes:
         except Exception as _e89:
             logger.debug("[R89-SANITIZE] 清理器未生效: %s", str(_e89)[:100])
 
-        # P3-2 (2026-09-01): claim-level 溯源附录接线——此前 core/claim_citation.py
-        # 存在但 0 调用（AUDIT 2026-09-01 点名"引用粒度"差距）。现在 assemble 阶段
-        # 追加「关键数据溯源」附录：正文数值 × chart_data ±0.5% 确定性匹配。
-        # env REPORT_CITATION_APPENDIX=0 可关；幂等（重复调用不重复注入）。
+        # P3-2 (2026-09-01): claim-level 溯源接线——此前 core/claim_citation.py
+        # 存在但 0 调用（AUDIT 2026-09-01 点名"引用粒度"差距）。assemble 阶段
+        # 做「正文[注N]内联标记 + 编号溯源附录」（annotate_inline，最优）。
+        # 内联不可用/命中率低时回退到文末附录（append_citation_appendix）。
+        # env REPORT_CITATION_APPENDIX=0 可关；两者均幂等（不重复注入）。
         try:
             import os as _os
 
             if _os.environ.get("REPORT_CITATION_APPENDIX", "1") != "0" and "附录：关键数据溯源" not in final:
-                from core.claim_citation import append_citation_appendix
+                from core.claim_citation import annotate_inline, append_citation_appendix
 
                 _cd2 = context.get("collected_data", {})
-                final = append_citation_appendix(final, _cd2)
+                # 优先内联：正文句尾加 [注N]，文末附编号溯源表
+                try:
+                    _inlined, _claims = annotate_inline(final, _cd2)
+                    if _claims:
+                        final = _inlined
+                        logger.info("[P3-2] claim 内联标注 %d 处（[注N] 脚注模式）", len(_claims))
+                    else:
+                        final = append_citation_appendix(final, _cd2)
+                except Exception as _e_inline:
+                    logger.debug("[P3-2] annotate_inline 失败，回退附录: %s", str(_e_inline)[:100])
+                    final = append_citation_appendix(final, _cd2)
         except Exception as _e_claim:
-            logger.debug("[P3-2] claim citation 附录注入失败: %s", str(_e_claim)[:100])
+            logger.debug("[P3-2] claim citation 注入失败: %s", str(_e_claim)[:100])
 
         # S6-3: 合规条款自动附加（替代 LLM 生成的免责——R42 已删 AI 免责）
         try:
@@ -1223,7 +1241,7 @@ class E2ENodes:
                             "style": style,
                             "timestamp": _dt.datetime.now().isoformat(),
                             "attempt": context.get("attempt", 0),
-                            "gate_score": gate.get("score", 0),
+                            "gate_score": gate.get("overall_score", gate.get("score", 0)),
                             "gate_passed": True,
                             "via_pipeline": True,
                             "pipeline": "E2EOrchestratorV2",
@@ -1264,13 +1282,16 @@ class E2ENodes:
         try:
             from pipeline.learning_loop import LearningLoop
 
+            # P0-3 修复（2026-09-02）：gate_result 来自 to_dict()，键是 overall_score
+            # 非 score——此前用 gate.get("score",0) 恒得 0，导致 report_scores 62% 假 0 分。
             gate = context.get("gate_result", {})
             ll = LearningLoop()
+            _score = gate.get("overall_score", gate.get("score", 0))
             ll.after_report(
                 context.get("asset", ""),
                 context.get("report_type"),
                 {
-                    "iron_gate": gate.get("score", 0),
+                    "iron_gate": _score,
                     "passed": gate.get("passed", False),
                     "failures": [],
                     "attempt": context.get("attempt", 0),
@@ -1295,7 +1316,7 @@ class E2ENodes:
                     asset=context.get("asset", ""),
                     report_type=context.get("report_type", ""),
                     gate_passed=bool(gate.get("passed", False)),
-                    gate_score=gate.get("score", 0),
+                    gate_score=_score,
                     failures=_failures,
                 )
             except Exception as _e_fp5:
@@ -2278,10 +2299,15 @@ class E2EOrchestratorV2:
                 try:
                     from pipeline.learning_loop import LearningLoop
 
+                    # P0-3 修复（2026-09-02）：after_report 须传 iron_gate score——
+                    # 此前只传 failures 无 iron_gate 键，learning_loop 默认 0 → 假 0 分。
+                    _g = gate if isinstance(gate, dict) else {}
                     LearningLoop().after_report(
                         self.asset,
                         self.report_type,
                         {
+                            "iron_gate": _g.get("overall_score", _g.get("score", 0)),
+                            "passed": _g.get("passed", False),
                             "failures": [f"Attempt {attempt + 1}: {last_error}"],
                         },
                     )

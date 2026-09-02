@@ -230,17 +230,33 @@ class SectionWriter:
         # 从 data_context 提取关键数值
         _extracted = {}
 
-        # 1. 目标价（从 compute_results 或 collected_data）
+        # 1. 目标价（从 collected_data / compute_results 双路径）
         _tp = data_context.get("target_price") or data_context.get("target_prices")
+        # W3.1 fallback: compute_results 内嵌套
+        if not _tp:
+            _cr = data_context.get("compute_results", {})
+            if isinstance(_cr, dict):
+                _tp = _cr.get("primary_target_price")
+                if not _tp:
+                    _dcf = _cr.get("dcf_valuation", {})
+                    if isinstance(_dcf, dict):
+                        _tp = _dcf.get("result", {}).get("fair_value")
         if _tp:
             if isinstance(_tp, (int, float)):
-                _extracted["目标价"] = f"{_tp}元"
+                _source = data_context.get("target_price_source", "compute")
+                _extracted["目标价"] = f"{_tp}元（来源：{_source}）"
             elif isinstance(_tp, dict):
                 for k, v in _tp.items():
                     if isinstance(v, (int, float)):
                         _extracted[f"目标价_{k}"] = f"{v}元"
             elif isinstance(_tp, list) and _tp:
                 _extracted["目标价"] = f"{_tp[0]}元"
+
+        # W3.1: 展示各方法目标价对比（供参考，但全文统一用 primary）
+        _atp = data_context.get("all_target_prices", {})
+        if _atp and isinstance(_atp, dict) and len(_atp) > 1:
+            _parts = [f"{k}={v}元" for k, v in _atp.items()]
+            _extracted["各方法目标价"] = "、".join(_parts)
 
         # 2. EPS / PE
         _eps = data_context.get("eps") or data_context.get("EPS")
