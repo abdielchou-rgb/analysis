@@ -1245,6 +1245,18 @@ class DataQualityChecksMixin:
                     f"目标价自相矛盾: 正文出现多个目标价 {tp_amounts}，"
                     f"差异>6%（最高{tp_base}元 vs 最低{tp_min}元），必须统一为单一结论"
                 )
+        # W3.3: 报告目标价 vs 计算引擎 primary_target_price 一致性
+        # 锚卡注入后 LLM 应使用统一目标价；若报告目标价与 compute 结果偏差>10%，报错
+        _cd = getattr(self, "collected_data", {}) or {}
+        _compute_tp = _cd.get("target_price")
+        if _compute_tp and isinstance(_compute_tp, (int, float)) and _compute_tp > 0 and tp_amounts:
+            _report_tp = float(tp_amounts[0])
+            _deviation = abs(_report_tp - _compute_tp) / max(_compute_tp, 1e-9)
+            if _deviation > 0.10:
+                issues.append(
+                    f"目标价偏离计算值: 报告{_report_tp}元 vs 管线计算{_compute_tp}元"
+                    f"（偏差{_deviation:.0%}），锚卡未生效或LLM自行编造"
+                )
         passed = len(issues) == 0
         det = f"评级/估值一致性: {len(issues)} 项" + (": " + "; ".join(issues[:3]) if issues else "")
         return GateCheckResult("rating_target_consistency", passed, 1.0 if passed else 0.5, det, severity="error")
