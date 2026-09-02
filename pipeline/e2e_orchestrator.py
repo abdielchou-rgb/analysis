@@ -1065,6 +1065,31 @@ class E2ENodes:
         with open(tmp_path, "w", encoding="utf-8") as f:
             f.write(text)
 
+        # D1: 节点完成契约——校验必需节点是否产出 evidence
+        _node_evidence = {
+            "data": ["collected_data"],
+            "compute": ["compute_results"],
+            "write_sections": ["report_text"],
+            "assemble": ["final_text"],
+        }
+        _node_failures = []
+        for _node, _keys in _node_evidence.items():
+            for _k in _keys:
+                _val = context.get(_k)
+                if not _val or (isinstance(_val, (dict, str)) and not _val):
+                    _node_failures.append(f"{_node}:{_k}")
+        if _node_failures:
+            logger.warning("[D1-NODE-CONTRACT] Missing evidence: %s", _node_failures)
+            # D2: fail-closed——节点证据缺失 → block（不是静默 continue）
+            context["gate_result"] = {
+                "passed": False,
+                "score": 0.0,
+                "failures": [f"Node contract violated: missing {_node_failures}"],
+                "judge_ver": "",
+                "gate_config_hash": "",
+            }
+            return {"gate_result": context["gate_result"]}
+
         from pipeline.iron_gate import IronGate
 
         dl = context.get("degradation_level", 0)

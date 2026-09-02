@@ -191,8 +191,12 @@ class DataPoint:
             raise ValueError(f"DataPoint {self.name}: access_ts is required")
         if not self.excerpt_sha256:
             raise ValueError(f"DataPoint {self.name}: excerpt_sha256 is required")
+        # B4: unit 可空——允许"数据不可得"，不许编造（对齐 FP2a 诚实标注）
+        # 原逻辑：空 unit → raise，导致 ArgumentEngine 构建 DataPoint 失败
+        # 改为：空 unit 记日志但不阻断，由下游 Gate 检查完整性
         if not self.unit:
-            raise ValueError(f"DataPoint {self.name}: unit is required")
+            import logging as _log
+            _log.getLogger("2hao.models").debug("DataPoint %s: unit is empty (data may be unavailable)", self.name)
         if not 0 <= self.confidence <= 1:
             raise ValueError(f"DataPoint {self.name}: confidence must be 0-1")
 
