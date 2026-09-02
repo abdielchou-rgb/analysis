@@ -1142,6 +1142,7 @@ class SectionWriter:
             f"## 分析维度（必须全部出现在骨架中）\n{dim_defs[:1500]}\n\n"
             f"## 可用数据（骨架中的数据点从以下引用）\n{data_str[:800]}\n\n"
             + self._build_data_anchor_card(self._last_data_context or {}, asset) + "\n\n"
+            "【数值一致性强制】骨架中的所有数值必须与锚卡一致，禁止编造。\n\n"
             f"## 图表\n{chart_md[:500]}\n\n"
             f"请只输出本章节的**章节骨架**（Markdown 标题 + 每小节 1-2 行要点 + 计划引用的数据），"
             f"不要展开成正文。格式：\n"
@@ -1343,6 +1344,10 @@ class SectionWriter:
             # 根因：LLM 在不同章节写不同数值（目标价310/387/175、增速12%/15%/20%），
             # 导致 indicator_consistency / cross_section_consistency / rating_target 三项 ERROR。
             self._build_data_anchor_card(self._last_data_context or {}, asset),
+            "",
+            "【数值一致性强制】全文所有章节必须使用锚卡中的统一数值。"
+            "禁止在同一报告中对同一指标写不同数字（如目标价不得出现310和387两个值）。"
+            "若锚卡中没有某指标，从【可用数据】或【共享数据字典】中取值，禁止自行编造。",
             "",
             # R7 共享数据字典：正文数值必须引用 {ref:key}，禁止自由输出数字。
             # 这是"收敛机制"第二块 —— 数据一致性从架构上保证，不靠 LLM 自觉。
@@ -2320,6 +2325,8 @@ class SectionWriter:
                 + f"## 分析维度（必须全部覆盖）\n{dim_defs[:3400]}\n\n"
                 f"## 可用数据\n{data_str[:1500]}\n\n"
                 + self._build_data_anchor_card(self._last_data_context or {}, asset) + "\n\n"
+                + "【数值一致性强制】全文所有章节必须使用锚卡中的统一数值。"
+                "禁止在同一报告中对同一指标写不同数字（如目标价不得出现310和387两个值）。\n\n"
                 f"## 共享数据字典\n{_dd_str[:1500]}\n\n"
                 + (_cp_str if _cp_str else "")
                 + (
