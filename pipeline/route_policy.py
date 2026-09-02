@@ -29,6 +29,7 @@ ROUTE_POLICY = {
         "skeleton": "zhipu",  # 骨架/大纲：zhipu
         "merge": "deepseek",  # 合并组装：DeepSeek（质量红线）
         "revise": "zhipu",  # 修订（Gate 反馈）：zhipu
+        "gate_review": "deepseek",  # Gate 失败审稿：DeepSeek（双模型对抗）
         "extract": "openrouter",  # 轻量提取/分类：OpenRouter flash
         "prefetch": "agent_provider",  # 后台预取：Marvis 免费
         "roundtable": "opencode_zen",  # 终局圆桌：OpenCode Zen 异源
@@ -39,6 +40,7 @@ ROUTE_POLICY = {
         "skeleton": "agent_provider",  # 骨架：Marvis
         "merge": "openrouter",  # 合并组装：OpenRouter（质量红线，永不 Marvis）
         "revise": "agent_provider",  # 修订：Marvis（训练用）
+        "gate_review": "deepseek",  # Gate 失败审稿：DeepSeek（即使 train 模式也用 DeepSeek 审稿）
         "extract": "agent_provider",  # 提取：Marvis
         "prefetch": "",  # 训练模式不需要预取（自己就是免费）
         "roundtable": "openrouter",  # 圆桌：OpenRouter（异于训练源 Marvis）
@@ -67,6 +69,7 @@ _NODE_ALIASES = {
     "roundtable": "roundtable",
     "critic": "roundtable",
     "review": "roundtable",
+    "gate_review": "gate_review",  # Gate 失败审稿（双模型对抗）
     "prefetch": "prefetch",
 }
 

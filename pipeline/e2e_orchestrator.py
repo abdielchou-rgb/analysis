@@ -725,6 +725,182 @@ class E2ENodes:
         return {"report_text": context["report_text"]}
 
     @staticmethod
+    def review_sections(node_id, context):
+        """P2 双模型对抗：DeepSeek 审稿节点。
+
+        只在 attempt > 0 时执行。DeepSeek 读取 Gate 反馈 + 当前报告，
+        输出结构化审稿意见，供 rewrite_sections 消费。
+        """
+        if context.get("attempt", 0) == 0:
+            logger.info("[REVIEW] attempt 0 — skip review (first draft)")
+            return {"review_comments": ""}
+
+        report_text = context.get("report_text", "")
+        gate_feedback = context.get("gate_feedback", "")
+        asset = context.get("asset", "")
+
+        if not report_text or not gate_feedback:
+            logger.info("[REVIEW] no report or feedback — skip")
+            return {"review_comments": ""}
+
+        # 提取失败项（从 gate_feedback 解析 ERROR 级检查）
+        import re as _re_review
+
+        fail_lines = [
+            line.strip()
+            for line in gate_feedback.split("\n")
+            if line.strip().startswith("- [ERROR]")
+        ]
+        fail_summary = "\n".join(fail_lines[:10])  # 最多10条
+
+        review_prompt = f"""你是资深投资研究报告审稿人。请审查以下报告，针对 Gate 失败项逐条给出修改指令。
+
+## 当前报告（前6000字）
+{report_text[:6000]}
+
+## Gate 失败项
+{fail_summary}
+
+## 输出格式要求
+对每个失败项，输出：
+1. **失败项名称**
+2. **问题定位**：报告中具体哪段/哪句有问题（引用原文片段）
+3. **修改指令**：具体怎么改（不是"改好点"，而是"把X改成Y"）
+4. **优先级**：P0(必须改)/P1(强烈建议)
+
+只输出修改指令列表，不要输出报告正文。
+"""
+        try:
+            from core.deepseek_client import call_llm
+
+            # 审稿用 DeepSeek（质量最高的模型）
+            resp = call_llm(
+                messages=[{"role": "user", "content": review_prompt}],
+                model="deepseek-chat",
+                provider="deepseek",
+                max_tokens=4000,
+                temperature=0.3,
+            )
+            review_comments = resp["choices"][0]["message"]["content"]
+            logger.info("[REVIEW] DeepSeek 审稿完成: %d chars", len(review_comments))
+            return {"review_comments": review_comments}
+        except Exception as e:
+            logger.warning("[REVIEW] DeepSeek 审稿失败: %s — fallback to gate_feedback", str(e)[:100])
+            return {"review_comments": gate_feedback}
+
+    @staticmethod
+    def rewrite_sections(node_id, context):
+        """P2 双模型对抗：免费模型重写节点。
+
+        只在 attempt > 0 且有 review_comments 时执行。
+        opencode_zen/zhipu 按 DeepSeek 审稿意见定向重写失败段。
+        """
+        if context.get("attempt", 0) == 0:
+            logger.info("[REWRITE] attempt 0 — skip rewrite (first draft)")
+            return {}
+
+        review_comments = context.get("review_comments", "")
+        if not review_comments:
+            logger.info("[REWRITE] no review comments — skip")
+            return {}
+
+        report_text = context.get("report_text", "")
+        asset = context.get("asset", "")
+        gate_feedback = context.get("gate_feedback", "")
+
+        if not report_text:
+            logger.warning("[REWRITE] no report_text — skip")
+            return {}
+
+        # 解析审稿意见中的修改指令
+        import re as _re_rw
+
+        instructions = []
+        current_instruction = {}
+        for line in review_comments.split("\n"):
+            line = line.strip()
+            if not line:
+                continue
+            # 匹配失败项标题
+            if line.startswith("**") and ("失败" in line or "问题" in line or "ERROR" in line):
+                if current_instruction:
+                    instructions.append(current_instruction)
+                current_instruction = {"section": line, "fix": ""}
+            elif current_instruction and ("修改" in line or "改成" in line or "改为" in line or "增加" in line or "删除" in line):
+                current_instruction["fix"] += line + "\n"
+            elif current_instruction:
+                current_instruction["fix"] += line + "\n"
+        if current_instruction:
+            instructions.append(current_instruction)
+
+        if not instructions:
+            logger.info("[REWRITE] no parseable instructions — fallback to gate_feedback style")
+            # 直接把 gate_feedback 作为重写 prompt
+            instructions = [{"section": "全局", "fix": gate_feedback[:2000]}]
+
+        # 重写 prompt：将审稿意见注入写作 prompt
+        _review_text = "\n".join(
+            f"### {inst['section']}\n{inst['fix']}" for inst in instructions[:8]
+        )
+
+        rewrite_prompt = f"""你是资深投资研究报告撰写人。请根据审稿意见定向修改报告。
+
+## 审稿意见（DeepSeek 审稿）
+{_review_text}
+
+## 当前报告（前6000字）
+{report_text[:6000]}
+
+## 修改要求
+1. 只修改审稿意见中明确指出的问题
+2. 保持报告其他部分不变
+3. 保留所有数据标注 (A)/(E)/(F)、图表引用 ![](chart:xxx)
+4. 输出完整修改后的报告（不是 diff）
+"""
+        try:
+            from core.deepseek_client import call_llm
+
+            # 重写用 opencode_zen/zhipu（免费模型）
+            from pipeline.route_policy import resolve_provider
+
+            rewrite_provider = resolve_provider("write", os.environ.get("RUN_MODE", "perf"))
+            resp = call_llm(
+                messages=[{"role": "user", "content": rewrite_prompt}],
+                model="deepseek-chat",
+                provider=rewrite_provider,
+                max_tokens=8000,
+                temperature=0.5,
+            )
+            rewritten_text = resp["choices"][0]["message"]["content"]
+
+            # 后处理：保留原报告的头部和合规段
+            from pipeline.section_writer import SectionWriter
+
+            sw = SectionWriter(context.get("report_type", "industry_deep"), context.get("style", "cicc"))
+            rewritten_text = sw._post_process_for_gate(rewritten_text, asset)
+
+            # 质量门：重写后文本不能比原版短太多（防 LLM 偷懒）
+            if len(rewritten_text) < len(report_text) * 0.5:
+                logger.warning(
+                    "[REWRITE] rewritten too short (%d < %d*0.5) — keep original",
+                    len(rewritten_text),
+                    len(report_text),
+                )
+                return {}
+
+            logger.info(
+                "[REWRITE] %s 重写完成: %d → %d chars (provider=%s)",
+                asset,
+                len(report_text),
+                len(rewritten_text),
+                rewrite_provider,
+            )
+            return {"report_text": rewritten_text}
+        except Exception as e:
+            logger.warning("[REWRITE] rewrite failed: %s — keep original", str(e)[:100])
+            return {}
+
+    @staticmethod
     def template_enforce(node_id, context):
         """Run TemplateEnforcer consistency check after writing and before gate.
 
@@ -1773,6 +1949,21 @@ class E2EOrchestratorV2:
             )
             g.add_node("assemble", E2ENodes.assemble, deps=["style", "charts"], desc="assemble")
             g.add_node("validate", E2ENodes.validate, deps=["assemble"], desc="gate")
+            # P2 双模型对抗：Gate 失败后 DeepSeek 审稿 → 免费模型重写
+            g.add_node(
+                "review_sections",
+                E2ENodes.review_sections,
+                deps=["validate"],
+                desc="DeepSeek adversarial review (attempt>0 only)",
+                timeout_s=300,
+            )
+            g.add_node(
+                "rewrite_sections",
+                E2ENodes.rewrite_sections,
+                deps=["review_sections"],
+                desc="free-model rewrite based on review (attempt>0 only)",
+                timeout_s=600,
+            )
             g.add_node("critic", E2ENodes.critic_review, deps=["validate"], desc="multi-critic panel")
             g.add_node("compliance", E2ENodes.compliance_check, deps=["validate", "critic"], desc="compliance")
             g.add_node("export_docx", E2ENodes.export_docx, deps=["compliance"], desc="export")
@@ -2305,6 +2496,8 @@ def _build_output_contracts():
         "template": {"template_result": {"type": dict, "required": False, "severity": "warning"}},
         "assemble": {"final_text": {"type": str, "required": True, "severity": "error"}},
         "validate": {"gate_result": {"type": dict, "required": True, "severity": "error"}},
+        "review_sections": {"review_comments": {"type": str, "required": False, "severity": "warning"}},
+        "rewrite_sections": {},  # 可能返回 report_text 覆盖，也可能空（跳过）
         "compliance": {"compliance_result": {"type": dict, "required": False, "severity": "warning"}},
         "export_docx": {"_docx_path": {"type": str, "required": False, "severity": "warning"}},
         "data_feeds": {"feeds_loaded": {"type": bool, "required": False, "severity": "warning"}},
