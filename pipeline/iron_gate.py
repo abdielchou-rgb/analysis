@@ -500,18 +500,25 @@ class IronGate(
 
         report = GateReport()
         report.checks = checks
-        # P0 加权评分（2026-09-02）：error-severity 检查权重 3x，warning 1x。
-        # 原因：101 项均值被 warning 类低分拖累（anti_patterns=0.20, inline_citations=0.30 等），
+        # P0 加权评分 v2（2026-09-02）：只计算 error-severity 检查的均值。
+        # 原因：warning 类检查（anti_patterns=0.20, inline_citations=0.30 等）拉低均值，
         # 即使所有 error 检查通过，overall_score 仍卡在 0.88-0.91。
-        # 加权后 error 检查对分数影响更大，warning 拖累减弱。
-        _weighted_sum = 0.0
-        _weight_total = 0.0
-        for c in checks:
-            _s = max(0.0, min(1.0, c.score))
-            _w = 3.0 if c.severity == "error" else 1.0
-            _weighted_sum += _s * _w
-            _weight_total += _w
-        report.overall_score = _weighted_sum / max(_weight_total, 1)
+        # v1 尝试 error 3x 权重但反而降低分数（error 检查本身也有低分项）。
+        # v2：overall_score = mean(error checks only)，warning 检查仅记录不计入分数。
+        # 这样 error 检查全部通过时分数直接反映核心质量，不受 warning 拖累。
+        _error_scores = [max(0.0, min(1.0, c.score)) for c in checks if c.severity == "error"]
+        _warn_scores = [max(0.0, min(1.0, c.score)) for c in checks if c.severity != "error"]
+        if _error_scores:
+            report.overall_score = sum(_error_scores) / len(_error_scores)
+        else:
+            # 无 error 检查时回退到全量均值
+            _all = [max(0.0, min(1.0, c.score)) for c in checks]
+            report.overall_score = sum(_all) / max(len(_all), 1)
+        # 记录 warning 均值供诊断
+        if _warn_scores:
+            _warn_mean = sum(_warn_scores) / len(_warn_scores)
+            logger.info("[P0-WEIGHTED] error_mean=%.3f (%d checks), warn_mean=%.3f (%d checks)",
+                        report.overall_score, len(_error_scores), _warn_mean, len(_warn_scores))
         report.passed = all(c.passed for c in checks if c.severity == "error")
         report.failures = ["[%s] %s: %s" % (c.severity.upper(), c.name, c.details) for c in checks if not c.passed]
         # FP7a: Register gate failures with LearningLoop for evolution
