@@ -848,14 +848,15 @@ class E2ENodes:
 ## 审稿意见（DeepSeek 审稿）
 {_review_text}
 
-## 当前报告（前6000字）
-{report_text[:6000]}
+## 当前报告（前20000字）
+{report_text[:20000]}
 
 ## 修改要求
 1. 只修改审稿意见中明确指出的问题
 2. 保持报告其他部分不变
 3. 保留所有数据标注 (A)/(E)/(F)、图表引用 ![](chart:xxx)
 4. 输出完整修改后的报告（不是 diff）
+5. 确保输出长度不低于原报告的80%
 """
         try:
             from core.deepseek_client import call_llm
@@ -868,7 +869,7 @@ class E2ENodes:
                 messages=[{"role": "user", "content": rewrite_prompt}],
                 model="deepseek-chat",
                 provider=rewrite_provider,
-                max_tokens=8000,
+                max_tokens=16000,
                 temperature=0.5,
             )
             rewritten_text = resp["choices"][0]["message"]["content"]
