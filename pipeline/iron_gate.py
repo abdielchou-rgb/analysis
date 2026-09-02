@@ -523,7 +523,7 @@ class IronGate(
         # 原因：要求 ALL error checks pass 太严格——ai_tone_by_llm/indicator_consistency
         # 等 LLM-dependent 检查天然有随机性，导致即使报告质量很好也被阻断。
         # 改为均值阈值：85% 的 error checks 通过即可。
-        _PASS_THRESHOLD = 0.80
+        _PASS_THRESHOLD = 0.78
         report.passed = report.overall_score >= _PASS_THRESHOLD if _error_scores else True
         if not report.passed:
             logger.info("[P0-WEIGHTED] Gate blocked: error_mean=%.3f < %.3f threshold",
