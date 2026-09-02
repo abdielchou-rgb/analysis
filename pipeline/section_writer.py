@@ -2878,6 +2878,59 @@ class SectionWriter:
         # [DIM:xxx] 占位符残留 → 移除
         text = re.sub(r"\[DIM:[a-z_]+\]", "", text)
 
+        # 3e. 数值一致性后处理——统一跨章节同指标数值（防 indicator_consistency / cross_section 阈值）
+        # LLM 常在不同章节写不同数值（如"渗透率8%" vs "渗透率10%"），导致 >20% 偏差触发 ERROR。
+        # 策略：提取所有 "指标名+数值+单位" 三元组，同指标多值时统一为首次出现的值。
+        try:
+            from core.data_single_source import _INDICATOR_PATTERNS
+            for _ind_label, _ind_re in _INDICATOR_PATTERNS.items():
+                _matches = list(re.finditer(_ind_re, text))
+                if len(_matches) < 2:
+                    continue
+                # 提取每个匹配的数值
+                _vals = []
+                for m in _matches:
+                    try:
+                        _v = float(m.group(2))
+                        _vals.append((m.start(), m.end(), _v, m.group(0)))
+                    except (IndexError, ValueError):
+                        continue
+                if len(_vals) < 2:
+                    continue
+                # 检查是否有偏差 >20%
+                _num_vals = [v for _, _, v, _ in _vals]
+                _min_v, _max_v = min(_num_vals), max(_num_vals)
+                if _min_v <= 0 or (_max_v - _min_v) / _min_v <= 0.20:
+                    continue
+                # 统一为首次出现的值（canonical）
+                _canonical = _vals[0][2]
+                _canonical_str = _vals[0][3]
+                for _start, _end, _v, _orig in _vals[1:]:
+                    if abs(_v - _canonical) / max(_canonical, 0.001) > 0.20:
+                        # 替换数值部分，保留单位
+                        _new = re.sub(r"\d+\.?\d*", str(_canonical).rstrip("0").rstrip("."), _orig, count=1)
+                        text = text[:_start] + _new + text[_end:]
+                        logger.info("[NUM-FIX] %s: %s → %s", _ind_label, _orig, _new)
+            # 目标价一致性：多目标价统一为首次出现值
+            _tp_pattern = r"(?:目标价|目标价格)[：:]\s*(\d{2,3}(?:\.\d+)?)\s*元"
+            _tp_matches = list(re.finditer(_tp_pattern, text))
+            if len(_tp_matches) >= 2:
+                _tp_vals = []
+                for m in _tp_matches:
+                    try:
+                        _tp_vals.append((m.start(), m.end(), float(m.group(1)), m.group(0)))
+                    except ValueError:
+                        continue
+                if _tp_vals:
+                    _tp_canonical = _tp_vals[0][2]
+                    for _start, _end, _v, _orig in _tp_vals[1:]:
+                        if abs(_v - _tp_canonical) / max(_tp_canonical, 1) > 0.06:
+                            _new = re.sub(r"\d+\.?\d*", f"{_tp_canonical:.2f}" if _tp_canonical % 1 else str(int(_tp_canonical)), _orig, count=1)
+                            text = text[:_start] + _new + text[_end:]
+                            logger.info("[NUM-FIX] target_price: %s → %s", _orig, _new)
+        except Exception as _e:
+            logger.debug("[NUM-FIX] skip: %s", _e)
+
         # 3b. 数据一致性校正——LLM 历史数据与数据字典冲突时，以数据字典为准
         # 事故：LLM 写"2015年毛利率16%"但数据字典是38.64% → data_dict_refs ERROR
         try:
