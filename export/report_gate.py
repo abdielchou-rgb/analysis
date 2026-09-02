@@ -242,7 +242,8 @@ def export_report(
     import re
 
     chart_refs = re.findall(r"!\[.*?\]\((?!chart:)(.+?)\)", md_text)
-    missing_charts = [c for c in chart_refs if not Path(c).exists() and not c.startswith("http")]
+    _output_dir = Path(output_path).parent if output_path else Path(".")
+    missing_charts = [c for c in chart_refs if not Path(c).exists() and not (_output_dir / c).exists() and not c.startswith("http")]
     if missing_charts:
         logger.warning("Missing chart images: %d of %d", len(missing_charts), len(chart_refs))
         if config.export.get("delete_on_fail", True) and config.export.get("raise_on_fail", True):
