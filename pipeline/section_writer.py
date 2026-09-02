@@ -2990,6 +2990,7 @@ class SectionWriter:
         # （如"市占率37%"和"渗透率28%"都匹配"渗透率"模式）错误统一，导致正确值被改为错误值。
         # 解决方案：依赖 prompt 层的数值锚卡 + 一致性约束，而非后处理修正。
         # NUM-FIX 只保留目标价一致性（已验证有效）。
+        try:
             # 目标价一致性：多目标价统一为首次出现值
             _tp_pattern = r"(?:目标价|目标价格)[：:]\s*(\d{2,3}(?:\.\d+)?)\s*元"
             _tp_matches = list(re.finditer(_tp_pattern, text))
