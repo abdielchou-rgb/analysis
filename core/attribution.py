@@ -57,10 +57,13 @@ def compute_ic(
     ic = cov / (std_rx * std_ry)
 
     # Approximate p-value (t-test for Spearman IC)
-    if abs(ic) > 0:
+    if abs(ic) > 0 and abs(ic) < 1:
         t_stat = ic * math.sqrt((n - 2) / (1 - ic ** 2))
         # Rough approximation: |t| > 2 ≈ p < 0.05
         p_approx = max(0.001, min(1.0, 2 * (1 - min(abs(t_stat) / 3, 1.0))))
+    elif abs(ic) >= 1:
+        # Perfect or near-perfect correlation
+        p_approx = 0.001
     else:
         p_approx = 1.0
 
