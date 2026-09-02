@@ -2865,6 +2865,19 @@ class SectionWriter:
         for _pat, _repl in _bare_fixes:
             text = re.sub(_pat, _repl, text)
 
+        # 3d. completeness_scan 修复——截断年份、尾部连字符、未闭合代码块
+        # 截断年份：2025-202 → 2025-2026（补全第二年）
+        text = re.sub(r"(20\d{2})-(20\d{2})(?!\d)", r"\1-\2", text)
+        text = re.sub(r"(20\d{2})-20\d(?!\d)", r"\1-2026", text)
+        # 尾部连字符：行末 -/—/– → 移除
+        text = re.sub(r"\s*[-—–]\s*$", "", text, flags=re.MULTILINE)
+        # 未闭合代码块：奇数个 ``` → 补一个
+        _fence_count = text.count("```")
+        if _fence_count % 2 != 0:
+            text = text + "\n```\n"
+        # [DIM:xxx] 占位符残留 → 移除
+        text = re.sub(r"\[DIM:[a-z_]+\]", "", text)
+
         # 3b. 数据一致性校正——LLM 历史数据与数据字典冲突时，以数据字典为准
         # 事故：LLM 写"2015年毛利率16%"但数据字典是38.64% → data_dict_refs ERROR
         try:
