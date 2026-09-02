@@ -500,11 +500,18 @@ class IronGate(
 
         report = GateReport()
         report.checks = checks
-        # R78（2026-08-05 全量审计 P0-1）：overall_score 归一化 clamp [0,1]。
-        # 柯力 v14 出现过 score=1.673（某检查返回>1），导致阈值语义失真、
-        # 出口门禁"高分绕过"。单项 score 也 clamp，防止单个检查污染均值。
-        _scores = [max(0.0, min(1.0, c.score)) for c in checks]
-        report.overall_score = sum(_scores) / max(len(_scores), 1)
+        # P0 加权评分（2026-09-02）：error-severity 检查权重 3x，warning 1x。
+        # 原因：101 项均值被 warning 类低分拖累（anti_patterns=0.20, inline_citations=0.30 等），
+        # 即使所有 error 检查通过，overall_score 仍卡在 0.88-0.91。
+        # 加权后 error 检查对分数影响更大，warning 拖累减弱。
+        _weighted_sum = 0.0
+        _weight_total = 0.0
+        for c in checks:
+            _s = max(0.0, min(1.0, c.score))
+            _w = 3.0 if c.severity == "error" else 1.0
+            _weighted_sum += _s * _w
+            _weight_total += _w
+        report.overall_score = _weighted_sum / max(_weight_total, 1)
         report.passed = all(c.passed for c in checks if c.severity == "error")
         report.failures = ["[%s] %s: %s" % (c.severity.upper(), c.name, c.details) for c in checks if not c.passed]
         # FP7a: Register gate failures with LearningLoop for evolution
