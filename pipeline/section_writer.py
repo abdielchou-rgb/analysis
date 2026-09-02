@@ -2880,37 +2880,43 @@ class SectionWriter:
 
         # 3e. 数值一致性后处理——统一跨章节同指标数值（防 indicator_consistency / cross_section 阈值）
         # LLM 常在不同章节写不同数值（如"渗透率8%" vs "渗透率10%"），导致 >20% 偏差触发 ERROR。
-        # 策略：提取所有 "指标名+数值+单位" 三元组，同指标多值时统一为首次出现的值。
+        # 策略：只修复同一段落内的数值冲突（不同段落可能有不同上下文，不应统一）。
+        # 使用段落级分组：同一 ## 段落内的同指标多值才统一。
         try:
             from core.data_single_source import _INDICATOR_PATTERNS
-            for _ind_label, _ind_re in _INDICATOR_PATTERNS.items():
-                _matches = list(re.finditer(_ind_re, text))
-                if len(_matches) < 2:
+            # 按 ## 段落分割文本
+            _para_splits = re.split(r"(^## .+$)", text, flags=re.MULTILINE)
+            for _pi in range(1, len(_para_splits), 2):
+                if _pi + 1 >= len(_para_splits):
                     continue
-                # 提取每个匹配的数值
-                _vals = []
-                for m in _matches:
-                    try:
-                        _v = float(m.group(2))
-                        _vals.append((m.start(), m.end(), _v, m.group(0)))
-                    except (IndexError, ValueError):
+                _para_body = _para_splits[_pi + 1]
+                for _ind_label, _ind_re in _INDICATOR_PATTERNS.items():
+                    _matches = list(re.finditer(_ind_re, _para_body))
+                    if len(_matches) < 2:
                         continue
-                if len(_vals) < 2:
-                    continue
-                # 检查是否有偏差 >20%
-                _num_vals = [v for _, _, v, _ in _vals]
-                _min_v, _max_v = min(_num_vals), max(_num_vals)
-                if _min_v <= 0 or (_max_v - _min_v) / _min_v <= 0.20:
-                    continue
-                # 统一为首次出现的值（canonical）
-                _canonical = _vals[0][2]
-                _canonical_str = _vals[0][3]
-                for _start, _end, _v, _orig in _vals[1:]:
-                    if abs(_v - _canonical) / max(_canonical, 0.001) > 0.20:
-                        # 替换数值部分，保留单位
-                        _new = re.sub(r"\d+\.?\d*", str(_canonical).rstrip("0").rstrip("."), _orig, count=1)
-                        text = text[:_start] + _new + text[_end:]
-                        logger.info("[NUM-FIX] %s: %s → %s", _ind_label, _orig, _new)
+                    _vals = []
+                    for m in _matches:
+                        try:
+                            _v = float(m.group(2))
+                            _vals.append((m.start(), m.end(), _v, m.group(0)))
+                        except (IndexError, ValueError):
+                            continue
+                    if len(_vals) < 2:
+                        continue
+                    _num_vals = [v for _, _, v, _ in _vals]
+                    _min_v, _max_v = min(_num_vals), max(_num_vals)
+                    if _min_v <= 0 or (_max_v - _min_v) / _min_v <= 0.20:
+                        continue
+                    _canonical = _vals[0][2]
+                    _canonical_str = _vals[0][3]
+                    for _start, _end, _v, _orig in _vals[1:]:
+                        if abs(_v - _canonical) / max(_canonical, 0.001) > 0.20:
+                            _new = re.sub(r"\d+\.?\d*", str(_canonical).rstrip("0").rstrip("."), _orig, count=1)
+                            _para_splits[_pi + 1] = (
+                                _para_splits[_pi + 1][:_start] + _new + _para_splits[_pi + 1][_end:]
+                            )
+                            logger.info("[NUM-FIX] %s: %s → %s (para-level)", _ind_label, _orig, _new)
+            text = "".join(_para_splits)
             # 目标价一致性：多目标价统一为首次出现值
             _tp_pattern = r"(?:目标价|目标价格)[：:]\s*(\d{2,3}(?:\.\d+)?)\s*元"
             _tp_matches = list(re.finditer(_tp_pattern, text))
