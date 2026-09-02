@@ -1632,6 +1632,8 @@ class E2EOrchestratorV2:
             "attempt": ctx.get("attempt", 0),
             "gate_score": gate.get("score", 0) if isinstance(gate, dict) else 0,
             "gate_passed": gate.get("passed", False) if isinstance(gate, dict) else False,
+            "judge_ver": gate.get("judge_ver", "") if isinstance(gate, dict) else "",
+            "gate_config_hash": gate.get("gate_config_hash", "") if isinstance(gate, dict) else "",
             "steps": step_status,
             "needs_agent": ctx.get("needs_agent", False),
             "data_enriched": ctx.get("data_enriched", False),

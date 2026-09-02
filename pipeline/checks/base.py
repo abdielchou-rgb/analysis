@@ -37,6 +37,9 @@ class GateReport:
     checks: list = field(default_factory=list)
     failures: list = field(default_factory=list)
     suggestions: list = field(default_factory=list)
+    # A2: 评分版本化——跨版本比较必须按同 judge_ver
+    judge_ver: str = "v2-error-mean-0.78"
+    gate_config_hash: str = ""  # 运行时计算：threshold + 公式 hash
 
     @property
     def hard_fail_errors(self):
@@ -60,6 +63,8 @@ class GateReport:
             "checks": [asdict(c) for c in self.checks],
             "failures": self.failures,
             "suggestions": self.suggestions,
+            "judge_ver": self.judge_ver,
+            "gate_config_hash": self.gate_config_hash,
         }
 
     def to_text(self):
