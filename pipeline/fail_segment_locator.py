@@ -103,13 +103,13 @@ def locate_failed_segments(context: dict, sw) -> list | None:
 
     def _norm_tpl(tpl: str) -> str:
         """模板归一化：去除资产名/数字/标点/常见连接词。"""
-        tpl = re.sub(
+        tpl = _re.sub(
             r"[宁德时代|比亚迪|中芯国际|茅台|工行|中信|高盛|摩根|华泰|中金|海通|国泰|安信|东方财富|同花顺|Wind|SMM|SNE]",
             "",
             tpl,
         )
-        tpl = re.sub(r"\d+(?:\.\d+)?[%倍元亿万千]", "", tpl)
-        tpl = re.sub(r"[。，、；：:.!?、\(\)（）【】\[\]\"\']", "", tpl)
+        tpl = _re.sub(r"\d+(?:\.\d+)?[%倍元亿万千]", "", tpl)
+        tpl = _re.sub(r"[。，、；：:.!?、\(\)（）【】\[\]\"\']", "", tpl)
         return tpl.strip()[:60]
 
     for ftype, pat in _global_fail_pats.items():
