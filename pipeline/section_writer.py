@@ -2319,7 +2319,7 @@ class SectionWriter:
                 "严禁输出字面占位符（X、Y、Z、【结论1】等字样），必须给出真实结论内容。禁止只提框架名不分析。\n\n"
                 + f"## 分析维度（必须全部覆盖）\n{dim_defs[:3400]}\n\n"
                 f"## 可用数据\n{data_str[:1500]}\n\n"
-                + self._build_data_anchor_card(data_context, asset) + "\n\n"
+                + self._build_data_anchor_card(self._last_data_context or {}, asset) + "\n\n"
                 f"## 共享数据字典\n{_dd_str[:1500]}\n\n"
                 + (_cp_str if _cp_str else "")
                 + (
