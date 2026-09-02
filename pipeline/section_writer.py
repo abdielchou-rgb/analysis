@@ -210,6 +210,99 @@ class SectionWriter:
             prev = s
         return segs
 
+    def _build_data_anchor_card(self, data_context: dict, asset: str) -> str:
+        """数值锚卡：从 compute pipeline 结果中提取关键数值，锁定全文。
+
+        根因：LLM 在不同章节写不同数值（目标价310/387/175、增速12%/15%/20%），
+        导致 indicator_consistency / cross_section_consistency / rating_target ERROR。
+        此卡注入 prompt 后，LLM 必须使用卡中数值，禁止自行编造。
+        """
+        if not data_context:
+            return ""
+
+        lines = [
+            "## 数值锚卡（强制引用，禁止自行编造）",
+            "以下数值是管线计算/采集的确定性结果。全文必须统一使用以下数值，",
+            "不得在不同章节写不同数字。若需引用卡外数值，必须标注来源。",
+            "",
+        ]
+
+        # 从 data_context 提取关键数值
+        _extracted = {}
+
+        # 1. 目标价（从 compute_results 或 collected_data）
+        _tp = data_context.get("target_price") or data_context.get("target_prices")
+        if _tp:
+            if isinstance(_tp, (int, float)):
+                _extracted["目标价"] = f"{_tp}元"
+            elif isinstance(_tp, dict):
+                for k, v in _tp.items():
+                    if isinstance(v, (int, float)):
+                        _extracted[f"目标价_{k}"] = f"{v}元"
+            elif isinstance(_tp, list) and _tp:
+                _extracted["目标价"] = f"{_tp[0]}元"
+
+        # 2. EPS / PE
+        _eps = data_context.get("eps") or data_context.get("EPS")
+        if _eps:
+            if isinstance(_eps, dict):
+                for k, v in _eps.items():
+                    if isinstance(v, (int, float)):
+                        _extracted[f"EPS_{k}"] = f"{v}元"
+            elif isinstance(_eps, (int, float)):
+                _extracted["EPS"] = f"{_eps}元"
+
+        _pe = data_context.get("pe") or data_context.get("PE") or data_context.get("pe_ratio")
+        if _pe:
+            if isinstance(_pe, dict):
+                for k, v in _pe.items():
+                    if isinstance(v, (int, float)):
+                        _extracted[f"PE_{k}"] = f"{v}x"
+            elif isinstance(_pe, (int, float)):
+                _extracted["PE"] = f"{_pe}x"
+
+        # 3. 增速 / CAGR
+        for key in ["cagr", "CAGR", "growth_rate", "增速", "revenue_cagr", "profit_cagr"]:
+            val = data_context.get(key)
+            if val and isinstance(val, (int, float)):
+                _extracted[key] = f"{val}%"
+
+        # 4. 市场规模
+        for key in ["market_size", "市场规模", "tam", "TAM", "global_market", "china_market"]:
+            val = data_context.get(key)
+            if val and isinstance(val, (int, float)):
+                _extracted[key] = f"{val}亿元"
+
+        # 5. 渗透率 / 市占率
+        for key in ["penetration", "渗透率", "market_share", "市占率", "市场份额"]:
+            val = data_context.get(key)
+            if val and isinstance(val, (int, float)):
+                _extracted[key] = f"{val}%"
+
+        # 6. 营收 / 利润
+        for key in ["revenue", "营收", "net_profit", "净利润", "operating_profit", "营业利润"]:
+            val = data_context.get(key)
+            if val and isinstance(val, (int, float)):
+                _extracted[key] = f"{val}亿元"
+
+        # 7. 评级
+        _rating = data_context.get("rating") or data_context.get("评级")
+        if _rating and isinstance(_rating, str):
+            _extracted["评级"] = _rating
+
+        if not _extracted:
+            return ""
+
+        # 构建锚卡表格
+        lines.append("| 指标 | 数值 |")
+        lines.append("|------|------|")
+        for k, v in _extracted.items():
+            lines.append(f"| {k} | {v} |")
+
+        lines.append("")
+        lines.append("**违反后果**：若全文出现与锚卡不一致的同名指标数值，将以锚卡为准自动替换。")
+        return "\n".join(lines)
+
     def _build_research_protocol(self) -> str:
         """MECE + Serenity 9-step research protocol injection"""
         try:
@@ -1048,6 +1141,7 @@ class SectionWriter:
             f"你是资深分析师，为《{asset}深度研究报告》第{seg_idx + 1}部分「{seg['label']}」生成章节骨架。\n\n"
             f"## 分析维度（必须全部出现在骨架中）\n{dim_defs[:1500]}\n\n"
             f"## 可用数据（骨架中的数据点从以下引用）\n{data_str[:800]}\n\n"
+            + self._build_data_anchor_card(data_context, asset) + "\n\n"
             f"## 图表\n{chart_md[:500]}\n\n"
             f"请只输出本章节的**章节骨架**（Markdown 标题 + 每小节 1-2 行要点 + 计划引用的数据），"
             f"不要展开成正文。格式：\n"
@@ -1244,6 +1338,11 @@ class SectionWriter:
             "",
             "## 可用数据",
             data_str[:4000],
+            "",
+            # 数值锚卡（2026-09-02）：锁定全文关键数值，禁止 LLM 自由发挥
+            # 根因：LLM 在不同章节写不同数值（目标价310/387/175、增速12%/15%/20%），
+            # 导致 indicator_consistency / cross_section_consistency / rating_target 三项 ERROR。
+            self._build_data_anchor_card(data_context, asset),
             "",
             # R7 共享数据字典：正文数值必须引用 {ref:key}，禁止自由输出数字。
             # 这是"收敛机制"第二块 —— 数据一致性从架构上保证，不靠 LLM 自觉。
@@ -2220,6 +2319,7 @@ class SectionWriter:
                 "严禁输出字面占位符（X、Y、Z、【结论1】等字样），必须给出真实结论内容。禁止只提框架名不分析。\n\n"
                 + f"## 分析维度（必须全部覆盖）\n{dim_defs[:3400]}\n\n"
                 f"## 可用数据\n{data_str[:1500]}\n\n"
+                + self._build_data_anchor_card(data_context, asset) + "\n\n"
                 f"## 共享数据字典\n{_dd_str[:1500]}\n\n"
                 + (_cp_str if _cp_str else "")
                 + (
