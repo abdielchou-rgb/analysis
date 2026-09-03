@@ -392,8 +392,12 @@ class E2ENodes:
             n_sections = len(scaffold.sections) if hasattr(scaffold, "sections") else len(scaffold.get("sections", []))
             logger.info("[ARGUMENT] Scaffold built: %d sections", n_sections)
         except Exception as e:
+            # P0-3: Record error for D1 gate check (not silent)
             logger.warning("[ARGUMENT] failed: %s", e)
             context["scaffold"] = None
+            if "node_errors" not in context:
+                context["node_errors"] = {}
+            context["node_errors"]["argument"] = str(e)[:500]
         return {"scaffold": context.get("scaffold")}
 
     @staticmethod
@@ -1069,6 +1073,7 @@ class E2ENodes:
         _node_evidence = {
             "data": ["collected_data"],
             "compute": ["compute_results"],
+            "argument": ["scaffold"],  # P0-3: argument node must produce scaffold
             "write_sections": ["report_text"],
             "assemble": ["final_text"],
         }

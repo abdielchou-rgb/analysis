@@ -51,3 +51,8 @@ jobs:
           python -c "from core.idempotent_ledger import IdempotentLedger; print('Ledger OK')"
           python -c "from core.retry_policy import RetryPolicy; print('RetryPolicy OK')"
           python -c "from core.dashboard import generate_dashboard; print('Dashboard OK')"
+          python -c "from core.price_feeder import get_price; print('PriceFeeder OK')"
+
+      - name: Run new tests
+        run: |
+          python -m pytest tests/test_price_feeder.py tests/test_significance_guard.py tests/test_argument_node_contract.py tests/test_placeholder_hard_block.py tests/test_golden_numeric.py -v --tb=short

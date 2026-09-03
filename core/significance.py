@@ -13,6 +13,33 @@ from typing import Any, Optional
 logger = logging.getLogger("2hao.significance")
 
 
+class InsufficientOutcomes(Exception):
+    """Raised when outcome pool is too small for MC significance testing."""
+    pass
+
+
+def _require_valid_outcomes(predictions: list[dict], min_valid: int = 20) -> list[dict]:
+    """Filter to valid outcomes and enforce minimum count.
+
+    P0-2: Guards against running MC on empty/pending pools.
+    Valid outcomes: 'correct' or 'incorrect' only.
+    'unverifiable', 'pending', 'pending_review' are NOT valid.
+
+    Raises:
+        InsufficientOutcomes if fewer than min_valid resolved outcomes.
+    """
+    valid = [p for p in predictions if p.get("outcome") in ("correct", "incorrect")]
+    if len(valid) < min_valid:
+        n_pending = sum(1 for p in predictions if p.get("outcome") in ("pending", "pending_review"))
+        n_unverifiable = sum(1 for p in predictions if p.get("outcome") == "unverifiable")
+        raise InsufficientOutcomes(
+            f"Valid outcomes: {len(valid)} (need >= {min_valid}). "
+            f"Pending: {n_pending}, Unverifiable: {n_unverifiable}. "
+            f"Run update_outcomes with real price source first."
+        )
+    return valid
+
+
 def _effect_size_cohen_h(p1: float, p2: float) -> float:
     """Cohen's h: effect size for two proportions.
 
@@ -66,16 +93,17 @@ def monte_carlo_direction_significance(
             "error": "insufficient predictions (need >=10)",
         }
 
-    # Filter to predictions with known outcomes
-    valid = [p for p in predictions if p.get("outcome") in ("correct", "incorrect")]
-    if len(valid) < 10:
+    # P0-2: Guard — reject empty/pending pools
+    try:
+        valid = _require_valid_outcomes(predictions, min_valid=20)
+    except InsufficientOutcomes as e:
         return {
             "system_hit_rate": 0,
             "random_mean": 0.5,
             "percentile": 50,
             "p_value": 1.0,
             "significant": False,
-            "error": "insufficient resolved predictions (need >=10)",
+            "error": str(e),
         }
 
     n = len(valid)
@@ -144,15 +172,17 @@ def monte_carlo_alpha_significance(
     Returns:
         {alpha, random_alpha_mean, percentile, p_value, significant, ci, effect_size}
     """
-    valid = [p for p in predictions if p.get("outcome") in ("correct", "incorrect")]
-    if len(valid) < 10:
+    # P0-2: Guard — reject empty/pending pools
+    try:
+        valid = _require_valid_outcomes(predictions, min_valid=20)
+    except InsufficientOutcomes as e:
         return {
             "alpha": 0,
             "random_alpha_mean": 0,
             "percentile": 50,
             "p_value": 1.0,
             "significant": False,
-            "error": "insufficient predictions",
+            "error": str(e),
         }
 
     n = len(valid)

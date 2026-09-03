@@ -89,34 +89,39 @@ def check_expired(
 def resolve_outcome(
     prediction: dict,
     get_price_func=None,
+    backend: str = "auto",
 ) -> dict:
     """Resolve a prediction's outcome based on price data.
 
     Args:
         prediction: The prediction dict
-        get_price_func: Callable(asset, date) → price. If None, returns placeholder.
+        get_price_func: Callable(asset, date) → price. If None, uses price_feeder.
+        backend: Price backend ('auto', 'akshare', 'yfinance', 'mock')
 
     Returns:
-        Updated prediction with outcome set
+        Updated prediction with outcome set.
+        If price unavailable → outcome="unverifiable", never fabricates.
     """
+    from core.price_feeder import get_price_or_unverifiable
+
     asset = prediction.get("asset", "")
     direction = prediction.get("direction", "")
     made_date = prediction.get("made_date", "")
     expiry_date = prediction.get("expiry_date", "")
 
     if not get_price_func:
-        # Placeholder: mark as needing manual review
-        prediction["outcome"] = "pending_review"
-        prediction["outcome_reason"] = "no_price_function_available"
-        return prediction
+        get_price_func = lambda a, d: get_price_or_unverifiable(a, d, backend=backend).get("price")
 
     try:
         price_at_make = get_price_func(asset, made_date)
         price_at_expiry = get_price_func(asset, expiry_date)
 
         if price_at_make is None or price_at_expiry is None:
-            prediction["outcome"] = "pending_review"
-            prediction["outcome_reason"] = "missing_price_data"
+            # P0-1: Never fabricate — mark as unverifiable
+            prediction["outcome"] = "unverifiable"
+            prediction["outcome_reason"] = f"data_unavailable:{asset}@make={made_date},expiry={expiry_date}"
+            prediction["price_at_make"] = price_at_make
+            prediction["price_at_expiry"] = price_at_expiry
             return prediction
 
         # Determine if direction was correct

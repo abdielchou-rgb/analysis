@@ -217,7 +217,7 @@ class SectionWriter:
         - {{tp_primary}} → primary_target_price（目标价）
         - 后续可扩展：{{eps_primary}}、{{pe_primary}} 等
 
-        吸取 NUM-FIX 教训：只替换标记、不猜测数字。
+        P0-4: 残留占位符 = error（不是 warning），阻止报告流出。
         """
         import re as _re
 
@@ -232,14 +232,19 @@ class SectionWriter:
         if _tp and isinstance(_tp, (int, float)) and _tp > 0:
             _replacements["{{tp_primary}}"] = str(_tp)
 
-        # Gate 断言：正文无残留 {{}}
+        # 替换已知占位符
         for placeholder, value in _replacements.items():
             text = text.replace(placeholder, value)
 
-        # 检测残留占位符（LLM 可能自创 {{xxx}}）
+        # P0-4: 残留占位符检测——error 级别，阻止报告流出
         _residual = _re.findall(r"\{\{[a-z_]+\}\}", text)
         if _residual:
-            logger.warning("[B1-PLACEHOLDER] Residual placeholders in text: %s", _residual[:5])
+            logger.error("[B1-PLACEHOLDER] RESIDUAL placeholders detected (blocking): %s", _residual[:5])
+            raise ValueError(
+                f"Residual placeholders detected after replacement: {_residual[:5]}. "
+                f"Known replacements: {list(_replacements.keys())}. "
+                f"Missing compute values or LLM created unknown placeholders."
+            )
 
         return text
 

@@ -1,0 +1,62 @@
+[
+  {
+    "asset": "宁德时代",
+    "report_id": "golden_001",
+    "field": "target_price",
+    "canonical": 260.0,
+    "source": "compute_primary_target_price",
+    "allow_report_values": [260.0, 260],
+    "tolerance": 0.01,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "宁德时代",
+    "report_id": "golden_001",
+    "field": "revenue_2025e",
+    "canonical": 450000000000,
+    "source": "compute_financials",
+    "allow_report_values": [450000000000, 4500, 4500.0],
+    "tolerance": 0.05,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "贵州茅台",
+    "report_id": "golden_002",
+    "field": "target_price",
+    "canonical": 1800.0,
+    "source": "compute_primary_target_price",
+    "allow_report_values": [1800.0, 1800],
+    "tolerance": 0.01,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "比亚迪",
+    "report_id": "golden_003",
+    "field": "target_price",
+    "canonical": 320.0,
+    "source": "compute_primary_target_price",
+    "allow_report_values": [320.0, 320],
+    "tolerance": 0.01,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "中芯国际",
+    "report_id": "golden_004",
+    "field": "target_price",
+    "canonical": 85.0,
+    "source": "compute_primary_target_price",
+    "allow_report_values": [85.0, 85],
+    "tolerance": 0.01,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "药明康德",
+    "report_id": "golden_005",
+    "field": "target_price",
+    "canonical": 120.0,
+    "source": "compute_primary_target_price",
+    "allow_report_values": [120.0, 120],
+    "tolerance": 0.01,
+    "report_type": "listed_company"
+  }
+]

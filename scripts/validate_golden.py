@@ -182,15 +182,214 @@ def run_golden_validation(
     return results
 
 
+# ============================================================
+# P0-5: Numeric golden truth validation
+# ============================================================
+
+def load_numeric_golden_set(golden_dir: str = "benchmark/golden_numeric") -> list[dict]:
+    """Load numeric golden truth set (JSON format).
+
+    Each item has: asset, report_id, field, canonical, source, tolerance.
+    """
+    golden_path = Path(golden_dir)
+    if not golden_path.exists():
+        return []
+
+    items = []
+    for json_file in golden_path.rglob("*.json"):
+        try:
+            data = json.loads(json_file.read_text(encoding="utf-8"))
+            if isinstance(data, list):
+                items.extend(data)
+            else:
+                items.append(data)
+        except Exception as e:
+            logger.warning("[GOLDEN-NUMERIC] Failed to load %s: %s", json_file, e)
+
+    return items
+
+
+def extract_numeric_values(report_text: str) -> dict[str, list[float]]:
+    """Extract numeric values from report text for key fields.
+
+    Returns: {field_name: [extracted_values]}
+    """
+    extracted = {}
+
+    # Target price patterns
+    tp_patterns = [
+        r"目标价[：:\s]*(\d+\.?\d*)\s*[元]",
+        r"target\s*price[：:\s]*(\d+\.?\d*)",
+        r"给予.*?(\d+\.?\d*)\s*元.*?目标",
+    ]
+    tp_values = []
+    for pat in tp_patterns:
+        matches = re.findall(pat, report_text, re.IGNORECASE)
+        tp_values.extend([float(m) for m in matches])
+    if tp_values:
+        extracted["target_price"] = tp_values
+
+    # Revenue patterns (亿元)
+    rev_patterns = [
+        r"营收.*?(\d+\.?\d*)\s*亿",
+        r"收入.*?(\d+\.?\d*)\s*亿",
+        r"营业收入.*?(\d+\.?\d*)\s*亿",
+    ]
+    rev_values = []
+    for pat in rev_patterns:
+        matches = re.findall(pat, report_text)
+        rev_values.extend([float(m) for m in matches])
+    if rev_values:
+        extracted["revenue"] = rev_values
+
+    # PE ratio patterns
+    pe_patterns = [
+        r"(\d+\.?\d*)\s*倍.*?PE",
+        r"PE.*?(\d+\.?\d*)\s*倍",
+        r"市盈率.*?(\d+\.?\d*)",
+    ]
+    pe_values = []
+    for pat in pe_patterns:
+        matches = re.findall(pat, report_text, re.IGNORECASE)
+        pe_values.extend([float(m) for m in matches])
+    if pe_values:
+        extracted["pe_ratio"] = pe_values
+
+    return extracted
+
+
+def validate_numeric_values(
+    report_text: str,
+    golden_items: list[dict],
+    asset_filter: str = None,
+) -> dict:
+    """Validate numeric values in report against golden truth set.
+
+    Args:
+        report_text: Generated report content
+        golden_items: List of golden numeric truth items
+        asset_filter: Only validate for this asset (optional)
+
+    Returns:
+        {total_checks, passed, failed, unverifiable, details}
+    """
+    if not golden_items:
+        return {"error": "No golden numeric items loaded"}
+
+    extracted = extract_numeric_values(report_text)
+    results = {"total_checks": 0, "passed": 0, "failed": 0, "unverifiable": 0, "details": []}
+
+    for item in golden_items:
+        asset = item.get("asset", "")
+        field = item.get("field", "")
+        canonical = item.get("canonical", 0)
+        tolerance = item.get("tolerance", 0.01)
+        allow_values = item.get("allow_report_values", [canonical])
+
+        if asset_filter and asset != asset_filter:
+            continue
+
+        results["total_checks"] += 1
+
+        # Check if field was extracted
+        if field not in extracted or not extracted[field]:
+            results["unverifiable"] += 1
+            results["details"].append({
+                "asset": asset,
+                "field": field,
+                "status": "unverifiable",
+                "reason": "field_not_found_in_report",
+            })
+            continue
+
+        # Check if any extracted value matches
+        values = extracted[field]
+        matched = False
+        for val in values:
+            # Check against allowed values
+            for allowed in allow_values:
+                if abs(val - allowed) / max(abs(allowed), 1e-10) <= tolerance:
+                    matched = True
+                    break
+            if matched:
+                break
+
+        if matched:
+            results["passed"] += 1
+            results["details"].append({
+                "asset": asset,
+                "field": field,
+                "status": "passed",
+                "canonical": canonical,
+                "extracted": values[:3],
+            })
+        else:
+            results["failed"] += 1
+            results["details"].append({
+                "asset": asset,
+                "field": field,
+                "status": "failed",
+                "canonical": canonical,
+                "extracted": values[:3],
+                "reason": f"no_match_within_tolerance_{tolerance}",
+            })
+
+    # Summary
+    results["pass_rate"] = round(results["passed"] / max(results["total_checks"], 1), 4)
+    results["fail_rate"] = round(results["failed"] / max(results["total_checks"], 1), 4)
+
+    return results
+
+
+def run_numeric_validation(
+    output_dir: str = "output",
+    golden_dir: str = "benchmark/golden_numeric",
+) -> dict:
+    """Run numeric validation on all generated reports."""
+    output_path = Path(output_dir)
+    golden_items = load_numeric_golden_set(golden_dir)
+
+    if not golden_items:
+        return {"error": "No numeric golden items found"}
+
+    results = {}
+    for report_file in output_path.glob("*.md"):
+        if report_file.name.startswith("gate_"):
+            continue
+        report_text = report_file.read_text(encoding="utf-8")
+        result = validate_numeric_values(report_text, golden_items)
+        results[report_file.name] = result
+
+    # Save results
+    out_path = output_path / "golden_numeric_validation.json"
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(results, f, ensure_ascii=False, indent=2)
+
+    # Summary
+    total = sum(r.get("total_checks", 0) for r in results.values())
+    passed = sum(r.get("passed", 0) for r in results.values())
+    failed = sum(r.get("failed", 0) for r in results.values())
+
+    logger.info("[GOLDEN-NUMERIC] Validated %d reports: %d/%d passed, %d failed",
+                len(results), passed, total, failed)
+
+    return results
+
+
 if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Validate against golden truth set")
     parser.add_argument("--output-dir", default="output")
     parser.add_argument("--golden-dir", default="benchmark/golden")
+    parser.add_argument("--numeric", action="store_true", help="Run numeric validation")
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO)
 
-    results = run_golden_validation(args.output_dir, args.golden_dir)
-    print(json.dumps({k: v.get("delta", {}) for k, v in results.items()}, indent=2))
+    if args.numeric:
+        results = run_numeric_validation(args.output_dir)
+        print(json.dumps({k: {"pass_rate": v.get("pass_rate", 0), "failed": v.get("failed", 0)} for k, v in results.items()}, indent=2))
+    else:
+        results = run_golden_validation(args.output_dir, args.golden_dir)
+        print(json.dumps({k: v.get("delta", {}) for k, v in results.items()}, indent=2))
