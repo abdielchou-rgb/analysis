@@ -13,6 +13,18 @@ from typing import Any, Optional
 logger = logging.getLogger("2hao.significance")
 
 
+def _filter_out_mock(predictions: list[dict]) -> list[dict]:
+    """M2-A2: Filter out mock predictions from statistical analysis.
+    
+    Mock predictions have source="mock" or id starting with "mock_".
+    This prevents mock data from polluting real statistics.
+    """
+    return [
+        p for p in predictions
+        if p.get("source") != "mock" and not str(p.get("id", "")).startswith("mock_")
+    ]
+
+
 class InsufficientOutcomes(Exception):
     """Raised when outcome pool is too small for MC significance testing."""
     pass
@@ -22,12 +34,16 @@ def _require_valid_outcomes(predictions: list[dict], min_valid: int = 20) -> lis
     """Filter to valid outcomes and enforce minimum count.
 
     P0-2: Guards against running MC on empty/pending pools.
+    M2-A2: Filters out mock predictions (source="mock" or id starts with "mock_").
     Valid outcomes: 'hit' or 'miss' only.
     'unverifiable', 'pending', 'pending_review', 'partial' are NOT valid.
 
     Raises:
         InsufficientOutcomes if fewer than min_valid resolved outcomes.
     """
+    # M2-A2: Filter out mock predictions first
+    predictions = _filter_out_mock(predictions)
+    
     valid = [p for p in predictions if p.get("outcome") in ("hit", "miss")]
     if len(valid) < min_valid:
         n_pending = sum(1 for p in predictions if p.get("outcome") in ("pending", "pending_review"))

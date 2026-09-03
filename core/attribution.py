@@ -86,6 +86,12 @@ def attribute_by_dimension(
 
     Returns: {dimension: {hit_rate, ic, count, ...}}
     """
+    # M2-A2: Filter out mock predictions
+    predictions = [
+        p for p in predictions
+        if p.get("source") != "mock" and not str(p.get("id", "")).startswith("mock_")
+    ]
+    
     if not dimensions:
         dimensions = [
             "decision_gate", "core_disagreement", "business_model",
@@ -140,6 +146,12 @@ def attribute_by_framework(
 
     Returns: {framework: {hit_rate, ic, count, ...}}
     """
+    # M2-A2: Filter out mock predictions
+    predictions = [
+        p for p in predictions
+        if p.get("source") != "mock" and not str(p.get("id", "")).startswith("mock_")
+    ]
+    
     if not frameworks:
         frameworks = [
             "porter_five_forces", "swot", "pestel", "value_chain",

@@ -25,7 +25,12 @@ class LiveForwardCohort:
             return []
         with open(self.track_record_path, encoding="utf-8") as f:
             data = json.load(f)
-        return data.get("predictions", [])
+        preds = data.get("predictions", [])
+        # M2-A2: Filter out mock predictions
+        return [
+            p for p in preds
+            if p.get("source") != "mock" and not str(p.get("id", "")).startswith("mock_")
+        ]
 
     def get_cohort(
         self,

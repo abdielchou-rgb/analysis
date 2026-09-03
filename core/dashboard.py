@@ -38,7 +38,12 @@ def generate_dashboard(
         try:
             with open(track_record_file, encoding="utf-8") as f:
                 data = json.load(f)
-                predictions = data.get("predictions", [])
+                raw_preds = data.get("predictions", [])
+                # M2-A2: Filter out mock predictions
+                predictions = [
+                    p for p in raw_preds
+                    if p.get("source") != "mock" and not str(p.get("id", "")).startswith("mock_")
+                ]
         except Exception as e:
             logger.warning("[DASHBOARD] Failed to load track record: %s", str(e))
 
