@@ -361,7 +361,14 @@ class E2ENodes:
             ae = ArgumentEngine()
             from core.models import DataPoint, KnowledgePackage, WritingBrief
 
-            brief = WritingBrief(asset=context.get("asset", ""))
+            # M2-A1: Get asset from context or collected_data (fallback)
+            asset = (
+                context.get("asset")
+                or (context.get("collected_data") or {}).get("asset")
+                or (context.get("collected_data") or {}).get("stock_name")
+                or "UNKNOWN"
+            )
+            brief = WritingBrief(asset=asset)
             kp = KnowledgePackage()
             # Feed collected data into argument engine (as DataPoint objects)
             data = context.get("collected_data", {})
@@ -374,6 +381,8 @@ class E2ENodes:
                 kp.data_points = []
                 for k, v in list(data.items())[:30]:
                     val = str(v)[:200] if not isinstance(v, (int, float)) else v
+                    if not val or (isinstance(val, str) and not val.strip()):
+                        continue  # Skip empty values
                     excerpt = str(val)[:200]
                     kp.data_points.append(
                         DataPoint(
@@ -390,10 +399,10 @@ class E2ENodes:
             scaffold = ae.design(brief, kp)
             context["scaffold"] = scaffold
             n_sections = len(scaffold.sections) if hasattr(scaffold, "sections") else len(scaffold.get("sections", []))
-            logger.info("[ARGUMENT] Scaffold built: %d sections", n_sections)
+            logger.info("[ARGUMENT] Scaffold built: %d sections (asset=%s)", n_sections, asset)
         except Exception as e:
             # P0-3: Record error for D1 gate check (not silent)
-            logger.warning("[ARGUMENT] failed: %s", e)
+            logger.warning("[ARGUMENT] failed: %s", e, exc_info=True)
             context["scaffold"] = None
             if "node_errors" not in context:
                 context["node_errors"] = {}
