@@ -2,7 +2,52 @@
 
 ## 概览
 
-本轮工作聚焦**质量门鲁棒性、效度验证、生产化**三大方向，共完成 **35+ commit**，新增 **20+ 模块/脚本**，**68 个测试用例全部通过**。
+本轮工作聚焦**质量门鲁棒性、效度验证、生产化**三大方向，共完成 **40+ commit**，新增 **25+ 模块/脚本**，**88 个测试用例全部通过**。
+
+---
+
+## P0 质量收尾（2026-09-03 补充）
+
+### P0-1: 接真价 price_feeder
+
+- **交付**：`core/price_feeder.py` — akshare/yfinance 真实取价后端
+- **核心**：`get_price()` 返回 `None` 表示不可用，绝不编造；`get_price_or_unverifiable()` 显式标注状态
+- **测试**：14/14（取价成功/失败/不可用/unverifiable）
+
+### P0-2: MC 前置 guard
+
+- **交付**：`core/significance.py` — `InsufficientOutcomes` 异常 + `_require_valid_outcomes()` guard
+- **核心**：有效 outcome < 20 → 拒跑 MC，不产假 p 值
+- **测试**：12/12（空池拒绝/有效池通过/unverifiable 不计入）
+
+### P0-3: ArgumentEngine 修复
+
+- **修复**：`pipeline/e2e_orchestrator.py` — argument 失败记录 `node_errors`，scaffold 进 D1 证据清单
+- **核心**：scaffold=None → D1 拦截（不是 warning 放行）
+- **测试**：5/5
+
+### P0-4: 占位符硬拦
+
+- **修复**：`pipeline/section_writer.py` — 残留 `{{xxx}}` → `ValueError`（不是 warning）
+- **核心**：占位符不可能泄漏到 docx 交付物
+- **测试**：7/7
+
+### P0-5: Golden 数值真值
+
+- **交付**：`benchmark/golden_numeric/truth_set.json`（6 条）+ `validate_golden --numeric`
+- **核心**：目标价偏离 > tolerance → 拦截"幻觉数字"
+- **测试**：8/8
+
+### P0-6: MC 真验证彩排 ✅
+
+- **交付**：20 条 mock 到期预测（4 incorrect + 16 correct = 80% hit rate）
+- **结果**：p=0.005, percentile=99.85%, effect_size=0.64 (medium), **significant=True**
+- **验证**：全链路跑通（resolve → MC N=10000 → dashboard）
+
+### P0-7: 接线 + CI
+
+- **交付**：CI 新增 price_feeder import check + 55 新测试
+- **测试**：9/9（retry/ledger/HITL/placeholder 组合）
 
 ---
 
