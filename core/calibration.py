@@ -182,9 +182,9 @@ def load_and_recalibrate(
         confidences = []
         outcomes = []
         for p in predictions:
-            if p.get("outcome") in ("correct", "incorrect"):
+            if p.get("outcome") in ("hit", "miss"):
                 conf = p.get("confidence_at_make", 0.5)
-                out = 1 if p["outcome"] == "correct" else 0
+                out = 1 if p["outcome"] == "hit" else 0
                 confidences.append(conf)
                 outcomes.append(out)
         if len(confidences) >= 20:

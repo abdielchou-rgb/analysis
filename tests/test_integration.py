@@ -136,9 +136,9 @@ class TestSignificanceIntegration:
         from core.significance import monte_carlo_direction_significance
 
         predictions = [
-            {"direction": "bullish", "outcome": "correct"} for _ in range(20)
+            {"direction": "bullish", "outcome": "hit"} for _ in range(20)
         ] + [
-            {"direction": "bearish", "outcome": "incorrect"} for _ in range(5)
+            {"direction": "bearish", "outcome": "miss"} for _ in range(5)
         ]
 
         result = monte_carlo_direction_significance(predictions, n_simulations=100)
@@ -151,9 +151,9 @@ class TestSignificanceIntegration:
         from core.significance import monte_carlo_alpha_significance
 
         predictions = [
-            {"direction": "bullish", "outcome": "correct"} for _ in range(15)
+            {"direction": "bullish", "outcome": "hit"} for _ in range(15)
         ] + [
-            {"direction": "bearish", "outcome": "incorrect"} for _ in range(5)
+            {"direction": "bearish", "outcome": "miss"} for _ in range(5)
         ]
 
         result = monte_carlo_alpha_significance(predictions, n_simulations=100)
@@ -177,8 +177,8 @@ class TestCohortIntegration:
         # Mock predictions
         cohort.load_predictions = MagicMock(return_value=[
             {"made_date": "2026-01-01", "direction": "bullish", "time_horizon": "6m", "outcome": "pending"},
-            {"made_date": "2026-06-01", "direction": "bearish", "time_horizon": "12m", "outcome": "correct"},
-            {"made_date": "2026-03-01", "direction": "bullish", "time_horizon": "6m", "outcome": "incorrect"},
+            {"made_date": "2026-06-01", "direction": "bearish", "time_horizon": "12m", "outcome": "hit"},
+            {"made_date": "2026-03-01", "direction": "bullish", "time_horizon": "6m", "outcome": "miss"},
         ])
 
         # Filter by direction
@@ -195,15 +195,15 @@ class TestCohortIntegration:
 
         cohort = LiveForwardCohort.__new__(LiveForwardCohort)
         stats = cohort.cohort_stats([
-            {"outcome": "correct"},
-            {"outcome": "correct"},
-            {"outcome": "incorrect"},
+            {"outcome": "hit"},
+            {"outcome": "hit"},
+            {"outcome": "miss"},
             {"outcome": "pending"},
         ])
 
         assert stats["total"] == 4
         assert stats["resolved"] == 3
-        assert stats["correct"] == 2
+        assert stats["hit"] == 2
         assert stats["hit_rate"] == pytest.approx(2/3, abs=0.01)
 
 
@@ -231,16 +231,16 @@ class TestAttributionIntegration:
 
         # Need at least 5 predictions per dimension
         predictions = [
-            {"outcome": "correct", "dimensions_used": ["valuation", "growth"], "confidence_at_make": 0.8},
-            {"outcome": "incorrect", "dimensions_used": ["valuation"], "confidence_at_make": 0.6},
-            {"outcome": "correct", "dimensions_used": ["growth"], "confidence_at_make": 0.9},
-            {"outcome": "correct", "dimensions_used": ["valuation", "growth"], "confidence_at_make": 0.7},
-            {"outcome": "incorrect", "dimensions_used": ["valuation"], "confidence_at_make": 0.5},
-            {"outcome": "correct", "dimensions_used": ["growth"], "confidence_at_make": 0.85},
-            {"outcome": "correct", "dimensions_used": ["valuation"], "confidence_at_make": 0.75},
-            {"outcome": "incorrect", "dimensions_used": ["valuation", "growth"], "confidence_at_make": 0.65},
-            {"outcome": "correct", "dimensions_used": ["growth"], "confidence_at_make": 0.95},
-            {"outcome": "correct", "dimensions_used": ["valuation"], "confidence_at_make": 0.7},
+            {"outcome": "hit", "dimensions_used": ["valuation", "growth"], "confidence_at_make": 0.8},
+            {"outcome": "miss", "dimensions_used": ["valuation"], "confidence_at_make": 0.6},
+            {"outcome": "hit", "dimensions_used": ["growth"], "confidence_at_make": 0.9},
+            {"outcome": "hit", "dimensions_used": ["valuation", "growth"], "confidence_at_make": 0.7},
+            {"outcome": "miss", "dimensions_used": ["valuation"], "confidence_at_make": 0.5},
+            {"outcome": "hit", "dimensions_used": ["growth"], "confidence_at_make": 0.85},
+            {"outcome": "hit", "dimensions_used": ["valuation"], "confidence_at_make": 0.75},
+            {"outcome": "miss", "dimensions_used": ["valuation", "growth"], "confidence_at_make": 0.65},
+            {"outcome": "hit", "dimensions_used": ["growth"], "confidence_at_make": 0.95},
+            {"outcome": "hit", "dimensions_used": ["valuation"], "confidence_at_make": 0.7},
         ]
 
         result = attribute_by_dimension(predictions)

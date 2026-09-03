@@ -14,6 +14,14 @@ import os
 from dataclasses import dataclass, field
 from datetime import datetime
 
+# ── M0-U1: 全仓唯一 outcome 词汇表 ──────────────────────────
+# 唯一允许写入/读取的 outcome 值
+OUTCOME_VOCAB = frozenset({"pending", "hit", "miss", "partial", "unverifiable", "pending_review"})
+# 写入侧白名单：resolved 状态（非 pending）
+RESOLVED_OUTCOMES = frozenset({"hit", "miss", "partial"})
+# 方向白名单
+DIRECTION_VOCAB = frozenset({"bullish", "bearish", "neutral"})
+
 
 @dataclass
 class Prediction:
@@ -26,12 +34,14 @@ class Prediction:
     direction: str = ""  # bullish/bearish/neutral
     bold_call: str = ""  # 具体预测内容
     target_price: str = ""  # 目标价(如有)
+    falsification: str = ""  # 证伪条件——什么情况下该预测被证明错误
     time_horizon: str = ""  # 3m/6m/12m
     made_date: str = ""  # 预测日期
     outcome_date: str = ""  # 结果确认日期
-    outcome: str = ""  # correct/incorrect/pending/partial
+    outcome: str = ""  # hit/miss/partial/pending/unverifiable/pending_review
     outcome_detail: str = ""  # 结果详情
     confidence_at_make: float = 0.0  # 做出预测时的置信度
+    source: str = "pipeline"  # 数据源: pipeline/backfill (mock 禁止写入生产库)
 
     def is_expired(self) -> bool:
         """是否已过期"""
@@ -57,11 +67,11 @@ class TrackRecord:
 
     @property
     def correct_count(self) -> int:
-        return sum(1 for p in self.predictions if p.outcome == "correct")
+        return sum(1 for p in self.predictions if p.outcome == "hit")
 
     @property
     def incorrect_count(self) -> int:
-        return sum(1 for p in self.predictions if p.outcome == "incorrect")
+        return sum(1 for p in self.predictions if p.outcome == "miss")
 
     @property
     def pending_count(self) -> int:
@@ -76,10 +86,10 @@ class TrackRecord:
 
     def by_industry(self, industry: str) -> float:
         """某个行业的准确率"""
-        preds = [p for p in self.predictions if p.industry == industry and p.outcome in ("correct", "incorrect")]
+        preds = [p for p in self.predictions if p.industry == industry and p.outcome in ("hit", "miss")]
         if not preds:
             return 0.0
-        return sum(1 for p in preds if p.outcome == "correct") / len(preds)
+        return sum(1 for p in preds if p.outcome == "hit") / len(preds)
 
     def add_prediction(self, pred: Prediction):
         """添加预测记录"""
@@ -92,8 +102,8 @@ class TrackRecord:
 
         if industry:
             ind_preds = [p for p in self.predictions if p.industry == industry]
-            correct = sum(1 for p in ind_preds if p.outcome == "correct")
-            incorrect = sum(1 for p in ind_preds if p.outcome == "incorrect")
+            correct = sum(1 for p in ind_preds if p.outcome == "hit")
+            incorrect = sum(1 for p in ind_preds if p.outcome == "miss")
             resolved = correct + incorrect
             acc = correct / resolved if resolved > 0 else 0
             lines.append(f"[{industry}] 预测{len(ind_preds)}次, 准确率{acc:.0%}")
@@ -104,10 +114,10 @@ class TrackRecord:
             # 按报告类型
             for rt in ["industry", "listed_company", "unlisted_company"]:
                 rt_preds = [
-                    p for p in self.predictions if p.report_type == rt and p.outcome in ("correct", "incorrect")
+                    p for p in self.predictions if p.report_type == rt and p.outcome in ("hit", "miss")
                 ]
                 if rt_preds:
-                    acc = sum(1 for p in rt_preds if p.outcome == "correct") / len(rt_preds)
+                    acc = sum(1 for p in rt_preds if p.outcome == "hit") / len(rt_preds)
                     lines.append(f"  [{rt}] {len(rt_preds)}次, 准确率{acc:.0%}")
 
         return "\n".join(lines)
@@ -190,10 +200,34 @@ class TrackRecordManager:
         direction: str,
         bold_call: str,
         target_price: str = "",
+        falsification: str = "",
         time_horizon: str = "6m",
         confidence: float = 0.7,
+        source: str = "pipeline",
     ) -> Prediction:
-        """注册新预测"""
+        """注册新预测
+        
+        Args:
+            source: 数据源标识，必须是 {pipeline, backfill} 之一
+                   mock 数据禁止写入生产库
+            direction: 必须是 {bullish, bearish, neutral} 之一
+        """
+        # Source validation: mock data cannot be written to production
+        VALID_SOURCES = {"pipeline", "backfill"}
+        if source not in VALID_SOURCES:
+            raise ValueError(
+                f"Invalid source '{source}' for production track_record. "
+                f"Valid sources: {VALID_SOURCES}. "
+                f"Mock data must be written to isolated mock_track_record.json"
+            )
+
+        # M0-U3: Direction validation
+        if direction not in DIRECTION_VOCAB:
+            raise ValueError(
+                f"Invalid direction '{direction}'. "
+                f"Valid directions: {DIRECTION_VOCAB}"
+            )
+
         pred = Prediction(
             id=f"{datetime.now().strftime('%Y%m%d_%H%M')}_{asset}",
             asset=asset,
@@ -202,10 +236,12 @@ class TrackRecordManager:
             direction=direction,
             bold_call=bold_call,
             target_price=target_price,
+            falsification=falsification,
             time_horizon=time_horizon,
             made_date=datetime.now().strftime("%Y-%m-%d"),
             outcome="pending",
             confidence_at_make=confidence,
+            source=source,
         )
         self.record.add_prediction(pred)
         self._save()
@@ -213,6 +249,13 @@ class TrackRecordManager:
 
     def update_outcome(self, pred_id: str, outcome: str, detail: str = ""):
         """更新预测结果"""
+        # M0-U3: Outcome validation
+        if outcome not in OUTCOME_VOCAB:
+            raise ValueError(
+                f"Invalid outcome '{outcome}'. "
+                f"Valid outcomes: {OUTCOME_VOCAB}"
+            )
+
         for p in self.record.predictions:
             if p.id == pred_id:
                 p.outcome = outcome
@@ -270,6 +313,7 @@ class TrackRecordManager:
                 "direction": p.direction,
                 "bold_call": p.bold_call,
                 "target_price": p.target_price,
+                "falsification": p.falsification,
                 "time_horizon": p.time_horizon,
                 "made_date": p.made_date,
                 "outcome": p.outcome,
@@ -282,16 +326,16 @@ class TrackRecordManager:
 
     def get_public_summary(self) -> dict:
         """Generate public track record summary."""
-        resolved = [p for p in self.record.predictions if p.outcome in ("correct", "incorrect")]
+        resolved = [p for p in self.record.predictions if p.outcome in ("hit", "miss")]
         total = len(resolved)
-        correct = sum(1 for p in resolved if p.outcome == "correct")
+        correct = sum(1 for p in resolved if p.outcome == "hit")
 
         directional_acc = correct / total if total > 0 else 0
 
         # Calculate avg PnL (mock for now - would need price data)
         avg_pnl = 0.0
         if resolved:
-            # Simplified: assume correct = +10%, incorrect = -5%
+            # Simplified: assume hit = +10%, miss = -5%
             avg_pnl = (correct * 10 - (total - correct) * 5) / total
 
         # Group by sector
@@ -320,14 +364,15 @@ class TrackRecordManager:
                     "direction": p.direction,
                     "bold_call": p.bold_call,
                     "target_price": p.target_price,
+                    "falsification": p.falsification,
                     "time_window": p.time_horizon,
                     "trigger": p.bold_call[:100],
-                    "falsification": p.outcome_detail[:100],
+                    "falsification": p.outcome_detail[:100] if not p.falsification else p.falsification,
                     "created_at": p.made_date,
                     "outcome": p.outcome,
                     "outcome_date": p.outcome_date,
                     "outcome_detail": p.outcome_detail,
-                    "pnl_pct": 10.0 if p.outcome == "correct" else (-5.0 if p.outcome == "incorrect" else 0),
+                    "pnl_pct": 10.0 if p.outcome == "hit" else (-5.0 if p.outcome == "miss" else 0),
                 }
                 for p in sorted(self.record.predictions, key=lambda x: x.made_date, reverse=True)
             ],

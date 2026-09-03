@@ -42,7 +42,7 @@ def generate_dashboard(
         except Exception as e:
             logger.warning("[DASHBOARD] Failed to load track record: %s", str(e))
 
-    resolved = [p for p in predictions if p.get("outcome") in ("correct", "incorrect")]
+    resolved = [p for p in predictions if p.get("outcome") in ("hit", "miss")]
     pending = [p for p in predictions if p.get("outcome") == "pending"]
 
     # === Calibration ===
@@ -54,7 +54,7 @@ def generate_dashboard(
                 "total_predictions": len(predictions),
                 "resolved": len(resolved),
                 "pending": len(pending),
-                "hit_rate": round(sum(1 for p in resolved if p["outcome"] == "correct") / len(resolved), 4),
+                "hit_rate": round(sum(1 for p in resolved if p["outcome"] == "hit") / len(resolved), 4),
             }
         except Exception as e:
             dashboard["calibration"] = {"error": str(e)}
@@ -151,7 +151,7 @@ def generate_dashboard(
         "resolved": len(resolved),
         "pending": len(pending),
         "hit_rate": round(
-            sum(1 for p in resolved if p["outcome"] == "correct") / len(resolved), 4
+            sum(1 for p in resolved if p["outcome"] == "hit") / len(resolved), 4
         ) if resolved else 0,
         "significance_achieved": dashboard.get("significance", {}).get("direction_test", {}).get("significant", False),
         "dimensions_tracked": len(dashboard.get("attribution", {}).get("dimension_attribution", {})),

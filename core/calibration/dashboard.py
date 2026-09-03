@@ -30,7 +30,7 @@ except ImportError:
 @dataclass
 class SectorAccuracy:
     sector: str = ""
-    correct: int = 0
+    hit: int = 0
     total: int = 0
     accuracy: float = 0.0
 
@@ -38,7 +38,7 @@ class SectorAccuracy:
 @dataclass
 class TimeframeAccuracy:
     timeframe: str = ""
-    correct: int = 0
+    hit: int = 0
     total: int = 0
     accuracy: float = 0.0
 
@@ -87,19 +87,19 @@ class CalibrationDashboard:
             if correct is None:
                 continue
             if sector not in sectors:
-                sectors[sector] = {"correct": 0, "total": 0}
+                sectors[sector] = {"hit": 0, "total": 0}
             sectors[sector]["total"] += 1
             if correct:
-                sectors[sector]["correct"] += 1
+                sectors[sector]["hit"] += 1
 
         results = []
         for sector, data in sorted(sectors.items()):
             results.append(
                 SectorAccuracy(
                     sector=sector,
-                    correct=data["correct"],
+                    hit=data["hit"],
                     total=data["total"],
-                    accuracy=round(data["correct"] / max(data["total"], 1), 3),
+                    accuracy=round(data["hit"] / max(data["total"], 1), 3),
                 )
             )
         return results
@@ -111,10 +111,10 @@ class CalibrationDashboard:
 
         picks = self._get_matured_picks()
         tfs: dict[str, dict] = {
-            "3m": {"correct": 0, "total": 0},
-            "6m": {"correct": 0, "total": 0},
-            "12m": {"correct": 0, "total": 0},
-            "other": {"correct": 0, "total": 0},
+            "3m": {"hit": 0, "total": 0},
+            "6m": {"hit": 0, "total": 0},
+            "12m": {"hit": 0, "total": 0},
+            "other": {"hit": 0, "total": 0},
         }
 
         for p in picks:
@@ -131,10 +131,10 @@ class CalibrationDashboard:
                 key = "12m"
             tfs[key]["total"] += 1
             if correct:
-                tfs[key]["correct"] += 1
+                tfs[key]["hit"] += 1
 
         return [
-            TimeframeAccuracy(k, v["correct"], v["total"], round(v["correct"] / max(v["total"], 1), 3))
+            TimeframeAccuracy(k, v["hit"], v["total"], round(v["hit"] / max(v["total"], 1), 3))
             for k, v in tfs.items()
         ]
 

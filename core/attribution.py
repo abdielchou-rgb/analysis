@@ -97,10 +97,10 @@ def attribute_by_dimension(
     dim_stats = defaultdict(lambda: {"hits": 0, "total": 0, "scores": [], "outcomes": []})
 
     for p in predictions:
-        if p.get("outcome") not in ("correct", "incorrect"):
+        if p.get("outcome") not in ("hit", "miss"):
             continue
 
-        outcome_val = 1 if p["outcome"] == "correct" else 0
+        outcome_val = 1 if p["outcome"] == "hit" else 0
         used_dims = p.get("dimensions_used", [])
 
         for dim in used_dims:
@@ -150,10 +150,10 @@ def attribute_by_framework(
     fw_stats = defaultdict(lambda: {"hits": 0, "total": 0, "scores": [], "outcomes": []})
 
     for p in predictions:
-        if p.get("outcome") not in ("correct", "incorrect"):
+        if p.get("outcome") not in ("hit", "miss"):
             continue
 
-        outcome_val = 1 if p["outcome"] == "correct" else 0
+        outcome_val = 1 if p["outcome"] == "hit" else 0
         used_fws = p.get("frameworks_used", [])
 
         for fw in used_fws:
@@ -191,8 +191,8 @@ def generate_attribution_report(
     fw_attribution = attribute_by_framework(predictions)
 
     # Overall stats
-    resolved = [p for p in predictions if p.get("outcome") in ("correct", "incorrect")]
-    overall_hit = sum(1 for p in resolved if p["outcome"] == "correct") / max(len(resolved), 1)
+    resolved = [p for p in predictions if p.get("outcome") in ("hit", "miss")]
+    overall_hit = sum(1 for p in resolved if p["outcome"] == "hit") / max(len(resolved), 1)
 
     # Find best/worst dimensions
     sorted_dims = sorted(dim_attribution.items(), key=lambda x: x[1]["hit_rate"], reverse=True)

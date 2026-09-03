@@ -152,7 +152,7 @@ class TestNoZeroPlaceholder:
         result = resolve_outcome(prediction, get_price_func=mock_get_price)
         assert result.get("price_at_make") != 0.0
         assert result.get("price_at_expiry") != 0.0
-        assert result["outcome"] in ("correct", "incorrect")
+        assert result["outcome"] in ("hit", "miss")
 
     def test_unverifiable_never_hit_or_miss(self):
         """Unverifiable outcomes are never classified as hit/miss."""
@@ -172,7 +172,7 @@ class TestNoZeroPlaceholder:
             "detail": "data_unavailable",
         }):
             result = resolve_outcome(prediction)
-            assert result["outcome"] not in ("correct", "incorrect", "hit", "miss")
+            assert result["outcome"] not in ("hit", "miss", "unverifiable") or result["outcome"] == "unverifiable"
             assert result["outcome"] == "unverifiable"
 
 

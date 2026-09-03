@@ -221,12 +221,12 @@ class DecisionHub:
 
         # Exponential moving average of recent accuracy
         recent = db["signals"][signal_id].get("history", [])
-        recent.append({"correct": correct, "timestamp": datetime.now().isoformat()})
+        recent.append({"hit": correct, "timestamp": datetime.now().isoformat()})
         db["signals"][signal_id]["history"] = recent[-50:]  # keep last 50
 
         _save_history(db)
         wr = db["signals"][signal_id]["wins"] / db["signals"][signal_id]["total"]
-        logger.info(f"Signal {signal_id}: {'correct' if correct else 'incorrect'} (win rate now {wr:.0%})")
+        logger.info(f"Signal {signal_id}: {'hit' if correct else 'miss'} (win rate now {wr:.0%})")
 
     @classmethod
     def get_stats(cls) -> dict:

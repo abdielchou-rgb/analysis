@@ -30,14 +30,14 @@ class TestSignificanceEdgeCases:
         """Single prediction returns error (need >=10)."""
         from core.significance import monte_carlo_direction_significance
 
-        result = monte_carlo_direction_significance([{"outcome": "correct"}])
+        result = monte_carlo_direction_significance([{"outcome": "hit"}])
         assert "error" in result
 
     def test_exactly_10_predictions(self):
         """Exactly 10 predictions is minimum viable."""
         from core.significance import monte_carlo_direction_significance
 
-        predictions = [{"outcome": "correct"} for _ in range(10)]
+        predictions = [{"outcome": "hit"} for _ in range(10)]
         result = monte_carlo_direction_significance(predictions, n_simulations=100)
         assert "error" not in result
         assert result["system_hit_rate"] == 1.0
@@ -46,7 +46,7 @@ class TestSignificanceEdgeCases:
         """All correct predictions → p_value should be very small."""
         from core.significance import monte_carlo_direction_significance
 
-        predictions = [{"outcome": "correct"} for _ in range(20)]
+        predictions = [{"outcome": "hit"} for _ in range(20)]
         result = monte_carlo_direction_significance(predictions, n_simulations=100)
         assert result["system_hit_rate"] == 1.0
         assert result["p_value"] < 0.05
@@ -55,7 +55,7 @@ class TestSignificanceEdgeCases:
         """All incorrect predictions → extreme deviation from 50% benchmark."""
         from core.significance import monte_carlo_direction_significance
 
-        predictions = [{"outcome": "incorrect"} for _ in range(20)]
+        predictions = [{"outcome": "miss"} for _ in range(20)]
         result = monte_carlo_direction_significance(predictions, n_simulations=100)
         assert result["system_hit_rate"] == 0.0
         # 0% hit rate is extreme deviation; percentile should be low
@@ -66,8 +66,8 @@ class TestSignificanceEdgeCases:
         from core.significance import monte_carlo_direction_significance
 
         predictions = (
-            [{"outcome": "correct"} for _ in range(10)] +
-            [{"outcome": "incorrect"} for _ in range(10)]
+            [{"outcome": "hit"} for _ in range(10)] +
+            [{"outcome": "miss"} for _ in range(10)]
         )
         result = monte_carlo_direction_significance(predictions, n_simulations=100)
         assert 0.3 < result["p_value"] < 0.7
@@ -76,8 +76,8 @@ class TestSignificanceEdgeCases:
         """Same seed produces same results."""
         from core.significance import monte_carlo_direction_significance
 
-        predictions = [{"outcome": "correct"} for _ in range(15)] + [
-            {"outcome": "incorrect"} for _ in range(5)
+        predictions = [{"outcome": "hit"} for _ in range(15)] + [
+            {"outcome": "miss"} for _ in range(5)
         ]
 
         r1 = monte_carlo_direction_significance(predictions, random_seed=42)
@@ -90,17 +90,17 @@ class TestSignificanceEdgeCases:
         from core.significance import batch_significance_by_horizon
 
         predictions = [
-            {"outcome": "correct", "time_horizon": "6m"},
-            {"outcome": "correct", "time_horizon": "6m"},
-            {"outcome": "incorrect", "time_horizon": "6m"},
-            {"outcome": "correct", "time_horizon": "12m"},
-            {"outcome": "correct", "time_horizon": "12m"},
-            {"outcome": "correct", "time_horizon": "12m"},
-            {"outcome": "correct", "time_horizon": "12m"},
-            {"outcome": "correct", "time_horizon": "12m"},
-            {"outcome": "incorrect", "time_horizon": "12m"},
-            {"outcome": "correct", "time_horizon": "12m"},
-            {"outcome": "correct", "time_horizon": "12m"},
+            {"outcome": "hit", "time_horizon": "6m"},
+            {"outcome": "hit", "time_horizon": "6m"},
+            {"outcome": "miss", "time_horizon": "6m"},
+            {"outcome": "hit", "time_horizon": "12m"},
+            {"outcome": "hit", "time_horizon": "12m"},
+            {"outcome": "hit", "time_horizon": "12m"},
+            {"outcome": "hit", "time_horizon": "12m"},
+            {"outcome": "hit", "time_horizon": "12m"},
+            {"outcome": "miss", "time_horizon": "12m"},
+            {"outcome": "hit", "time_horizon": "12m"},
+            {"outcome": "hit", "time_horizon": "12m"},
         ]
 
         result = batch_significance_by_horizon(predictions, n_simulations=100)
@@ -129,8 +129,8 @@ class TestAttributionEdgeCases:
         from core.attribution import attribute_by_dimension
 
         predictions = [
-            {"outcome": "correct", "confidence_at_make": 0.8},
-            {"outcome": "incorrect", "confidence_at_make": 0.6},
+            {"outcome": "hit", "confidence_at_make": 0.8},
+            {"outcome": "miss", "confidence_at_make": 0.6},
         ]
 
         result = attribute_by_dimension(predictions)

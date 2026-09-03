@@ -57,9 +57,9 @@ class TestMCGuardRejectsPending:
         assert "error" in result
 
     def test_fewer_than_20_valid_rejected(self):
-        """15 correct + 5 incorrect = 20 valid, should pass. But 15 valid should fail."""
+        """15 hit + 5 miss = 20 valid, should pass. But 15 valid should fail."""
         predictions = [
-            {"direction": "bullish", "outcome": "correct", "time_horizon": "6m"}
+            {"direction": "bullish", "outcome": "hit", "time_horizon": "6m"}
             for _ in range(15)
         ]
         result = monte_carlo_direction_significance(predictions)
@@ -74,26 +74,26 @@ class TestMCGuardRejectsPending:
 class TestMCGuardPassesValid:
     """MC should work normally with enough real outcomes."""
 
-    def test_25_correct_outcomes(self):
-        """25 correct outcomes → produces valid p-value."""
+    def test_25_hit_outcomes(self):
+        """25 hit outcomes → produces valid p-value."""
         predictions = [
-            {"direction": "bullish", "outcome": "correct", "time_horizon": "6m"}
+            {"direction": "bullish", "outcome": "hit", "time_horizon": "6m"}
             for _ in range(25)
         ]
         result = monte_carlo_direction_significance(predictions, n_simulations=1000)
         assert "p_value" in result
         assert "percentile" in result
         assert "system_hit_rate" in result
-        assert result["system_hit_rate"] == 1.0  # all correct
+        assert result["system_hit_rate"] == 1.0  # all hit
         assert result["p_value"] < 0.05  # should be significant
 
     def test_30_mixed_outcomes(self):
-        """30 mixed correct/incorrect → valid test."""
+        """30 mixed hit/miss → valid test."""
         predictions = [
-            {"direction": "bullish", "outcome": "correct", "time_horizon": "6m"}
+            {"direction": "bullish", "outcome": "hit", "time_horizon": "6m"}
             for _ in range(18)
         ] + [
-            {"direction": "bullish", "outcome": "incorrect", "time_horizon": "6m"}
+            {"direction": "bullish", "outcome": "miss", "time_horizon": "6m"}
             for _ in range(12)
         ]
         result = monte_carlo_alpha_significance(predictions, n_simulations=1000)
@@ -119,29 +119,29 @@ class TestRequireValidOutcomes:
         with pytest.raises(InsufficientOutcomes):
             _require_valid_outcomes(preds)
 
-    def test_passes_on_25_correct(self):
-        """25 correct → returns list."""
-        preds = [{"outcome": "correct"} for _ in range(25)]
+    def test_passes_on_25_hit(self):
+        """25 hit → returns list."""
+        preds = [{"outcome": "hit"} for _ in range(25)]
         result = _require_valid_outcomes(preds)
         assert len(result) == 25
 
-    def test_mixed_correct_incorrect(self):
-        """15 correct + 10 incorrect = 25 valid → passes."""
-        preds = [{"outcome": "correct"} for _ in range(15)] + \
-                [{"outcome": "incorrect"} for _ in range(10)]
+    def test_mixed_hit_miss(self):
+        """15 hit + 10 miss = 25 valid → passes."""
+        preds = [{"outcome": "hit"} for _ in range(15)] + \
+                [{"outcome": "miss"} for _ in range(10)]
         result = _require_valid_outcomes(preds)
         assert len(result) == 25
 
     def test_custom_min_valid(self):
         """Custom min_valid=5 with 7 valid → passes."""
-        preds = [{"outcome": "correct"} for _ in range(7)]
+        preds = [{"outcome": "hit"} for _ in range(7)]
         result = _require_valid_outcomes(preds, min_valid=5)
         assert len(result) == 7
 
     def test_unverifiable_not_counted(self):
         """Unverifiable outcomes are not counted as valid."""
         preds = [
-            {"outcome": "correct"} for _ in range(15)
+            {"outcome": "hit"} for _ in range(15)
         ] + [
             {"outcome": "unverifiable"} for _ in range(30)
         ]

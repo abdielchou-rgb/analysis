@@ -45,9 +45,9 @@ def main():
             change = (p_exp - p_make) / p_make
 
             if direction == "bullish":
-                p["outcome"] = "correct" if change > 0 else "incorrect"
+                p["outcome"] = "hit" if change > 0 else "miss"
             elif direction == "bearish":
-                p["outcome"] = "correct" if change < 0 else "incorrect"
+                p["outcome"] = "hit" if change < 0 else "miss"
             else:
                 p["outcome"] = "unverifiable"
 

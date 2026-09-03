@@ -128,9 +128,9 @@ def resolve_outcome(
         price_change = (price_at_expiry - price_at_make) / price_at_make
 
         if direction == "bullish":
-            prediction["outcome"] = "correct" if price_change > 0 else "incorrect"
+            prediction["outcome"] = "hit" if price_change > 0 else "miss"
         elif direction == "bearish":
-            prediction["outcome"] = "correct" if price_change < 0 else "incorrect"
+            prediction["outcome"] = "hit" if price_change < 0 else "miss"
         else:
             prediction["outcome"] = "pending_review"
             prediction["outcome_reason"] = f"unknown_direction: {direction}"
@@ -178,7 +178,7 @@ def run_outcome_update(
     for p in expired:
         try:
             p = resolve_outcome(p, get_price_func)
-            if p.get("outcome") == "correct" or p.get("outcome") == "incorrect":
+            if p.get("outcome") == "hit" or p.get("outcome") == "miss":
                 stats["updated"] += 1
             elif p.get("outcome") == "pending_review":
                 stats["pending_review"] += 1

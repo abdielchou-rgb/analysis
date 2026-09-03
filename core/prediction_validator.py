@@ -159,7 +159,7 @@ class PredictionValidator:
                 correct = abs(change) < threshold
 
             result["validated"] = True
-            result["outcome"] = "correct" if correct else "incorrect"
+            result["outcome"] = "hit" if correct else "miss"
             result["detail"] = (
                 f"入场价: {price_before:.2f}, "
                 f"到期价: {price_after:.2f}, "
@@ -212,13 +212,13 @@ class PredictionValidator:
         """Get validation statistics"""
         self._load()
         total = len(self.tm.record.predictions)
-        resolved = sum(1 for p in self.tm.record.predictions if p.outcome in ("correct", "incorrect"))
-        correct = sum(1 for p in self.tm.record.predictions if p.outcome == "correct")
+        resolved = sum(1 for p in self.tm.record.predictions if p.outcome in ("hit", "miss"))
+        correct = sum(1 for p in self.tm.record.predictions if p.outcome == "hit")
         return {
             "total": total,
             "resolved": resolved,
-            "correct": correct,
-            "incorrect": resolved - correct,
+            "hit": correct,
+            "miss": resolved - correct,
             "pending": sum(1 for p in self.tm.record.predictions if p.outcome == "pending"),
             "requires_review": sum(1 for p in self.tm.record.predictions if p.outcome == "requires_human_review"),
             "accuracy": correct / resolved if resolved > 0 else 0,

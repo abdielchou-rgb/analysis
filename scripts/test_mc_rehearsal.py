@@ -12,7 +12,7 @@ def main():
         data = json.load(f)
 
     preds = data["predictions"]
-    valid = [p for p in preds if p.get("outcome") in ("correct", "incorrect")]
+    valid = [p for p in preds if p.get("outcome") in ("hit", "miss")]
     print(f"Valid outcomes: {len(valid)}")
     for v in valid:
         print(f"  {v['asset']}: {v['outcome']} ({v.get('outcome_detail', '')})")

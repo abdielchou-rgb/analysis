@@ -22,7 +22,7 @@ def generate_html_dashboard(
         data = json.load(f)
 
     preds = data.get("predictions", [])
-    resolved = [p for p in preds if p.get("outcome") in ("correct", "incorrect")]
+    resolved = [p for p in preds if p.get("outcome") in ("hit", "miss")]
     pending = [p for p in preds if p.get("outcome") == "pending"]
     unverifiable = [p for p in preds if p.get("outcome") == "unverifiable"]
 
@@ -31,8 +31,8 @@ def generate_html_dashboard(
     n_resolved = len(resolved)
     n_pending = len(pending)
     n_unverifiable = len(unverifiable)
-    n_correct = sum(1 for p in resolved if p["outcome"] == "correct")
-    n_incorrect = sum(1 for p in resolved if p["outcome"] == "incorrect")
+    n_correct = sum(1 for p in resolved if p["outcome"] == "hit")
+    n_incorrect = sum(1 for p in resolved if p["outcome"] == "miss")
     hit_rate = n_correct / n_resolved if n_resolved > 0 else 0
 
     # Attribution by direction
@@ -40,7 +40,7 @@ def generate_html_dashboard(
     for p in resolved:
         d = p.get("direction", "unknown")
         if d not in direction_stats:
-            direction_stats[d] = {"correct": 0, "incorrect": 0}
+            direction_stats[d] = {"hit": 0, "miss": 0}
         direction_stats[d][p["outcome"]] += 1
 
     # Attribution by industry
@@ -48,7 +48,7 @@ def generate_html_dashboard(
     for p in resolved:
         ind = p.get("industry", "unknown")
         if ind not in industry_stats:
-            industry_stats[ind] = {"correct": 0, "incorrect": 0}
+            industry_stats[ind] = {"hit": 0, "miss": 0}
         industry_stats[ind][p["outcome"]] += 1
 
     # Significance (if enough data)
@@ -132,9 +132,9 @@ def generate_html_dashboard(
 """
 
     for d, stats in sorted(direction_stats.items()):
-        total_d = stats["correct"] + stats["incorrect"]
-        rate = stats["correct"] / total_d if total_d > 0 else 0
-        html += f'                <tr><td>{d}</td><td>{stats["correct"]}</td><td>{stats["incorrect"]}</td><td>{rate:.1%}</td></tr>\n'
+        total_d = stats["hit"] + stats["miss"]
+        rate = stats["hit"] / total_d if total_d > 0 else 0
+        html += f'                <tr><td>{d}</td><td>{stats["hit"]}</td><td>{stats["miss"]}</td><td>{rate:.1%}</td></tr>\n'
 
     html += """            </table>
         </div>
@@ -146,9 +146,9 @@ def generate_html_dashboard(
 """
 
     for ind, stats in sorted(industry_stats.items()):
-        total_i = stats["correct"] + stats["incorrect"]
-        rate = stats["correct"] / total_i if total_i > 0 else 0
-        html += f'                <tr><td>{ind}</td><td>{stats["correct"]}</td><td>{stats["incorrect"]}</td><td>{rate:.1%}</td></tr>\n'
+        total_i = stats["hit"] + stats["miss"]
+        rate = stats["hit"] / total_i if total_i > 0 else 0
+        html += f'                <tr><td>{ind}</td><td>{stats["hit"]}</td><td>{stats["miss"]}</td><td>{rate:.1%}</td></tr>\n'
 
     html += """            </table>
         </div>
@@ -161,7 +161,7 @@ def generate_html_dashboard(
 
     for p in resolved[-10:]:
         badge_class = f"badge-{p['outcome']}"
-        outcome_label = "正确" if p["outcome"] == "correct" else "错误"
+        outcome_label = "正确" if p["outcome"] == "hit" else "错误"
         html += f'                <tr><td>{p.get("asset","")}</td><td>{p.get("direction","")}</td><td><span class="badge {badge_class}">{outcome_label}</span></td><td>{p.get("outcome_detail","")}</td></tr>\n'
 
     html += """            </table>

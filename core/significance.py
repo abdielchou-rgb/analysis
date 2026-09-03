@@ -22,13 +22,13 @@ def _require_valid_outcomes(predictions: list[dict], min_valid: int = 20) -> lis
     """Filter to valid outcomes and enforce minimum count.
 
     P0-2: Guards against running MC on empty/pending pools.
-    Valid outcomes: 'correct' or 'incorrect' only.
-    'unverifiable', 'pending', 'pending_review' are NOT valid.
+    Valid outcomes: 'hit' or 'miss' only.
+    'unverifiable', 'pending', 'pending_review', 'partial' are NOT valid.
 
     Raises:
         InsufficientOutcomes if fewer than min_valid resolved outcomes.
     """
-    valid = [p for p in predictions if p.get("outcome") in ("correct", "incorrect")]
+    valid = [p for p in predictions if p.get("outcome") in ("hit", "miss")]
     if len(valid) < min_valid:
         n_pending = sum(1 for p in predictions if p.get("outcome") in ("pending", "pending_review"))
         n_unverifiable = sum(1 for p in predictions if p.get("outcome") == "unverifiable")
@@ -107,7 +107,7 @@ def monte_carlo_direction_significance(
         }
 
     n = len(valid)
-    system_hits = sum(1 for p in valid if p["outcome"] == "correct")
+    system_hits = sum(1 for p in valid if p["outcome"] == "hit")
     system_rate = system_hits / n
 
     # Monte Carlo: generate random direction assignments
@@ -186,7 +186,7 @@ def monte_carlo_alpha_significance(
         }
 
     n = len(valid)
-    system_hits = sum(1 for p in valid if p["outcome"] == "correct")
+    system_hits = sum(1 for p in valid if p["outcome"] == "hit")
     system_rate = system_hits / n
     alpha = system_rate - benchmark_rate
 

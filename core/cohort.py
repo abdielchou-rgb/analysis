@@ -124,24 +124,24 @@ class LiveForwardCohort:
         return [p for p in self.load_predictions() if p.get("outcome") == "pending"]
 
     def get_resolved_predictions(self) -> list[dict]:
-        """Get all resolved predictions (correct/incorrect)."""
-        return [p for p in self.load_predictions() if p.get("outcome") in ("correct", "incorrect")]
+        """Get all resolved predictions (hit/miss)."""
+        return [p for p in self.load_predictions() if p.get("outcome") in ("hit", "miss")]
 
     def cohort_stats(self, cohort: list[dict]) -> dict:
         """Compute statistics for a cohort."""
         if not cohort:
             return {"total": 0, "resolved": 0, "pending": 0, "hit_rate": 0}
 
-        resolved = [p for p in cohort if p.get("outcome") in ("correct", "incorrect")]
-        correct = sum(1 for p in resolved if p["outcome"] == "correct")
+        resolved = [p for p in cohort if p.get("outcome") in ("hit", "miss")]
+        correct = sum(1 for p in resolved if p["outcome"] == "hit")
         hit_rate = correct / len(resolved) if resolved else 0
 
         return {
             "total": len(cohort),
             "resolved": len(resolved),
             "pending": len([p for p in cohort if p.get("outcome") == "pending"]),
-            "correct": correct,
-            "incorrect": len(resolved) - correct,
+            "hit": correct,
+            "miss": len(resolved) - correct,
             "hit_rate": round(hit_rate, 4),
         }
 
