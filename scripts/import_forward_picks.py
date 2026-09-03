@@ -72,6 +72,13 @@ def main():
             except Exception:
                 anchor_nav = 0.0
         direction = str(r.get("direction", "bull")).strip().lower()
+        # M2-A3: Direction validation - map common variants to whitelist
+        direction_map = {
+            "bull": "bullish", "bullish": "bullish",
+            "bear": "bearish", "bearish": "bearish",
+            "neutral": "neutral", "hold": "neutral",
+        }
+        direction = direction_map.get(direction, "neutral")
         base_target = float(r["target_price"]) if r.get("target_price") else 0.0
         # R64（审计修复 P1-008）：不再造 bull_target=base_target 复制值。
         # 单目标价预测不伪造独立三情景；bull/bear_target 留 0 = 未提供（FP2 诚实边界）。
