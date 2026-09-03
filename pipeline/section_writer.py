@@ -1391,6 +1391,10 @@ class SectionWriter:
             # 报告蓝图注入
             self._build_report_blueprint(seg_idx),
             "",
+            # EXEMPLAR_INJECTION_START: Diversity-aware exemplar injection
+            self._build_exemplar_injection(parts, seg, asset),
+            # EXEMPLAR_INJECTION_END
+
             "## 可用数据",
             data_str[:4000],
             "",
@@ -1582,7 +1586,50 @@ class SectionWriter:
                 )
         return "\n".join(parts)
 
-    def _debate_bold_call(self, asset, data_str):
+    def _debate_bold_call(self, parts, seg, asset, context):
+        """Add debate-style bold call section."""
+        parts.append(f"\n### Bold Call: {asset}")
+        parts.append("基于以上分析，我们给出明确的投资建议和目标价。")
+        return parts
+
+    def _build_exemplar_injection(self, parts, seg, asset):
+        """Inject diversity-aware exemplars from FinRpt bank."""
+        try:
+            import sys
+            sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+            from exemplar_injector import ExemplarInjector
+
+            injector = ExemplarInjector()
+
+            # Map segment to section names
+            section_map = {
+                0: "利润表分析",  # Strategy Layer
+                1: "竞争格局分析",  # Competition Layer
+                2: "趋势分析",  # Forward-Looking Layer
+            }
+            section = section_map.get(seg.get("idx", 0), "财务综述")
+
+            # Get dimension IDs for this segment
+            dim_ids = seg.get("dimension_ids", [])
+
+            # Build exemplar prompt
+            exemplar_text = injector._format_exemplars(
+                injector.retriever.retrieve(
+                    section=section,
+                    n=3,
+                    exclude_stocks={self._asset_code} if self._asset_code else None,
+                )
+            )
+
+            if exemplar_text:
+                parts.append("## 资深分析师参考示例（风格参考，禁止照搬）")
+                parts.append(exemplar_text[:2000])  # Cap at 2000 chars
+                parts.append("")
+
+        except Exception:
+            pass  # Graceful degradation if exemplar bank unavailable
+
+    def _debate_bold_call_with_agents(self, asset, data_str):
         """FP3-D5: Bold Call辩论 — bull agent vs bear agent vs judge"""
         try:
             base_prompt = f"分析标的:{asset}\n\n可用数据:{data_str[:500]}\n\n请给出该标的的核心投资判断。"

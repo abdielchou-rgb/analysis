@@ -1,35 +1,604 @@
 [
-  {"asset": "宁德时代", "report_id": "golden_001", "field": "target_price", "canonical": 260.0, "source": "compute_primary_target_price", "allow_report_values": [260.0, 260], "tolerance": 0.01, "report_type": "listed_company"},
-  {"asset": "宁德时代", "report_id": "golden_001", "field": "revenue", "canonical": 4500, "source": "compute_financials", "allow_report_values": [4500, 4500.0, 450], "tolerance": 0.05, "report_type": "listed_company"},
-  {"asset": "贵州茅台", "report_id": "golden_002", "field": "target_price", "canonical": 1800.0, "source": "compute_primary_target_price", "allow_report_values": [1800.0, 1800], "tolerance": 0.01, "report_type": "listed_company"},
-  {"asset": "贵州茅台", "report_id": "golden_002", "field": "pe_ratio", "canonical": 25.0, "source": "compute_valuation", "allow_report_values": [25.0, 25], "tolerance": 0.05, "report_type": "listed_company"},
-  {"asset": "比亚迪", "report_id": "golden_003", "field": "target_price", "canonical": 320.0, "source": "compute_primary_target_price", "allow_report_values": [320.0, 320], "tolerance": 0.01, "report_type": "listed_company"},
-  {"asset": "比亚迪", "report_id": "golden_003", "field": "revenue", "canonical": 6000, "source": "compute_financials", "allow_report_values": [6000, 6000.0, 600], "tolerance": 0.05, "report_type": "listed_company"},
-  {"asset": "中芯国际", "report_id": "golden_004", "field": "target_price", "canonical": 85.0, "source": "compute_primary_target_price", "allow_report_values": [85.0, 85], "tolerance": 0.01, "report_type": "listed_company"},
-  {"asset": "药明康德", "report_id": "golden_005", "field": "target_price", "canonical": 120.0, "source": "compute_primary_target_price", "allow_report_values": [120.0, 120], "tolerance": 0.01, "report_type": "listed_company"},
-  {"asset": "中国平安", "report_id": "golden_006", "field": "target_price", "canonical": 65.0, "source": "compute_primary_target_price", "allow_report_values": [65.0, 65], "tolerance": 0.01, "report_type": "listed_company"},
-  {"asset": "招商银行", "report_id": "golden_007", "field": "target_price", "canonical": 45.0, "source": "compute_primary_target_price", "allow_report_values": [45.0, 45], "tolerance": 0.01, "report_type": "listed_company"},
-  {"asset": "五粮液", "report_id": "golden_008", "field": "target_price", "canonical": 200.0, "source": "compute_primary_target_price", "allow_report_values": [200.0, 200], "tolerance": 0.01, "report_type": "listed_company"},
-  {"asset": "立讯精密", "report_id": "golden_009", "field": "target_price", "canonical": 40.0, "source": "compute_primary_target_price", "allow_report_values": [40.0, 40], "tolerance": 0.01, "report_type": "listed_company"},
-  {"asset": "东方财富", "report_id": "golden_010", "field": "target_price", "canonical": 30.0, "source": "compute_primary_target_price", "allow_report_values": [30.0, 30], "tolerance": 0.01, "report_type": "listed_company"},
-  {"asset": "长江电力", "report_id": "golden_011", "field": "target_price", "canonical": 32.0, "source": "compute_primary_target_price", "allow_report_values": [32.0, 32], "tolerance": 0.01, "report_type": "listed_company"},
-  {"asset": "隆基绿能", "report_id": "golden_012", "field": "target_price", "canonical": 22.0, "source": "compute_primary_target_price", "allow_report_values": [22.0, 22], "tolerance": 0.01, "report_type": "listed_company"},
-  {"asset": "北方华创", "report_id": "golden_013", "field": "target_price", "canonical": 180.0, "source": "compute_primary_target_price", "allow_report_values": [180.0, 180], "tolerance": 0.01, "report_type": "listed_company"},
-  {"asset": "中微公司", "report_id": "golden_014", "field": "target_price", "canonical": 150.0, "source": "compute_primary_target_price", "allow_report_values": [150.0, 150], "tolerance": 0.01, "report_type": "listed_company"},
-  {"asset": "汇川技术", "report_id": "golden_015", "field": "target_price", "canonical": 60.0, "source": "compute_primary_target_price", "allow_report_values": [60.0, 60], "tolerance": 0.01, "report_type": "listed_company"},
-  {"asset": "紫光国微", "report_id": "golden_016", "field": "target_price", "canonical": 150.0, "source": "compute_primary_target_price", "allow_report_values": [150.0, 150], "tolerance": 0.01, "report_type": "listed_company"},
-  {"asset": "用友网络", "report_id": "golden_017", "field": "target_price", "canonical": 45.0, "source": "compute_primary_target_price", "allow_report_values": [45.0, 45], "tolerance": 0.01, "report_type": "listed_company"},
-  {"asset": "金山办公", "report_id": "golden_018", "field": "target_price", "canonical": 100.0, "source": "compute_primary_target_price", "allow_report_values": [100.0, 100], "tolerance": 0.01, "report_type": "listed_company"},
-  {"asset": "迈瑞医疗", "report_id": "golden_019", "field": "target_price", "canonical": 300.0, "source": "compute_primary_target_price", "allow_report_values": [300.0, 300], "tolerance": 0.01, "report_type": "listed_company"},
-  {"asset": "恒瑞医药", "report_id": "golden_020", "field": "target_price", "canonical": 55.0, "source": "compute_primary_target_price", "allow_report_values": [55.0, 55], "tolerance": 0.01, "report_type": "listed_company"},
-  {"asset": "海康威视", "report_id": "golden_021", "field": "target_price", "canonical": 42.0, "source": "compute_primary_target_price", "allow_report_values": [42.0, 42], "tolerance": 0.01, "report_type": "listed_company"},
-  {"asset": "迈瑞医疗", "report_id": "golden_022", "field": "pe_ratio", "canonical": 35.0, "source": "compute_valuation", "allow_report_values": [35.0, 35], "tolerance": 0.05, "report_type": "listed_company"},
-  {"asset": "宁德时代", "report_id": "golden_023", "field": "pe_ratio", "canonical": 28.0, "source": "compute_valuation", "allow_report_values": [28.0, 28], "tolerance": 0.05, "report_type": "listed_company"},
-  {"asset": "比亚迪", "report_id": "golden_024", "field": "pe_ratio", "canonical": 30.0, "source": "compute_valuation", "allow_report_values": [30.0, 30], "tolerance": 0.05, "report_type": "listed_company"},
-  {"asset": "中芯国际", "report_id": "golden_025", "field": "pe_ratio", "canonical": 45.0, "source": "compute_valuation", "allow_report_values": [45.0, 45], "tolerance": 0.05, "report_type": "listed_company"},
-  {"asset": "药明康德", "report_id": "golden_026", "field": "pe_ratio", "canonical": 32.0, "source": "compute_valuation", "allow_report_values": [32.0, 32], "tolerance": 0.05, "report_type": "listed_company"},
-  {"asset": "中国平安", "report_id": "golden_027", "field": "pe_ratio", "canonical": 12.0, "source": "compute_valuation", "allow_report_values": [12.0, 12], "tolerance": 0.05, "report_type": "listed_company"},
-  {"asset": "招商银行", "report_id": "golden_028", "field": "pe_ratio", "canonical": 8.0, "source": "compute_valuation", "allow_report_values": [8.0, 8], "tolerance": 0.05, "report_type": "listed_company"},
-  {"asset": "贵州茅台", "report_id": "golden_029", "field": "revenue", "canonical": 1500, "source": "compute_financials", "allow_report_values": [1500, 1500.0, 150], "tolerance": 0.05, "report_type": "listed_company"},
-  {"asset": "宁德时代", "report_id": "golden_030", "field": "revenue", "canonical": 4000, "source": "compute_financials", "allow_report_values": [4000, 4000.0, 400], "tolerance": 0.05, "report_type": "listed_company"}
+  {
+    "asset": "宁德时代",
+    "report_id": "golden_001",
+    "field": "target_price",
+    "canonical": 260.0,
+    "source": "compute_primary_target_price",
+    "allow_report_values": [
+      260.0,
+      260
+    ],
+    "tolerance": 0.01,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "宁德时代",
+    "report_id": "golden_001",
+    "field": "revenue",
+    "canonical": 4500,
+    "source": "compute_financials",
+    "allow_report_values": [
+      4500,
+      4500.0,
+      450
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "贵州茅台",
+    "report_id": "golden_002",
+    "field": "target_price",
+    "canonical": 1800.0,
+    "source": "compute_primary_target_price",
+    "allow_report_values": [
+      1800.0,
+      1800
+    ],
+    "tolerance": 0.01,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "贵州茅台",
+    "report_id": "golden_002",
+    "field": "pe_ratio",
+    "canonical": 25.0,
+    "source": "compute_valuation",
+    "allow_report_values": [
+      25.0,
+      25
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "比亚迪",
+    "report_id": "golden_003",
+    "field": "target_price",
+    "canonical": 320.0,
+    "source": "compute_primary_target_price",
+    "allow_report_values": [
+      320.0,
+      320
+    ],
+    "tolerance": 0.01,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "比亚迪",
+    "report_id": "golden_003",
+    "field": "revenue",
+    "canonical": 6000,
+    "source": "compute_financials",
+    "allow_report_values": [
+      6000,
+      6000.0,
+      600
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "中芯国际",
+    "report_id": "golden_004",
+    "field": "target_price",
+    "canonical": 85.0,
+    "source": "compute_primary_target_price",
+    "allow_report_values": [
+      85.0,
+      85
+    ],
+    "tolerance": 0.01,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "药明康德",
+    "report_id": "golden_005",
+    "field": "target_price",
+    "canonical": 120.0,
+    "source": "compute_primary_target_price",
+    "allow_report_values": [
+      120.0,
+      120
+    ],
+    "tolerance": 0.01,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "中国平安",
+    "report_id": "golden_006",
+    "field": "target_price",
+    "canonical": 65.0,
+    "source": "compute_primary_target_price",
+    "allow_report_values": [
+      65.0,
+      65
+    ],
+    "tolerance": 0.01,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "招商银行",
+    "report_id": "golden_007",
+    "field": "target_price",
+    "canonical": 45.0,
+    "source": "compute_primary_target_price",
+    "allow_report_values": [
+      45.0,
+      45
+    ],
+    "tolerance": 0.01,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "五粮液",
+    "report_id": "golden_008",
+    "field": "target_price",
+    "canonical": 200.0,
+    "source": "compute_primary_target_price",
+    "allow_report_values": [
+      200.0,
+      200
+    ],
+    "tolerance": 0.01,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "立讯精密",
+    "report_id": "golden_009",
+    "field": "target_price",
+    "canonical": 40.0,
+    "source": "compute_primary_target_price",
+    "allow_report_values": [
+      40.0,
+      40
+    ],
+    "tolerance": 0.01,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "东方财富",
+    "report_id": "golden_010",
+    "field": "target_price",
+    "canonical": 30.0,
+    "source": "compute_primary_target_price",
+    "allow_report_values": [
+      30.0,
+      30
+    ],
+    "tolerance": 0.01,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "长江电力",
+    "report_id": "golden_011",
+    "field": "target_price",
+    "canonical": 32.0,
+    "source": "compute_primary_target_price",
+    "allow_report_values": [
+      32.0,
+      32
+    ],
+    "tolerance": 0.01,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "隆基绿能",
+    "report_id": "golden_012",
+    "field": "target_price",
+    "canonical": 22.0,
+    "source": "compute_primary_target_price",
+    "allow_report_values": [
+      22.0,
+      22
+    ],
+    "tolerance": 0.01,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "北方华创",
+    "report_id": "golden_013",
+    "field": "target_price",
+    "canonical": 180.0,
+    "source": "compute_primary_target_price",
+    "allow_report_values": [
+      180.0,
+      180
+    ],
+    "tolerance": 0.01,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "中微公司",
+    "report_id": "golden_014",
+    "field": "target_price",
+    "canonical": 150.0,
+    "source": "compute_primary_target_price",
+    "allow_report_values": [
+      150.0,
+      150
+    ],
+    "tolerance": 0.01,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "汇川技术",
+    "report_id": "golden_015",
+    "field": "target_price",
+    "canonical": 60.0,
+    "source": "compute_primary_target_price",
+    "allow_report_values": [
+      60.0,
+      60
+    ],
+    "tolerance": 0.01,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "紫光国微",
+    "report_id": "golden_016",
+    "field": "target_price",
+    "canonical": 150.0,
+    "source": "compute_primary_target_price",
+    "allow_report_values": [
+      150.0,
+      150
+    ],
+    "tolerance": 0.01,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "用友网络",
+    "report_id": "golden_017",
+    "field": "target_price",
+    "canonical": 45.0,
+    "source": "compute_primary_target_price",
+    "allow_report_values": [
+      45.0,
+      45
+    ],
+    "tolerance": 0.01,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "金山办公",
+    "report_id": "golden_018",
+    "field": "target_price",
+    "canonical": 100.0,
+    "source": "compute_primary_target_price",
+    "allow_report_values": [
+      100.0,
+      100
+    ],
+    "tolerance": 0.01,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "迈瑞医疗",
+    "report_id": "golden_019",
+    "field": "target_price",
+    "canonical": 300.0,
+    "source": "compute_primary_target_price",
+    "allow_report_values": [
+      300.0,
+      300
+    ],
+    "tolerance": 0.01,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "恒瑞医药",
+    "report_id": "golden_020",
+    "field": "target_price",
+    "canonical": 55.0,
+    "source": "compute_primary_target_price",
+    "allow_report_values": [
+      55.0,
+      55
+    ],
+    "tolerance": 0.01,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "海康威视",
+    "report_id": "golden_021",
+    "field": "target_price",
+    "canonical": 42.0,
+    "source": "compute_primary_target_price",
+    "allow_report_values": [
+      42.0,
+      42
+    ],
+    "tolerance": 0.01,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "迈瑞医疗",
+    "report_id": "golden_022",
+    "field": "pe_ratio",
+    "canonical": 35.0,
+    "source": "compute_valuation",
+    "allow_report_values": [
+      35.0,
+      35
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "宁德时代",
+    "report_id": "golden_023",
+    "field": "pe_ratio",
+    "canonical": 28.0,
+    "source": "compute_valuation",
+    "allow_report_values": [
+      28.0,
+      28
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "比亚迪",
+    "report_id": "golden_024",
+    "field": "pe_ratio",
+    "canonical": 30.0,
+    "source": "compute_valuation",
+    "allow_report_values": [
+      30.0,
+      30
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "中芯国际",
+    "report_id": "golden_025",
+    "field": "pe_ratio",
+    "canonical": 45.0,
+    "source": "compute_valuation",
+    "allow_report_values": [
+      45.0,
+      45
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "药明康德",
+    "report_id": "golden_026",
+    "field": "pe_ratio",
+    "canonical": 32.0,
+    "source": "compute_valuation",
+    "allow_report_values": [
+      32.0,
+      32
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "中国平安",
+    "report_id": "golden_027",
+    "field": "pe_ratio",
+    "canonical": 12.0,
+    "source": "compute_valuation",
+    "allow_report_values": [
+      12.0,
+      12
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "招商银行",
+    "report_id": "golden_028",
+    "field": "pe_ratio",
+    "canonical": 8.0,
+    "source": "compute_valuation",
+    "allow_report_values": [
+      8.0,
+      8
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "贵州茅台",
+    "report_id": "golden_029",
+    "field": "revenue",
+    "canonical": 1500,
+    "source": "compute_financials",
+    "allow_report_values": [
+      1500,
+      1500.0,
+      150
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "宁德时代",
+    "report_id": "golden_030",
+    "field": "revenue",
+    "canonical": 4000,
+    "source": "compute_financials",
+    "allow_report_values": [
+      4000,
+      4000.0,
+      400
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "report",
+    "report_id": "extracted_report_final",
+    "field": "target_price",
+    "canonical": 45.0,
+    "source": "extracted_from_output",
+    "allow_report_values": [
+      45.0,
+      45.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "report",
+    "report_id": "extracted_report_final",
+    "field": "target_price",
+    "canonical": 45.0,
+    "source": "extracted_from_output",
+    "allow_report_values": [
+      45.0,
+      45.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "report",
+    "report_id": "extracted_report_final",
+    "field": "target_price",
+    "canonical": 45.0,
+    "source": "extracted_from_output",
+    "allow_report_values": [
+      45.0,
+      45.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "report",
+    "report_id": "extracted_report_final",
+    "field": "pe_ratio",
+    "canonical": 40.0,
+    "source": "extracted_from_output",
+    "allow_report_values": [
+      40.0,
+      40.0
+    ],
+    "tolerance": 0.1,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "report",
+    "report_id": "extracted_report_final",
+    "field": "pe_ratio",
+    "canonical": 40.0,
+    "source": "extracted_from_output",
+    "allow_report_values": [
+      40.0,
+      40.0
+    ],
+    "tolerance": 0.1,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "report",
+    "report_id": "extracted_report_final",
+    "field": "pe_ratio",
+    "canonical": 25.0,
+    "source": "extracted_from_output",
+    "allow_report_values": [
+      25.0,
+      25.0
+    ],
+    "tolerance": 0.1,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "final",
+    "report_id": "extracted_final_report_v7_optimized",
+    "field": "pe_ratio",
+    "canonical": 45.0,
+    "source": "extracted_from_output",
+    "allow_report_values": [
+      45.0,
+      45.0
+    ],
+    "tolerance": 0.1,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "keliganzhi",
+    "report_id": "extracted_keliganzhi_v2",
+    "field": "target_price",
+    "canonical": 35.0,
+    "source": "extracted_from_output",
+    "allow_report_values": [
+      35.0,
+      35.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "keliganzhi",
+    "report_id": "extracted_keliganzhi_v2",
+    "field": "target_price",
+    "canonical": 35.0,
+    "source": "extracted_from_output",
+    "allow_report_values": [
+      35.0,
+      35.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "keliganzhi",
+    "report_id": "extracted_keliganzhi_v2",
+    "field": "target_price",
+    "canonical": 47.0,
+    "source": "extracted_from_output",
+    "allow_report_values": [
+      47.0,
+      47.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "keliganzhi",
+    "report_id": "extracted_keliganzhi_v2",
+    "field": "pe_ratio",
+    "canonical": 30.0,
+    "source": "extracted_from_output",
+    "allow_report_values": [
+      30.0,
+      30.0
+    ],
+    "tolerance": 0.1,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "keliganzhi",
+    "report_id": "extracted_keliganzhi_v2",
+    "field": "pe_ratio",
+    "canonical": 30.0,
+    "source": "extracted_from_output",
+    "allow_report_values": [
+      30.0,
+      30.0
+    ],
+    "tolerance": 0.1,
+    "report_type": "listed_company"
+  },
+  {
+    "asset": "keliganzhi",
+    "report_id": "extracted_keliganzhi_v2",
+    "field": "pe_ratio",
+    "canonical": 25.0,
+    "source": "extracted_from_output",
+    "allow_report_values": [
+      25.0,
+      25.0
+    ],
+    "tolerance": 0.1,
+    "report_type": "listed_company"
+  }
 ]
