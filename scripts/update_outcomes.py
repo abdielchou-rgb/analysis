@@ -90,19 +90,22 @@ def resolve_outcome(
     prediction: dict,
     get_price_func=None,
     backend: str = "auto",
+    get_benchmark_func=None,
 ) -> dict:
-    """Resolve a prediction's outcome based on price data.
+    """Resolve a prediction's outcome based on price data and alpha judge.
 
     Args:
         prediction: The prediction dict
         get_price_func: Callable(asset, date) → price. If None, uses price_feeder.
         backend: Price backend ('auto', 'akshare', 'yfinance', 'mock')
+        get_benchmark_func: Callable(benchmark_code, date) → price. If None, degraded judge.
 
     Returns:
         Updated prediction with outcome set.
         If price unavailable → outcome="unverifiable", never fabricates.
     """
     from core.price_feeder import get_price_or_unverifiable
+    from core.prediction_judge import judge_outcome
 
     asset = prediction.get("asset", "")
     direction = prediction.get("direction", "")
@@ -124,18 +127,43 @@ def resolve_outcome(
             prediction["price_at_expiry"] = price_at_expiry
             return prediction
 
-        # Determine if direction was correct
-        price_change = (price_at_expiry - price_at_make) / price_at_make
+        # Compute returns
+        actual_return = (price_at_expiry - price_at_make) / price_at_make
 
-        if direction == "bullish":
-            prediction["outcome"] = "hit" if price_change > 0 else "miss"
-        elif direction == "bearish":
-            prediction["outcome"] = "hit" if price_change < 0 else "miss"
-        else:
-            prediction["outcome"] = "pending_review"
-            prediction["outcome_reason"] = f"unknown_direction: {direction}"
+        # Get benchmark return if available
+        bench_return = None
+        if get_benchmark_func:
+            try:
+                bench_make = get_benchmark_func("000300", made_date)  # CSI 300
+                bench_expiry = get_benchmark_func("000300", expiry_date)
+                if bench_make and bench_expiry:
+                    bench_return = (bench_expiry - bench_make) / bench_make
+            except Exception:
+                pass  # Degraded: no benchmark
 
-        prediction["return_pct"] = round(price_change * 100, 2)
+        # Get target price if available
+        target_price = prediction.get("target_price")
+        if target_price:
+            try:
+                target_price = float(target_price)
+            except (ValueError, TypeError):
+                target_price = None
+
+        # M1-W2: Use judge_outcome instead of absolute direction
+        judge_result = judge_outcome(
+            actual_return=actual_return,
+            direction=direction,
+            bench_return=bench_return,
+            target_price=target_price,
+            price_at_expiry=price_at_expiry,
+        )
+
+        prediction["outcome"] = judge_result["outcome"]
+        prediction["outcome_detail"] = judge_result["detail"]
+        prediction["judge_ver"] = judge_result["judge_ver"]
+        prediction["bench"] = judge_result.get("bench", "none")
+        prediction["alpha"] = judge_result.get("alpha")
+        prediction["return_pct"] = round(actual_return * 100, 2)
         prediction["price_at_make"] = price_at_make
         prediction["price_at_expiry"] = price_at_expiry
         prediction["resolved_at"] = datetime.now(timezone.utc).isoformat()
