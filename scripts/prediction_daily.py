@@ -38,11 +38,11 @@ def _verify_forward_picks() -> dict:
     """对 ForwardPicksDB 中到期的 pending 项做验证。"""
     from core.forward_picks import ForwardPicksDB
     from core.benchmark_client import get_best_benchmark_return
+    from scripts.verify_predictions import parse_time_horizon, is_due
 
     db = ForwardPicksDB()
     picks = db.load_all()
     today = datetime.now()
-    due_window = timedelta(days=365)  # 12M
 
     stats = {"total": len(picks), "pending": 0, "due": 0, "verified": 0, "skipped": 0}
     newly_verified = []
@@ -52,14 +52,15 @@ def _verify_forward_picks() -> dict:
             continue
         stats["pending"] += 1
 
-        # 到期判定
+        # 到期判定 (M1-W3: use shared parse_time_horizon)
         try:
             created = datetime.fromisoformat(p.created_at)
         except Exception:
             stats["skipped"] += 1
             continue
 
-        if not p.created_at or (today - created) < due_window:
+        horizon_days = parse_time_horizon(p.time_window or "6m")
+        if not is_due(p.created_at, horizon_days):
             continue  # 未到期
 
         stats["due"] += 1
