@@ -126,26 +126,38 @@ def _bocha_search(query: str, max_results: int) -> Optional[list[dict]]:
 
 
 def _keenable_search(query: str, max_results: int) -> Optional[list[dict]]:
-    """Keenable public search (keyless /public endpoint).
-    Docs: https://docs.keenable.ai — POST https://api.keenable.ai/v1/search"""
-    try:
-        import requests
+    """Keenable search — authenticated when KEENABLE_API_KEY present,
+    keyless /public endpoint as fallback.
+    Docs: https://docs.keenable.ai — POST https://api.keenable.ai/v1/search
+    实测（2026-09-04）：payload 只接受 {"query"}；带 count 等额外参数会被拒。
+    结果字段：title/url/description/snippet。"""
+    import requests
 
-        resp = requests.post(
-            "https://api.keenable.ai/v1/search",
-            headers={"Content-Type": "application/json"},
-            json={"query": query, "count": min(max_results, 8)},
-            timeout=12,
-        )
+    key = os.environ.get("KEENABLE_API_KEY", "")
+    url = "https://api.keenable.ai/v1/search"
+    headers = {"Content-Type": "application/json"}
+    if key:
+        headers["X-API-Key"] = key  # authenticated lane
+    payload = {"query": query}
+    try:
+        resp = requests.post(url, headers=headers, json=payload, timeout=12)
+        if resp.status_code in (401, 403, 400) and key:
+            # Authenticated lane rejected — retry keyless
+            resp = requests.post(
+                url,
+                headers={"Content-Type": "application/json"},
+                json=payload,
+                timeout=12,
+            )
         resp.raise_for_status()
         data = resp.json()
-        # Normalize: accept both {"results": [...]} and {"data": [...]}
+        # Normalize: accept results/data arrays
         raw = data.get("results") or data.get("data") or []
         results = []
-        for r in raw:
+        for r in raw[:max_results]:
             if not isinstance(r, dict):
                 continue
-            content = r.get("content", "") or r.get("snippet", "") or r.get("text", "")
+            content = r.get("snippet", "") or r.get("content", "") or r.get("description", "") or r.get("text", "")
             if not content:
                 continue
             results.append(
@@ -311,6 +323,8 @@ def available_backends() -> list[str]:
         usable.append("exa")
     if os.environ.get("TAVILY_API_KEY"):
         usable.append("tavily")
-    usable.append("keenable")  # keyless
-    usable.append("ddg")  # keyless
+    if os.environ.get("KEENABLE_API_KEY"):
+        usable.append("keenable+auth")
+    usable.append("keenable")  # keyless floor
+    usable.append("ddg")  # keyless floor
     return usable
