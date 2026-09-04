@@ -69,8 +69,49 @@ def _get_tavily() -> TavilyClient | None:
         return None
 
 
+def search_multi_backend(queries: list[dict]) -> list[dict]:
+    """S1 (2026-09-04): 多后端并行搜索——替代单一 Tavily 依赖。
+
+    按查询语言自动分流：中文 → bocha/tavily/keenable/ddg，
+    英文 → exa/tavily/keenable/ddg。无 key 的后端静默跳过。
+    结果与 search_tavily_multi 同构（url/title/content/query_reason），
+    额外带 source_backend 字段供溯源。
+    """
+    from core.multi_search import multi_search
+
+    all_results = []
+    seen_urls = set()
+    plan = queries if queries else []
+    for pq in plan[:6]:  # 最多6轮，节省API额度
+        q = pq.get("query", "")
+        reason = pq.get("reason", "通用")
+        max_r = pq.get("max_results", 5)
+        if not q:
+            continue
+        results = multi_search(q, max_results=max_r, reason=reason)
+        for r in results:
+            url = r.get("url", "")
+            if url and url not in seen_urls:
+                seen_urls.add(url)
+                all_results.append(
+                    {
+                        "url": url,
+                        "title": r.get("title", ""),
+                        "content": r.get("content", "")[:500],
+                        "query_reason": reason,
+                        "source_backend": r.get("source_backend", "unknown"),
+                    }
+                )
+        logger.info("  MultiBackend [%s]: %d results for '%s'", reason, len(results), q[:40])
+    return all_results
+
+
 def search_tavily_multi(client: TavilyClient, queries: list[dict]) -> list[dict]:
-    """并行多轮Tavily搜索，每次用不同查询"""
+    """并行多轮Tavily搜索，每次用不同查询
+
+    S1 之后此函数仅作为 tavily key 存在时的兼容路径保留；
+    新代码请用 search_multi_backend()。
+    """
     if not client:
         return []
     all_results = []
@@ -196,34 +237,33 @@ def collect_all(
     result = WebIntelResult()
     result.search_count = 0
 
-    # 1. Tavily多轮搜索
-    client = _get_tavily()
-    if client:
-        from core.search_planner import plan_macro_queries, plan_queries
+    # 1. 多后端搜索（S1: exa/bocha/keenable/tavily/ddg failover 链）
+    # 无任何 key 时 keyless 后端（keenable/ddg）仍可用，不再因 Tavily 缺 key 而整个跳过
+    from core.search_planner import plan_macro_queries, plan_queries
 
-        # 资产查询
-        queries = plan_queries(asset, report_type, industry)
-        # 宏观查询
-        macro_q = plan_macro_queries()
-        all_results = search_tavily_multi(client, queries + macro_q)
-        result.search_count = len(all_results)
-        # 按reason分类
-        for r in all_results:
-            reason = r.get("query_reason", "通用")
-            if "SAC维度: catalyst" in reason:
-                result.catalysts.append(r)
-            elif "SAC维度: falsification" in reason:
-                result.risks.append(r)
-            elif "国际" in reason or "宏观" in reason:
-                result.macro.append(r)
-            elif "行业" in reason:
-                result.industry.append(r)
-            elif "竞争" in reason:
-                result.competitors.append(r)
-            else:
-                result.news.append(r)
-            result.raw_sources.append(r.get("url", ""))
-        logger.info("WebIntel Tavily: %d results from %d queries", len(all_results), len(queries) + len(macro_q))
+    # 资产查询
+    queries = plan_queries(asset, report_type, industry)
+    # 宏观查询
+    macro_q = plan_macro_queries()
+    all_results = search_multi_backend(queries + macro_q)
+    result.search_count = len(all_results)
+    # 按reason分类
+    for r in all_results:
+        reason = r.get("query_reason", "通用")
+        if "SAC维度: catalyst" in reason:
+            result.catalysts.append(r)
+        elif "SAC维度: falsification" in reason:
+            result.risks.append(r)
+        elif "国际" in reason or "宏观" in reason:
+            result.macro.append(r)
+        elif "行业" in reason:
+            result.industry.append(r)
+        elif "竞争" in reason:
+            result.competitors.append(r)
+        else:
+            result.news.append(r)
+        result.raw_sources.append(r.get("url", ""))
+    logger.info("WebIntel MultiBackend: %d results from %d queries", len(all_results), len(queries) + len(macro_q))
 
     # 2. yfinance国际数据
     yf_data = yfinance_intel(asset_code)

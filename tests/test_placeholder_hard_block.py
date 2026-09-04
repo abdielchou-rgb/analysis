@@ -73,41 +73,51 @@ class TestPlaceholderReplacementSuccess:
 
 
 # ============================================================
-# Test 3: No compute value → ValueError (not silent)
+# Test 3: Missing compute value → honest-gap (2026-09-04 revision)
 # ============================================================
 
 class TestPlaceholderMissingCompute:
-    """Placeholder without compute value must fail, not silently pass."""
+    """{{tp_primary}} without valid target_price → honest-gap label, not paragraph death.
+
+    2026-09-04 修订：P0-4 原版对 target_price 缺失也抛 ValueError，
+    导致估值模块全失败时整段写作死——与 R79 honest_gap 原则矛盾。
+    现行为：{{tp_primary}} → "目标价待定（估值数据不可得，待补充）"。
+    未知占位符（{{xxx}} 非 tp_primary）仍然 ValueError 硬拦（见 Test 1）。
+    """
 
     def test_tp_primary_no_compute_value(self):
-        """{{tp_primary}} without target_price in context → ValueError."""
+        """{{tp_primary}} without target_price in context → honest-gap label."""
         from pipeline.section_writer import SectionWriter
 
         writer = SectionWriter.__new__(SectionWriter)
         writer._last_data_context = {}  # no target_price
 
         text = "目标价{{tp_primary}}元"
-        with pytest.raises(ValueError, match="Residual placeholders"):
-            writer._replace_placeholders(text)
+        result = writer._replace_placeholders(text)
+        assert "{{tp_primary}}" not in result  # replaced
+        assert "目标价待定" in result  # honest-gap label
+        assert "{{" not in result  # no residual
 
     def test_tp_primary_zero_value(self):
-        """{{tp_primary}} with target_price=0 → ValueError."""
+        """{{tp_primary}} with target_price=0 → honest-gap label."""
         from pipeline.section_writer import SectionWriter
 
         writer = SectionWriter.__new__(SectionWriter)
         writer._last_data_context = {"target_price": 0}
 
         text = "目标价{{tp_primary}}元"
-        with pytest.raises(ValueError, match="Residual placeholders"):
-            writer._replace_placeholders(text)
+        result = writer._replace_placeholders(text)
+        assert "{{tp_primary}}" not in result
+        assert "目标价待定" in result
 
     def test_tp_primary_negative_value(self):
-        """{{tp_primary}} with target_price<0 → ValueError."""
+        """{{tp_primary}} with target_price<0 → honest-gap label."""
         from pipeline.section_writer import SectionWriter
 
         writer = SectionWriter.__new__(SectionWriter)
         writer._last_data_context = {"target_price": -10}
 
         text = "目标价{{tp_primary}}元"
-        with pytest.raises(ValueError, match="Residual placeholders"):
-            writer._replace_placeholders(text)
+        result = writer._replace_placeholders(text)
+        assert "{{tp_primary}}" not in result
+        assert "目标价待定" in result

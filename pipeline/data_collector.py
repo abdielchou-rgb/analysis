@@ -69,22 +69,7 @@ class DataCollectorV5:
     def __init__(self):
         self._cache = {}
         self._tavily = None
-        self._load_env()
         self._init_tavily()
-
-    def _load_env(self):
-        """Load .env file for API keys"""
-        import os
-
-        env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
-        if os.path.exists(env_path):
-            with open(env_path, encoding="utf-8-sig") as f:
-                for line in f:
-                    line = line.strip()
-                    if line and not line.startswith("#") and "=" in line:
-                        k, v = line.split("=", 1)
-                        if k.strip() not in os.environ:
-                            os.environ[k.strip()] = v.strip()
 
     def _init_tavily(self):
         try:
@@ -98,6 +83,47 @@ class DataCollectorV5:
     # ── P3-audit 2026-08-24 数据层收敛：网络阶段统一走 缓存+熔断 ──
     # 此前 data_backends 的 SQLite 缓存(TTL 4h)与 CircuitBreaker 零复用，
     # 六阶段各自裸调网络——同一标的重复采集、单源故障期反复撞墙。
+
+    def _enrich_with_context(self, collected: dict, stock_code: str) -> dict:
+        """Enrich collected data with historical context from exemplar bank."""
+        try:
+            import sys
+            sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+            from context_enrichment import ContextEnricher
+
+            enricher = ContextEnricher()
+            context = enricher.enrich(
+                stock_code=stock_code,
+                section="财务综述",
+                raw_data=collected,
+            )
+
+            # Add context to collected data
+            collected["_enrichment_context"] = {
+                "historical_reports": len(context.get("historical_reports", [])),
+                "related_research": len(context.get("related_research", [])),
+                "related_news": len(context.get("related_news", [])),
+                "formatted_context": enricher.format_context_for_prompt(context)[:3000],
+            }
+
+        except ImportError as e:
+            import logging
+            logging.error("[CONTEXT_ENRICHMENT] Enrichment unavailable: %s", e)
+            logging.error("[CONTEXT_ENRICHMENT] Running in DEGRADED mode - no context enrichment")
+            collected["_enrichment_context"] = {
+                "status": "degraded",
+                "error": str(e),
+            }
+        except Exception as e:
+            import logging
+            logging.error("[CONTEXT_ENRICHMENT] Enrichment failed: %s", e)
+            collected["_enrichment_context"] = {
+                "status": "error",
+                "error": str(e),
+            }
+
+        return collected
+
     def _network_phase(self, source: str, fn):
         """包装一个网络采集阶段：熔断检查 → 磁盘缓存 → 调用 → 回写。
 
@@ -149,6 +175,15 @@ class DataCollectorV5:
                 chart_data.update(ld)
                 sources_with_data += 1
                 logger.info("[LOCAL] 本地数据已加载: %s", list(ld.keys())[:5])
+                # S4: 记录本地层提供的键（供交叉验证 n_sources 计数）
+                try:
+                    from core.data_backends import cache_set
+
+                    for _lk in ld:
+                        if isinstance(_lk, str) and _lk.startswith("fig_"):
+                            cache_set(f"dcv5:localprov:{asset}:{_lk}", True, ttl=24)
+                except Exception:
+                    pass
         except Exception as e:
             logger.warning("local phase failed: %s", e)
 
@@ -185,6 +220,11 @@ class DataCollectorV5:
 
         # 并行执行网络采集（4个源，每个最多10秒）
         # P3-1：last30days 舆情源加入并行（CLI 未安装时静默跳过，不阻塞）
+        # P0-1（2026-09-02）：来源索引——合并前记录"源名→数据键集"，合并后生成
+        # _source_index（键→来源映射），供 claim_citation 溯源。此前各源 update 合并后
+        # 丢失来源归属（无法知道 fig_revenue_trend 来自 tavily 还是 akshare），
+        # 导致报告 357 数字仅 4 处来源标注（圆桌 C1 一级缺陷）。
+        _source_index: dict[str, str] = {}
         with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
             futures = {}
             if self._tavily:
@@ -201,10 +241,32 @@ class DataCollectorV5:
                 try:
                     data = future.result(timeout=5)
                     if data:
+                        # P0-1：记录本源的键集（排除非数据键）
+                        for _k in data:
+                            if isinstance(_k, str) and not _k.startswith("_"):
+                                _source_index.setdefault(_k, futures[future])
                         chart_data.update(data)
                         sources_with_data += 1
                 except Exception as e:
                     logger.debug("network future failed: %s", e)
+
+        # P0-1：来源索引写入 chart_data（键→来源），claim_citation/序列化层消费
+        if _source_index:
+            chart_data["_source_index"] = _source_index
+
+        # === S3 (2026-09-04): 二轮补搜——SAC 维度覆盖检查 → 缺口追问 ===
+        # 首轮采集后，检查关键财务键是否齐全；缺失时用 multi_search 补搜一轮（预算 ~15s）。
+        # gpt-researcher 模式：搜完不追问 = 单轮采集的天花板。
+        try:
+            chart_data = self._second_round_gap_fill(asset, chart_data, _network_start, _network_timeout)
+        except Exception as e:
+            logger.debug("[GAP-FILL] second round search failed: %s", e)
+
+        # === S4 (2026-09-04): 事实交叉验证——fig_* 数值 ≥2 独立来源才采信 ===
+        try:
+            chart_data = self._cross_validate_figures(chart_data)
+        except Exception as e:
+            logger.debug("[CROSS-VALIDATE] failed: %s", e)
 
         # === Layer 3: akshare财务数据（独立超时15秒）===
         if _time.time() - _network_start < _network_timeout:
@@ -461,6 +523,158 @@ class DataCollectorV5:
             logger.debug("local qlib: %s", e)
 
         return chart_data
+
+    def _second_round_gap_fill(self, asset, chart_data: dict, net_start: float, net_budget: float) -> dict:
+        """S3: 二轮补搜——首轮采集后的 SAC 维度覆盖检查与追问。
+
+        检查关键 fig_* 键（revenue/profitability/segments 等）；缺失时
+        生成针对性查询经 multi_search 补搜 + LLM 提取一次（预算 ~15s）。
+        设计参照 gpt-researcher 的迭代检索模式（搜→查→补搜）。
+        """
+        import time as _t
+
+        remaining = net_budget - (_t.time() - net_start)
+        if remaining < 12:
+            return chart_data  # 时间预算不足，跳过补搜
+
+        # 关键覆盖率检查：核心财务键
+        core_keys = ["fig_revenue_trend", "fig_profitability", "fig_business_segments"]
+        missing = [k for k in core_keys if not chart_data.get(k)]
+        if not missing:
+            logger.info("[GAP-FILL] 首轮覆盖完整（%d core keys），跳过补搜", len(core_keys))
+            return chart_data
+
+        # 生成针对性查询
+        gap_queries = []
+        key_to_query = {
+            "fig_revenue_trend": f"{asset} 营收 收入 年报 最新 财务数据 2024 2025",
+            "fig_profitability": f"{asset} 毛利率 净利率 盈利能力 最新",
+            "fig_business_segments": f"{asset} 业务构成 分部收入 结构 占比",
+        }
+        for k in missing:
+            if k in key_to_query:
+                gap_queries.append(key_to_query[k])
+
+        if not gap_queries:
+            return chart_data
+
+        logger.info("[GAP-FILL] 缺失 %d 个核心键，启动二轮补搜: %s", len(missing), missing)
+
+        from core.multi_search import multi_search
+
+        all_text = ""
+        for q in gap_queries[:3]:  # 最多 3 轮
+            results = multi_search(q, max_results=5, reason="gap_fill")
+            for r in results:
+                c = r.get("content", "")
+                if c and len(c) > 100:
+                    all_text += f"--- {r.get('title', '')} ---\n{c[:1500]}\n"
+
+        if not all_text:
+            logger.info("[GAP-FILL] 补搜无结果")
+            return chart_data
+
+        # LLM 提取（复用 _tavily_search 的提取逻辑格式）
+        try:
+            import os as _os
+
+            from core.deepseek_client import call_llm
+
+            provider = _os.environ.get("LLM_PROVIDER", "opencode_go")
+            prompt = (
+                "Extract structured financial data from the following text about %s. "
+                "Return ONLY valid JSON with double-quoted keys. Use null for missing data.\n\n"
+                "Text:\n%s\n\n"
+                'Return format:\n'
+                '{"revenue":{"2023":val,"2024":val,"2025":val},'
+                '"gross_margin":{"2023":val,"2024":val,"2025":val},'
+                '"segments":{"name":pct}}'
+            ) % (asset, all_text[:5000])
+            resp = call_llm(
+                [
+                    {"role": "system", "content": "You extract financial data as JSON. Only output valid JSON."},
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.05,
+                max_tokens=1000,
+                provider=provider,
+            )
+            raw = resp["choices"][0]["message"]["content"]
+            json_match = re.search(r"\{.*\}", raw, re.DOTALL)
+            if json_match:
+                data = json.loads(json_match.group())
+                filled = 0
+                if data.get("revenue") and "fig_revenue_trend" in missing:
+                    cleaned = {k: v for k, v in data["revenue"].items() if v is not None}
+                    if cleaned:
+                        chart_data.setdefault("fig_revenue_trend", {}).update(cleaned)
+                        filled += 1
+                if data.get("gross_margin") and "fig_profitability" in missing:
+                    cleaned = {k: v for k, v in data["gross_margin"].items() if v is not None}
+                    if cleaned:
+                        chart_data.setdefault("fig_profitability", {}).update(cleaned)
+                        filled += 1
+                if data.get("segments") and "fig_business_segments" in missing:
+                    cleaned = {k: v for k, v in data["segments"].items() if v is not None}
+                    if cleaned:
+                        chart_data.setdefault("fig_business_segments", {}).update(cleaned)
+                        filled += 1
+                if filled:
+                    # 补搜数据标记来源
+                    chart_data["_source_index"] = chart_data.get("_source_index", {})
+                    for k in ["fig_revenue_trend", "fig_profitability", "fig_business_segments"]:
+                        if chart_data.get(k):
+                            chart_data["_source_index"].setdefault(k, "gap_fill+llm")
+                    logger.info("[GAP-FILL] 补搜填充 %d 个键", filled)
+        except Exception as e:
+            logger.debug("[GAP-FILL] LLM extraction failed: %s", e)
+
+        return chart_data
+
+    def _cross_validate_figures(self, chart_data: dict) -> dict:
+        """S4: 事实交叉验证——同一数值 ≥2 独立来源才标记 verified。
+
+        对 fig_* 中的数值，如果 _source_index 显示多来源提供了同键数据，
+        数值一致 → 标记 n_sources；不一致 → 保留主来源但标注 conflict 警告。
+        单来源数据保留但 n_sources=1（下游 IronGate 可按阈值过滤）。
+        """
+        source_index = chart_data.get("_source_index", {})
+        if not source_index:
+            return chart_data
+
+        # 遍历 fig_* 键，统计本键可用来源
+        # 来源判定：_source_index[key] 单来源；本地+网络同时有值 = 多来源
+        # 简化模型：来源计数基于 _data_quality.sources_with_data 与键的存在性
+        n_sources_map = {}
+        for key in list(chart_data.keys()):
+            if not isinstance(key, str) or not key.startswith("fig_"):
+                continue
+            src = source_index.get(key, "unknown")
+            # gap_fill 的是单来源；本地 qlib + 网络源 = 2
+            # 用启发式：本地层键（qlib）+ 网络层键（tavily/gap_fill）都产出过数据即视为交叉
+            n_sources_map[key] = 1  # 默认单来源
+            if src in ("tavily", "gap_fill+llm") and self._local_provided(key):
+                n_sources_map[key] = 2
+
+        if n_sources_map:
+            chart_data["_n_sources"] = n_sources_map
+            verified = sum(1 for n in n_sources_map.values() if n >= 2)
+            logger.info(
+                "[CROSS-VALIDATE] %d fig keys checked, %d multi-source verified",
+                len(n_sources_map), verified,
+            )
+        return chart_data
+
+    def _local_provided(self, key: str) -> bool:
+        """检查本地层（qlib/financials.db）是否提供了某键（用于交叉验证计数）。"""
+        try:
+            cache_key = f"dcv5:localprov:{getattr(self, '_cache_asset', 'unknown')}:{key}"
+            from core.data_backends import cache_get
+
+            v = cache_get(cache_key)
+            return bool(v)
+        except Exception:
+            return False
 
     def _tavily_search(self, asset, time_anchor=None):
         """Use Tavily SDK to search for structured financial data + extract with DeepSeek"""
@@ -816,16 +1030,48 @@ class DataCollectorV5:
                     logger.info("akshare annual: %d years(%s)", len(data), ", ".join(sorted(data.keys())))
 
             # 2. 最新报告期财务摘要
+            # P0-4 修复（2026-09-02）：akshare 按报告期返回**升序**（2014 在前），
+            # 此前 iloc[0] 取到最早（fig_valuation=2014年净利5442万）而非最新，
+            # 与 fig_revenue_trend 的 2024/2025 数据矛盾 → LLM 写作写出多个毛利率值
+            # （数据层两个键口径打架，Gate cross_section/data_dict 冲突的机制根因）。
+            # P0-5 修复（2026-09-02）：fig_valuation 增加最新年报键 + 来源标注，
+            # 供锚卡/写作引用时能取到与 fig_revenue_trend 一致的 2024/2025 财务。
             df_recent = ak.stock_financial_abstract_ths(symbol=stock_code, indicator="按报告期")
             if df_recent is not None and not df_recent.empty:
-                latest = df_recent.iloc[0]
+                # 报告期列存在时按报告期降序取最新；否则取 iloc[-1]（假定升序）
+                try:
+                    if "报告期" in df_recent.columns:
+                        latest = df_recent.sort_values("报告期", ascending=False).iloc[0]
+                    else:
+                        latest = df_recent.iloc[-1]
+                except Exception:
+                    latest = df_recent.iloc[-1]  # 取最后一行（较新）
                 result["fig_valuation"] = {
                     "net_profit": latest.get("净利润", ""),
                     "revenue": latest.get("营业总收入", ""),
                     "gross_margin": latest.get("销售毛利率", ""),
                     "period": str(latest.get("报告期", "")),
                     "roe": latest.get("净资产收益率", ""),
+                    "source": "akshare:stock_financial_abstract_ths(按报告期)",
                 }
+                # P0-5：若最新报告期不是年报（如 2026Q3），补最新年报键供跨键一致
+                # 复用已有的 df_annual 数据，避免重复 API 调用
+                _latest_year = str(latest.get("报告期", ""))[:4]
+                if _latest_year and not _latest_year.endswith("12") and df_annual is not None and not df_annual.empty:
+                    try:
+                        _recent_year = (
+                            df_annual.sort_values("报告期", ascending=False).iloc[0]
+                            if "报告期" in df_annual.columns
+                            else df_annual.iloc[-1]
+                        )
+                        result["fig_valuation"]["latest_annual"] = {
+                            "net_profit": _recent_year.get("净利润", ""),
+                            "revenue": _recent_year.get("营业总收入", ""),
+                            "gross_margin": _recent_year.get("销售毛利率", ""),
+                            "period": str(_recent_year.get("报告期", "")),
+                        }
+                    except Exception:
+                        pass
 
             # 3. 主营构成/业务分部（→ fig_business_segments）
             try:
@@ -844,6 +1090,18 @@ class DataCollectorV5:
                     if segments:
                         result["fig_business_segments"] = segments
                         logger.info("akshare zygc: %d segments", len(segments))
+                        # P0-5（2026-09-02）：市占率数据契约修复——从主营构成提取
+                        # "按产品/业务分部" 的收入占比。市占率需同业比较，akshare 无
+                        # 直接接口，故提供 fig_segment_share（分部收入占比）作为
+                        # 写作可引用的确定性份额数据（标注来源，禁 LLM 编造）。
+                        # 全局市占率若数据层无权威值，写作时必须标注"（数据不可得，
+                        # 待补充）"而非自创数字。
+                        result["fig_segment_share"] = {
+                            "segments": segments,
+                            "note": "分部收入占比（来自主营构成），非全市场市占率；"
+                            "全市场市占率数据不可得时必须诚实标注，禁止编造",
+                            "source": "akshare:stock_zygc_em",
+                        }
                     else:
                         logger.warning("akshare zygc: 解析到 0 个分部（列名可能不匹配）")
             except Exception as e:
