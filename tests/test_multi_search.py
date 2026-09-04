@@ -58,9 +58,15 @@ class TestChainComposition:
         assert "keenable" in CHAIN_ZH and "ddg" in CHAIN_ZH
         assert "keenable" in CHAIN_EN and "ddg" in CHAIN_EN
 
+    def test_bing_cn_in_both_chains(self):
+        """BingCN (keyless zh-strong) is in both chains as free floor."""
+        assert "bing_cn" in CHAIN_ZH
+        assert "bing_cn" in CHAIN_EN
+
     def test_available_backends_includes_keyless(self):
         backends = available_backends()
         assert "keenable" in backends
+        assert "bing_cn" in backends
         assert "ddg" in backends
 
 
@@ -95,6 +101,7 @@ class TestFailoverBehavior:
         with patch("core.multi_search._bocha_search", return_value=None), \
              patch("core.multi_search._tavily_search", return_value=None), \
              patch("core.multi_search._keenable_search", return_value=None), \
+             patch("core.multi_search._bing_cn_search", return_value=None), \
              patch("core.multi_search._ddg_search", return_value=None):
             results = multi_search("宁德时代 财报", prefer_zh=True)
             assert results == []
@@ -221,6 +228,76 @@ class TestCrossValidation:
             result = dc._cross_validate_figures(chart_data)
             assert "company_intro" not in result.get("_n_sources", {})
             assert "fig_revenue_trend" in result["_n_sources"]
+
+
+# ============================================================
+# S1: BingCN backend (free bocha replacement)
+# ============================================================
+
+class TestBingCNBackend:
+    def test_bing_cn_parses_html(self):
+        """BingCN parses li.b_algo items into normalized results."""
+        from core.multi_search import _bing_cn_search
+
+        fake_html = """
+        <html><body>
+        <li class="b_algo">
+            <h2><a href="https://example.com/1">宁德时代财报</a></h2>
+            <div class="b_caption"><p>2025年营收突破4000亿元</p></div>
+        </li>
+        <li class="b_algo">
+            <h2><a href="https://example.com/2">宁德时代公告</a></h2>
+            <div class="b_caption"><p>公司公告全文</p></div>
+        </li>
+        </body></html>
+        """
+        with patch("requests.get") as m_get:
+            m_resp = MagicMock()
+            m_resp.status_code = 200
+            m_resp.text = fake_html
+            m_resp.raise_for_status = MagicMock()
+            m_get.return_value = m_resp
+            results = _bing_cn_search("宁德时代", 5)
+            assert len(results) == 2
+            assert results[0]["source_backend"] == "bing_cn"
+            assert results[0]["url"] == "https://example.com/1"
+            assert "宁德时代财报" in results[0]["title"]
+
+    def test_bing_cn_empty_on_no_results(self):
+        from core.multi_search import _bing_cn_search
+
+        with patch("requests.get") as m_get:
+            m_resp = MagicMock()
+            m_resp.status_code = 200
+            m_resp.text = "<html><body>No results</body></html>"
+            m_resp.raise_for_status = MagicMock()
+            m_get.return_value = m_resp
+            assert _bing_cn_search("test", 5) is None
+
+    def test_bing_cn_skips_items_without_snippet(self):
+        """Items without snippet are skipped (no empty content)."""
+        from core.multi_search import _bing_cn_search
+
+        fake_html = """
+        <html><body>
+        <li class="b_algo">
+            <h2><a href="https://example.com/1">Title only</a></h2>
+        </li>
+        <li class="b_algo">
+            <h2><a href="https://example.com/2">With snippet</a></h2>
+            <div class="b_caption"><p>has content</p></div>
+        </li>
+        </body></html>
+        """
+        with patch("requests.get") as m_get:
+            m_resp = MagicMock()
+            m_resp.status_code = 200
+            m_resp.text = fake_html
+            m_resp.raise_for_status = MagicMock()
+            m_get.return_value = m_resp
+            results = _bing_cn_search("test", 5)
+            assert len(results) == 1
+            assert results[0]["url"] == "https://example.com/2"
 
 
 # ============================================================

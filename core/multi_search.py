@@ -206,6 +206,56 @@ def _tavily_search(query: str, max_results: int, depth: str = "advanced") -> Opt
         return None
 
 
+# ── Backend: Bing CN (keyless, Chinese-strong) ───────────────
+
+
+def _bing_cn_search(query: str, max_results: int) -> Optional[list[dict]]:
+    """Bing CN direct scrape — keyless, no API needed, strong Chinese coverage.
+
+    实测（2026-09-04）：cn.bing.com/search 稳定返回 10 条/查询，无反爬拦截。
+    定位：bocha 的免费替代（bocha 需充值），中文链 keyless 层。
+    """
+    try:
+        import requests
+        from urllib.parse import quote
+        from bs4 import BeautifulSoup
+
+        resp = requests.get(
+            f"https://cn.bing.com/search?q={quote(query)}",
+            headers={
+                "User-Agent": (
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
+                )
+            },
+            timeout=12,
+        )
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, "html.parser")
+        results = []
+        for it in soup.select("li.b_algo")[:max_results]:
+            a = it.select_one("h2 a")
+            if not a:
+                continue
+            p = it.select_one(".b_caption p, p")
+            snippet = p.get_text(strip=True) if p else ""
+            if not snippet:
+                continue
+            results.append(
+                {
+                    "url": a.get("href", ""),
+                    "title": a.get_text(strip=True),
+                    "content": snippet[:600],
+                    "source_backend": "bing_cn",
+                }
+            )
+        logger.info("BingCN: %d results for '%s'", len(results), query[:40])
+        return results or None
+    except Exception as e:
+        logger.debug("BingCN failed: %s", e)
+        return None
+
+
 # ── Backend: keyless DDG floor ────────────────────────────────
 
 
@@ -247,8 +297,10 @@ def _ddg_search(query: str, max_results: int) -> Optional[list[dict]]:
 # ── Unified multi-search entry ───────────────────────────────
 
 # Chain order by language. Backends without keys fail fast (return None).
-CHAIN_ZH = ("bocha", "tavily", "keenable", "ddg")
-CHAIN_EN = ("exa", "tavily", "keenable", "ddg")
+# BingCN (keyless, zh-strong) replaces bocha as the free zh primary;
+# bocha auto-activates when funded.
+CHAIN_ZH = ("bocha", "tavily", "keenable", "bing_cn", "ddg")
+CHAIN_EN = ("exa", "tavily", "keenable", "bing_cn", "ddg")
 
 # Name → module-level function (resolved at call time for testability)
 _BACKENDS = {
@@ -256,6 +308,7 @@ _BACKENDS = {
     "exa": "_exa_search",
     "tavily": "_tavily_search",
     "keenable": "_keenable_search",
+    "bing_cn": "_bing_cn_search",
     "ddg": "_ddg_search",
 }
 
@@ -318,7 +371,7 @@ def available_backends() -> list[str]:
     """Report which backends are usable given current env keys."""
     usable = []
     if os.environ.get("BOCHA_API_KEY"):
-        usable.append("bocha")
+        usable.append("bocha")  # activates when account funded
     if os.environ.get("EXA_API_KEY"):
         usable.append("exa")
     if os.environ.get("TAVILY_API_KEY"):
@@ -326,5 +379,6 @@ def available_backends() -> list[str]:
     if os.environ.get("KEENABLE_API_KEY"):
         usable.append("keenable+auth")
     usable.append("keenable")  # keyless floor
+    usable.append("bing_cn")  # keyless, zh-strong
     usable.append("ddg")  # keyless floor
     return usable
