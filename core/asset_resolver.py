@@ -27,6 +27,8 @@ _ROOT = Path(__file__).resolve().parent.parent
 
 # 已分析标的 + 常用龙头的名称→代码映射（Marvis 用 akshare 全量生成后覆盖）
 _NAME_MAP_CACHE: dict | None = None
+# 反查表 name→code（2026-09-04 修复方向 bug 时引入，懒加载）
+_REV_NAME_MAP_CACHE: dict | None = None
 
 
 @dataclass
@@ -98,17 +100,32 @@ def _detect_market(code: str, name: str = "") -> str:
 
 
 def _lookup_code_by_name_here(name: str) -> str:
-    """名称→代码（查映射 + 后缀剥离）。"""
-    name_map = _load_name_map()
+    """名称→代码。
+
+    注：a_stock_name_map.json 的方向是 code→name（"603662": "柯力传感"），
+    此前本函数直接按 name_map[name] 查——方向反了，中文名永远解析不出代码。
+    修复（2026-09-04）：先构建反查表 name→code（带缓存），再精确/模糊匹配。
+    """
+    global _REV_NAME_MAP_CACHE
+    if _REV_NAME_MAP_CACHE is None:
+        base = _load_name_map()
+        # 反转 code→name 为 name→code（值冲突时保留首个，同名校罕见）
+        rev: dict = {}
+        for _code, _name in base.items():
+            _name = str(_name).strip()
+            if _name and _name not in rev:
+                rev[_name] = str(_code).strip()
+        _REV_NAME_MAP_CACHE = rev
+    rev = _REV_NAME_MAP_CACHE
     # 精确
-    if name in name_map:
-        return name_map[name]
-    # 包含/去后缀
-    core = re.sub(r"(\(|（).*?(\)|）)$", "", name).strip()
-    if core in name_map:
-        return name_map[core]
-    for n, c in name_map.items():
-        if core in n or n in core:
+    if name in rev:
+        return rev[name]
+    # 去括号后缀（"柯力传感(603662.SH)" → "柯力传感"；兼容全/半角括号）
+    core = re.sub(r"[（(][^）)]*[）)]$", "", name).strip()
+    if core and core in rev:
+        return rev[core]
+    for n, c in rev.items():
+        if core and (core in n or n in core):
             return c
     return ""
 
@@ -154,12 +171,13 @@ def resolve_asset(raw: str) -> Asset:
         a.name = name_match.group(1)
         a.has_name = True
 
-    # 2.5 用代码反向查名字（R26：纯代码输入也能拿到中文名）
+    # 2.5 用代码反查名字（R26：纯代码输入也能拿到中文名）
+    # 注：name_map 方向就是 code→name，直接正查即可，无需反转
     if a.has_code and not a.has_name:
         name_map = _load_name_map()
-        rev = {v: k for k, v in name_map.items()}
-        if a.code in rev:
-            a.name = rev[a.code]
+        _n = name_map.get(a.code)
+        if _n:
+            a.name = str(_n)
             a.has_name = True
 
     # 3. 用名字补代码（A股/港股映射）

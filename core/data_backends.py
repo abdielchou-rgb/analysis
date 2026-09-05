@@ -185,6 +185,52 @@ def _query_local_qlib_price(code: str) -> dict | None:
         closes = arr[1:]
         cal = cal_path.read_text(encoding="utf-8").splitlines()
         dates = [cal[start_idx + i] for i in range(len(closes)) if start_idx + i < len(cal)]
+        if not dates:
+            return None
+
+        # 数据完整性校验（2026-09-04）：instruments/all.txt 声明了每只股票的
+        # 上市区间。若 bin 数据起点早于声明上市日，说明 qlib_bin 生成管线曾错位
+        # （如 sz300750 声明 2018-06 上市，bin 却从 2000-01 起且有 2003-2008 数据）。
+        # 消费错位数据会算出错误收益（预测验证/目标价台账全部失真），
+        # 此处 fail-closed 返回 None，由调用方走 mootdx/baostock 兜底。
+        try:
+            inst_path = qlib_dir / "instruments" / "all.txt"
+            if inst_path.exists():
+                _code_up = c.upper()
+                _list_date = None
+                for _line in inst_path.read_text(encoding="utf-8").splitlines():
+                    _parts = _line.split("\t")
+                    if len(_parts) >= 2 and _parts[0].upper() == _code_up:
+                        _list_date = _parts[1]
+                        break
+                if _list_date:
+                    # 错位检测（2026-09-04）：本批 qlib_bin 全部 start_idx=1（2000-01-05 起），
+                    # 上市前对齐差异普遍存在，"起点早于上市日"不可判。改用尾部检测：
+                    # 正常 bin 尾部应接近 calendar 末尾（数据持续更新到近期）；
+                    # 错位 bin（如 sz300750 尾部停在 2008-04）是别人的短序列被错放，
+                    # 尾部落后 calendar 末尾超过 2 年 → 物理不可能 → 拦截。
+                    try:
+                        _cal_end = cal[-1] if cal else ""
+                        if _cal_end and dates[-1] < _cal_end:
+                            from datetime import datetime as _dt
+
+                            _d_end = _dt.strptime(dates[-1], "%Y-%m-%d")
+                            _d_cal = _dt.strptime(_cal_end, "%Y-%m-%d")
+                            _lag_days = (_d_cal - _d_end).days
+                            if _lag_days > 730:
+                                logger.warning(
+                                    "[QLIB-GUARD] %s 数据强错位：bin 尾部 %s 落后日历末尾 %s 达 %d 天，拒绝返回（走兜底数据源）",
+                                    code,
+                                    dates[-1],
+                                    _cal_end,
+                                    _lag_days,
+                                )
+                                return None
+                    except ValueError:
+                        pass
+        except Exception:
+            pass
+
         # 取最近 60 个月末（月度采样）
         monthly = {}
         for d, px in zip(dates, closes):
