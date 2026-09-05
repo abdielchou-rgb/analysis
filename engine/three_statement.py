@@ -21,6 +21,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
 from engine.irongate import GateReport, IronGateEngine
+from engine.precision import D, PreciseValuation, dto_float
 
 # ─── Schemas ────────────────────────────────────────────────────────────────
 
@@ -264,6 +265,7 @@ class ThreeStatementEngine:
         skip_gates: bool = False,
     ) -> None:
         self.a = assumptions
+        self.provenance = PreciseValuation()
         self._validate_assumptions()
 
         if not skip_gates:
@@ -713,29 +715,39 @@ class ThreeStatementEngine:
     # ── Phase 5: Free Cash Flow ────────────────────────────────────────────
 
     def _compute_free_cash_flow(self, result: ThreeStatementResult, n: int) -> None:
-        """计算 FCFF 和 FCFE"""
+        """计算 FCFF 和 FCFE — Decimal 精度"""
         a = self.a
         is_ = result.income_statement
         fcf = result.free_cash_flow
+        tax = D(a.tax_rate)
 
         for i in range(n):
-            ebit = is_.ebit[i]
-            tax = is_.income_tax[i]
-            da = is_.revenue[i] * a.da_pct_revenue
-            capex = is_.revenue[i] * a.capex_pct_revenue
-            wc = result.cash_flow.wc_change[i]
+            ebit_d = D(is_.ebit[i])
+            da_d = D(is_.revenue[i]) * D(a.da_pct_revenue)
+            capex_d = D(is_.revenue[i]) * D(a.capex_pct_revenue)
+            wc_d = D(result.cash_flow.wc_change[i])
 
             # NOPAT = EBIT × (1 - tax_rate)
-            nopat = ebit * (1 - a.tax_rate)
+            nopat_d = ebit_d * (D(1) - tax)
+            nopat = dto_float(nopat_d)
             fcf.nopat.append(nopat)
 
             # FCFF = NOPAT + D&A - Capex - ΔWC
-            fcff = nopat + da - capex - wc
+            fcff_d = nopat_d + da_d - capex_d - wc_d
+            fcff = dto_float(fcff_d)
             fcf.fcff.append(fcff)
 
+            self.provenance.set(
+                f"year{i + 1}.fcff",
+                fcff,
+                source="computed",
+                formula="NOPAT + D&A - CapEx - ΔWC",
+            )
+
             # 利息费用（税后）
-            interest = is_.interest_expense[i]
-            net_interest = interest * (1 - a.tax_rate)
+            interest_d = D(is_.interest_expense[i])
+            net_interest_d = interest_d * (D(1) - tax)
+            net_interest = dto_float(net_interest_d)
             fcf.less_net_interest.append(-net_interest)
 
             # 净债务偿还
@@ -746,25 +758,26 @@ class ThreeStatementEngine:
             fcf.less_net_debt_repayment.append(-debt_repayment)
 
             # FCFE = FCFF - 税后利息 + 净债务偿还
-            fcfe = fcff - net_interest - debt_repayment
-            fcf.fcfe.append(fcfe)
+            fcfe_d = fcff_d - net_interest_d - D(debt_repayment)
+            fcf.fcfe.append(dto_float(fcfe_d))
 
-            fcf.plus_da.append(da)
-            fcf.less_capex.append(-capex)
-            fcf.less_wc_change.append(-wc)
+            fcf.plus_da.append(dto_float(da_d))
+            fcf.less_capex.append(-dto_float(capex_d))
+            fcf.less_wc_change.append(-dto_float(wc_d))
 
     # ── Phase 6: Invariant Checks ──────────────────────────────────────────
 
     def _check_invariants(self, result: ThreeStatementResult, n: int) -> None:
-        """三项财务不变量校验"""
+        """三项财务不变量校验 — Decimal 精度"""
         checks = {}
         violations = []
-        tol = self.INVARIANT_TOLERANCE
+        tol = D(self.INVARIANT_TOLERANCE)
 
         # 1. Balance Sheet Identity: Assets = Liabilities + Equity
         bs_ok = True
         for i in range(n):
-            if abs(result.balance_sheet.bs_imbalance[i]) > tol:
+            imbalance_d = D(result.balance_sheet.bs_imbalance[i])
+            if abs(imbalance_d) > tol:
                 bs_ok = False
                 violations.append(
                     f"Year {i + 1}: BS 不平衡 {result.balance_sheet.bs_imbalance[i]:.4f}亿 "
@@ -776,52 +789,46 @@ class ThreeStatementEngine:
         # 2. Cash Flow Identity: 期初现金 + 净变动 = 期末现金
         cf_ok = True
         for i in range(n):
-            if i == 0:
-                prev_cash = self.a.base_cash
-            else:
-                prev_cash = result.balance_sheet.cash[i - 1]
-            expected = prev_cash + result.cash_flow.net_cash_change[i]
-            actual = result.balance_sheet.cash[i]
-            if abs(expected - actual) > tol:
+            prev_cash = D(self.a.base_cash) if i == 0 else D(result.balance_sheet.cash[i - 1])
+            expected_d = prev_cash + D(result.cash_flow.net_cash_change[i])
+            actual_d = D(result.balance_sheet.cash[i])
+            if abs(expected_d - actual_d) > tol:
                 cf_ok = False
                 violations.append(
-                    f"Year {i + 1}: CF 恒等式偏差 {expected - actual:.4f}亿 "
-                    f"(expected={expected:.2f}, actual={actual:.2f})"
+                    f"Year {i + 1}: CF 恒等式偏差 {dto_float(expected_d - actual_d):.4f}亿 "
+                    f"(expected={dto_float(expected_d):.2f}, actual={dto_float(actual_d):.2f})"
                 )
         checks["cash_flow_identity"] = cf_ok
 
         # 3. Retained Earnings Identity: 期末RE = 期初RE + 归母净利润 - 分红
-        # 简化为：权益变动 = 归母净利润 × (1 - 分红率)
         re_ok = True
         for i in range(n):
-            prev_eq = self.a.base_equity if i == 0 else result.balance_sheet.equity[i - 1]
-            parent_ni = result.income_statement.net_profit_to_parent[i]
-            retained = parent_ni * (1 - self.a.payout_ratio)
-            expected_eq = prev_eq + retained
-            actual_eq = result.balance_sheet.equity[i]
-            if abs(expected_eq - actual_eq) > tol:
+            prev_eq = D(self.a.base_equity) if i == 0 else D(result.balance_sheet.equity[i - 1])
+            parent_ni_d = D(result.income_statement.net_profit_to_parent[i])
+            retained_d = parent_ni_d * (D(1) - D(self.a.payout_ratio))
+            expected_eq_d = prev_eq + retained_d
+            actual_eq_d = D(result.balance_sheet.equity[i])
+            if abs(expected_eq_d - actual_eq_d) > tol:
                 re_ok = False
                 violations.append(
-                    f"Year {i + 1}: RE 恒等式偏差 {expected_eq - actual_eq:.4f}亿 "
-                    f"(expected={expected_eq:.2f}, actual={actual_eq:.2f})"
+                    f"Year {i + 1}: RE 恒等式偏差 {dto_float(expected_eq_d - actual_eq_d):.4f}亿 "
+                    f"(expected={dto_float(expected_eq_d):.2f}, actual={dto_float(actual_eq_d):.2f})"
                 )
         checks["retained_earnings_identity"] = re_ok
 
         result.invariant_checks = checks
         result.invariant_violations = violations
 
-        # 如果有违规，生成警告
         if violations:
             result.warnings.append(f"三项财务不变量中有 {sum(1 for v in checks.values() if not v)} 项不满足")
 
     # ── Phase 7: Valuation Metrics ─────────────────────────────────────────
 
     def _compute_valuation_metrics(self, result: ThreeStatementResult) -> None:
-        """计算估值辅助指标"""
+        """计算估值辅助指标 — Decimal 精度 + 溯源"""
         a = self.a
         n = a.forecast_years
 
-        # 总负债和净负债
         for i in range(n):
             total_debt = (
                 result.balance_sheet.short_term_debt[i]
@@ -832,7 +839,8 @@ class ThreeStatementEngine:
             result.total_debt.append(total_debt)
             result.net_debt.append(total_debt - result.balance_sheet.cash[i])
 
-        # 最新一年 FCFF/FCFE 用于 DCF
         if n > 0:
             result.fcff_for_dcf = result.free_cash_flow.fcff[-1]
             result.fcfe_for_dcf = result.free_cash_flow.fcfe[-1]
+            self.provenance.set("fcff_for_dcf", result.fcff_for_dcf, formula="last year FCFF")
+            self.provenance.set("fcfe_for_dcf", result.fcfe_for_dcf, formula="last year FCFE")

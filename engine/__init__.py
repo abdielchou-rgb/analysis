@@ -117,6 +117,17 @@ from engine.schemas import (
     ValuationMethod,
     ValuationResult,
 )
+
+# Phase 1: Unified schemas + precision
+from engine.schemas_v2 import (
+    CellProvenance,
+    DCFAssumptionsV2,
+    MonteCarloAssumptionsV2,
+    ReverseDCFAssumptions,
+    SensitivitySurface,
+    ThreeStatementAssumptionsV2,
+    ValuationResultV2,
+)
 from engine.sotp_model import SOTPEngine, SOTPResult
 
 # Three-statement
@@ -240,6 +251,14 @@ __all__ = [
     "generate_dockerfiles",
     # Excel
     "AuditExcelWriter",
+    # Phase 1: Unified schemas + precision
+    "DCFAssumptionsV2",
+    "ThreeStatementAssumptionsV2",
+    "ReverseDCFAssumptions",
+    "MonteCarloAssumptionsV2",
+    "SensitivitySurface",
+    "CellProvenance",
+    "ValuationResultV2",
 ]
 
-__version__ = "2.0.0"
+__version__ = "3.0.0"

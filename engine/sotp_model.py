@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from typing import List, Optional
 
 from engine.irongate import GateReport, IronGateEngine
+from engine.precision import D, PreciseValuation, dto_float
 from engine.schemas import SOTPAssumptions, SOTPSegment, ValuationMethod
 
 
@@ -34,11 +35,12 @@ class SOTPResult:
 
 
 class SOTPEngine:
-    """分部加总估值引擎"""
+    """分部加总估值引擎 — Decimal 精度"""
 
     def __init__(self, assumptions: SOTPAssumptions, skip_gates: bool = False) -> None:
         self.a = assumptions
         self.gate_report: Optional[GateReport] = None
+        self.provenance = PreciseValuation()
 
         if not skip_gates:
             gate = IronGateEngine()
@@ -54,9 +56,12 @@ class SOTPEngine:
         result.net_debt = a.net_debt
         result.non_core_assets = a.non_core_assets
 
-        # ── 分部估值 ────────────────────────────────────────────────────
+        # ── 分部估值 (Decimal) ──────────────────────────────────────────
+        total_d = D(0)
         for seg in a.segments:
             value = self._value_segment(seg)
+            value_d = D(value)
+            total_d += value_d
             result.segment_values.append(
                 {
                     "name": seg.name,
@@ -69,15 +74,17 @@ class SOTPEngine:
                 }
             )
 
-        result.total_segments_value = round(sum(s["value"] for s in result.segment_values), 2)
+        result.total_segments_value = dto_float(total_d)
 
-        # ── 企业价值 → 股权价值 → 目标价 ───────────────────────────────
+        # ── 企业价值 → 股权价值 → 目标价 (Decimal) ─────────────────────
         result.enterprise_value = result.total_segments_value
-        result.equity_value = round(
-            result.enterprise_value + a.cash_and_equivalents - a.net_debt + a.non_core_assets,
-            2,
-        )
-        result.target_price = round(result.equity_value / a.total_shares, 2)
+        equity_d = total_d + D(a.cash_and_equivalents) - D(a.net_debt) + D(a.non_core_assets)
+        result.equity_value = dto_float(equity_d)
+        result.target_price = dto_float(equity_d / D(a.total_shares))
+
+        self.provenance.set("sotp_total", result.total_segments_value, formula="Σ(segment values)")
+        self.provenance.set("sotp_equity", result.equity_value, formula="EV + Cash - Debt + NonCore")
+        self.provenance.set("sotp_target", result.target_price, formula="Equity / Shares")
 
         if a.current_price and a.current_price > 0:
             result.upside_pct = round((result.target_price / a.current_price - 1) * 100, 1)

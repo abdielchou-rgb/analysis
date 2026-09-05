@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
 from engine.irongate import GateReport, IronGateEngine
+from engine.precision import D, PreciseValuation, dto_float
 from engine.schemas import ComparableAssumptions
 
 
@@ -31,11 +32,12 @@ class ComparableResult:
 
 
 class ComparableEngine:
-    """可比公司估值引擎"""
+    """可比公司估值引擎 — Decimal 精度"""
 
     def __init__(self, assumptions: ComparableAssumptions, skip_gates: bool = False) -> None:
         self.a = assumptions
         self.gate_report: Optional[GateReport] = None
+        self.provenance = PreciseValuation()
 
         if not skip_gates:
             gate = IronGateEngine()
@@ -48,37 +50,44 @@ class ComparableEngine:
         a = self.a
         result = ComparableResult(gate_report=self.gate_report)
 
-        # ── PE 隐含估值 ─────────────────────────────────────────────────
+        # ── PE 隐含估值 (Decimal) ────────────────────────────────────────
         pe_stats = self._calc_stats(a.peer_pe_ratios)
         result.peer_stats["PE"] = pe_stats
         if a.company_eps > 0 and pe_stats["mean"] > 0:
-            result.implied_prices["PE"] = round(a.company_eps * pe_stats["mean"], 2)
+            implied = D(a.company_eps) * D(pe_stats["mean"])
+            result.implied_prices["PE"] = dto_float(implied)
+            self.provenance.set("pe_implied", result.implied_prices["PE"], formula="EPS × Peer PE Mean")
 
-        # ── PB 隐含估值 ─────────────────────────────────────────────────
+        # ── PB 隐含估值 (Decimal) ────────────────────────────────────────
         if a.peer_pb_ratios and len(a.peer_pb_ratios) >= 2:
             pb_stats = self._calc_stats(a.peer_pb_ratios)
             result.peer_stats["PB"] = pb_stats
             if a.company_bvps > 0 and pb_stats["mean"] > 0:
-                result.implied_prices["PB"] = round(a.company_bvps * pb_stats["mean"], 2)
+                implied = D(a.company_bvps) * D(pb_stats["mean"])
+                result.implied_prices["PB"] = dto_float(implied)
+                self.provenance.set("pb_implied", result.implied_prices["PB"], formula="BVPS × Peer PB Mean")
 
-        # ── PS 隐含估值 ─────────────────────────────────────────────────
+        # ── PS 隐含估值 (Decimal) ────────────────────────────────────────
         if a.peer_ps_ratios and len(a.peer_ps_ratios) >= 2:
             ps_stats = self._calc_stats(a.peer_ps_ratios)
             result.peer_stats["PS"] = ps_stats
             if a.company_revenue_per_share > 0 and ps_stats["mean"] > 0:
-                result.implied_prices["PS"] = round(a.company_revenue_per_share * ps_stats["mean"], 2)
+                implied = D(a.company_revenue_per_share) * D(ps_stats["mean"])
+                result.implied_prices["PS"] = dto_float(implied)
+                self.provenance.set("ps_implied", result.implied_prices["PS"], formula="Rev/Share × Peer PS Mean")
 
-        # ── EV/EBITDA 隐含估值 ──────────────────────────────────────────
+        # ── EV/EBITDA 隐含估值 (Decimal) ─────────────────────────────────
         if a.peer_ev_ebitda and len(a.peer_ev_ebitda) >= 2:
             ebitda_stats = self._calc_stats(a.peer_ev_ebitda)
             result.peer_stats["EV/EBITDA"] = ebitda_stats
             if a.company_ebitda_per_share > 0 and ebitda_stats["mean"] > 0:
-                result.implied_prices["EV/EBITDA"] = round(a.company_ebitda_per_share * ebitda_stats["mean"], 2)
+                implied = D(a.company_ebitda_per_share) * D(ebitda_stats["mean"])
+                result.implied_prices["EV/EBITDA"] = dto_float(implied)
 
-        # ── 综合目标价 ──────────────────────────────────────────────────
+        # ── 综合目标价 (Decimal) ─────────────────────────────────────────
         if result.implied_prices:
-            values = list(result.implied_prices.values())
-            result.target_price = round(sum(values) / len(values), 2)
+            prices_d = [D(p) for p in result.implied_prices.values()]
+            result.target_price = dto_float(sum(prices_d) / D(len(prices_d)))
         else:
             result.warnings.append("无有效可比估值结果")
 
