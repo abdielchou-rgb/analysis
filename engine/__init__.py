@@ -49,8 +49,15 @@ from engine.fcff_path import (
     MarketImpliedSolver,
 )
 
+# Phase 2: Reverse-DCF + Intent Engine
+from engine.intent_engine import DecisionPersona, ExpectationsInvesting, MECEIssueTree
+
 # IronGate
 from engine.irongate import GateReport, GateResult, IronGateEngine
+
+# Phase 3: IronGate 2.0 + Provenance
+from engine.irongate_v2 import GateSeverity, GateVerdict, IronGateV2
+from engine.irongate_v2.provenance import CellProvenanceRecord, ProvenanceTracker
 
 # P2: Knowledge + Memory + Scenarios
 from engine.knowledge import (
@@ -106,6 +113,7 @@ from engine.regime import (
     SyntheticPeerEngine,
     SyntheticPeerResult,
 )
+from engine.reverse_dcf import ReverseDCFSolver
 from engine.scenario_model import ScenarioEngine, ScenarioResult
 from engine.schemas import (
     ComparableAssumptions,
@@ -128,6 +136,15 @@ from engine.schemas_v2 import (
     ThreeStatementAssumptionsV2,
     ValuationResultV2,
 )
+
+# Phase 1: Unified schemas + precision
+from engine.schemas_v2 import (
+    ReverseDCFAssumptions as ReverseDCFAssumptionsSchema,
+)
+from engine.schemas_v2 import (
+    SensitivitySurface as SensitivitySurfaceSchema,
+)
+from engine.sensitivity_surface import SensitivitySurface as SensitivitySurfaceEngine
 from engine.sotp_model import SOTPEngine, SOTPResult
 
 # Three-statement
@@ -254,11 +271,23 @@ __all__ = [
     # Phase 1: Unified schemas + precision
     "DCFAssumptionsV2",
     "ThreeStatementAssumptionsV2",
-    "ReverseDCFAssumptions",
+    "ReverseDCFAssumptionsSchema",
     "MonteCarloAssumptionsV2",
-    "SensitivitySurface",
+    "SensitivitySurfaceSchema",
     "CellProvenance",
     "ValuationResultV2",
+    # Phase 2: Reverse-DCF + Intent Engine
+    "ReverseDCFSolver",
+    "MECEIssueTree",
+    "ExpectationsInvesting",
+    "DecisionPersona",
+    # Phase 3: IronGate 2.0 + Provenance
+    "IronGateV2",
+    "GateSeverity",
+    "GateVerdict",
+    "ProvenanceTracker",
+    "CellProvenanceRecord",
+    "SensitivitySurfaceEngine",
 ]
 
 __version__ = "3.0.0"
