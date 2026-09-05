@@ -600,5 +600,1399 @@
     ],
     "tolerance": 0.1,
     "report_type": "listed_company"
+  },
+  {
+    "asset": "贵州茅台",
+    "report_id": "golden_expanded_000",
+    "field": "eps",
+    "canonical": 1256197800.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      1256197800.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "600519",
+      "sector": "白酒",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "贵州茅台",
+    "report_id": "golden_expanded_001",
+    "field": "roe",
+    "canonical": 1256197800.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      1256197800.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "600519",
+      "sector": "白酒",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "中国平安",
+    "report_id": "golden_expanded_002",
+    "field": "revenue",
+    "canonical": 6.42,
+    "source": "baostock_gross_margin",
+    "allow_report_values": [
+      6.42
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "601318",
+      "sector": "保险",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "中国平安",
+    "report_id": "golden_expanded_003",
+    "field": "eps",
+    "canonical": 18210234607.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      18210234607.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "601318",
+      "sector": "保险",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "中国平安",
+    "report_id": "golden_expanded_004",
+    "field": "roe",
+    "canonical": 10762657695.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      10762657695.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "601318",
+      "sector": "保险",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "五粮液",
+    "report_id": "golden_expanded_005",
+    "field": "pe_ratio",
+    "canonical": 20.97,
+    "source": "baostock_ttm",
+    "allow_report_values": [
+      20.97
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "000858",
+      "sector": "白酒",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "五粮液",
+    "report_id": "golden_expanded_006",
+    "field": "revenue",
+    "canonical": 8.42,
+    "source": "baostock_gross_margin",
+    "allow_report_values": [
+      8.42
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "000858",
+      "sector": "白酒",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "五粮液",
+    "report_id": "golden_expanded_007",
+    "field": "eps",
+    "canonical": 3881608005.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      3881608005.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "000858",
+      "sector": "白酒",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "五粮液",
+    "report_id": "golden_expanded_008",
+    "field": "roe",
+    "canonical": 3881459458.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      3881459458.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "000858",
+      "sector": "白酒",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "招商银行",
+    "report_id": "golden_expanded_009",
+    "field": "revenue",
+    "canonical": 5.85,
+    "source": "baostock_gross_margin",
+    "allow_report_values": [
+      5.85
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "600036",
+      "sector": "银行",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "招商银行",
+    "report_id": "golden_expanded_010",
+    "field": "eps",
+    "canonical": 25219845601.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      25219845601.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "600036",
+      "sector": "银行",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "招商银行",
+    "report_id": "golden_expanded_011",
+    "field": "roe",
+    "canonical": 20628944429.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      20628944429.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "600036",
+      "sector": "银行",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "美的集团",
+    "report_id": "golden_expanded_012",
+    "field": "target_price",
+    "canonical": 95.98,
+    "source": "mootdx_realtime",
+    "allow_report_values": [
+      95.98
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "000333",
+      "sector": "家电",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "美的集团",
+    "report_id": "golden_expanded_013",
+    "field": "pe_ratio",
+    "canonical": 15.0,
+    "source": "baostock_ttm",
+    "allow_report_values": [
+      15.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "000333",
+      "sector": "家电",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "美的集团",
+    "report_id": "golden_expanded_014",
+    "field": "revenue",
+    "canonical": 5.48,
+    "source": "baostock_gross_margin",
+    "allow_report_values": [
+      5.48
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "000333",
+      "sector": "家电",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "美的集团",
+    "report_id": "golden_expanded_015",
+    "field": "eps",
+    "canonical": 7660355772.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      7660355772.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "000333",
+      "sector": "家电",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "美的集团",
+    "report_id": "golden_expanded_016",
+    "field": "roe",
+    "canonical": 6897003085.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      6897003085.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "000333",
+      "sector": "家电",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "中国中免",
+    "report_id": "golden_expanded_017",
+    "field": "target_price",
+    "canonical": 59.09,
+    "source": "mootdx_realtime",
+    "allow_report_values": [
+      59.09
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "601888",
+      "sector": "旅游",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "中国中免",
+    "report_id": "golden_expanded_018",
+    "field": "pe_ratio",
+    "canonical": 27.27,
+    "source": "baostock_ttm",
+    "allow_report_values": [
+      27.27
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "601888",
+      "sector": "旅游",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "中国中免",
+    "report_id": "golden_expanded_019",
+    "field": "revenue",
+    "canonical": 1.88,
+    "source": "baostock_gross_margin",
+    "allow_report_values": [
+      1.88
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "601888",
+      "sector": "旅游",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "中国中免",
+    "report_id": "golden_expanded_020",
+    "field": "eps",
+    "canonical": 2068859044.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      2068859044.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "601888",
+      "sector": "旅游",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "中国中免",
+    "report_id": "golden_expanded_021",
+    "field": "roe",
+    "canonical": 1952475544.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      1952475544.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "601888",
+      "sector": "旅游",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "宁德时代",
+    "report_id": "golden_expanded_022",
+    "field": "eps",
+    "canonical": 4403394911.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      4403394911.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "300750",
+      "sector": "电池",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "宁德时代",
+    "report_id": "golden_expanded_023",
+    "field": "roe",
+    "canonical": 3902556333.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      3902556333.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "300750",
+      "sector": "电池",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "长江电力",
+    "report_id": "golden_expanded_024",
+    "field": "pe_ratio",
+    "canonical": 19.22,
+    "source": "baostock_ttm",
+    "allow_report_values": [
+      19.22
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "600900",
+      "sector": "电力",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "长江电力",
+    "report_id": "golden_expanded_025",
+    "field": "revenue",
+    "canonical": 1.38,
+    "source": "baostock_gross_margin",
+    "allow_report_values": [
+      1.38
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "600900",
+      "sector": "电力",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "长江电力",
+    "report_id": "golden_expanded_026",
+    "field": "eps",
+    "canonical": 24468217716.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      24468217716.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "600900",
+      "sector": "电力",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "长江电力",
+    "report_id": "golden_expanded_027",
+    "field": "roe",
+    "canonical": 24007256503.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      24007256503.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "600900",
+      "sector": "电力",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "平安银行",
+    "report_id": "golden_expanded_028",
+    "field": "target_price",
+    "canonical": 13.07,
+    "source": "mootdx_realtime",
+    "allow_report_values": [
+      13.07
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "000001",
+      "sector": "银行",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "平安银行",
+    "report_id": "golden_expanded_029",
+    "field": "pe_ratio",
+    "canonical": 5.3,
+    "source": "baostock_ttm",
+    "allow_report_values": [
+      5.3
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "000001",
+      "sector": "银行",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "平安银行",
+    "report_id": "golden_expanded_030",
+    "field": "revenue",
+    "canonical": 2.25,
+    "source": "baostock_gross_margin",
+    "allow_report_values": [
+      2.25
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "000001",
+      "sector": "银行",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "平安银行",
+    "report_id": "golden_expanded_031",
+    "field": "eps",
+    "canonical": 19405918198.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      19405918198.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "000001",
+      "sector": "银行",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "平安银行",
+    "report_id": "golden_expanded_032",
+    "field": "roe",
+    "canonical": 19405571850.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      19405571850.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "000001",
+      "sector": "银行",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "恒瑞医药",
+    "report_id": "golden_expanded_033",
+    "field": "pe_ratio",
+    "canonical": 39.48,
+    "source": "baostock_ttm",
+    "allow_report_values": [
+      39.48
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "600276",
+      "sector": "医药",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "恒瑞医药",
+    "report_id": "golden_expanded_034",
+    "field": "revenue",
+    "canonical": 1.07,
+    "source": "baostock_gross_margin",
+    "allow_report_values": [
+      1.07
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "600276",
+      "sector": "医药",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "恒瑞医药",
+    "report_id": "golden_expanded_035",
+    "field": "eps",
+    "canonical": 6379002274.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      6379002274.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "600276",
+      "sector": "医药",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "恒瑞医药",
+    "report_id": "golden_expanded_036",
+    "field": "roe",
+    "canonical": 6379002274.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      6379002274.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "600276",
+      "sector": "医药",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "海康威视",
+    "report_id": "golden_expanded_037",
+    "field": "pe_ratio",
+    "canonical": 19.51,
+    "source": "baostock_ttm",
+    "allow_report_values": [
+      19.51
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "002415",
+      "sector": "安防",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "海康威视",
+    "report_id": "golden_expanded_038",
+    "field": "revenue",
+    "canonical": 1.31,
+    "source": "baostock_gross_margin",
+    "allow_report_values": [
+      1.31
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "002415",
+      "sector": "安防",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "海康威视",
+    "report_id": "golden_expanded_039",
+    "field": "eps",
+    "canonical": 9233198326.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      9233198326.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "002415",
+      "sector": "安防",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "海康威视",
+    "report_id": "golden_expanded_040",
+    "field": "roe",
+    "canonical": 9105669814.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      9105669814.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "002415",
+      "sector": "安防",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "中信证券",
+    "report_id": "golden_expanded_041",
+    "field": "target_price",
+    "canonical": 30.65,
+    "source": "mootdx_realtime",
+    "allow_report_values": [
+      30.65
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "600030",
+      "sector": "证券",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "中信证券",
+    "report_id": "golden_expanded_042",
+    "field": "pe_ratio",
+    "canonical": 10.98,
+    "source": "baostock_ttm",
+    "allow_report_values": [
+      10.98
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "600030",
+      "sector": "证券",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "中信证券",
+    "report_id": "golden_expanded_043",
+    "field": "revenue",
+    "canonical": 1.57,
+    "source": "baostock_gross_margin",
+    "allow_report_values": [
+      1.57
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "600030",
+      "sector": "证券",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "中信证券",
+    "report_id": "golden_expanded_044",
+    "field": "eps",
+    "canonical": 14820546829.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      14820546829.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "600030",
+      "sector": "证券",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "中信证券",
+    "report_id": "golden_expanded_045",
+    "field": "roe",
+    "canonical": 12176550974.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      12176550974.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "600030",
+      "sector": "证券",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "泸州老窖",
+    "report_id": "golden_expanded_046",
+    "field": "target_price",
+    "canonical": 83.6,
+    "source": "mootdx_realtime",
+    "allow_report_values": [
+      83.6
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "000568",
+      "sector": "白酒",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "泸州老窖",
+    "report_id": "golden_expanded_047",
+    "field": "pe_ratio",
+    "canonical": 14.9,
+    "source": "baostock_ttm",
+    "allow_report_values": [
+      14.9
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "000568",
+      "sector": "白酒",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "泸州老窖",
+    "report_id": "golden_expanded_048",
+    "field": "revenue",
+    "canonical": 9.17,
+    "source": "baostock_gross_margin",
+    "allow_report_values": [
+      9.17
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "000568",
+      "sector": "白酒",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "泸州老窖",
+    "report_id": "golden_expanded_049",
+    "field": "eps",
+    "canonical": 1471951503.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      1471951503.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "000568",
+      "sector": "白酒",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "泸州老窖",
+    "report_id": "golden_expanded_050",
+    "field": "roe",
+    "canonical": 1469361143.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      1469361143.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "000568",
+      "sector": "白酒",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "隆基绿能",
+    "report_id": "golden_expanded_051",
+    "field": "pe_ratio",
+    "canonical": -11.77,
+    "source": "baostock_ttm",
+    "allow_report_values": [
+      -11.77
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "601012",
+      "sector": "光伏",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "隆基绿能",
+    "report_id": "golden_expanded_052",
+    "field": "revenue",
+    "canonical": -1.02,
+    "source": "baostock_gross_margin",
+    "allow_report_values": [
+      -1.02
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "601012",
+      "sector": "光伏",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "隆基绿能",
+    "report_id": "golden_expanded_053",
+    "field": "eps",
+    "canonical": 7578049736.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      7578049736.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "601012",
+      "sector": "光伏",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "隆基绿能",
+    "report_id": "golden_expanded_054",
+    "field": "roe",
+    "canonical": 7578042190.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      7578042190.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "601012",
+      "sector": "光伏",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "比亚迪",
+    "report_id": "golden_expanded_055",
+    "field": "eps",
+    "canonical": 3039065855.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      3039065855.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "002594",
+      "sector": "汽车",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "比亚迪",
+    "report_id": "golden_expanded_056",
+    "field": "roe",
+    "canonical": 1162413941.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      1162413941.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "002594",
+      "sector": "汽车",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "山西汾酒",
+    "report_id": "golden_expanded_057",
+    "field": "target_price",
+    "canonical": 128.66,
+    "source": "mootdx_realtime",
+    "allow_report_values": [
+      128.66
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "600809",
+      "sector": "白酒",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "山西汾酒",
+    "report_id": "golden_expanded_058",
+    "field": "pe_ratio",
+    "canonical": 14.02,
+    "source": "baostock_ttm",
+    "allow_report_values": [
+      14.02
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "600809",
+      "sector": "白酒",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "山西汾酒",
+    "report_id": "golden_expanded_059",
+    "field": "revenue",
+    "canonical": 10.35,
+    "source": "baostock_gross_margin",
+    "allow_report_values": [
+      10.35
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "600809",
+      "sector": "白酒",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "山西汾酒",
+    "report_id": "golden_expanded_060",
+    "field": "eps",
+    "canonical": 1219964222.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      1219964222.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "600809",
+      "sector": "白酒",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "山西汾酒",
+    "report_id": "golden_expanded_061",
+    "field": "roe",
+    "canonical": 1219964222.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      1219964222.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "600809",
+      "sector": "白酒",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "京东方A",
+    "report_id": "golden_expanded_062",
+    "field": "target_price",
+    "canonical": 6.28,
+    "source": "mootdx_realtime",
+    "allow_report_values": [
+      6.28
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "000725",
+      "sector": "面板",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "京东方A",
+    "report_id": "golden_expanded_063",
+    "field": "pe_ratio",
+    "canonical": 26.92,
+    "source": "baostock_ttm",
+    "allow_report_values": [
+      26.92
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "000725",
+      "sector": "面板",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "京东方A",
+    "report_id": "golden_expanded_064",
+    "field": "revenue",
+    "canonical": 0.16,
+    "source": "baostock_gross_margin",
+    "allow_report_values": [
+      0.16
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "000725",
+      "sector": "面板",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "京东方A",
+    "report_id": "golden_expanded_065",
+    "field": "eps",
+    "canonical": 37645016203.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      37645016203.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "000725",
+      "sector": "面板",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "京东方A",
+    "report_id": "golden_expanded_066",
+    "field": "roe",
+    "canonical": 36851555686.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      36851555686.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "000725",
+      "sector": "面板",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "紫金矿业",
+    "report_id": "golden_expanded_067",
+    "field": "target_price",
+    "canonical": 36.64,
+    "source": "mootdx_realtime",
+    "allow_report_values": [
+      36.64
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "601899",
+      "sector": "有色",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "紫金矿业",
+    "report_id": "golden_expanded_068",
+    "field": "pe_ratio",
+    "canonical": 13.09,
+    "source": "baostock_ttm",
+    "allow_report_values": [
+      13.09
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "601899",
+      "sector": "有色",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "紫金矿业",
+    "report_id": "golden_expanded_069",
+    "field": "revenue",
+    "canonical": 1.35,
+    "source": "baostock_gross_margin",
+    "allow_report_values": [
+      1.35
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "601899",
+      "sector": "有色",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "紫金矿业",
+    "report_id": "golden_expanded_070",
+    "field": "eps",
+    "canonical": 26577573940.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      26577573940.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "601899",
+      "sector": "有色",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "紫金矿业",
+    "report_id": "golden_expanded_071",
+    "field": "roe",
+    "canonical": 20587938340.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      20587938340.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "601899",
+      "sector": "有色",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "顺丰控股",
+    "report_id": "golden_expanded_072",
+    "field": "target_price",
+    "canonical": 35.26,
+    "source": "mootdx_realtime",
+    "allow_report_values": [
+      35.26
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "002352",
+      "sector": "物流",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "顺丰控股",
+    "report_id": "golden_expanded_073",
+    "field": "pe_ratio",
+    "canonical": 15.51,
+    "source": "baostock_ttm",
+    "allow_report_values": [
+      15.51
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "002352",
+      "sector": "物流",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "顺丰控股",
+    "report_id": "golden_expanded_074",
+    "field": "revenue",
+    "canonical": 2.1,
+    "source": "baostock_gross_margin",
+    "allow_report_values": [
+      2.1
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "002352",
+      "sector": "物流",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "顺丰控股",
+    "report_id": "golden_expanded_075",
+    "field": "eps",
+    "canonical": 4987646658.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      4987646658.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "002352",
+      "sector": "物流",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "顺丰控股",
+    "report_id": "golden_expanded_076",
+    "field": "roe",
+    "canonical": 4790219923.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      4790219923.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "002352",
+      "sector": "物流",
+      "exchange": "SZ"
+    }
+  },
+  {
+    "asset": "海螺水泥",
+    "report_id": "golden_expanded_077",
+    "field": "target_price",
+    "canonical": 19.48,
+    "source": "mootdx_realtime",
+    "allow_report_values": [
+      19.48
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "600585",
+      "sector": "建材",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "海螺水泥",
+    "report_id": "golden_expanded_078",
+    "field": "pe_ratio",
+    "canonical": 15.01,
+    "source": "baostock_ttm",
+    "allow_report_values": [
+      15.01
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "600585",
+      "sector": "建材",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "海螺水泥",
+    "report_id": "golden_expanded_079",
+    "field": "revenue",
+    "canonical": 1.51,
+    "source": "baostock_gross_margin",
+    "allow_report_values": [
+      1.51
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "600585",
+      "sector": "建材",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "海螺水泥",
+    "report_id": "golden_expanded_080",
+    "field": "eps",
+    "canonical": 5299302579.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      5299302579.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "600585",
+      "sector": "建材",
+      "exchange": "SS"
+    }
+  },
+  {
+    "asset": "海螺水泥",
+    "report_id": "golden_expanded_081",
+    "field": "roe",
+    "canonical": 3999702579.0,
+    "source": "baostock_profit",
+    "allow_report_values": [
+      3999702579.0
+    ],
+    "tolerance": 0.05,
+    "report_type": "listed_company",
+    "metadata": {
+      "stock_code": "600585",
+      "sector": "建材",
+      "exchange": "SS"
+    }
   }
 ]
