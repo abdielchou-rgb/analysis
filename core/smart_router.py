@@ -122,7 +122,10 @@ class SmartRouter:
                 "qwen3.6-plus",
                 "qwen3.5-plus",
             ],
-            priority=99,  # 临时禁用：opencode_go 连续超时 23 次，拖垮全链路
+            # 2026-09-04：key 已配置，重新启用。priority 1（与 zhipu 同级，
+            # zhipu 429 限流时作为写作主力替代）。历史 23 次超时是未配 key 时
+            # 的错误探测——现在 key 有效且实测 7.5s 通。
+            priority=1,
             is_free=True,
             cost_per_1k_tokens=0.0,
             rate_limit_rpm=30,
@@ -311,7 +314,8 @@ class SmartRouter:
         self._failures[provider] = prev + 0.5
         if self._failures[provider] >= self.CIRCUIT_BREAK_THRESHOLD:
             cooldown = min(
-                self.CIRCUIT_BREAK_COOLDOWN_BASE * (2 ** (int(self._failures[provider]) - self.CIRCUIT_BREAK_THRESHOLD)),
+                self.CIRCUIT_BREAK_COOLDOWN_BASE
+                * (2 ** (int(self._failures[provider]) - self.CIRCUIT_BREAK_THRESHOLD)),
                 self.CIRCUIT_BREAK_COOLDOWN_MAX,
             )
             self._circuit_broken_until[provider] = time.time() + cooldown

@@ -113,6 +113,9 @@ def _llm_generate_questions(
             [{"role": "user", "content": prompt}],
             temperature=0.7,
             max_tokens=200,
+            # 修复（2026-09-04）：此前缺省 provider="opencode_go"（未注册）→
+            # 全量回退打 zhipu 加剧 429。research_planner 节点按路由策略走。
+            provider="deepseek",
         )
         content = r["choices"][0]["message"]["content"].strip()
         lines = [l.strip().lstrip("0123456789.、） ") for l in content.split("\n") if l.strip() and len(l.strip()) > 10]

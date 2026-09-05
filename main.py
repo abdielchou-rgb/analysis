@@ -40,17 +40,11 @@ logger = logging.getLogger("2hao.main")
 # R69（2026-08-05）：main.py 入口加载 .env（此前仅 scheduler.py 加载，
 # 导致 DEEPSEEK_API_KEY 缺失 → deepseek 判不可用 → 回退 agent_provider 兜底质量崩坏）
 try:
+    from dotenv import load_dotenv
+
     _env_path = _ROOT / ".env"
     if _env_path.exists():
-        for _line in _env_path.read_text(encoding="utf-8").splitlines():
-            _line = _line.strip()
-            if not _line or _line.startswith("#") or "=" not in _line:
-                continue
-            _k, _v = _line.split("=", 1)
-            _k = _k.strip()
-            _v = _v.strip().strip('"').strip("'")
-            if _k and _k not in os.environ:
-                os.environ[_k] = _v
+        load_dotenv(_env_path, override=False)
         logger.info(
             "[ENV-R69] 已从 .env 加载环境变量（deepseek=%s）", "OK" if os.environ.get("DEEPSEEK_API_KEY") else "MISSING"
         )

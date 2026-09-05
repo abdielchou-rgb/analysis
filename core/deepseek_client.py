@@ -132,11 +132,17 @@ class ProviderRegistry:
         logger.warning("Provider %s timeout (consecutive=%.1f)", name, self._consecutive_failures[name])
         if self._consecutive_failures[name] >= self.CIRCUIT_BREAK_THRESHOLD:
             cooldown = min(
-                self.CIRCUIT_BREAK_COOLDOWN_BASE * (2 ** (int(self._consecutive_failures[name]) - self.CIRCUIT_BREAK_THRESHOLD)),
+                self.CIRCUIT_BREAK_COOLDOWN_BASE
+                * (2 ** (int(self._consecutive_failures[name]) - self.CIRCUIT_BREAK_THRESHOLD)),
                 self.CIRCUIT_BREAK_COOLDOWN_MAX,
             )
             self._circuit_broken_until[name] = time.time() + cooldown
-            logger.warning("Provider %s circuit-broken for %.0fs (consecutive=%.1f)", name, cooldown, self._consecutive_failures[name])
+            logger.warning(
+                "Provider %s circuit-broken for %.0fs (consecutive=%.1f)",
+                name,
+                cooldown,
+                self._consecutive_failures[name],
+            )
 
     def record_success(self, name: str):
         # 单次成功：清零连续失败计数和冷却时间
@@ -280,10 +286,14 @@ def _register_default_providers(registry: ProviderRegistry):
                         api_key="",
                         base_url=_ollama_url,
                         models=_models,
-                        priority=0,
+                        # 2026-09-04：priority 0→9。原 0（最高）会让 fallback 链
+                        # 在云端限流时先打本地 7B（质量低于 deepseek/openrouter）。
+                        # 现在 2hao-analyst-v2(10K SFT) 已可用但仍是 7B——
+                        # 定位为"云端全挂时的最后兜底"（在 agent_provider 之前）。
+                        priority=9,
                     ),
                 )
-                logger.info("Ollama registered: %s", _models)
+                logger.info("Ollama registered: %s (priority=9, last-resort fallback)", _models)
     except Exception:
         logger.info("No local Ollama detected")
 
@@ -333,6 +343,20 @@ def _response_cache_get(key: str):
 
 
 def _response_cache_set(key: str, value):
+    # 防污染（2026-09-04）：zhipu 429 限流期间曾把截断/乱码响应写入缓存，
+    # 后续同 prompt 命中坏缓存 → 写作修订 3 次返回同一截断文本 → Gate 恒 0.658。
+    # 门槛：内容必须非空且 ≥50 字符才入缓存（截断响应通常 <50 或为空）。
+    try:
+        _content = ""
+        if isinstance(value, dict):
+            _choices = value.get("choices") or []
+            if _choices:
+                _content = str((_choices[0] or {}).get("message", {}).get("content", ""))
+        if len(_content.strip()) < 50:
+            logger.info("[LLM-CACHE] 拒绝缓存短/空响应（%d 字符）", len(_content.strip()))
+            return
+    except Exception:
+        pass
     ttl = _settings.llm_cache_ttl()
     try:
         from core.compute.llm_cache import get_cache
@@ -486,13 +510,16 @@ def call_llm(
     temperature: float = 0.3,
     max_tokens: int = 8192,
     stream: bool = False,
-    provider: str = "opencode_go",
+    provider: str = "auto",
 ) -> dict:
     """统一LLM调用接口（多provider自动切换）
 
     用法与 call_deepseek 一致，但会自动处理provider故障切换。
     R13（2026-08-01 三算力架构）：新增 provider 参数强制指定提供方——
-      "opencode_go" = OpenCode Go（免费，默认）
+      "opencode_go" = OpenCode Go（免费）
+    provider 默认 auto（2026-09-04 修复）：此前默认 opencode_go——本机未注册
+    该 provider（无 OPENCODE_API_KEY），漏传参数的调用点全部走"指定不可用
+    →回退链"，加剧 zhipu 429。auto 走 smart_router 按健康度选可用 provider。
       "openrouter" = OpenRouter（免费）
       "opencode_zen" = OpenCode Zen（免费）
       "agent_provider" = Marvis 队列（起草/修订，多实例并行）
@@ -530,24 +557,48 @@ def call_llm(
         if target and _registry._consecutive_failures.get(provider, 0) < 5:
             providers = [target]
         else:
-            logger.warning("[LLM] 指定 provider=%s 不可用，使用智能路由", provider)
-            result = router.select_provider(task_type=task_type, prefer_free=True)
-            if result:
-                config, model_name = result
-                providers = [_registry._providers.get(config.name)]
-                if providers[0]:
-                    model = model_name
-            else:
-                providers = []
+            logger.warning("[LLM 指定 provider=%s 不可用，使用全量回退链", provider)
+
+            # 修复（2026-09-04）：此前这里用 router.select_provider() 只取单选
+            # （恒为 priority 最高的 zhipu），zhipu 429 后整链死亡——
+            # openrouter/deepseek 在注册表里却永远轮不到。改为全量回退链
+            # （按 priority 排序、剔除熔断），指定 provider 失败后逐个尝试。
+            def _active():
+                return sorted(
+                    (p for p in _registry._providers.values() if _registry._consecutive_failures.get(p.name, 0) < 5),
+                    key=lambda x: x.priority,
+                )
+
+            providers = _active()
     else:
         # 使用智能路由器选择
         result = router.select_provider(task_type=task_type, prefer_free=True)
         if result:
             config, model_name = result
-            providers = [_registry._providers.get(config.name)]
-            if providers[0]:
+            _picked = _registry._providers.get(config.name)
+            if _picked:
+                # 修复（2026-09-04）：此前 providers=[单选]，smart_router 首选
+                # （zhipu）429 后整链 raise，openrouter/deepseek 永远轮不到。
+                # 现在首选排最前，其余可用 provider 追加为回退。
+                def _active():
+                    return sorted(
+                        (
+                            p
+                            for p in _registry._providers.values()
+                            if _registry._consecutive_failures.get(p.name, 0) < 5
+                        ),
+                        key=lambda x: x.priority,
+                    )
+
+                _rest = [p for p in _active() if p.name != config.name]
+                providers = [_picked] + _rest
                 model = model_name
-                logger.info("[LLM] Smart router selected: %s (model=%s)", config.name, model)
+                logger.info(
+                    "[LLM] Smart router selected: %s (model=%s, fallback chain: %s)",
+                    config.name,
+                    model,
+                    [p.name for p in providers],
+                )
             else:
                 providers = []
         else:
@@ -840,9 +891,15 @@ def call_deepseek(
     max_tokens: int = 8192,
     api_key: str = "",
     stream: bool = False,
-    provider: str = "opencode_go",
+    provider: str = "auto",
 ) -> dict:
-    """兼容旧接口（provider 默认 opencode_go；三算力架构传其他值路由）"""
+    """兼容旧接口。
+
+    provider 默认 auto（2026-09-04 修复）：此前默认 opencode_go——该 provider
+    在本机未注册（无 OPENCODE_API_KEY），所有漏传 provider 的调用点全部
+    打到"指定不可用→回退链"，加剧 zhipu 429。auto 走 smart_router 按
+    健康度选可用 provider。
+    """
     return call_llm(
         messages, model=model, temperature=temperature, max_tokens=max_tokens, stream=stream, provider=provider
     )

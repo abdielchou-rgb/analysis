@@ -408,6 +408,9 @@ class DeepSeekQualityScorer:
                 ],
                 temperature=0.1,
                 max_tokens=1024,
+                # 修复（2026-09-04）：此前缺省 provider="opencode_go"（未注册）→
+                # 全量回退打 zhipu 加剧 429。质控评分走 deepseek。
+                provider="deepseek",
             )
 
             content = result["choices"][0]["message"]["content"]
