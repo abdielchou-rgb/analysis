@@ -4,16 +4,14 @@ Tests boundary conditions, empty inputs, and error paths.
 """
 
 import json
-import math
-from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
 
-
 # ============================================================
 # Significance edge cases
 # ============================================================
+
 
 class TestSignificanceEdgeCases:
     """Test MC significance with edge cases."""
@@ -34,10 +32,23 @@ class TestSignificanceEdgeCases:
         assert "error" in result
 
     def test_exactly_10_predictions(self):
-        """Exactly 10 predictions is minimum viable."""
+        """Exactly 10 predictions → P0-2 guard (min_valid=20) 应拒绝并返回 error。
+
+        注（2026-09-04）：此前断言 10 个可运行，但 significance.py 的 P0-2
+        guard 后来把最小有效样本提到 20（统计功效要求），10 个返回
+        error 是预期行为。20 个 hit 的场景由 test_all_correct 覆盖。
+        """
         from core.significance import monte_carlo_direction_significance
 
         predictions = [{"outcome": "hit"} for _ in range(10)]
+        result = monte_carlo_direction_significance(predictions, n_simulations=100)
+        assert "error" in result, "10 < min_valid=20，应返回 insufficient 错误"
+
+    def test_exactly_20_predictions(self):
+        """Exactly 20 predictions is minimum viable (P0-2 min_valid=20)."""
+        from core.significance import monte_carlo_direction_significance
+
+        predictions = [{"outcome": "hit"} for _ in range(20)]
         result = monte_carlo_direction_significance(predictions, n_simulations=100)
         assert "error" not in result
         assert result["system_hit_rate"] == 1.0
@@ -65,10 +76,7 @@ class TestSignificanceEdgeCases:
         """50/50 split → p_value should be ~0.5."""
         from core.significance import monte_carlo_direction_significance
 
-        predictions = (
-            [{"outcome": "hit"} for _ in range(10)] +
-            [{"outcome": "miss"} for _ in range(10)]
-        )
+        predictions = [{"outcome": "hit"} for _ in range(10)] + [{"outcome": "miss"} for _ in range(10)]
         result = monte_carlo_direction_significance(predictions, n_simulations=100)
         assert 0.3 < result["p_value"] < 0.7
 
@@ -76,9 +84,7 @@ class TestSignificanceEdgeCases:
         """Same seed produces same results."""
         from core.significance import monte_carlo_direction_significance
 
-        predictions = [{"outcome": "hit"} for _ in range(15)] + [
-            {"outcome": "miss"} for _ in range(5)
-        ]
+        predictions = [{"outcome": "hit"} for _ in range(15)] + [{"outcome": "miss"} for _ in range(5)]
 
         r1 = monte_carlo_direction_significance(predictions, random_seed=42)
         r2 = monte_carlo_direction_significance(predictions, random_seed=42)
@@ -113,6 +119,7 @@ class TestSignificanceEdgeCases:
 # ============================================================
 # Attribution edge cases
 # ============================================================
+
 
 class TestAttributionEdgeCases:
     """Test attribution with edge cases."""
@@ -158,10 +165,11 @@ class TestAttributionEdgeCases:
 
     def test_ic_no_correlation(self):
         """Random data → IC ≈ 0."""
-        from core.attribution import compute_ic
-
         # Use fixed seed for reproducibility
         import random
+
+        from core.attribution import compute_ic
+
         rng = random.Random(42)
         predicted = [rng.random() for _ in range(100)]
         actual = [rng.random() for _ in range(100)]
@@ -173,6 +181,7 @@ class TestAttributionEdgeCases:
 # ============================================================
 # Cohort edge cases
 # ============================================================
+
 
 class TestCohortEdgeCases:
     """Test cohort with edge cases."""
@@ -191,10 +200,12 @@ class TestCohortEdgeCases:
         from core.cohort import LiveForwardCohort
 
         cohort = LiveForwardCohort.__new__(LiveForwardCohort)
-        stats = cohort.cohort_stats([
-            {"outcome": "pending"},
-            {"outcome": "pending"},
-        ])
+        stats = cohort.cohort_stats(
+            [
+                {"outcome": "pending"},
+                {"outcome": "pending"},
+            ]
+        )
         assert stats["total"] == 2
         assert stats["resolved"] == 0
         assert stats["hit_rate"] == 0
@@ -212,6 +223,7 @@ class TestCohortEdgeCases:
 # ============================================================
 # Dashboard edge cases
 # ============================================================
+
 
 class TestDashboardEdgeCases:
     """Test dashboard with edge cases."""
@@ -247,6 +259,7 @@ class TestDashboardEdgeCases:
 # Timeline edge cases
 # ============================================================
 
+
 class TestTimelineEdgeCases:
     """Test prediction timeline with edge cases."""
 
@@ -281,6 +294,7 @@ class TestTimelineEdgeCases:
 # ============================================================
 # HITL edge cases
 # ============================================================
+
 
 class TestHITLEdgeCases:
     """Test HITL durable with edge cases."""
@@ -348,6 +362,7 @@ class TestHITLEdgeCases:
 # Retry policy edge cases
 # ============================================================
 
+
 class TestRetryEdgeCases:
     """Test retry policy with edge cases."""
 
@@ -379,6 +394,7 @@ class TestRetryEdgeCases:
 # ============================================================
 # DataPoint edge cases
 # ============================================================
+
 
 class TestDataPointEdgeCases:
     """Test DataPoint with edge cases."""
@@ -421,6 +437,7 @@ class TestDataPointEdgeCases:
 # Idempotent ledger edge cases
 # ============================================================
 
+
 class TestLedgerEdgeCases:
     """Test idempotent ledger with edge cases."""
 
@@ -444,6 +461,7 @@ class TestLedgerEdgeCases:
 # ============================================================
 # Golden validation edge cases
 # ============================================================
+
 
 class TestGoldenEdgeCases:
     """Test golden validation with edge cases."""

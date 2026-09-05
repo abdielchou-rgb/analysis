@@ -30,8 +30,8 @@ def test_registry_returns_all_contract_keys():
     out = build_injections(**_ctx())
     expected = {name for name, _ in INJECTORS}
     assert set(out.keys()) == expected, f"注册表与返回键不一致: {expected ^ set(out.keys())}"
-    # 与 section_writer 消费端约定的 30 个变量名
-    assert len(expected) == 44  # P3-B: +mc_str/ev_str
+    # 与 section_writer 消费端约定的变量名（45 = 44 + sentiment_str，2026-09-04 校准）
+    assert len(expected) == 45
 
 
 @pytest.mark.unit
@@ -62,7 +62,7 @@ def test_broken_data_does_not_crash():
     out = build_injections(
         **_ctx(data_context={"chart_data": None, "compute_results": "not-a-dict", "universe_summary": 12345})
     )
-    assert isinstance(out, dict) and len(out) == 44
+    assert isinstance(out, dict) and len(out) == 45
 
 
 @pytest.mark.unit
