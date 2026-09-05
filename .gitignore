@@ -157,3 +157,12 @@ validation_report_v10.json
 # Heavy raw corpus (2026-09-01): original PDF/input data, stay out of VCS
 benchmark/golden_raw/
 
+# Generated sweep corpora (2026-09-05 hygiene): converter/external/SFT/AB scratch — stay out of VCS
+benchmark/temp_chunk_*/
+benchmark/external_datasets/
+benchmark/sft_training/
+benchmark/exemplar_bank/
+benchmark/golden_numeric/results/
+benchmark/e2e_smoke_results.json
+data/llm_cache_polluted_20260904/
+reports/
