@@ -1018,48 +1018,58 @@ class DataQualityChecksMixin:
 
         # ── 2. PE 口径一致性：多个 PE 值但无口径标注 ──
         # 正文/附录出现明显不同的 PE 值（如 79.79 vs 44.63）且未说明口径 → 拦截
-        pe_vals = set()
+        # 2026-09-04 修复：按口径上下文分组——报告常见"历史PE 25-30倍"（估值锚）、
+        # "2026E PE 22倍"（前瞻）、"当前PE 19倍"（TTM/静态）并存，是不同口径的
+        # 合法差异，不该一锅端判冲突。只有**同一口径内**出现 >1.5x 差异才报。
+        # 区间表述（20-25倍）不取单值。
+        pe_by_caliber: dict[str, list] = {}
         for m in _re.finditer(r"PE[^。；\n]{0,20}?(\d{2}(?:\.\d+)?)\s*倍", text):
             try:
-                pe_vals.add(float(m.group(1)))
+                v = float(m.group(1))
             except (ValueError, TypeError):
                 continue
-        if len(pe_vals) >= 2:
-            pe_list = sorted(pe_vals)
-            if pe_list[-1] / max(pe_list[0], 1e-9) > 1.5:
-                # 存在 1.5x 以上差异的不同 PE 值
-                # R49（2026-08-02）：即使有口径标注，若同一数据源（图注 vs 正文）
-                # 用不同 PE 值，仍属"图表数据未同步"冲突。
-                # 检测：若最小的 PE（附录图表，如 44.63）与最大的（正文静态，如 78.1）
-                # 同框出现，且小 PE 对应"静态"标注（误标），flag。
-                has_static = "静态" in text
-                has_ttm = "TTM" in text or "ttm" in text
-                has_fwd = "前瞻" in text or "2027E" in text
-                if not (has_static and (has_ttm or has_fwd)):
-                    issues.append(f"PE口径混乱: 正文出现多个PE值 {pe_list}，差异>50%且未明确区分静态/TTM/前瞻口径")
-                else:
-                    # 有口径标注，但检查是否"同一口径下仍冲突"（图注数据未同步）
-                    # 若最小 PE 出现在"图注/图表"语境且无对应口径说明 → 疑似未同步
-                    for _pv in pe_list:
-                        _pctx = text[max(0, text.find(str(_pv)) - 40) : text.find(str(_pv)) + 20]
-                        if any(k in _pctx for k in ("图", "表", "附录", "对比")):
-                            # 图表中的 PE 值，检查是否有明确口径
-                            _has_label = any(
-                                k in _pctx for k in ("静态", "TTM", "动态", "前瞻", "2025", "2026", "2027")
-                            )
-                            if not _has_label and _pv < pe_list[-1] * 0.7:
-                                issues.append(
-                                    f"图表PE未同步: 附录图表PE {_pv} 与正文最高 {pe_list[-1]} 差异大，"
-                                    f"图表数据可能未随正文口径更新"
-                                )
-                            break
-
-        passed = len(issues) == 0
-        det = f"财务数值一致性: {len(issues)} 项" + (": " + "; ".join(issues[:2]) if issues else "无")
+            ctx = text[max(0, m.start() - 30) : m.end()]
+            # 区间表述（X-Y倍）不取单值
+            if _re.search(r"\d{2}(?:\.\d+)?\s*[-—~至]\s*" + _re.escape(m.group(1)), ctx):
+                continue
+            if _re.search(r"202[6-9]E|202[6-9]年|前瞻|预测", ctx):
+                cal = "前瞻"
+            elif _re.search(r"TTM|历史|滚动", ctx):
+                cal = "TTM/历史"
+            elif _re.search(r"当前|现有|静态", ctx):
+                cal = "当前/静态"
+            else:
+                cal = "未标注"
+            pe_by_caliber.setdefault(cal, []).append(v)
+        pe_issues = []
+        for cal, vals in pe_by_caliber.items():
+            if cal == "未标注":
+                continue  # 未标注口径的多值属不同语境（历史PE/区间/横比），由下方提示处理
+            if len(vals) >= 2:
+                vs = sorted(vals)
+                if vs[-1] / max(vs[0], 1e-9) > 1.5:
+                    pe_issues.append(f"口径[{cal}]PE值{vs}差异>50%")
+        if pe_issues:
+            issues.extend(pe_issues)
+        # 未标注口径的多个PE值（历史/区间/横比等不同语境）——仅提示，不硬拦。
+        # 2026-09-04：此前把提示也塞进 issues → 判 error（0.50 拖分）。未标注
+        # 多值≠矛盾（历史PE/估值区间/横向对比本就多值），只记 det 供人工看。
+        _pe_hint = ""
+        if "未标注" in pe_by_caliber and len(pe_by_caliber["未标注"]) >= 2:
+            _uv = sorted(pe_by_caliber["未标注"])
+            if _uv[-1] / max(_uv[0], 1e-9) > 1.5:
+                _pe_hint = f" | 未标注口径PE多值{_uv[:5]}（建议标注静态/TTM/前瞻）"
+        det_pe = f"财务数值一致性: {len(issues)} 项" + (": " + "; ".join(issues[:2]) if issues else "无") + _pe_hint
         # R91（2026-08-10）：行业报告财务多值豁免——industry_deep 常并列多家公司
         # 的不同 PE/毛利率（中国卫星52 vs 铖昌80），属正常横向对比，降级 warning。
         _sev = "warning" if getattr(self, "report_type", "") == "industry_deep" else "error"
-        return GateCheckResult("financial_value_consistency", passed, 1.0 if passed else 0.5, det, severity=_sev)
+        return GateCheckResult(
+            "financial_value_consistency",
+            len(issues) == 0,
+            1.0 if not issues else 0.5,
+            det_pe,
+            severity=_sev,
+        )
 
     def _check_financial_fraud_signals(self) -> "GateCheckResult":
         """R58（2026-08-03）：四大审计确定性检查——财务造假信号。

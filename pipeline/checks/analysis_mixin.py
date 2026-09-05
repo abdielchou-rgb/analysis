@@ -810,7 +810,20 @@ class AnalysisChecksMixin:
 
         # R12（2026-08-01 全量优化）：排除附录段（图表附录/来源附录/免责声明等非分析段），
         # 否则附录段无推理链会拉低 min_score，导致正文 So What 达标却被误判失败。
-        _appendix_marks = ("附录", "数据图表", "数据补充来源", "AGENT_ENRICH", "免责声明", "来源")
+        # 2026-09-04：补"利益冲突披露/合规声明/分析师声明"——合规声明段
+        # 无推理链属正常，不应成为 so_what 死角段。
+        _appendix_marks = (
+            "附录",
+            "数据图表",
+            "数据补充来源",
+            "AGENT_ENRICH",
+            "免责声明",
+            "来源",
+            "利益冲突披露",
+            "合规声明",
+            "分析师声明",
+            "重要声明",
+        )
         sections = [s for s in sections if not any(m in s[:30] for m in _appendix_marks)]
         if not sections:
             return GateCheckResult("so_what_chain", False, 0.3, "No analyzable sections (all appendix)")

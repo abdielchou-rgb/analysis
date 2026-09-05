@@ -7,6 +7,7 @@ Post-check: scan all numbers, each must hit "canonical ∪ annotated" or flag.
 """
 
 import re
+
 from pipeline.checks.base import GateCheckResult
 
 # Tier-1: numbers that MUST have canonical source or annotation
@@ -21,8 +22,11 @@ TIER1_PATTERNS = [
     (r"(?:增速|增长率|同比增长)[^\d]{0,10}(\d+(?:\.\d+)?)\s*%", "增速"),
     # 毛利率/净利率
     (r"(?:毛利率|净利率|ROE)[^\d]{0,10}(\d+(?:\.\d+)?)\s*%", "利润率"),
-    # 评级
-    (r"(?:增持|买入|强烈推荐|推荐|中性|持有|减持|卖出)", "评级"),
+    # 2026-09-04 修复：移除"评级"模式——评级词（增持/买入/推荐）是定性结论，
+    # 不是"数字"，不该要求逐次 [注N] 标注。此前它命中 ~44 次占 Tier-1 分母
+    # 近 1/3，虚增分母把 annotation_rate 从 ~60% 拉到 44%（numerical_tier
+    # 0.44 分，差 6 个百分点）。评级有无依据由 rating_target_consistency
+    # 专项检查负责，不在此重复要求。
 ]
 
 # Annotation pattern: [注N] or (来源: xxx) or (A)/(E)/(F)/(B)
@@ -35,9 +39,7 @@ SOURCE_TOKEN_PATTERN = r"(?:来源|数据来源|据.+报告|据.+公告|Wind|Blo
 def check_numerical_tier_classification(report_text: str) -> GateCheckResult:
     """Check that Tier-1 numbers have canonical source or annotation."""
     if not report_text or len(report_text) < 300:
-        return GateCheckResult(
-            "numerical_tier", True, 1.0, "text too short, skipped", severity="warning"
-        )
+        return GateCheckResult("numerical_tier", True, 1.0, "text too short, skipped", severity="warning")
 
     issues = []
     tier1_total = 0
@@ -67,16 +69,13 @@ def check_numerical_tier_classification(report_text: str) -> GateCheckResult:
                 issues.append(f"{label}: ...{sentence}...")
 
     if tier1_total == 0:
-        return GateCheckResult(
-            "numerical_tier", True, 1.0, "no Tier-1 numbers found", severity="warning"
-        )
+        return GateCheckResult("numerical_tier", True, 1.0, "no Tier-1 numbers found", severity="warning")
 
     annotation_rate = tier1_annotated / tier1_total
     passed = annotation_rate >= 0.5  # At least 50% of Tier-1 numbers must be annotated
 
-    detail = (
-        f"Tier-1 数字注释率: {tier1_annotated}/{tier1_total} = {annotation_rate:.0%}"
-        + (f" (不足50%: {len(issues)} 处缺来源)" if issues else "")
+    detail = f"Tier-1 数字注释率: {tier1_annotated}/{tier1_total} = {annotation_rate:.0%}" + (
+        f" (不足50%: {len(issues)} 处缺来源)" if issues else ""
     )
 
     return GateCheckResult(

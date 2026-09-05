@@ -646,6 +646,11 @@ class ContentFormatChecksMixin:
             _s = _ln.strip()
             if not _s:
                 continue
+            # 修复（2026-09-04）：独立分隔线行（---/--/—）是 markdown 合法元素
+            # （合规条款注入用 "\n\n---\n\n" 分隔），非句末截断。只有"文字+末尾连字符"
+            # 才是截断形态。
+            if _re.fullmatch(r"[-—–]{1,10}", _s):
+                continue
             if _s.endswith("-") or _s.endswith("—") or _s.endswith("–"):
                 issues.append(f"句末连字符(L{_i + 1}): '...{_s[-25:]}'（疑似截半词）")
 
@@ -655,7 +660,28 @@ class ContentFormatChecksMixin:
             _s = _ln.strip()
             if not _s or _s.startswith("#") or _s.startswith("|") or _s.startswith("-"):
                 continue
+            # 2026-09-04：表格数据行（含 ≥2 个管道符，如 "28倍 | 0.35x | 4.5x |"）
+            # 是 markdown 表格 cell 结构，即使不以 | 开头也非"段落截断"。
+            if _s.count("|") >= 2:
+                continue
             if len(_s) < 15:
+                continue
+            # 2026-09-04：图表引用 token（fig_xxx / ![fig_xxx] / ![](chart:fig_xxx)）
+            # 是合法占位符，行尾出现不构成"段落截断"——LLM 嵌入图表引用后换行到
+            # 来源注释是正常结构（此前 L82 "fig_revenue_" 被误判截半词）。
+            if re.search(r"fig_[a-z_0-9]+$", _s) or re.search(r"!\[.*?\]\(chart:", _s):
+                continue
+            # 2026-09-04：行尾是全角/半角左括号（（/）、逗号/顿号，或 markdown
+            # 强调残留（*/_）——分析段落以"（"开头续行、引用续行、斜体残留等
+            # 结构，属正常，非截断（括号配对由专检查负责）。
+            if (
+                _s.endswith("（")
+                or _s.endswith("(")
+                or _s.endswith("，")
+                or _s.endswith("、")
+                or _s.endswith("*")
+                or _s.endswith("_")
+            ):
                 continue
             if re.search(
                 r"^(?:报告级别|报告日期|分析师|分析周期|报告标题|股票代码|"

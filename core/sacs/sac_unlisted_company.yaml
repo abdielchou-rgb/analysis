@@ -298,8 +298,11 @@ required_dimensions:
   - 公司治理风险(股权/关联/合规)
   - ESG对估值影响
 chart_config:
-  min_charts: 3
-  min_tables: 2
+  # 修复（2026-09-04）：3 → 8。YAML 实际定义 8 个 fig（business_model/market_size/
+  # growth_drivers/...），STANDARDS_BASE 基线也是 8，min_charts=3 属配置笔误，
+  # 导致非上市报告图表质量门槛形同虚设（test_standards_consistency 抓出）。
+  min_charts: 8
+  min_tables: 3
   charts:
   - id: fig_business_model
     num: 1

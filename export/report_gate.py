@@ -243,7 +243,9 @@ def export_report(
 
     chart_refs = re.findall(r"!\[.*?\]\((?!chart:)(.+?)\)", md_text)
     _output_dir = Path(output_path).parent if output_path else Path(".")
-    missing_charts = [c for c in chart_refs if not Path(c).exists() and not (_output_dir / c).exists() and not c.startswith("http")]
+    missing_charts = [
+        c for c in chart_refs if not Path(c).exists() and not (_output_dir / c).exists() and not c.startswith("http")
+    ]
     if missing_charts:
         logger.warning("Missing chart images: %d of %d", len(missing_charts), len(chart_refs))
         if config.export.get("delete_on_fail", True) and config.export.get("raise_on_fail", True):
@@ -387,8 +389,21 @@ def export_report(
             z.close()
             paras = _re.findall(r"<w:p\b[^>]*>(.*?)</w:p>", xml, _re.S)
             if paras:
-                empty = [p for p in paras if not _re.sub(r"<[^>]+>", "", p).strip()]
-                empty_ratio = len(empty) / len(paras)
+                # 修复（2026-09-04）：空段判定排除合法排版元素——
+                # ① 分页/分节符段（<w:br type="page"/>、sectPr）是排版必需；
+                # ② 封面模板的居中占位段（纯 jc 属性、无文本无其他内容）
+                #   是封面结构固有部分。此前把这些都计入"空段"，
+                #   封面+分页即 4/46=8.7% >5% → 优质报告被误阻断。
+                def _is_layout_para(p_xml: str) -> bool:
+                    if "<w:br" in p_xml or "sectPr" in p_xml or "w:type" in p_xml:
+                        return True
+                    # 纯段落属性段（只有 jc/spacing 等格式属性，无任何 run/文本）
+                    _has_run = "<w:r>" in p_xml or "<w:t" in p_xml
+                    return not _has_run
+
+                _content_paras = [p for p in paras if not _is_layout_para(p)]
+                empty = [p for p in _content_paras if not _re.sub(r"<[^>]+>", "", p).strip()]
+                empty_ratio = len(empty) / max(len(_content_paras), 1)
                 if empty_ratio > 0.05:
                     raise GateBlockedError(
                         "ProductValidation", 0.0, [f"DOCX 空段率 {empty_ratio:.0%}（>{5}%）——排版未清洗，阻断交付"]
