@@ -166,3 +166,7 @@ benchmark/golden_numeric/results/
 benchmark/e2e_smoke_results.json
 data/llm_cache_polluted_20260904/
 reports/
+
+# Runtime prediction/reflection logs (2026-09-05): churned by every pipeline run, stop tracking
+data/fp5_history.json
+data/method_reflection_log.json
