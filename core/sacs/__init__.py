@@ -46,6 +46,20 @@ _REPORT_PURPOSE = {
     "decision_memo": "board",  # R83: 委托方决策备忘录
 }
 
+# Module-level cache for SACLoader instances (avoids repeated YAML parsing)
+_sac_cache: dict[str, "SACLoader"] = {}
+
+# R-opt（2026-09-04）：SAC 数据级缓存——key: report_type, value: 解析后的 YAML 数据
+# （deepcopy 出仓，保证 18+ 直接实例化 SACLoader 的调用点零改动即受益）
+_sac_data_cache: dict[str, dict] = {}
+
+
+def get_sac_loader(report_type: str = "industry_deep") -> "SACLoader":
+    """Get cached SACLoader instance for the given report type."""
+    if report_type not in _sac_cache:
+        _sac_cache[report_type] = SACLoader(report_type)
+    return _sac_cache[report_type]
+
 
 class SACLoader:
     """Unified SAC framework loader.
@@ -61,6 +75,16 @@ class SACLoader:
         self._load()
 
     def _load(self) -> None:
+        import copy
+
+        # R-opt（2026-09-04）：数据级缓存——同一进程内 18+ 调用点重复解析同一 YAML，
+        # 每个 SAC 实例保留独立对象身份，仅共享解析后的数据（deepcopy 防跨实例污染）。
+        _cached = _sac_data_cache.get(self.report_type)
+        if _cached is not None:
+            self._data = copy.deepcopy(_cached)
+            self._loaded = True
+            return
+
         yaml_file = _ROOT / _REPORT_TO_SAC.get(self.report_type, "sac_industry_deep.yaml")
         if not yaml_file.exists():
             self._data = self._fallback()
@@ -82,6 +106,10 @@ class SACLoader:
         except Exception:
             self._data = self._fallback()
             self._loaded = False
+            return
+
+        if self._loaded and self._data:
+            _sac_data_cache[self.report_type] = copy.deepcopy(self._data)
 
     def _parse_yaml_simple(self, raw: str) -> dict:
         """Simple YAML parser when pyyaml is not available"""

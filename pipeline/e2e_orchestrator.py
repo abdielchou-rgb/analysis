@@ -421,13 +421,31 @@ class E2ENodes:
             return {"compiled_text": context.get("report_text", ""), "note": "StyleCompiler not available"}
         try:
             sc = StyleCompiler()
-            text = context.get("final_text", "") or context.get("report_text", "")
+            # 2026-09-04 修复：style_compile 在 assemble 之前执行，此时 final_text
+            # 是上一轮修订的旧值（首轮为空）。此前 "final_text or report_text"
+            # 在修订轮会用旧 final_text 覆盖新写作的 report_text → 本轮修订白写。
+            # 写作链节点（write→style→assemble）必须优先消费 report_text（最新）。
+            text = context.get("report_text", "") or context.get("final_text", "")
             style_name = context.get("style", "cicc")
             report_type = context.get("report_type", "standard")
             result = sc.compile(text, {"style": style_name, "report_type": report_type})
             compiled = result.compiled if hasattr(result, "compiled") else result
             if isinstance(compiled, str) and compiled:
                 # P0-A 修复：原地写回 report_text，让下游消费清洗后的文本
+                # 2026-09-04（0.95 冲刺）：StyleCompiler 重排版可能重新引入
+                # 行内标题/无标点行/孤立分隔线——post-process 二次跑（幂等），
+                # 保证 Gate 前文本结构最终态干净。
+                try:
+                    from pipeline.section_writer import SectionWriter as _SW2
+
+                    _sw2 = _SW2(
+                        context.get("report_type", "industry_deep"),
+                        context.get("style", "cicc"),
+                        attempt_num=context.get("attempt", 0),
+                    )
+                    compiled = _sw2._post_process_for_gate(compiled, context.get("asset", ""), patch_chain=False)
+                except Exception as _ppe:
+                    logger.debug("[STYLE-POST] post-process skip: %s", _ppe)
                 context["report_text"] = compiled
                 context["compiled_text"] = compiled
                 logger.info("[STYLE] Compiled with %s style (len=%d→%d)", style_name, len(text), len(compiled))
@@ -605,7 +623,16 @@ class E2ENodes:
         try:
             from pipeline.chart_pipeline import ChartPipeline
 
-            cp = ChartPipeline(context.get("report_type", "industry_deep"), context.get("style", "cicc"))
+            # 修复（2026-09-04）：此前 ChartPipeline 用默认 output/charts（项目相对
+            # 路径），报告输出在独立 output_dir（如测试 tmp_path）时，MD 引用
+            # charts\xxx.png 相对报告目录解析不到 → ChartCheck "Missing charts" 阻断。
+            # 图表必须与报告同目录（报告目录下的 charts/ 子目录）。
+            _chart_out = Path(context.get("output_dir", "")) / "charts" if context.get("output_dir") else None
+            cp = ChartPipeline(
+                context.get("report_type", "industry_deep"),
+                context.get("style", "cicc"),
+                output_dir=str(_chart_out) if _chart_out else "output/charts",
+            )
             paths, template_flags = cp.generate_all(data)
             # R51（2026-08-02）：记录模板图标记（data=template），
             # 供 section_writer 在图表标注"示意/数据不足"，防止冒充真实证据。
@@ -728,7 +755,9 @@ class E2ENodes:
             context["report_text"] = sw._post_process_for_gate(text, context.get("asset", ""))
             text = context["report_text"]
         except Exception as _e:
-            logger.debug("[POST-GATE] post-process skipped: %s", _e)
+            # 2026-09-04：debug→warning——post-process 静默失败时 Gate 结构修复
+            # 全部失效（so_what 死锁），必须在日志里可见。
+            logger.warning("[POST-GATE] post-process FAILED: %s", _e, exc_info=True)
         # R13 Phase4：局部修订时，未重写段用上一轮 report_text 对应内容填充
         if rewrite_indices is not None:
             try:
@@ -764,13 +793,8 @@ class E2ENodes:
             return {"review_comments": ""}
 
         # 提取失败项（从 gate_feedback 解析 ERROR 级检查）
-        import re as _re_review
 
-        fail_lines = [
-            line.strip()
-            for line in gate_feedback.split("\n")
-            if line.strip().startswith("- [ERROR]")
-        ]
+        fail_lines = [line.strip() for line in gate_feedback.split("\n") if line.strip().startswith("- [ERROR]")]
         fail_summary = "\n".join(fail_lines[:10])  # 最多10条
 
         review_prompt = f"""你是资深投资研究报告审稿人。请审查以下报告，针对 Gate 失败项逐条给出修改指令。
@@ -833,7 +857,6 @@ class E2ENodes:
             return {}
 
         # 解析审稿意见中的修改指令
-        import re as _re_rw
 
         instructions = []
         current_instruction = {}
@@ -846,7 +869,9 @@ class E2ENodes:
                 if current_instruction:
                     instructions.append(current_instruction)
                 current_instruction = {"section": line, "fix": ""}
-            elif current_instruction and ("修改" in line or "改成" in line or "改为" in line or "增加" in line or "删除" in line):
+            elif current_instruction and (
+                "修改" in line or "改成" in line or "改为" in line or "增加" in line or "删除" in line
+            ):
                 current_instruction["fix"] += line + "\n"
             elif current_instruction:
                 current_instruction["fix"] += line + "\n"
@@ -859,9 +884,7 @@ class E2ENodes:
             instructions = [{"section": "全局", "fix": gate_feedback[:2000]}]
 
         # 重写 prompt：将审稿意见注入写作 prompt
-        _review_text = "\n".join(
-            f"### {inst['section']}\n{inst['fix']}" for inst in instructions[:8]
-        )
+        _review_text = "\n".join(f"### {inst['section']}\n{inst['fix']}" for inst in instructions[:8])
 
         rewrite_prompt = f"""你是资深投资研究报告撰写人。请根据审稿意见定向修改报告。
 
@@ -1074,6 +1097,37 @@ class E2ENodes:
     @staticmethod
     def validate(node_id, context):
         text = context.get("final_text", "") or context.get("report_text", "")
+        # 2026-09-04（0.95 冲刺）：双声部分离前置到 Gate 前。
+        # 根因：main.py 的 separate_voices 在管线返回后才跑——但 Gate 在此之前
+        # 打分，"分析师声明/利益冲突披露"等编辑声部段落内嵌正文，
+        # 被 so_what 当死角段（min=0.00）。分离后这些段落归位文末统一块，
+        # Gate 的 appendix 过滤可正确排除。与 main.py 行为一致（幂等）。
+        try:
+            from core.voice_separation import separate_voices as _sv
+
+            _separated = _sv(text)
+            if _separated and len(_separated) >= len(text) * 0.5:
+                text = _separated
+        except Exception as _e_vs:
+            logger.debug("[VALIDATE-PRE] voice separation skip: %s", _e_vs)
+        # 2026-09-04（0.95 冲刺·终极保底）：Gate 前最后机会修复结构。
+        # assemble 的图表注入/合规条款附加可能重新引入行内标题连排
+        # （。## 形态）——so_what 切段死锁的根源。此处在 validate 入口
+        # 跑结构修复（幂等），保证 Gate 与导出消费的文本结构一致且干净。
+        try:
+            from pipeline.section_writer import SectionWriter as _SW3
+
+            _sw3 = _SW3(
+                context.get("report_type", "industry_deep"),
+                context.get("style", "cicc"),
+                attempt_num=context.get("attempt", 0),
+            )
+            _fixed = _sw3._post_process_for_gate(text, context.get("asset", ""), patch_chain=False)
+            if _fixed and len(_fixed) >= len(text) * 0.5:
+                text = _fixed
+                context["final_text"] = text
+        except Exception as _e_vp:
+            logger.debug("[VALIDATE-PRE] 结构修复跳过: %s", _e_vp)
         tmp_path = os.path.join(context.get("output_dir", str(_ROOT / "output")), "_gate_check.md")
         with open(tmp_path, "w", encoding="utf-8") as f:
             f.write(text)
@@ -1289,9 +1343,9 @@ class E2ENodes:
                     },
                     ensure_ascii=False,
                     indent=2,
-                    ),
-                    encoding="utf-8",
-                )
+                ),
+                encoding="utf-8",
+            )
         except Exception as e:
             logger.warning("[FINGERPRINT] 预写失败: %s", e)
         try:
@@ -1401,8 +1455,11 @@ class E2ENodes:
                 tm = TrackRecordManager()
                 # W1.1: 传入 collected_data 供 target_price fallback 使用
                 calls = bce.extract_and_register(
-                    text, context.get("asset", ""), context.get("report_type"),
-                    tm=tm, collected_data=context.get("collected_data", {})
+                    text,
+                    context.get("asset", ""),
+                    context.get("report_type"),
+                    tm=tm,
+                    collected_data=context.get("collected_data", {}),
                 )
                 logger.info("[RECORD] %d bold calls registered", len(calls))
 
