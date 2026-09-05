@@ -1,293 +1,6 @@
 {
   "entries": [
     {
-      "timestamp": "2026-08-05T11:09:46.349975",
-      "asset": "测试标的",
-      "report_type": "listed_company",
-      "frameworks": [
-        "bottleneck_engine",
-        "ma_valuation"
-      ],
-      "gate_score": 0.9123,
-      "data_sufficiency": true,
-      "notes": "e2e 出口自动记录"
-    },
-    {
-      "timestamp": "2026-08-05T11:10:01.972862",
-      "asset": "测试标的",
-      "report_type": "industry_deep",
-      "frameworks": [
-        "bottleneck_engine"
-      ],
-      "gate_score": 0.91,
-      "data_sufficiency": true,
-      "notes": ""
-    },
-    {
-      "timestamp": "2026-08-05T11:10:01.998577",
-      "asset": "测试标的2",
-      "report_type": "industry_deep",
-      "frameworks": [
-        "bottleneck_engine"
-      ],
-      "gate_score": 0.95,
-      "data_sufficiency": true,
-      "notes": ""
-    },
-    {
-      "timestamp": "2026-08-05T11:10:10.668648",
-      "asset": "__r77test__",
-      "report_type": "industry_deep",
-      "frameworks": [
-        "signal_chain"
-      ],
-      "gate_score": 0.77,
-      "data_sufficiency": true,
-      "notes": ""
-    },
-    {
-      "timestamp": "2026-08-05T11:10:10.709435",
-      "asset": "__r77a__",
-      "report_type": "industry_deep",
-      "frameworks": [
-        "signal_chain"
-      ],
-      "gate_score": 0.8,
-      "data_sufficiency": true,
-      "notes": ""
-    },
-    {
-      "timestamp": "2026-08-05T11:10:10.727075",
-      "asset": "__r77b__",
-      "report_type": "industry_deep",
-      "frameworks": [
-        "signal_chain"
-      ],
-      "gate_score": 0.9,
-      "data_sufficiency": true,
-      "notes": ""
-    },
-    {
-      "timestamp": "2026-08-05T11:11:19.283749",
-      "asset": "__r77test__",
-      "report_type": "industry_deep",
-      "frameworks": [
-        "signal_chain"
-      ],
-      "gate_score": 0.77,
-      "data_sufficiency": true,
-      "notes": ""
-    },
-    {
-      "timestamp": "2026-08-05T11:11:19.315751",
-      "asset": "__r77a__",
-      "report_type": "industry_deep",
-      "frameworks": [
-        "signal_chain"
-      ],
-      "gate_score": 0.8,
-      "data_sufficiency": true,
-      "notes": ""
-    },
-    {
-      "timestamp": "2026-08-05T11:11:19.333311",
-      "asset": "__r77b__",
-      "report_type": "industry_deep",
-      "frameworks": [
-        "signal_chain"
-      ],
-      "gate_score": 0.9,
-      "data_sufficiency": true,
-      "notes": ""
-    },
-    {
-      "timestamp": "2026-08-05T11:15:36.847515",
-      "asset": "__r77test__",
-      "report_type": "industry_deep",
-      "frameworks": [
-        "signal_chain"
-      ],
-      "gate_score": 0.77,
-      "data_sufficiency": true,
-      "notes": ""
-    },
-    {
-      "timestamp": "2026-08-05T11:15:36.910803",
-      "asset": "__r77a__",
-      "report_type": "industry_deep",
-      "frameworks": [
-        "signal_chain"
-      ],
-      "gate_score": 0.8,
-      "data_sufficiency": true,
-      "notes": ""
-    },
-    {
-      "timestamp": "2026-08-05T11:15:36.939315",
-      "asset": "__r77b__",
-      "report_type": "industry_deep",
-      "frameworks": [
-        "signal_chain"
-      ],
-      "gate_score": 0.9,
-      "data_sufficiency": true,
-      "notes": ""
-    },
-    {
-      "timestamp": "2026-08-05T11:57:08.243305",
-      "asset": "__r77test__",
-      "report_type": "industry_deep",
-      "frameworks": [
-        "signal_chain"
-      ],
-      "gate_score": 0.77,
-      "data_sufficiency": true,
-      "notes": ""
-    },
-    {
-      "timestamp": "2026-08-05T11:57:08.272591",
-      "asset": "__r77a__",
-      "report_type": "industry_deep",
-      "frameworks": [
-        "signal_chain"
-      ],
-      "gate_score": 0.8,
-      "data_sufficiency": true,
-      "notes": ""
-    },
-    {
-      "timestamp": "2026-08-05T11:57:08.289078",
-      "asset": "__r77b__",
-      "report_type": "industry_deep",
-      "frameworks": [
-        "signal_chain"
-      ],
-      "gate_score": 0.9,
-      "data_sufficiency": true,
-      "notes": ""
-    },
-    {
-      "timestamp": "2026-08-05T11:58:58.128312",
-      "asset": "__r77test__",
-      "report_type": "industry_deep",
-      "frameworks": [
-        "signal_chain"
-      ],
-      "gate_score": 0.77,
-      "data_sufficiency": true,
-      "notes": ""
-    },
-    {
-      "timestamp": "2026-08-05T11:58:58.187746",
-      "asset": "__r77a__",
-      "report_type": "industry_deep",
-      "frameworks": [
-        "signal_chain"
-      ],
-      "gate_score": 0.8,
-      "data_sufficiency": true,
-      "notes": ""
-    },
-    {
-      "timestamp": "2026-08-05T11:58:58.220998",
-      "asset": "__r77b__",
-      "report_type": "industry_deep",
-      "frameworks": [
-        "signal_chain"
-      ],
-      "gate_score": 0.9,
-      "data_sufficiency": true,
-      "notes": ""
-    },
-    {
-      "timestamp": "2026-08-05T11:59:35.307484",
-      "asset": "__r77test__",
-      "report_type": "industry_deep",
-      "frameworks": [
-        "signal_chain"
-      ],
-      "gate_score": 0.77,
-      "data_sufficiency": true,
-      "notes": ""
-    },
-    {
-      "timestamp": "2026-08-05T11:59:35.358784",
-      "asset": "__r77a__",
-      "report_type": "industry_deep",
-      "frameworks": [
-        "signal_chain"
-      ],
-      "gate_score": 0.8,
-      "data_sufficiency": true,
-      "notes": ""
-    },
-    {
-      "timestamp": "2026-08-05T11:59:35.397855",
-      "asset": "__r77b__",
-      "report_type": "industry_deep",
-      "frameworks": [
-        "signal_chain"
-      ],
-      "gate_score": 0.9,
-      "data_sufficiency": true,
-      "notes": ""
-    },
-    {
-      "timestamp": "2026-08-05T12:20:31.272354",
-      "asset": "__r77test__",
-      "report_type": "industry_deep",
-      "frameworks": [
-        "signal_chain"
-      ],
-      "gate_score": 0.77,
-      "data_sufficiency": true,
-      "notes": ""
-    },
-    {
-      "timestamp": "2026-08-05T12:20:31.323681",
-      "asset": "__r77a__",
-      "report_type": "industry_deep",
-      "frameworks": [
-        "signal_chain"
-      ],
-      "gate_score": 0.8,
-      "data_sufficiency": true,
-      "notes": ""
-    },
-    {
-      "timestamp": "2026-08-05T12:20:31.344624",
-      "asset": "__r77b__",
-      "report_type": "industry_deep",
-      "frameworks": [
-        "signal_chain"
-      ],
-      "gate_score": 0.9,
-      "data_sufficiency": true,
-      "notes": ""
-    },
-    {
-      "timestamp": "2026-08-05T12:27:34.764250",
-      "asset": "__r77test__",
-      "report_type": "industry_deep",
-      "frameworks": [
-        "signal_chain"
-      ],
-      "gate_score": 0.77,
-      "data_sufficiency": true,
-      "notes": ""
-    },
-    {
-      "timestamp": "2026-08-05T12:27:34.790354",
-      "asset": "__r77a__",
-      "report_type": "industry_deep",
-      "frameworks": [
-        "signal_chain"
-      ],
-      "gate_score": 0.8,
-      "data_sufficiency": true,
-      "notes": ""
-    },
-    {
       "timestamp": "2026-08-05T12:27:34.808911",
       "asset": "__r77b__",
       "report_type": "industry_deep",
@@ -2046,6 +1759,372 @@
       "gate_score": 0.9,
       "data_sufficiency": true,
       "notes": ""
+    },
+    {
+      "timestamp": "2026-09-02T13:53:15.722399",
+      "asset": "宁德时代",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.7914,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-02T21:26:29.835282",
+      "asset": "宁德时代",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.8472,
+      "data_sufficiency": false,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-02T21:59:02.901587",
+      "asset": "宁德时代",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.8722,
+      "data_sufficiency": false,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-04T04:38:37.652415",
+      "asset": "__r77test__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.77,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-09-04T04:38:37.691115",
+      "asset": "__r77a__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.8,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-09-04T04:38:37.702055",
+      "asset": "__r77b__",
+      "report_type": "industry_deep",
+      "frameworks": [
+        "signal_chain"
+      ],
+      "gate_score": 0.9,
+      "data_sufficiency": true,
+      "notes": ""
+    },
+    {
+      "timestamp": "2026-09-04T12:48:41.467005",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.8158,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-04T13:33:35.485731",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.792,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-04T13:41:32.996498",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.8326,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-04T13:52:09.801792",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.7883,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-04T14:02:09.236292",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.8241,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-04T14:24:14.272136",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.8316,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-04T14:32:24.324560",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.8285,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-04T14:41:31.919975",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.8386,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-04T14:48:28.816419",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.8265,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-04T14:56:44.443201",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.8486,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-04T16:52:41.647230",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.8775,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-04T16:59:47.018594",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.808,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-04T17:24:52.505026",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.8107,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-04T18:11:20.516035",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.836,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-04T18:26:49.773945",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.818,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-04T18:42:38.140333",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.7904,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-04T18:54:29.771350",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.8251,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-04T19:00:55.216864",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.8398,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-04T19:09:19.348608",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.8206,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-04T19:26:28.146786",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.8551,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-04T19:38:53.664124",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.8485,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-04T19:48:19.657397",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.8177,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-04T20:04:44.964760",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.797,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-04T20:21:12.054678",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.8251,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-04T20:39:50.504188",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.8303,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-04T21:31:00.267527",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.845,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-04T22:11:39.635349",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.8317,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-04T23:04:41.154425",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.861,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-04T23:37:32.159072",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.8403,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-04T23:49:34.890895",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.8432,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-05T00:25:37.639315",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.8389,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-05T00:35:57.784558",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.788,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-05T09:38:23.744028",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.7887,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
+    },
+    {
+      "timestamp": "2026-09-05T13:56:32.359867",
+      "asset": "贵州茅台",
+      "report_type": "listed_company",
+      "frameworks": [],
+      "gate_score": 0.8034,
+      "data_sufficiency": true,
+      "notes": "e2e 出口自动记录"
     }
   ]
 }
