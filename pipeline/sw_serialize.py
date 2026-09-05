@@ -39,7 +39,9 @@ def serialize_chart_data(data):
                 evidence = recent_news.get("evidence", "")
                 if clusters:
                     for i, cl in enumerate(clusters[:5], 1):
-                        lines.append(f"  [{i}] {cl.get('title', '')} (score={cl.get('score', 0)}, 来源={cl.get('sources', '')})")
+                        lines.append(
+                            f"  [{i}] {cl.get('title', '')} (score={cl.get('score', 0)}, 来源={cl.get('sources', '')})"
+                        )
                 if evidence:
                     lines.append(f"  证据摘要: {evidence[:400]}")
                 lines.append(f"  数据截至: {recent_news.get('collected_at', '')[:10]}")
@@ -223,18 +225,36 @@ def serialize_chart_data(data):
                 # R82（2026-08-06）：读取 _caliber 伴生字典中的 unit，随数值一并注入，
                 # 防止 LLM 把全球市场 46/50/54.5/65 亿美元写成"亿元"（第5轮冲突根因）。
                 _caliber = v.get("_caliber", {}) if isinstance(v, dict) else {}
+                # P0-1（2026-09-02）：来源索引注入——serialize 时给每个 fig_* 键附加来源，
+                # 让 LLM 写作时看到"数据值 + 来源"，从源头提升报告来源标注率。
+                # 此前数据层无系统性来源标注，LLM 写不出（圆桌 C1：357 数字 4 来源）。
+                _src_idx = v.get("_source_index", {}) if isinstance(v, dict) else {}
+                # P0-5（2026-09-02）：市占率诚实约束——数据层无 fig_segment_share /
+                # market_share 键时，明确禁止 LLM 编造市占率/份额数字（写"数据不可得"）。
+                if "fig_segment_share" not in v and "market_share" not in v:
+                    lines.append(
+                        "## [市占率铁律] 数据层未提供市占率/市场份额权威值。"
+                        "写作中涉及市占率/份额时必须标注『市占率数据不可得，待补充』或基于分部收入占比"
+                        "（若有 fig_segment_share）表述为『分部收入占比』，严禁编造具体市占率百分比。"
+                    )
                 for fk in fig_keys:
                     fv = v.get(fk)
                     _unit = ""
                     if isinstance(_caliber.get(fk), dict):
                         _unit = _caliber[fk].get("unit", "")
+                    _src = str(_src_idx.get(fk, ""))[:60] if isinstance(_src_idx, dict) else ""
                     if isinstance(fv, dict) and fv:
                         _line = str(fv)[:900]
                         if _unit:
                             _line = _line + "  [unit=" + _unit + "]"
+                        if _src:
+                            _line = _line + f"  [来源={_src}]"
                         lines.append(f"  .{fk}: {_line}")
                     elif isinstance(fv, str) and fv.strip():
-                        lines.append("  .{}: {}".format(fk, fv[:900] + ("  [unit=" + _unit + "]" if _unit else "")))
+                        _l = fv[:900] + ("  [unit=" + _unit + "]" if _unit else "")
+                        if _src:
+                            _l = _l + f"  [来源={_src}]"
+                        lines.append(f"  .{fk}: {_l}")
             continue
         try:
             # P2-audit 2026-08-24：兜底 dump 不得绕过 spotlighting——

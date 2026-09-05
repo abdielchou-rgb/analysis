@@ -76,9 +76,17 @@ def build_claim_citation_map(report_text: str, collected_data: dict) -> list[dic
         return []
 
     sources_by_key = {}
+    # P0-1（2026-09-02）：来源映射从 chart_data 的 _source_index 读取（确定性，键→来源）。
+    # 此前读 cd["items"]——实际管线传的是 {"chart_data": {...}} 无 items 键，
+    # 导致 sources 永远空（357 数字 4 来源的机制根因，圆桌 C1）。
+    _src_idx = chart_data.get("_source_index", {})
+    if isinstance(_src_idx, dict):
+        for k, v in _src_idx.items():
+            sources_by_key[k] = str(v)[:80]
+    # 兼容旧结构：cd["items"]（若有）
     items = cd.get("items", []) if isinstance(cd.get("items"), list) else []
     for it in items:
-        if isinstance(it, dict) and it.get("key"):
+        if isinstance(it, dict) and it.get("key") and it["key"] not in sources_by_key:
             sources_by_key[it["key"]] = str(it.get("source", ""))[:80]
 
     claims: list[dict] = []
@@ -182,16 +190,17 @@ def annotate_inline(report_text: str, collected_data: dict, max_markers: int = 4
     if not claims:
         return report_text, []
     id_by_claim = {c["claim"]: i + 1 for i, c in enumerate(claims)}
-    # 用统一句子切分，再按原文顺序重组并注入标记
+    # 用统一句子切分，再按原文顺序重组并注入标记。
+    # 修正（2026-09-02）：[注N] 直接拼接到命中句末（句号前），避免 "%。[注1]。" 双标点。
     sentences = _split_sentences(report_text)
     n_marked = 0
     out_parts: list[str] = []
     for sent in sentences:
-        out_parts.append(sent)
         key = sent[:100]
         if len(sent) >= 8 and key in id_by_claim and n_marked < max_markers:
-            out_parts.append(f"[注{id_by_claim[key]}]")
+            sent = f"{sent}[注{id_by_claim[key]}]"
             n_marked += 1
+        out_parts.append(sent)
     # 重组：用句号连接（原始分隔符已丢失，统一用。重建）
     marked_text = "。".join(out_parts)
     if not marked_text.endswith("。"):
@@ -230,17 +239,20 @@ def render_jsonld_ledger(claims: list[dict], provenance: dict | None = None) -> 
         data_key = claim.get("key", "")
         source_url = source_map.get(data_key, "unavailable")
 
-        ledger.append({
-            "@type": "Claim",
-            "claim": claim_text,
-            "source": {
-                "url": source_url,
-                "data_key": data_key,
-                "confidence": claim.get("confidence", "matched"),
-            },
-        })
+        ledger.append(
+            {
+                "@type": "Claim",
+                "claim": claim_text,
+                "source": {
+                    "url": source_url,
+                    "data_key": data_key,
+                    "confidence": claim.get("confidence", "matched"),
+                },
+            }
+        )
 
     import json
+
     return f'\n<script type="application/ld+json">\n{json.dumps(ledger, ensure_ascii=False, indent=2)}\n</script>\n'
 
 
