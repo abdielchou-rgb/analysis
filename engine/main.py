@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-engine 独立演示流水线 — 展示四大估值引擎 + Excel 审计底稿导出。
+engine 独立演示流水线 — 展示 P0-P3 全部功能。
 可直接运行: python -m engine.main
 """
 
@@ -9,13 +9,32 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-# 确保 engine 包可被导入
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from engine.comparable_model import ComparableEngine
 from engine.dcf_model import DCFEngine
+from engine.debate import DevilAdvocateAgent
 from engine.excel_writer import AuditExcelWriter
+from engine.fcff_path import FCFFPathEngine, MarketImpliedSolver
 from engine.irongate import IronGateEngine
+from engine.knowledge import DamodaranEntry, DamodaranRAG, DamodaranRAGQuery, TickerMemoryStore
+from engine.mcp_tools import MCPEngine
+
+# P2 imports
+from engine.monte_carlo import MonteCarloAssumptions, MonteCarloEngine
+
+# P3 imports
+from engine.orchestrator import IBGradeOrchestrator
+
+# P1 imports
+from engine.precision import PreciseValuation
+from engine.regime import (
+    PeerComponent,
+    RegimeAssumptions,
+    RegimeDCFEngine,
+    SyntheticPeerAssumptions,
+    SyntheticPeerEngine,
+)
 from engine.scenario_model import ScenarioEngine
 from engine.schemas import (
     ComparableAssumptions,
@@ -27,12 +46,22 @@ from engine.schemas import (
     ValuationMethod,
 )
 from engine.sotp_model import SOTPEngine
+from engine.three_statement import ThreeStatementAssumptions, ThreeStatementEngine
+from engine.valuation_catalog import (
+    IndustryType,
+    IndustryValuationAssumptions,
+    IndustryValuationEngine,
+    ValuationCatalog,
+)
 
 # ─── 示例数据 ───────────────────────────────────────────────────────────────
 
+TICKER = "600519.SH"
+COMPANY = "贵州茅台"
+
 DCF_EXAMPLE = DCFAssumptions(
-    ticker="600519.SH",
-    company_name="贵州茅台",
+    ticker=TICKER,
+    company_name=COMPANY,
     forecast_years=5,
     base_revenue=1500.0,
     base_ebit_margin=0.65,
@@ -44,7 +73,7 @@ DCF_EXAMPLE = DCFAssumptions(
     tax_rate=0.25,
     wacc=0.085,
     terminal_growth_rate=0.03,
-    net_debt=-500.0,  # 茅台几乎零负债，大量现金
+    net_debt=-500.0,
     shares_outstanding=12.56,
     current_price=1680.0,
     risk_free_rate=0.025,
@@ -53,8 +82,8 @@ DCF_EXAMPLE = DCFAssumptions(
 )
 
 COMPARABLE_EXAMPLE = ComparableAssumptions(
-    ticker="600519.SH",
-    company_name="贵州茅台",
+    ticker=TICKER,
+    company_name=COMPANY,
     company_eps=60.0,
     company_bvps=200.0,
     company_revenue_per_share=120.0,
@@ -65,8 +94,8 @@ COMPARABLE_EXAMPLE = ComparableAssumptions(
 )
 
 SCENARIO_EXAMPLE = ScenarioAssumptions(
-    ticker="600519.SH",
-    company_name="贵州茅台",
+    ticker=TICKER,
+    company_name=COMPANY,
     base_price=1680.0,
     bull=ScenarioDetail(
         revenue_growth_rates=[0.18, 0.15, 0.12, 0.10, 0.08],
@@ -95,162 +124,394 @@ SCENARIO_EXAMPLE = ScenarioAssumptions(
 )
 
 SOTP_EXAMPLE = SOTPAssumptions(
-    ticker="600519.SH",
-    company_name="贵州茅台",
+    ticker=TICKER,
+    company_name=COMPANY,
     segments=[
         SOTPSegment(
-            name="茅台酒（高端）",
-            revenue=1200.0,
-            profit=600.0,
-            valuation_method=ValuationMethod.PE,
-            peer_multiple=30.0,
-            description="飞天茅台、生肖酒等高端产品线",
+            name="茅台酒（高端）", revenue=1200.0, profit=600.0, valuation_method=ValuationMethod.PE, peer_multiple=30.0
         ),
         SOTPSegment(
-            name="系列酒（中端）",
-            revenue=200.0,
-            profit=50.0,
-            valuation_method=ValuationMethod.PE,
-            peer_multiple=20.0,
-            description="茅台王子、茅台迎宾等系列酒",
+            name="系列酒（中端）", revenue=200.0, profit=50.0, valuation_method=ValuationMethod.PE, peer_multiple=20.0
         ),
         SOTPSegment(
-            name="金融业务",
-            revenue=100.0,
-            profit=30.0,
-            valuation_method=ValuationMethod.PE,
-            peer_multiple=12.0,
-            description="财务公司、基金等金融板块",
+            name="金融业务", revenue=100.0, profit=30.0, valuation_method=ValuationMethod.PE, peer_multiple=12.0
         ),
     ],
     cash_and_equivalents=600.0,
-    net_debt=-500.0,  # 净现金
+    net_debt=-500.0,
     non_core_assets=50.0,
     total_shares=12.56,
     current_price=1680.0,
 )
 
+THREE_STATEMENT_EXAMPLE = ThreeStatementAssumptions(
+    ticker=TICKER,
+    company_name=COMPANY,
+    forecast_years=5,
+    base_revenue=1500.0,
+    base_cogs_pct=0.10,
+    base_selling_exp_pct=0.03,
+    base_admin_exp_pct=0.05,
+    base_rd_exp_pct=0.01,
+    tax_rate=0.25,
+    minority_interest_pct=0.03,
+    base_cash=500.0,
+    base_receivables_pct=0.15,
+    base_inventory_pct=0.10,
+    base_other_current_assets_pct=0.02,
+    base_ppe_pct=0.30,
+    base_intangibles_pct=0.05,
+    base_goodwill=0.0,
+    base_other_nca_pct=0.02,
+    base_payables_pct=0.12,
+    base_accrued_expenses_pct=0.03,
+    base_short_term_debt=0.0,
+    base_current_portion_ltd=0.0,
+    base_long_term_debt=0.0,
+    base_bonds_payable=0.0,
+    base_lease_liabilities=0.0,
+    base_deferred_tax_liabilities=0.0,
+    base_other_ncl=0.0,
+    base_equity=1150.0,
+    base_minority_interest=55.0,
+    revenue_growth_rates=[0.12, 0.10, 0.08, 0.06, 0.05],
+    cogs_pct=[0.10] * 5,
+    selling_exp_pct=[0.03] * 5,
+    admin_exp_pct=[0.05] * 5,
+    rd_exp_pct=[0.01] * 5,
+    da_pct_revenue=0.02,
+    capex_pct_revenue=0.03,
+    payout_ratio=0.50,
+    min_cash_balance=100.0,
+    revolver_rate=0.04,
+    term_loan_rate=0.05,
+)
+
 
 def run_demo():
-    print("=" * 60)
-    print("  engine 独立估值引擎 — 完整演示")
-    print("=" * 60)
+    print("=" * 70)
+    print("  engine v2.0 — P0-P3 全功能演示")
+    print("=" * 70)
 
-    # ── Step 1: IronGate 预检 ───────────────────────────────────────────
-    print("\n[Step 1] IronGate 假设预检...")
+    # ══════════════════════════════════════════════════════════════════════
+    # P0: 核心估值引擎
+    # ══════════════════════════════════════════════════════════════════════
+    print("\n" + "─" * 70)
+    print("  P0: 核心估值引擎")
+    print("─" * 70)
+
     gate = IronGateEngine()
     reports = gate.validate_all(
-        dcf=DCF_EXAMPLE,
-        comparable=COMPARABLE_EXAMPLE,
-        scenario=SCENARIO_EXAMPLE,
-        sotp=SOTP_EXAMPLE,
+        dcf=DCF_EXAMPLE, comparable=COMPARABLE_EXAMPLE, scenario=SCENARIO_EXAMPLE, sotp=SOTP_EXAMPLE
     )
-    all_passed = True
     for name, report in reports.items():
-        status = "PASS" if report.passed else "FAIL"
-        print(f"  {name}: {status} ({len(report.results)} gates)")
-        if not report.passed:
-            all_passed = False
-            for err in report.errors:
-                print(f"    ERROR: {err.message}")
+        print(f"  IronGate {name}: {'PASS' if report.passed else 'FAIL'}")
 
-    if not all_passed:
-        print("\n  ⚠ IronGate 校验失败，部分估值可能不可靠。继续执行...\n")
+    dcf_result = DCFEngine(DCF_EXAMPLE, skip_gates=True).run()
+    comp_result = ComparableEngine(COMPARABLE_EXAMPLE, skip_gates=True).run()
+    scn_result = ScenarioEngine(SCENARIO_EXAMPLE, skip_gates=True).run()
+    sotp_result = SOTPEngine(SOTP_EXAMPLE, skip_gates=True).run()
+    ts_result = ThreeStatementEngine(THREE_STATEMENT_EXAMPLE, skip_gates=True).run()
 
-    # ── Step 2: DCF 估值 ───────────────────────────────────────────────
-    print("\n[Step 2] DCF 估值计算...")
-    dcf_engine = DCFEngine(DCF_EXAMPLE, skip_gates=True)
-    dcf_result = dcf_engine.run()
+    print(f"  DCF:         {dcf_result.fair_value_per_share:>8.2f} 元/股")
+    print(f"  Comparable:  {comp_result.target_price:>8.2f} 元/股")
+    print(f"  Scenario:    {scn_result.weighted_target:>8.2f} 元/股")
+    print(f"  SOTP:        {sotp_result.target_price:>8.2f} 元/股")
+    print(f"  Three-Stmt:  FCFF={ts_result.fcff_for_dcf:.0f} 亿")
 
-    # 后置校验
-    post_gates = dcf_engine.run_post_gates(dcf_result)
-    print(f"  后置校验: {'PASS' if post_gates.passed else 'WARN'}")
-    for r in post_gates.results:
-        mark = "OK" if r.passed else "WARN" if r.severity == "warning" else "FAIL"
-        print(f"    [{mark}] [{r.level}] {r.gate_id}: {r.message}")
+    # ══════════════════════════════════════════════════════════════════════
+    # P1: Decimal 精度
+    # ══════════════════════════════════════════════════════════════════════
+    print("\n" + "─" * 70)
+    print("  P1: Decimal 精度层")
+    print("─" * 70)
 
-    print(f"\n  基期营收:     {DCF_EXAMPLE.base_revenue:.0f} 亿元")
-    print(f"  Year 5 营收:  {dcf_result.revenues[-1]:.0f} 亿元")
-    print(f"  Year 5 FCF:   {dcf_result.fcf[-1]:.0f} 亿元")
-    print(f"  PV of FCF:    {dcf_result.sum_pv_fcf:.0f} 亿元")
-    print(f"  Terminal PV:  {dcf_result.terminal_value_pv:.0f} 亿元")
-    print(f"  TV % of EV:   {dcf_result.tv_pct:.1%}")
-    print(f"  Enterprise V: {dcf_result.enterprise_value:.0f} 亿元")
-    print(f"  Equity Value: {dcf_result.equity_value:.0f} 亿元")
-    print(f"  公允价值:     {dcf_result.fair_value_per_share:.2f} 元/股")
-    if dcf_result.upside_pct is not None:
-        print(f"  上行空间:     {dcf_result.upside_pct:+.1f}%")
-    print(f"  置信度:       {dcf_result.confidence}")
+    pv = PreciseValuation()
+    pv.set("revenue", 1500.0, source="financial_statement", formula="base_revenue")
+    pv.set("ebit_margin", 0.65, source="assumption", formula="LLM_extracted")
+    pv.set("ebit", "1500 * 0.65", source="computed", formula="revenue × margin")
+    print(f"  EBIT: {pv.get('revenue')}")
+    print(pv.provenance_report())
 
-    # ── Step 3: 可比估值 ───────────────────────────────────────────────
-    print("\n[Step 3] 可比公司估值...")
-    comp_engine = ComparableEngine(COMPARABLE_EXAMPLE, skip_gates=True)
-    comp_result = comp_engine.run()
+    # ══════════════════════════════════════════════════════════════════════
+    # P1: Regime-Conditional DCF
+    # ══════════════════════════════════════════════════════════════════════
+    print("\n" + "─" * 70)
+    print("  P1: Regime-Conditional DCF")
+    print("─" * 70)
 
-    print(f"  PE 隐含价格:  {comp_result.implied_prices.get('PE', 'N/A')}")
-    print(f"  PB 隐含价格:  {comp_result.implied_prices.get('PB', 'N/A')}")
-    print(f"  PS 隐含价格:  {comp_result.implied_prices.get('PS', 'N/A')}")
-    print(f"  综合目标价:   {comp_result.target_price:.2f} 元/股")
-    print(f"  置信度:       {comp_result.confidence}")
+    regime_a = RegimeAssumptions(
+        ticker=TICKER,
+        company_name=COMPANY,
+        base_revenue=1500.0,
+        base_ebit_margin=0.65,
+        forecast_years=5,
+        revenue_growth_rates=[0.15, 0.12, 0.10, 0.08, 0.06],
+        ebit_margins=[0.65, 0.66, 0.66, 0.67, 0.67],
+        wacc=0.085,
+        terminal_growth_rate=0.03,
+        net_debt=-500.0,
+        shares_outstanding=12.56,
+        current_price=1680.0,
+    )
+    regime_result = RegimeDCFEngine(regime_a).run()
+    print(f"  加权目标价:  {regime_result.weighted_value:.2f} 元/股")
+    for regime, value in regime_result.regime_values.items():
+        prob = regime_result.regime_probabilities[regime]
+        print(f"    {regime:>12}: {value:>8.2f} (概率 {prob:.0%})")
 
-    # ── Step 4: 情景分析 ───────────────────────────────────────────────
-    print("\n[Step 4] 情景分析...")
-    scn_engine = ScenarioEngine(SCENARIO_EXAMPLE, skip_gates=True)
-    scn_result = scn_engine.run()
+    # ══════════════════════════════════════════════════════════════════════
+    # P1: Synthetic Peers
+    # ══════════════════════════════════════════════════════════════════════
+    print("\n" + "─" * 70)
+    print("  P1: Synthetic Peers")
+    print("─" * 70)
 
-    for name, price in scn_result.scenario_prices.items():
-        prob = getattr(SCENARIO_EXAMPLE, name).probability
-        print(f"  {name:>5}: {price:>8.2f} 元 (概率 {prob:.0%})")
-    print(f"  加权目标:     {scn_result.weighted_target:.2f} 元/股")
-    print(f"  上行:         {scn_result.upside_pct:+.1f}%")
-    print(f"  下行:         {scn_result.downside_pct:+.1f}%")
-    print(f"  风险收益比:   {scn_result.risk_reward:.2f}")
+    synth_a = SyntheticPeerAssumptions(
+        ticker=TICKER,
+        company_name=COMPANY,
+        company_eps=60.0,
+        company_bvps=200.0,
+        components=[
+            PeerComponent("高端白酒", 0.6, 30.0, 9.0, 12.0, 20.0),
+            PeerComponent("大众消费品", 0.3, 22.0, 4.0, 3.0, 12.0),
+            PeerComponent("金融控股", 0.1, 10.0, 1.2, 2.0, 8.0),
+        ],
+    )
+    synth_result = SyntheticPeerEngine(synth_a).run()
+    print(f"  合成 PE: {synth_result.synthetic_pe:.2f}")
+    for method, price in synth_result.implied_prices.items():
+        print(f"    {method} 隐含: {price:.2f} 元")
+    print(f"  综合目标价: {synth_result.target_price:.2f} 元/股")
 
-    # ── Step 5: SOTP 估值 ──────────────────────────────────────────────
-    print("\n[Step 5] 分部加总 (SOTP) 估值...")
-    sotp_engine = SOTPEngine(SOTP_EXAMPLE, skip_gates=True)
-    sotp_result = sotp_engine.run()
+    # ══════════════════════════════════════════════════════════════════════
+    # P1: FCFF Path + Market-Implied g
+    # ══════════════════════════════════════════════════════════════════════
+    print("\n" + "─" * 70)
+    print("  P1: FCFF Path + Market-Implied Growth")
+    print("─" * 70)
 
-    for seg in sotp_result.segment_values:
-        print(f"  {seg['name']:>12}: {seg['method']:>8} × {seg['multiple']:>6.1f} = {seg['value']:>10.0f} 亿")
-    print(f"  分部合计:     {sotp_result.total_segments_value:.0f} 亿元")
-    print(f"  股权价值:     {sotp_result.equity_value:.0f} 亿元")
-    print(f"  目标价:       {sotp_result.target_price:.2f} 元/股")
-    if sotp_result.upside_pct is not None:
-        print(f"  上行空间:     {sotp_result.upside_pct:+.1f}%")
+    fcff_engine = FCFFPathEngine()
+    fcff_result = fcff_engine.compute_both_paths(
+        ebit=975.0,
+        tax_rate=0.25,
+        da=30.0,
+        capex=45.0,
+        wc_change=15.0,
+        cfo=950.0,
+        interest_expense=0.0,
+    )
+    print(f"  EBIAT 路径 FCFF: {fcff_result.fcff:.2f} 亿")
+    if fcff_result.fcff_from_cfo is not None:
+        print(f"  CFO 路径 FCFF:   {fcff_result.fcff_from_cfo:.2f} 亿")
+        print(f"  路径差异:        {fcff_result.path_diff:.2f} 亿 ({fcff_result.path_diff_pct:.1f}%)")
 
-    # ── Step 6: 导出 Excel 审计底稿 ────────────────────────────────────
-    print("\n[Step 6] 导出 Excel 审计底稿...")
+    solver = MarketImpliedSolver()
+    implied = solver.solve(
+        current_price=1680.0,
+        shares_outstanding=12.56,
+        net_debt=-500.0,
+        current_fcf=1174.0,
+        wacc=0.085,
+        terminal_growth=0.03,
+    )
+    print(f"  隐含增长率: {implied.implied_growth:.2%}")
+    print(f"  隐含 EV:    {implied.implied_ev:.0f} 亿")
+
+    # ══════════════════════════════════════════════════════════════════════
+    # P1: Devil's Advocate Debate
+    # ══════════════════════════════════════════════════════════════════════
+    print("\n" + "─" * 70)
+    print("  P1: Devil's Advocate Debate")
+    print("─" * 70)
+
+    devil = DevilAdvocateAgent()
+    challenge = devil.challenge(
+        bull_thesis="茅台受益于消费升级，DCF 估值 1513 元",
+        evidence=["ROE > 30%", "营收增长稳定"],
+        financials={"debt_ratio": 0.05, "revenue_growth": 0.12, "margin": 0.65, "pe_ratio": 28},
+    )
+    print(f"  反方挑战: {challenge.thesis}")
+    print(f"  识别风险: {', '.join(challenge.risks[:3])}")
+
+    # ══════════════════════════════════════════════════════════════════════
+    # P2: Monte Carlo
+    # ══════════════════════════════════════════════════════════════════════
+    print("\n" + "─" * 70)
+    print("  P2: Monte Carlo Simulation (10,000 runs)")
+    print("─" * 70)
+
+    mc_a = MonteCarloAssumptions(
+        ticker=TICKER,
+        company_name=COMPANY,
+        n_simulations=10000,
+        seed=42,
+        base_revenue=1500.0,
+        revenue_growth_mean=0.10,
+        revenue_growth_std=0.03,
+        ebit_margin_mean=0.65,
+        ebit_margin_std=0.02,
+        wacc_mean=0.085,
+        wacc_std=0.01,
+        terminal_growth_mean=0.03,
+        terminal_growth_std=0.005,
+        forecast_years=5,
+        net_debt=-500.0,
+        shares_outstanding=12.56,
+        current_price=1680.0,
+    )
+    mc_result = MonteCarloEngine(mc_a).run()
+    print(f"  均值:   {mc_result.mean:.2f}")
+    print(f"  中位数: {mc_result.median:.2f}")
+    print(f"  标准差: {mc_result.std:.2f}")
+    print(f"  95% CI: [{mc_result.confidence_interval_95[0]:.2f}, {mc_result.confidence_interval_95[1]:.2f}]")
+    if mc_result.prob_above_current is not None:
+        print(f"  P(>当前价): {mc_result.prob_above_current:.1%}")
+    print(f"  敏感性排序: {', '.join(f'{k}({v:.2f})' for k, v in mc_result.sensitivity_ranking)}")
+
+    # ══════════════════════════════════════════════════════════════════════
+    # P2: Quality Scoring
+    # ══════════════════════════════════════════════════════════════════════
+    print("\n" + "─" * 70)
+    print("  P2: Quality Scoring")
+    print("─" * 70)
+
+    piotroski = ValuationCatalog.piotroski_f_score(
+        {
+            "roa": 0.25,
+            "cfo": 1.0,
+            "roa_change": 0.02,
+            "cfo > net_income": 1,
+            "leverage_change": -0.05,
+            "current_ratio_change": 0.1,
+            "shares_change": -0.02,
+            "gross_margin_change": 0.01,
+            "asset_turnover_change": 0.05,
+        }
+    )
+    altman = ValuationCatalog.altman_z_score(
+        assets=2500,
+        liabilities=800,
+        working_capital=1200,
+        retained_earnings=800,
+        ebit=975,
+        market_cap=21100,
+        total_revenue=1500,
+    )
+    print(f"  Piotroski F-Score: {piotroski}/9")
+    print(f"  Altman Z-Score:    {altman:.2f} (>2.99=Safe)")
+
+    # ══════════════════════════════════════════════════════════════════════
+    # P2: Industry-Aware Valuation
+    # ══════════════════════════════════════════════════════════════════════
+    print("\n" + "─" * 70)
+    print("  P2: Industry-Aware Valuation")
+    print("─" * 70)
+
+    bank_a = IndustryValuationAssumptions(
+        ticker="601398.SH",
+        company_name="工商银行",
+        industry=IndustryType.BANK,
+        book_value_per_share=7.5,
+        roe=0.12,
+        cost_of_equity=0.09,
+        growth_rate=0.03,
+        shares=3564.0,
+    )
+    bank_result = IndustryValuationEngine(bank_a).run()
+    print(f"  银行估值 ({bank_result.method_used}): {bank_result.target_price:.2f} 元/股")
+
+    # ══════════════════════════════════════════════════════════════════════
+    # P2: Damodaran RAG + Ticker Memory
+    # ══════════════════════════════════════════════════════════════════════
+    print("\n" + "─" * 70)
+    print("  P2: Damodaran RAG + Ticker Memory")
+    print("─" * 70)
+
+    rag = DamodaranRAG()
+    rag.add_entry(DamodaranEntry("1", "blog", "dcf", "WACC should reflect the risk of the cash flows"))
+    rag_result = rag.query(DamodaranRAGQuery("WACC discount rate"))
+    print(f"  RAG 查询: 找到 {len(rag_result.entries)} 条相关条目")
+
+    memory = TickerMemoryStore()
+    mem = memory.get(TICKER)
+    mem.investment_thesis = "白酒龙头，品牌护城河深厚"
+    memory.add_history(TICKER, {"date": "2026-01", "action": "initiate", "price": 1680})
+    print(f"  Ticker 记忆: {mem.investment_thesis}")
+
+    # ══════════════════════════════════════════════════════════════════════
+    # P3: MCP Tools
+    # ══════════════════════════════════════════════════════════════════════
+    print("\n" + "─" * 70)
+    print("  P3: MCP Tools")
+    print("─" * 70)
+
+    mcp = MCPEngine()
+    tools = mcp.list_tools()
+    print(f"  注册工具: {len(tools)} 个")
+    for tool in tools:
+        print(f"    - {tool.name}: {tool.description[:40]}...")
+
+    # ══════════════════════════════════════════════════════════════════════
+    # P3: 16-Step Orchestrator
+    # ══════════════════════════════════════════════════════════════════════
+    print("\n" + "─" * 70)
+    print("  P3: 16-Step IB-Grade Orchestrator")
+    print("─" * 70)
+
+    orchestrator = IBGradeOrchestrator()
+    pipeline_result = orchestrator.run({"ticker": TICKER, "base_revenue": 1500.0, "wacc": 0.085})
+    completed = sum(1 for s in pipeline_result.steps.values() if s.status == "completed")
+    print(f"  管线状态: {completed}/{len(pipeline_result.steps)} 步完成")
+    print(f"  总耗时: {pipeline_result.total_duration_ms:.0f}ms")
+
+    # ══════════════════════════════════════════════════════════════════════
+    # Excel 导出
+    # ══════════════════════════════════════════════════════════════════════
+    print("\n" + "─" * 70)
+    print("  Excel 审计底稿导出")
+    print("─" * 70)
+
     writer = AuditExcelWriter(
         dcf_assumptions=DCF_EXAMPLE,
         comparable_assumptions=COMPARABLE_EXAMPLE,
         scenario_assumptions=SCENARIO_EXAMPLE,
         sotp_assumptions=SOTP_EXAMPLE,
+        three_statement_result=ts_result,
     )
     outpath = writer.export("output/audit_valuation_model.xlsx")
     print(f"  成功生成: {outpath}")
 
-    # ── Step 7: 汇总 ──────────────────────────────────────────────────
-    print("\n" + "=" * 60)
-    print("  估值汇总")
-    print("=" * 60)
-    print(f"  DCF:         {dcf_result.fair_value_per_share:>8.2f} 元/股")
-    print(f"  Comparable:  {comp_result.target_price:>8.2f} 元/股")
-    print(f"  Scenario:    {scn_result.weighted_target:>8.2f} 元/股")
-    print(f"  SOTP:        {sotp_result.target_price:>8.2f} 元/股")
+    # ══════════════════════════════════════════════════════════════════════
+    # 汇总
+    # ══════════════════════════════════════════════════════════════════════
+    print("\n" + "=" * 70)
+    print("  全方法估值汇总")
+    print("=" * 70)
+    print(f"  DCF:              {dcf_result.fair_value_per_share:>8.2f} 元/股")
+    print(f"  Comparable:       {comp_result.target_price:>8.2f} 元/股")
+    print(f"  Scenario:         {scn_result.weighted_target:>8.2f} 元/股")
+    print(f"  SOTP:             {sotp_result.target_price:>8.2f} 元/股")
+    print(f"  Regime DCF:       {regime_result.weighted_value:>8.2f} 元/股")
+    print(f"  Synthetic Peer:   {synth_result.target_price:>8.2f} 元/股")
+    print(f"  Monte Carlo:      {mc_result.median:>8.2f} 元/股 (中位数)")
+    print(f"  Bank DDM:         {bank_result.target_price:>8.2f} 元/股")
 
     all_prices = [
         dcf_result.fair_value_per_share,
         comp_result.target_price,
         scn_result.weighted_target,
         sotp_result.target_price,
+        regime_result.weighted_value,
+        synth_result.target_price,
+        mc_result.median,
     ]
     avg = sum(all_prices) / len(all_prices)
-    print("  ─────────────────────────")
-    print(f"  综合均值:    {avg:>8.2f} 元/股")
+    print("  ─────────────────────────────────")
+    print(f"  综合均值:         {avg:>8.2f} 元/股")
     if DCF_EXAMPLE.current_price:
         upside = (avg / DCF_EXAMPLE.current_price - 1) * 100
-        print(f"  vs 当前价:   {DCF_EXAMPLE.current_price:.0f} → {upside:+.1f}%")
+        print(f"  vs 当前价:        {DCF_EXAMPLE.current_price:.0f} → {upside:+.1f}%")
     print()
 
 

@@ -11,7 +11,9 @@ IronGate 预检网关 — 在计算前拦截畸形假设。
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Callable, List
+
+# Forward reference for ThreeStatementAssumptions
+from typing import TYPE_CHECKING, Callable, List
 
 from engine.schemas import (
     ComparableAssumptions,
@@ -19,6 +21,9 @@ from engine.schemas import (
     ScenarioAssumptions,
     SOTPAssumptions,
 )
+
+if TYPE_CHECKING:
+    from engine.three_statement import ThreeStatementAssumptions
 
 # ─── Gate Result ────────────────────────────────────────────────────────────
 
@@ -312,6 +317,114 @@ class IronGateEngine:
         report = GateReport()
         for gate_fn in self._sotp_gates:
             report.results.append(gate_fn(a))
+        return report
+
+    # ── Three-Statement Gates ──────────────────────────────────────────────
+
+    def validate_three_statement(self, a: "ThreeStatementAssumptions") -> GateReport:
+        """三表联动假设校验"""
+        report = GateReport()
+
+        # TS-01: 预测期长度
+        ok = len(a.revenue_growth_rates) == a.forecast_years
+        report.results.append(
+            GateResult(
+                "TS-01",
+                "L1",
+                ok,
+                f"revenue_growth_rates 长度 ({len(a.revenue_growth_rates)}) ≠ forecast_years ({a.forecast_years})"
+                if not ok
+                else "预测期长度匹配",
+            )
+        )
+
+        # TS-02: 税率范围
+        ok = 0.0 <= a.tax_rate <= 0.50
+        report.results.append(
+            GateResult(
+                "TS-02",
+                "L1",
+                ok,
+                f"税率 ({a.tax_rate:.2%}) 超出 [0%, 50%]" if not ok else f"税率 ({a.tax_rate:.2%}) ✓",
+            )
+        )
+
+        # TS-03: 分红率范围
+        ok = 0.0 <= a.payout_ratio <= 1.0
+        report.results.append(
+            GateResult(
+                "TS-03",
+                "L1",
+                ok,
+                f"分红率 ({a.payout_ratio:.2%}) 超出 [0%, 100%]" if not ok else f"分红率 ({a.payout_ratio:.2%}) ✓",
+            )
+        )
+
+        # TS-04: 基期权益为正
+        ok = a.base_equity > 0
+        report.results.append(
+            GateResult(
+                "TS-04",
+                "L1",
+                ok,
+                f"基期权益 ({a.base_equity:.2f}亿) 必须为正" if not ok else f"基期权益 ({a.base_equity:.2f}亿) ✓",
+            )
+        )
+
+        # TS-05: 基期营收为正
+        ok = a.base_revenue > 0
+        report.results.append(
+            GateResult(
+                "TS-05",
+                "L1",
+                ok,
+                f"基期营收 ({a.base_revenue:.2f}亿) 必须为正" if not ok else f"基期营收 ({a.base_revenue:.2f}亿) ✓",
+            )
+        )
+
+        # TS-06: 资本支出 vs 折旧
+        if a.capex_pct_revenue < a.da_pct_revenue:
+            report.results.append(
+                GateResult(
+                    "TS-06",
+                    "L2",
+                    False,
+                    f"资本支出占比 ({a.capex_pct_revenue:.2%}) < 折旧占比 ({a.da_pct_revenue:.2%})，企业可能在收缩",
+                    severity="warning",
+                )
+            )
+        else:
+            report.results.append(GateResult("TS-06", "L2", True, "资本支出 ≥ 折旧 ✓"))
+
+        # TS-07: 债务利率合理性
+        if a.term_loan_rate > 0.20:
+            report.results.append(
+                GateResult(
+                    "TS-07",
+                    "L2",
+                    False,
+                    f"长期贷款利率 ({a.term_loan_rate:.2%}) 过高",
+                    severity="warning",
+                )
+            )
+        else:
+            report.results.append(GateResult("TS-07", "L2", True, f"长期贷款利率 ({a.term_loan_rate:.2%}) ✓"))
+
+        # TS-08: 增速合理性
+        extreme = [g for g in a.revenue_growth_rates if abs(g) > 1.0]
+        if extreme:
+            report.results.append(
+                GateResult(
+                    "TS-08",
+                    "L2",
+                    False,
+                    f"存在极端增速 ({len(extreme)} 项 >100%)",
+                    severity="warning",
+                )
+            )
+        else:
+            report.results.append(GateResult("TS-08", "L2", True, "增速在合理范围内"))
+
         return report
 
     def validate_all(

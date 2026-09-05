@@ -61,6 +61,12 @@ class DCFEngine:
         self.a = assumptions
         self.gate_report: Optional[GateReport] = None
 
+        # 计算动态 WACC（如果启用）
+        if assumptions.use_dynamic_wacc:
+            self._wacc = assumptions.compute_dynamic_wacc()
+        else:
+            self._wacc = assumptions.wacc
+
         if not skip_gates:
             gate = IronGateEngine()
             self.gate_report = gate.validate_dcf(assumptions)
@@ -71,6 +77,7 @@ class DCFEngine:
     def run(self) -> DCFResult:
         result = DCFResult(gate_report=self.gate_report)
         a = self.a
+        wacc = self._wacc  # 使用计算后的 WACC（可能是动态的）
 
         # ── Stage 1: 逐年 FCF 推演 ─────────────────────────────────────
         curr_rev = a.base_revenue
@@ -83,7 +90,7 @@ class DCFEngine:
             wc = curr_rev * a.wc_pct_revenue
             nopat_val = ebit * (1 - a.tax_rate)
             fcf_val = nopat_val + da - capex - wc
-            df = 1 / ((1 + a.wacc) ** (i + 1))
+            df = 1 / ((1 + wacc) ** (i + 1))
 
             result.revenues.append(curr_rev)
             result.ebit_margins.append(a.ebit_margins[i])
@@ -101,8 +108,8 @@ class DCFEngine:
         # ── Stage 2: Gordon Growth 终值 ─────────────────────────────────
         last_fcf = result.fcf[-1]
         result.terminal_fcf = last_fcf * (1 + a.terminal_growth_rate)
-        result.terminal_value = result.terminal_fcf / (a.wacc - a.terminal_growth_rate)
-        result.terminal_value_pv = result.terminal_value / ((1 + a.wacc) ** a.forecast_years)
+        result.terminal_value = result.terminal_fcf / (wacc - a.terminal_growth_rate)
+        result.terminal_value_pv = result.terminal_value / ((1 + wacc) ** a.forecast_years)
 
         # ── Stage 3: 企业价值 → 每股 ───────────────────────────────────
         result.enterprise_value = result.sum_pv_fcf + result.terminal_value_pv
@@ -126,12 +133,21 @@ class DCFEngine:
         # ── Stage 5: 敏感性矩阵 ────────────────────────────────────────
         self._compute_sensitivity(result)
 
+        # 记录 WACC 拆解
+        result.wacc_breakdown = {
+            "wacc_used": wacc,
+            "is_dynamic": a.use_dynamic_wacc,
+            "industry_beta": a.industry_beta,
+            "target_debt_ratio": a.target_debt_ratio,
+        }
+
         return result
 
     def _compute_sensitivity(self, result: DCFResult) -> None:
         """WACC ±2pp × g ±1pp 敏感性矩阵"""
         a = self.a
-        wacc_range = [a.wacc + dp * 0.01 for dp in range(-2, 3)]
+        wacc = self._wacc
+        wacc_range = [wacc + dp * 0.01 for dp in range(-2, 3)]
         g_range = [a.terminal_growth_rate + dp * 0.005 for dp in range(-2, 3)]
 
         result.sensitivity_wacc_range = wacc_range

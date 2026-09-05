@@ -17,6 +17,7 @@ from engine.schemas import (
     ScenarioAssumptions,
     SOTPAssumptions,
 )
+from engine.three_statement import ThreeStatementResult
 
 # ─── Styles ─────────────────────────────────────────────────────────────────
 
@@ -57,11 +58,13 @@ class AuditExcelWriter:
         comparable_assumptions: ComparableAssumptions | None = None,
         scenario_assumptions: ScenarioAssumptions | None = None,
         sotp_assumptions: SOTPAssumptions | None = None,
+        three_statement_result: ThreeStatementResult | None = None,
     ) -> None:
         self.dcf_a = dcf_assumptions
         self.comp_a = comparable_assumptions
         self.scn_a = scenario_assumptions
         self.sotp_a = sotp_assumptions
+        self.ts_result = three_statement_result
         self.wb = Workbook()
 
     def export(self, filepath: str = "DCF_Valuation_Model.xlsx") -> str:
@@ -76,6 +79,8 @@ class AuditExcelWriter:
             self._write_scenario_sheet()
         if self.sotp_a:
             self._write_sotp_sheet()
+        if self.ts_result:
+            self._write_three_statement_sheet()
         self._write_summary_sheet()
 
         # 保存
@@ -558,6 +563,207 @@ class AuditExcelWriter:
         for c in "BCDEF":
             ws.column_dimensions[c].width = 16
 
+    # ─── Three-Statement Sheet ───────────────────────────────────────────
+
+    def _write_three_statement_sheet(self) -> None:
+        """三表联动 Excel 导出 — 完整利润表、资产负债表、现金流量表"""
+        ts = self.ts_result
+        if not ts:
+            return
+
+        ws = self.wb.create_sheet("Three-Statement Model")
+        years = ts.income_statement.years
+
+        # Title
+        ws["A1"] = "Three-Statement Model — Dynamic Linking"
+        ws["A1"].font = TITLE_FONT
+
+        # ── Income Statement ──
+        r = 3
+        ws[f"A{r}"] = "Income Statement (亿元)"
+        ws[f"A{r}"].font = SECTION_FONT
+        ws[f"A{r}"].fill = SECTION_FILL
+
+        r += 1
+        ws[f"A{r}"] = "Item"
+        for i in range(years):
+            c = _col(i + 2)
+            ws[f"{c}{r}"] = f"Year {i + 1}"
+            ws[f"{c}{r}"].font = HEADER_FONT
+            ws[f"{c}{r}"].fill = HEADER_FILL
+
+        is_items = [
+            ("Revenue", ts.income_statement.revenue),
+            ("COGS", ts.income_statement.cogs),
+            ("Gross Profit", ts.income_statement.gross_profit),
+            ("Selling Expenses", ts.income_statement.selling_exp),
+            ("Admin Expenses", ts.income_statement.admin_exp),
+            ("R&D Expenses", ts.income_statement.rd_exp),
+            ("Operating Profit", ts.income_statement.operating_profit),
+            ("EBIT", ts.income_statement.ebit),
+            ("Interest Expense", ts.income_statement.interest_expense),
+            ("EBT", ts.income_statement.ebt),
+            ("Income Tax", ts.income_statement.income_tax),
+            ("Net Income", ts.income_statement.net_income),
+            ("Minority Interest", ts.income_statement.minority_interest),
+            ("Net Profit to Parent", ts.income_statement.net_profit_to_parent),
+        ]
+
+        for item_name, values in is_items:
+            r += 1
+            ws[f"A{r}"] = item_name
+            for i, v in enumerate(values):
+                c = _col(i + 2)
+                ws[f"{c}{r}"] = round(v, 2)
+                ws[f"{c}{r}"].number_format = "#,##0.00"
+
+        # ── Balance Sheet ──
+        r += 2
+        ws[f"A{r}"] = "Balance Sheet (亿元)"
+        ws[f"A{r}"].font = SECTION_FONT
+        ws[f"A{r}"].fill = SECTION_FILL
+
+        r += 1
+        ws[f"A{r}"] = "Item"
+        for i in range(years):
+            c = _col(i + 2)
+            ws[f"{c}{r}"] = f"Year {i + 1}"
+            ws[f"{c}{r}"].font = HEADER_FONT
+            ws[f"{c}{r}"].fill = HEADER_FILL
+
+        bs_items = [
+            ("Cash", ts.balance_sheet.cash),
+            ("Receivables", ts.balance_sheet.receivables),
+            ("Inventory", ts.balance_sheet.inventory),
+            ("Other Current Assets", ts.balance_sheet.other_current_assets),
+            ("Total Current Assets", ts.balance_sheet.total_current_assets),
+            ("PPE", ts.balance_sheet.ppe),
+            ("Intangibles", ts.balance_sheet.intangibles),
+            ("Goodwill", ts.balance_sheet.goodwill),
+            ("Other NCA", ts.balance_sheet.other_nca),
+            ("Total Assets", ts.balance_sheet.total_assets),
+            ("", []),
+            ("Payables", ts.balance_sheet.payables),
+            ("Accrued Expenses", ts.balance_sheet.accrued_expenses),
+            ("Short-term Debt", ts.balance_sheet.short_term_debt),
+            ("Current Portion LTD", ts.balance_sheet.current_portion_ltd),
+            ("Total Current Liabilities", ts.balance_sheet.total_current_liabilities),
+            ("Long-term Debt", ts.balance_sheet.long_term_debt),
+            ("Bonds Payable", ts.balance_sheet.bonds_payable),
+            ("Total Non-current Liabilities", ts.balance_sheet.total_non_current_liabilities),
+            ("Total Liabilities", ts.balance_sheet.total_liabilities),
+            ("", []),
+            ("Equity", ts.balance_sheet.equity),
+            ("Minority Interest", ts.balance_sheet.minority_interest),
+            ("Total Equity", ts.balance_sheet.total_equity),
+            ("", []),
+            ("BS Imbalance", ts.balance_sheet.bs_imbalance),
+        ]
+
+        for item_name, values in bs_items:
+            r += 1
+            if not item_name:
+                continue
+            ws[f"A{r}"] = item_name
+            for i, v in enumerate(values):
+                c = _col(i + 2)
+                ws[f"{c}{r}"] = round(v, 4)
+                ws[f"{c}{r}"].number_format = "#,##0.00"
+
+        # ── Cash Flow Statement ──
+        r += 2
+        ws[f"A{r}"] = "Cash Flow Statement (亿元)"
+        ws[f"A{r}"].font = SECTION_FONT
+        ws[f"A{r}"].fill = SECTION_FILL
+
+        r += 1
+        ws[f"A{r}"] = "Item"
+        for i in range(years):
+            c = _col(i + 2)
+            ws[f"{c}{r}"] = f"Year {i + 1}"
+            ws[f"{c}{r}"].font = HEADER_FONT
+            ws[f"{c}{r}"].fill = HEADER_FILL
+
+        cf_items = [
+            ("Net Income", ts.cash_flow.net_income),
+            ("Depreciation & Amort.", ts.cash_flow.da),
+            ("Working Capital Δ", ts.cash_flow.wc_change),
+            ("Cash from Operations", ts.cash_flow.cash_from_operations),
+            ("", []),
+            ("Capital Expenditure", ts.cash_flow.capex),
+            ("Cash from Investing", ts.cash_flow.cash_from_investing),
+            ("", []),
+            ("Debt Repayment", ts.cash_flow.debt_repayment),
+            ("Dividends Paid", ts.cash_flow.dividends_paid),
+            ("Share Buyback", ts.cash_flow.share_buyback),
+            ("Cash from Financing", ts.cash_flow.cash_from_financing),
+            ("", []),
+            ("Net Cash Change", ts.cash_flow.net_cash_change),
+        ]
+
+        for item_name, values in cf_items:
+            r += 1
+            if not item_name:
+                continue
+            ws[f"A{r}"] = item_name
+            for i, v in enumerate(values):
+                c = _col(i + 2)
+                ws[f"{c}{r}"] = round(v, 2)
+                ws[f"{c}{r}"].number_format = "#,##0.00"
+
+        # ── Free Cash Flow ──
+        r += 2
+        ws[f"A{r}"] = "Free Cash Flow (亿元)"
+        ws[f"A{r}"].font = SECTION_FONT
+        ws[f"A{r}"].fill = SECTION_FILL
+
+        r += 1
+        ws[f"A{r}"] = "Item"
+        for i in range(years):
+            c = _col(i + 2)
+            ws[f"{c}{r}"] = f"Year {i + 1}"
+            ws[f"{c}{r}"].font = HEADER_FONT
+            ws[f"{c}{r}"].fill = HEADER_FILL
+
+        fcf_items = [
+            ("NOPAT", ts.free_cash_flow.nopat),
+            ("+ Depreciation", ts.free_cash_flow.plus_da),
+            ("- CapEx", ts.free_cash_flow.less_capex),
+            ("- WC Change", ts.free_cash_flow.less_wc_change),
+            ("= FCFF", ts.free_cash_flow.fcff),
+            ("", []),
+            ("- Net Interest (post-tax)", ts.free_cash_flow.less_net_interest),
+            ("- Net Debt Repayment", ts.free_cash_flow.less_net_debt_repayment),
+            ("= FCFE", ts.free_cash_flow.fcfe),
+        ]
+
+        for item_name, values in fcf_items:
+            r += 1
+            if not item_name:
+                continue
+            ws[f"A{r}"] = item_name
+            for i, v in enumerate(values):
+                c = _col(i + 2)
+                ws[f"{c}{r}"] = round(v, 2)
+                ws[f"{c}{r}"].number_format = "#,##0.00"
+
+        # ── Invariant Checks ──
+        r += 2
+        ws[f"A{r}"] = "Financial Invariant Checks"
+        ws[f"A{r}"].font = SECTION_FONT
+        ws[f"A{r}"].fill = SECTION_FILL
+
+        for check_name, passed in ts.invariant_checks.items():
+            r += 1
+            ws[f"A{r}"] = check_name
+            ws[f"B{r}"] = "PASS" if passed else "FAIL"
+            ws[f"B{r}"].font = Font(color="008000" if passed else "FF0000", bold=True)
+
+        # Column widths
+        ws.column_dimensions["A"].width = 28
+        for i in range(years + 1):
+            ws.column_dimensions[_col(i + 2)].width = 16
+
     # ─── Summary Sheet ──────────────────────────────────────────────────
 
     def _write_summary_sheet(self) -> None:
@@ -601,6 +807,23 @@ class AuditExcelWriter:
             ws[f"A{r}"] = "SOTP"
             ws[f"B{r}"] = "See 'SOTP Valuation' sheet"
             ws[f"C{r}"] = "(computed)"
+
+        # Three-Statement
+        if self.ts_result:
+            r += 1
+            ws[f"A{r}"] = "Three-Statement"
+            ws[f"B{r}"] = "See 'Three-Statement Model' sheet"
+            ws[f"C{r}"] = "(computed)"
+            if self.ts_result.fcff_for_dcf is not None:
+                r += 1
+                ws[f"A{r}"] = "  Latest FCFF"
+                ws[f"B{r}"] = round(self.ts_result.fcff_for_dcf, 2)
+                ws[f"B{r}"].number_format = "#,##0.00"
+            if self.ts_result.fcfe_for_dcf is not None:
+                r += 1
+                ws[f"A{r}"] = "  Latest FCFE"
+                ws[f"B{r}"] = round(self.ts_result.fcfe_for_dcf, 2)
+                ws[f"B{r}"].number_format = "#,##0.00"
 
         ws.column_dimensions["A"].width = 16
         ws.column_dimensions["B"].width = 30

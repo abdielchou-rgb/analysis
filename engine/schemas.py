@@ -54,6 +54,12 @@ class DCFAssumptions(BaseModel):
     # 可选：当前价格（用于计算 upside）
     current_price: Optional[float] = Field(None, gt=0, description="当前股价（元）")
 
+    # 动态 WACC 参数（可选，用于 Hamada 公式）
+    use_dynamic_wacc: bool = Field(False, description="是否使用动态 WACC（Hamada 公式）")
+    industry_beta: Optional[float] = Field(None, gt=0.0, le=5.0, description="行业平均 Beta（无杠杆）")
+    target_debt_ratio: Optional[float] = Field(None, ge=0.0, le=0.8, description="目标负债率 D/(D+E)")
+    tax_rate_for_beta: Optional[float] = Field(None, ge=0.0, le=0.50, description="用于 Hamada 的税率")
+
     @field_validator("revenue_growth_rates", "ebit_margins")
     @classmethod
     def validate_list_length(cls, v: list) -> list:
@@ -68,6 +74,45 @@ class DCFAssumptions(BaseModel):
         if len(self.ebit_margins) != self.forecast_years:
             raise ValueError(f"ebit_margins 长度 ({len(self.ebit_margins)}) ≠ forecast_years ({self.forecast_years})")
         return self
+
+    @model_validator(mode="after")
+    def validate_dynamic_wacc(self) -> "DCFAssumptions":
+        if self.use_dynamic_wacc:
+            if self.industry_beta is None:
+                raise ValueError("使用动态 WACC 时必须提供 industry_beta")
+            if self.target_debt_ratio is None:
+                raise ValueError("使用动态 WACC 时必须提供 target_debt_ratio")
+        return self
+
+    def compute_dynamic_wacc(self) -> float:
+        """使用 Hamada 公式计算动态 WACC
+
+        步骤：
+        1. relevered_beta = industry_beta × [1 + (1 - T) × D/E]
+        2. cost_of_equity = risk_free_rate + relevered_beta × equity_risk_premium
+        3. wacc = E/(D+E) × cost_of_equity + D/(D+E) × cost_of_debt × (1 - T)
+        """
+        if not self.use_dynamic_wacc or self.industry_beta is None or self.target_debt_ratio is None:
+            return self.wacc
+
+        t = self.tax_rate_for_beta if self.tax_rate_for_beta is not None else self.tax_rate
+        d_e = self.target_debt_ratio / (1 - self.target_debt_ratio) if self.target_debt_ratio < 1 else 999.0
+
+        # Hamada 公式
+        relevered_beta = self.industry_beta * (1 + (1 - t) * d_e)
+
+        # CAPM
+        rf = self.risk_free_rate if self.risk_free_rate is not None else 0.025
+        erp = self.equity_risk_premium if self.equity_risk_premium is not None else 0.065
+        cost_of_equity = rf + relevered_beta * erp
+
+        # WACC
+        cod = self.cost_of_debt if self.cost_of_debt is not None else 0.04
+        e_ratio = 1 - self.target_debt_ratio
+        d_ratio = self.target_debt_ratio
+        wacc = e_ratio * cost_of_equity + d_ratio * cod * (1 - t)
+
+        return round(wacc, 6)
 
 
 # ─── Comparable ─────────────────────────────────────────────────────────────
