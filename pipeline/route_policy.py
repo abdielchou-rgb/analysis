@@ -22,13 +22,16 @@ import os
 
 logger = logging.getLogger("2hao.route_policy")
 
-# 模式 → 节点 → provider 路由策略（2026-08-30: opencode_go 已损坏，写作任务切 zhipu）
+# 模式 → 节点 → provider 路由策略（2026-09-07 SSOT 修正：事实源 = core/smart_router.py）
+# 注意：provider 注册优先级在 core/smart_router.py（opencode_go=1 免费 → deepseek=2 → zhipu=3 …）。
+# 本文件是"节点级路由策略"——perf 模式把质量红线节点(write/merge/revise/gate_review)显式 pin
+# 到 deepseek，不是因为 opencode_go"损坏"，而是质量红线节点要付费主力保底(2026-09-06 用户指令后)。
 ROUTE_POLICY = {
     "perf": {
-        "write": "deepseek",  # 论点单元写作：DeepSeek（zhipu 429 频繁，切 deepseek 兜底）
-        "skeleton": "deepseek",  # 骨架/大纲：DeepSeek（zhipu 429 兜底）
+        "write": "deepseek",  # 论点单元写作：DeepSeek（质量红线付费保底）
+        "skeleton": "deepseek",  # 骨架/大纲：DeepSeek
         "merge": "deepseek",  # 合并组装：DeepSeek（质量红线）
-        "revise": "deepseek",  # 修订（Gate 反馈）：DeepSeek（zhipu 429 兜底）
+        "revise": "deepseek",  # 修订（Gate 反馈）：DeepSeek
         "gate_review": "deepseek",  # Gate 失败审稿：DeepSeek（双模型对抗）
         "extract": "openrouter",  # 轻量提取/分类：OpenRouter flash
         "prefetch": "agent_provider",  # 后台预取：Marvis 免费
