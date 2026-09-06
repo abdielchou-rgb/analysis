@@ -17,9 +17,12 @@
 - unlisted_company: 26 维
 
 ## LLM Providers（priority 越小越优先）
-- deepseek: 0
-- ollama_local: 0
-- openrouter: 1
+- opencode_go: 1
+- deepseek: 2
+- zhipu: 3
+- openrouter: 4
+- opencode_zen: 5
+- ollama_local: 9
 - agent_provider: 10
 
 ## 阈值来源

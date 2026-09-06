@@ -100,7 +100,8 @@ class SmartRouter:
                 "glm-4v-plus",
                 "glm-4v-flash",
             ],
-            priority=1,
+            # 2026-09-06 用户指令：降为第 3 顺位（opencode_go → deepseek → zhipu）
+            priority=3,
             is_free=False,
             cost_per_1k_tokens=0.5,  # 0.5元/万token
             rate_limit_rpm=60,
@@ -122,8 +123,8 @@ class SmartRouter:
                 "qwen3.6-plus",
                 "qwen3.5-plus",
             ],
-            # 2026-09-04：key 已配置，重新启用。priority 1（与 zhipu 同级，
-            # zhipu 429 限流时作为写作主力替代）。历史 23 次超时是未配 key 时
+            # 2026-09-06 用户指令：LLM 优先用 opencode_go（免费），用完/不可用
+            # 才走 deepseek。priority 1 = 全局最高。历史 23 次超时是未配 key 时
             # 的错误探测——现在 key 有效且实测 7.5s 通。
             priority=1,
             is_free=True,
@@ -142,7 +143,8 @@ class SmartRouter:
                 "meta-llama/llama-3.1-8b-instruct:free",
                 "google/gemma-2-9b-it:free",
             ],
-            priority=2,
+            # 2026-09-06 用户指令：顺延一位（原 2）
+            priority=4,
             is_free=True,
             cost_per_1k_tokens=0.0,
             rate_limit_rpm=20,
@@ -169,7 +171,8 @@ class SmartRouter:
                 "claude-haiku-4.5",
                 "gemini-3.5-flash-lite",
             ],
-            priority=3,
+            # 2026-09-06 用户指令：顺延一位（原 3）
+            priority=5,
             is_free=True,  # 优先使用免费模型
             cost_per_1k_tokens=0.0,
             rate_limit_rpm=30,
@@ -180,7 +183,8 @@ class SmartRouter:
             base_url="https://api.deepseek.com/v1",
             api_key_env="DEEPSEEK_API_KEY",
             models=["deepseek-chat", "deepseek-reasoner"],
-            priority=4,
+            # 2026-09-06 用户指令：opencode_go 用完后第二顺位（原 4）
+            priority=2,
             is_free=False,
             cost_per_1k_tokens=0.27,
             rate_limit_rpm=60,
@@ -400,8 +404,10 @@ class SmartRouter:
                 logger.info("Provider %s credit exhausted ($%.2f remaining)", name, credit.remaining_usd)
                 continue
 
-            # 优先级 1 的 provider（如 Zhipu）始终优先，不受 prefer_free 影响
-            if config.priority == 1:
+            # 前 2 顺位（opencode_go=1 / deepseek=2，2026-09-06 用户指令）
+            # 始终进入候选，不受 prefer_free 影响——"Go 用完后用 deepseek"
+            # 的降级路径不能被免费偏好过滤掉。
+            if config.priority <= 2:
                 candidates.append((config, credit))
             elif prefer_free and not config.is_free:
                 continue
@@ -409,7 +415,7 @@ class SmartRouter:
                 candidates.append((config, credit))
 
         if not candidates:
-            # 如果没有免费 provider，尝试所有可用的（优先级 1 永远优先）
+            # 如果没有免费 provider，尝试所有可用的（前 2 顺位永远优先）
             for name, config in sorted(self._configs.items(), key=lambda x: x[1].priority):
                 api_key = os.environ.get(config.api_key_env, "")
                 if not api_key:
@@ -420,8 +426,8 @@ class SmartRouter:
                 credit = self._credits.get(name)
                 if not config.is_free and credit and credit.remaining_usd < min_credit_usd:
                     continue
-                # 优先级 1 永远加入，不受 free 限制
-                if config.priority == 1:
+                # 前 2 顺位永远加入，不受 free 限制
+                if config.priority <= 2:
                     candidates.append((config, credit))
                 elif prefer_free and not config.is_free:
                     continue
@@ -458,10 +464,16 @@ class SmartRouter:
                 if "reasoner" in model.lower() or "think" in model.lower():
                     return model
 
-        # 写作任务优先使用高质量模型（glm-4.7 > glm-4.6v > glm-4.5-air > glm-4-flash）
+        # 写作任务按 provider 各自的高质量模型优先
         if task_type == "writing":
-            priority_order = ["glm-4.7", "glm-4.6v", "glm-4.5-air", "glm-4-flash", "glm-4-air"]
-            for preferred in priority_order:
+            writing_order = {
+                "opencode_go": ["glm-5.3", "glm-5.2", "qwen3.7-plus", "kimi-k2.6", "deepseek-v4-flash"],
+                "zhipu": ["glm-4.7", "glm-4.6v", "glm-4.5-air", "glm-4-flash", "glm-4-air"],
+                "deepseek": ["deepseek-chat", "deepseek-reasoner"],
+                "openrouter": ["deepseek/deepseek-chat", "qwen/qwen3-turbo"],
+                "opencode_zen": ["deepseek-v4-pro", "gpt-5.6-luna", "big-pickle"],
+            }.get(config.name, [])
+            for preferred in writing_order:
                 for model in config.models:
                     if preferred in model:
                         return model

@@ -164,10 +164,15 @@ REASONER_MODEL = "deepseek-reasoner"
 DEEPSEEK_BASE_URL = "https://api.deepseek.com/v1"
 
 # Provider 优先级常量（2026-08-07 统一语义：数字越小优先级越高，防 R81 语义反转复发）
+# 2026-09-06 用户指令生效后的实际链（事实来源是 core/smart_router.py DEFAULT_CONFIGS）：
+#   opencode_go(1, 免费) → deepseek(2) → zhipu(3) → openrouter(4) → zen(5) → ollama(9) → agent_provider(10)
 PROVIDER_PRIORITY = {
-    "deepseek": 0,  # P0 主力：付费关键链（写作/组装/修订/终审）
-    "openrouter": 1,  # P1 兜底+圆桌：付费降级/异源评审
-    "ollama_local": 0,  # 本地（与 deepseek 同级，可用即用）
+    "opencode_go": 1,  # P0 主力：OpenCode Go 免费套餐，用完/熔断才降级
+    "deepseek": 2,  # P1 第二顺位：opencode_go 不可用时的付费主力
+    "zhipu": 3,  # P2 备用付费
+    "openrouter": 4,  # P3 免费兜底
+    "opencode_zen": 5,  # P4 免费兜底
+    "ollama_local": 9,  # 本地最后手段
     "agent_provider": 10,  # P2 免费预取：仅兜底，绝不抢主链
 }
 
@@ -179,11 +184,12 @@ _registry = ProviderRegistry()
 def _register_default_providers(registry: ProviderRegistry):
     """注册默认 Provider（集成智能路由器）
 
-    优先级：
-    1. OpenCode Go 免费模型（$10/月套餐）
-    2. OpenRouter 免费模型（$10 信用）
-    3. OpenCode Zen 付费模型（$10/月套餐）
-    4. DeepSeek（付费兜底）
+    2026-09-06 用户指令后的优先级：
+    1. OpenCode Go 免费模型（$10/月套餐）— 主力
+    2. DeepSeek（付费）— Go 用完/熔断后第二顺位
+    3. Zhipu（付费备用）
+    4. OpenRouter（免费兜底）
+    5. OpenCode Zen（免费兜底）
     """
     # 使用智能路由器获取配置
     from core.smart_router import get_router
