@@ -1438,7 +1438,17 @@ class E2ENodes:
                 except Exception:
                     pass
             exported = export_report(
-                enriched_text, docx_path, report_type=context.get("report_type"), style=style, title=asset
+                enriched_text,
+                docx_path,
+                report_type=context.get("report_type"),
+                style=style,
+                title=asset,
+                # P1-2（2026-08-01 修复，2026-09-06 接线补漏）：管线层 validate 已完成
+                # IronGate（gate_result，passed=0.866）。此前此处漏传 pipe_gate_result →
+                # export_report 永远落入"独立重跑 IronGate"分支 → enriched_text 带
+                # provenance 注释导致两套 gate 分数不一致 → 高分（0.91）也被误阻断。
+                # 现传 gate 对象：export 复用管线结果，仅当缺失才兜底重跑。
+                pipe_gate_result=context.get("gate_result"),
             )
             context["_docx_path"] = exported
         except Exception as e:
