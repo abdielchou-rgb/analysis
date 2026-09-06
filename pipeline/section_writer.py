@@ -15,6 +15,7 @@ import re
 import sys
 from datetime import datetime
 from pathlib import Path
+from time import perf_counter as _perf_counter
 
 from core import settings
 
@@ -2349,9 +2350,13 @@ class SectionWriter:
         sentiment_str = _inj.get("sentiment_str", "")
 
         # 2. 各组并行写
+        _grp_t0 = _perf_counter()
+        _group_times: dict[str, float] = {}
+
         def _write_group(g):
             gname = g["group_name"]
             dims = g["dimensions"]
+            _t0 = _perf_counter()
             logger.info("[DIM-PARALLEL] 写组 %s (%d维)", gname, len(dims))
             # 取该组维度定义（从 SAC）
             dim_defs = self._build_dimension_defs_for(g["dimensions"])
@@ -2693,6 +2698,8 @@ class SectionWriter:
             # → 0.21 分死锁。组名是结构确定性来源（dimension_grouper 分组）。
             if not _re_has_h2(text):
                 text = f"## {gname}\n\n{text}"
+            _group_times[gname] = round(_perf_counter() - _t0, 1)
+            logger.info("[DIM-PARALLEL][PROFILE] 组 %s 写完: %.1fs (%d字)", gname, _group_times[gname], len(text))
             return gname, text
 
         group_texts = {}
@@ -2723,6 +2730,33 @@ class SectionWriter:
                     import traceback as _tb
 
                     logger.warning("[DIM-PARALLEL] group failed: %s\n%s", str(e)[:300], _tb.format_exc()[-1500:])
+
+        # 2026-09-07 (P0-2 段级 profile)：输出组级耗时分布 + 最慢组告警。
+        # 真实 PROFILE 显示 write_sections 中位 107s / max 2502s——需定位"最慢段"
+        # 才能对症（慢段降档/换 provider），而非给整篇写缓存。
+        _grp_elapsed = round(_perf_counter() - _grp_t0, 1)
+        if _group_times:
+            _sorted = sorted(_group_times.items(), key=lambda x: x[1], reverse=True)
+            _top = ", ".join(f"{k}={v:.0f}s" for k, v in _sorted[:5])
+            logger.info(
+                "[DIM-PARALLEL][PROFILE] 组级总耗时 %.1fs | 最慢组: %s",
+                _grp_elapsed,
+                _top,
+            )
+            _slowest_name, _slowest_s = _sorted[0]
+            try:
+                from core.settings import slow_group_threshold_s
+
+                _slow_th = slow_group_threshold_s()
+            except Exception:
+                _slow_th = 30.0
+            if _slowest_s >= _slow_th:
+                logger.warning(
+                    "[DIM-PARALLEL][PROFILE] 组 %s 耗时 %.1fs ≥%.0fs —— 慢段候选, 下轮可对该组降档/换 provider",
+                    _slowest_name,
+                    _slowest_s,
+                    _slow_th,
+                )
 
         # P1 (2026-09-02): 维度级自愈——空组自动重写（换 provider + 简化 prompt）
         _failed_groups = [g for g in _target_groups if g["group_name"] not in group_texts]
@@ -2770,7 +2804,14 @@ class SectionWriter:
         # 4. 编辑合并：DeepSeek 读所有组输出 → 合成连贯报告（治重复/乱序/补 Bold Call）
         import re as _re_local
 
+        _merge_t0 = _perf_counter()
         merged = self._editor_merge(asset, ordered, _dd_str, draft_provider)
+        _merge_s = round(_perf_counter() - _merge_t0, 1)
+        # 2026-09-07 (P0-2b)：merge 段计时——维度并行后唯一的串行 LLM 段。
+        # 组级都快但总时长仍高时，嫌疑就在这段；>15s 告警。
+        logger.info("[EDITOR][PROFILE] merge 耗时 %.1fs (%d 组 → %d 字)", _merge_s, len(ordered), len(merged))
+        if _merge_s >= 15.0:
+            logger.warning("[EDITOR][PROFILE] merge %.1fs ≥15s —— 串行 LLM 合并偏慢, 后续可评估分桶并行/降档", _merge_s)
         report = self._remove_md_artifacts(merged)
         report = self._inject_report_header(report)
         report = _re_local.sub(r"\{CHART:(\w+)\}", r"![](chart:\1)", report)

@@ -66,6 +66,24 @@ def skeleton_mode() -> bool:
     return _bool("SKELETON_MODE")
 
 
+def research_llm_budget_s() -> float:
+    """research_planner 每轮 LLM 问题生成总预算（秒）。超预算未完成维度回落 v1 模板。
+
+    2026-09-07 真实 PROFILE：research_planner 中位 155s/p90 1219s ——
+    每维度独立调 deepseek 无总预算导致慢。消费方: pipeline/research_planner.question_tree_v2
+    """
+    return max(5.0, _float("RESEARCH_LLM_BUDGET_S", 45.0))
+
+
+def slow_group_threshold_s() -> float:
+    """维度并行写"慢段"判定阈值（秒）。超过则日志告警，供段级 profile 定位最慢组。
+
+    2026-09-07 P0-2：write_sections 中位 107s/max 2502s，需组级耗时区分慢段。
+    消费方: pipeline/section_writer._write_dimension_parallel
+    """
+    return max(5.0, _float("SLOW_GROUP_THRESHOLD_S", 30.0))
+
+
 # ── 写作 ──────────────────────────────────────────────────────
 
 

@@ -475,8 +475,10 @@ class E2ENodes:
 
     @staticmethod
     def research_plan(node_id, context):
-        """P3-B: research_planner v1——确定性研究规划（问题树/冲突前移/追问）。
+        """P3-B: research_planner v2——LLM 问题生成（带共享预算）+ 确定性冲突前移。
 
+        注意（2026-09-07 注释纠偏）：不是"零 LLM"——question_tree_v2 会为各维度
+        调 deepseek 生成研究问题（受 RESEARCH_LLM_BUDGET_S 总预算约束），失败才回退模板。
         输出写入 ctx：research_plan / followup_queries（写作侧可引用）。
         冲突同时前移暴露：让 enrich 修订轮优先解决数据口径矛盾，
         而不是等 Gate 在写作后拦截。
@@ -2117,7 +2119,7 @@ class E2EOrchestratorV2:
                 desc="data sufficiency + local/agent backfill",
             )
             g.add_node("scarcity", E2ENodes.scarcity_signals, deps=["enrich"], desc="scarcity signals")
-            # P3-B: research_planner v1——问题树+冲突前移（零 LLM）
+            # P3-B: research_planner v2——LLM 问题生成(共享预算) + 冲突前移（非"零 LLM"，见节点 docstring）
             g.add_node(
                 "research_planner",
                 E2ENodes.research_plan,

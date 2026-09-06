@@ -8,7 +8,7 @@ v2 升级：问题树从模板匹配升级为 LLM 生成——每维度产出资
 from __future__ import annotations
 
 import logging
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 
 logger = logging.getLogger("2hao.research_planner")
 
@@ -131,42 +131,101 @@ def question_tree_v2(
     report_type: str = "",
     data_context: dict | None = None,
     use_llm: bool = True,
+    llm_budget_s: float | None = None,
 ) -> list[dict]:
     """v2 问题树：优先 LLM 生成，回退 v1 模板。
 
     use_llm=False 或 LLM 失败时自动降级到模板版。
-    """
-    # 骨架模式或无 LLM key → 直接走模板
-    import os
 
+    2026-09-07（真实 PROFILE 驱动）：新增 llm_budget_s 共享总预算——
+    6 路并行下若各维度独立无限等 deepseek，单轮可达 155s 中位/20min max。
+    超预算后未完成维度一律回落 v1 模板，绝不让单维度把整轮拖死。
+    """
+    import os
+    import time as _time
+
+    if llm_budget_s is None:
+        try:
+            from core.settings import research_llm_budget_s
+
+            llm_budget_s = research_llm_budget_s()
+        except Exception:
+            llm_budget_s = 45.0
+
+    # 骨架模式或无 LLM key → 直接走模板
     if not use_llm or not os.environ.get("DEEPSEEK_API_KEY"):
         return question_tree(dims)
 
-    tree = []
     dc = data_context or {}
+    tree: list[dict] = []
+    _deadline = _time.monotonic() + max(5.0, float(llm_budget_s))
 
-    def _process_dim(dim):
-        """为单个维度生成问题（供并行调用）"""
-        llm_qs = _llm_generate_questions(asset, dim, report_type, dc)
-        if llm_qs:
-            return {"dim": dim, "questions": llm_qs, "source": "llm"}
-        fallback = question_tree([dim])
-        if fallback:
-            return fallback[0]
+    def _template_for(dim: str) -> dict:
+        fb = question_tree([dim])
+        if fb:
+            return fb[0]
         return {
             "dim": dim,
             "questions": [
                 f"{dim}：当前事实与数据支撑是什么？",
                 f"{dim}：市场共识与本报告的分歧点在哪？",
             ],
+            "source": "template",
         }
 
-    with ThreadPoolExecutor(max_workers=6) as pool:
-        futures = {pool.submit(_process_dim, dim): dim for dim in (dims or [])}
-        for fut in as_completed(futures):
-            tree.append(fut.result())
+    def _process_dim(dim):
+        """为单个维度生成问题（供并行调用）——LLM 失败/异常即回落模板。"""
+        if _time.monotonic() > _deadline:
+            return _template_for(dim)  # 预算已尽，不再发起 LLM
+        try:
+            llm_qs = _llm_generate_questions(asset, dim, report_type, dc)
+            if llm_qs:
+                return {"dim": dim, "questions": llm_qs, "source": "llm"}
+        except Exception as _e:
+            logger.debug("[RQ] dim=%s LLM 异常回落模板: %s", dim, str(_e)[:60])
+        return _template_for(dim)
 
-    return tree
+    dims = list(dims or [])
+    if not dims:
+        return []
+
+    from concurrent.futures import FIRST_COMPLETED, Future, wait
+
+    pool = ThreadPoolExecutor(max_workers=min(6, len(dims)))
+    futures: dict[Future, str] = {pool.submit(_process_dim, d): d for d in dims}
+    pending = set(futures)
+    try:
+        # 预算有界等待：每轮只等"剩余预算"内最先完成的 future；
+        # 预算耗尽即 break，主线程总等待 ≈ llm_budget_s（不让慢 LLM 拖死整轮）。
+        while pending:
+            remaining = _deadline - _time.monotonic()
+            if remaining <= 0:
+                break
+            done, pending = wait(pending, timeout=remaining, return_when=FIRST_COMPLETED)
+            for fut in done:
+                tree.append(fut.result())
+        if pending:
+            logger.warning(
+                "[RQ] LLM 问题生成超总预算 %.1fs，%d 个维度回落 v1 模板",
+                llm_budget_s,
+                len(pending),
+            )
+            for f in pending:
+                f.cancel()
+    finally:
+        # 关键：wait=False——已启动的慢线程在后台自行结束，不阻塞主流程。
+        # 否则 `with` 的 shutdown(wait=True) 会让预算熔断形同虚设。
+        pool.shutdown(wait=False, cancel_futures=True)
+
+    # 补齐未完成维度（cancel 掉的 future 不会出现在 tree）
+    _done_dims = {n.get("dim") for n in tree if isinstance(n, dict)}
+    for d in dims:
+        if d not in _done_dims:
+            tree.append(_template_for(d))
+
+    # 保持原 dims 顺序（树结构确定性，便于测试/Gate）
+    _by_dim = {n.get("dim"): n for n in tree if isinstance(n, dict)}
+    return [_by_dim[d] for d in dims if d in _by_dim]
 
 
 # ── 冲突检测（不变） ─────────────────────────────────────────
