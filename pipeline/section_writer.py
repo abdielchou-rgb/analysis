@@ -2344,6 +2344,9 @@ class SectionWriter:
         market_seg_str = _inj["market_seg_str"]
         analogy_str = _inj["analogy_str"]
         mkb_str = _inj["mkb_str"]
+        # Phase E（2026-09-06）：KG-lite 同业图谱，竞争格局段落弹药
+        kg_peers_str = _inj.get("kg_peers_str", "")
+        sentiment_str = _inj.get("sentiment_str", "")
 
         # 2. 各组并行写
         def _write_group(g):
@@ -2488,6 +2491,12 @@ class SectionWriter:
                 + (f"## 哈佛分析框架（按四步展开财务章节）\n{hf_str[:1200]}\n\n" if hf_str else "")
                 + (f"## 反向DCF/市场隐含预期（引用到估值章节，判断预期差）\n{rdcf_str[:1000]}\n\n" if rdcf_str else "")
                 + (f"## 催化剂日历（引用到催化剂/风险章节，未来4季度时间轴）\n{cat_str[:1000]}\n\n" if cat_str else "")
+                # Phase E（2026-09-06）：KG-lite 同业图谱查询→竞争格局段落，需同行至少 3 家名单
+                + (
+                    f"## 同业名单（知识图谱 2-hop，竞争格局/可比估值段落必须引用其中 3 家以上）\n{kg_peers_str[:600]}\n\n"
+                    if kg_peers_str
+                    else ""
+                )
                 + (f"## 多空逻辑表（Bull/Bear，引用到核心判断/风险章节）\n{bb_str[:1000]}\n\n" if bb_str else "")
                 + (f"## 非上市反向定价 + 里程碑时间轴（引用到估值/退出章节）\n{ur_str[:900]}\n\n" if ur_str else "")
                 + (
@@ -2504,6 +2513,12 @@ class SectionWriter:
                 + (
                     f"## 玩家清单完整性提示（品牌映射/集团归属修正，写作时避免口径混淆）\n{us_str[:700]}\n\n"
                     if us_str
+                    else ""
+                )
+                # Phase E（2026-09-06）：舆情/资金情绪信号——引用到资金面/催化剂/风险章节
+                + (
+                    f"## 舆情情绪与资金流向（引用到资金面/催化剂章节，散户/主力情绪量化）\n{sentiment_str[:600]}\n\n"
+                    if sentiment_str
                     else ""
                 )
                 + (

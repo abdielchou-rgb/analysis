@@ -145,6 +145,28 @@ class ComputeEngine:
     def compute(self, financial_data: dict, report_type: str = "listed_company") -> dict:
         result = {"status": "incomplete"}
 
+        # Phase C（2026-09-06）：采集边界数据契约校验——单位/口径/来源元数据。
+        # 违规不阻断（走降级语义），但记录进 result 供写作 prompt/Gate 感知。
+        try:
+            from core.data_contract import DataContract
+
+            _contract = DataContract().validate_chart_data(
+                (financial_data or {}).get("chart_data", {}) if isinstance(financial_data, dict) else {}
+            )
+            if _contract.violations:
+                result["data_contract"] = {
+                    "status": "violations",
+                    "summary": _contract.summary(),
+                }
+                logger.info(
+                    "[DATA-CONTRACT] %d 项违规（口径/元数据），已记录供下游感知",
+                    len(_contract.violations),
+                )
+            else:
+                result["data_contract"] = {"status": "ok", "n_fields": len(_contract.fields)}
+        except Exception as _ce:
+            logger.debug("[DATA-CONTRACT] 校验跳过: %s", str(_ce)[:80])
+
         # Path 1: V30 StructuredData
         structured = self._build_v30_structured(financial_data)
         if structured and structured.financials:

@@ -503,6 +503,33 @@ class E2ENodes:
                 "research_plan": r,
                 "followup_queries": r.get("followup_queries", []),
             }
+            # Phase E（2026-09-06）：MECE 假设树 → 采集覆盖矩阵 → 未验证清单。
+            # hypothesis_coverage 进 ctx 供写作/Gate 消费；未验证假设附录
+            # 由 assemble 兜底注入（幂等），此处只产数据不产文本。
+            try:
+                from core.intent_bridge import build_hypothesis_plan
+
+                _hp = build_hypothesis_plan(
+                    asset=context.get("asset", ""),
+                    report_type=context.get("report_type", "listed_company"),
+                    collected_data=context.get("collected_data", {}) or {},
+                )
+                if _hp.get("status") == "ok":
+                    out["hypothesis_plan"] = _hp
+                    out["hypothesis_coverage"] = _hp.get("coverage")
+                    _cd_h = context.setdefault("collected_data", {})
+                    if isinstance(_cd_h, dict):
+                        _cd_h["_hypothesis_plan"] = {
+                            "coverage": _hp.get("coverage"),
+                            "unverifiable_n": len(_hp.get("unverifiable", [])),
+                        }
+                        logger.info(
+                            "[HYPOTHESIS] 覆盖率 %s（未验证 %d 项假设）",
+                            _hp.get("coverage"),
+                            len(_hp.get("unverifiable", [])),
+                        )
+            except Exception as _hpe:
+                logger.debug("[HYPOTHESIS] intent_bridge skip: %s", str(_hpe)[:80])
             # P3-B 接线：把研究问题摘要写入 collected_data，
             # 让 section_writer 的注入器可消费（否则只 log 不影响写作）。
             _cd = context.get("collected_data", {}) or {}
@@ -1101,6 +1128,31 @@ class E2ENodes:
                     )
         except Exception as _e_a3:
             logger.debug("[A3] 证据附录注入失败: %s", str(_e_a3)[:100])
+
+        # Phase E（2026-09-06）：认知边界附录——未验证假设诚实留白（幂等）。
+        # 数据源: research_plan 节点写入 collected_data 的 hypothesis_plan。
+        try:
+            if "认知边界（未验证假设" not in final:
+                _cd_hp = context.get("collected_data", {}) or {}
+                _plan_raw = _cd_hp.get("_hypothesis_plan_full") if isinstance(_cd_hp, dict) else None
+                if not _plan_raw:
+                    from core.intent_bridge import build_hypothesis_plan, format_unverifiable_appendix
+
+                    _hp = build_hypothesis_plan(
+                        asset=context.get("asset", ""),
+                        report_type=context.get("report_type", "listed_company"),
+                        collected_data=_cd_hp,
+                    )
+                else:
+                    from core.intent_bridge import format_unverifiable_appendix
+
+                    _hp = _plan_raw
+                _appendix = format_unverifiable_appendix(_hp)
+                if _appendix:
+                    final = final.rstrip() + "\n\n---\n\n" + _appendix
+                    logger.info("[E] 认知边界附录已注入（%d 项未验证假设）", len(_hp.get("unverifiable", [])))
+        except Exception as _e_hp:
+            logger.debug("[E] 认知边界附录跳过: %s", str(_e_hp)[:100])
 
         # S6-3: 合规条款自动附加（替代 LLM 生成的免责——R42 已删 AI 免责）
         try:

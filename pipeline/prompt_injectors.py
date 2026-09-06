@@ -78,6 +78,39 @@ def _inj_ac_str(ctx):
     return ""
 
 
+def _inj_kg_peers_str(ctx):
+    """Phase E（2026-09-06）：KG-lite 同业图查询——竞争维度写作弹药。
+
+    数据源: core/kg_lite.py（SQLite 图谱，5556 公司 + 335 行业种子）。
+    BELONGS_TO 边由 data 节点在采集后写入（同业成员按行业归属），
+    此处做 2-hop 查询给竞争格局段落供同业名单。
+    """
+    try:
+        from core.kg_lite import KG
+
+        code = "".join(c for c in str(ctx.get("asset_code") or ctx.get("asset", "")) if c.isdigit())[:6]
+        if len(code) != 6:
+            return ""
+        kg = KG()
+        if not kg._has_data():
+            kg.seed_from_data_assets()
+        peers = kg.same_industry_peers(code, limit=8)
+        if not peers:
+            return ""
+        peer_names = [p.get("name", "") for p in peers if p.get("name")][:8]
+        peer_codes = [p.get("id", "").replace("company:", "") for p in peers][:8]
+        lines = ["【同业名单（知识图谱 2-hop 查询）】"]
+        lines.append("以下公司与本标的同属一个行业板块，竞争格局/可比估值分析应至少覆盖其中 3 家：")
+        for n, c in zip(peer_names, peer_codes):
+            if n:
+                lines.append(f"- {n}（{c}）")
+        lines.append("若上述名单与正文行业分类冲突，以正文采集数据为准并注明差异。")
+        return "\n".join(lines)
+    except Exception as _e:
+        logger.debug("[KG-PEERS] %s", _e)
+    return ""
+
+
 _METHODOLOGY_TOPIC_MAP = {
     "industry_deep": [
         "industry_lifecycle",
@@ -806,6 +839,7 @@ INJECTORS = [
     ("market_seg_str", _inj_market_seg_str),
     ("analogy_str", _inj_analogy_str),
     ("sentiment_str", _inj_sentiment_str),
+    ("kg_peers_str", _inj_kg_peers_str),
 ]
 
 
