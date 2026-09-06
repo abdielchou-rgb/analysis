@@ -3469,41 +3469,17 @@ class SectionWriter:
                 insert_pos = m.end()
                 text = text[:insert_pos] + "（数据支撑：见上文财务数据表）" + text[insert_pos:]
 
-        # 6. 数值百分比上下文——仅对"孤立裸 %"补业务含义
-        # 2026-09-06 修复（茅台 E2E 实测 57 处污染）：旧逻辑对评级定义表等任何
-        # 未被 30 字内业务词跟随的 % 都插注解，把"涨幅15%以上"插成
-        # "涨幅15%（此水平较同业中位数明显领先，验证成本优势传导）以上"，
-        # 把区间"5%-15%"拆成"5%（…注解）15%"——污染正文 + 拆烂数值区间
-        # （触发 indicator_consistency 误报 + template_phrases 模板污染）。
-        # 新策略三重防护：① 表格行（| 开头）不处理（评级/假设表是 boilerplate）；
-        # ② % 后 40 字内已有业务含义/区间延续词不处理；
-        # ③ % 后已有括注注解不重复补。仍命中才补短注解（不带结论套话）。
+        # 6. 数值百分比上下文——已禁用（2026-09-06 茅台 E2E 两次实测）。
+        # 事故链：ff02378 引入"裸 % 后补业务含义注解"，初版 5 种结论套话轮换 →
+        # 评级表"涨幅15%以上"变"15%（较同业领先…）以上"、区间 5%-15% 被拆烂，
+        # 全报告 57 处污染（template_phrases error + indicator_consistency 误报）。
+        # 收紧守卫（跳表格行/后 45 字业务词/前 20 字含义/后随括注）重跑后仍注入
+        # 59 处——validate 对整个 final_text（含证据附录 [注N] 密集 % 行）执行本
+        # 函数，附录行非 | 开头，守卫拦不住。根因：事后正则补义必然复读。
+        # 结论：净负收益，彻底禁用。数值含义由 LLM 写作与其余 gate 保障；
+        # 残留复读由 template_blacklist.ANNOTATION_REPEAT 拦截（≥4 即 error）。
         if patch_chain:
-            _ann = "（该指标处同期行业/历史中上位）"
-            _follow_biz = re.compile(
-                r"^[^。；\n]{0,40}(增速|占比|毛利率|净利率|ROE|ROIC|市占率|份额|渗透率|增长|下降|提升|承压|波动|变化|以上|区间|中枢)"
-            )
-
-            def _add_pct_context(_line, m):
-                _after = _line[m.end() : m.end() + 45]
-                if _follow_biz.match(_after):
-                    return m.group(0)  # 后接业务词/区间延续 → 不动
-                if "（" in _after:
-                    return m.group(0)  # 后随括注 → 不动
-                _before = _line[max(0, m.start() - 20) : m.start()]
-                if re.search(
-                    r"(增速|占比|毛利率|净利率|ROE|ROIC|市占率|份额|渗透率|增长|涨幅|降幅|中枢|区间|率)", _before
-                ):
-                    return m.group(0)  # 前文已给业务含义 → 不动（如"增速转负至-5%"）
-                return m.group(0) + _ann
-
-            _lines_out = []
-            for _ln in text.split("\n"):
-                if _ln.lstrip().startswith("|"):
-                    _lines_out.append(_ln)  # 表格行不处理
-                    continue
-                _lines_out.append(re.sub(r"\d+\.?\d*%", lambda m: _add_pct_context(_ln, m), _ln))
-            text = "\n".join(_lines_out)
+            pass
 
         return text
 

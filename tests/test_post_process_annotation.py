@@ -7,8 +7,10 @@
 "5%-15%"拆烂——全报告 57 处机械注解污染（template_phrases error）+
 数值区间拆烂（indicator_consistency 误报）。
 
-修复后策略：表格行不处理 / 后 45 字有业务词不处理 / 后随括注不处理 /
-前 20 字已有业务含义不处理。仅真正的孤立裸 % 才补短注解。
+修复过程：先收紧守卫（跳表格行/后 45 字业务词/前 20 字含义）重跑仍注入 59 处
+——validate 对整个 final_text（含证据附录 [注N] 密集 % 行）执行本函数，附录行
+非 | 开头守卫拦不住。结论：事后正则补义必然复读 → 步骤 6 彻底禁用（identity）。
+残留复读由 template_blacklist.ANNOTATION_REPEAT 拦截（≥4 即 error）。
 """
 
 import sys
@@ -62,3 +64,17 @@ class TestPctAnnotationGuard:
         out = _post(t)
         r = scan(out)
         assert r["total_exact"] == 0, f"不应产生模板注解: {r['exact_hits']}"
+
+    def test_disabled_step6_is_identity(self):
+        """步骤 6 已彻底禁用——任何输入（含裸 %、附录密集 % 行）都不注入注解。"""
+        # 证据附录 [注N] 行形态（非 | 开头，密集 % 值）——此前二次污染的元凶
+        appendix_line = "[注1] 数据键 fig_margin｜论断：毛利率稳定在82.23%(A)-87.79%区间。"
+        assert _post(appendix_line) == appendix_line
+        # 纯裸 % 也不再补
+        bare = "毛利率提升到92.23%，显著领先同业。"
+        assert _post(bare) == bare
+        # 整篇不再产生任何黑名单注解短语
+        from core.template_blacklist import ANNOTATION_REPEAT
+
+        out = _post(appendix_line + "\n" + bare)
+        assert not any(p in out for p in ANNOTATION_REPEAT)
