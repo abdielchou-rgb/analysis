@@ -116,11 +116,11 @@ def run_pipeline(
                 # 此前降级为 warning 继续——安全带从不锁死。
                 result["status"] = "error"
                 result["error"] = f"Harness P0 检查失败: {', '.join(p0_failed)}"
-                print(f"  ✗ 阻断: {result['error']}")
+                print(f"  [X] 阻断: {result['error']}")
                 return result
             logger.warning("Harness 验证未完全通过（仅 P1 警告），继续执行")
         else:
-            print(f"  ✓ Harness: {len(h.checks)} 项检查通过 ({h.duration_ms:.0f}ms)")
+            print(f"  [OK] Harness: {len(h.checks)} 项检查通过 ({h.duration_ms:.0f}ms)")
     except Exception as e:
         logger.warning(f"Harness 验证跳过: {e}")
 
@@ -139,12 +139,12 @@ def run_pipeline(
     pipe_result = orchestrator.run()
     elapsed = (datetime.now() - t0).total_seconds()
     result["pipeline_time_s"] = round(elapsed, 1)
-    print(f"  ⏱ Pipeline: {elapsed:.1f}s")
+    print(f"  [Pipeline] {elapsed:.1f}s")
 
     if pipe_result.get("error") or pipe_result.get("status") == "error":
         result["status"] = "error"
         result["error"] = pipe_result.get("error", "管线执行错误")
-        print(f"  ✗ 管线失败: {result['error']}")
+        print(f"  [X] 管线失败: {result['error']}")
         return result
 
     report_text = pipe_result.get("report_text", "") or pipe_result.get("final_text", "")
@@ -166,7 +166,7 @@ def run_pipeline(
     result["gate_score"] = round(gate_result.overall_score, 3)
     result["gate_checks"] = gate_result.to_dict()
     print(
-        f"  IronGate: {'✓ 通过' if gate_result.passed else '✗ 阻断'} "
+        f"  IronGate: {'[OK] 通过' if gate_result.passed else '[X] 阻断'} "
         f"(score={result['gate_score']:.2f}, "
         f"{len(gate_result.failures)} issues)"
     )
@@ -255,7 +255,7 @@ def run_pipeline(
         result["error"] = result.get("gate_error", "Iron Gate 未通过，报告未交付")
     print(f"\n{'=' * 60}")
     print(f"  完成: {result['status']}")
-    print(f"  Gate: {'✓' if result.get('gate_passed') else '✗'} score={result.get('gate_score', 'N/A')}")
+    print(f"  Gate: {'[OK]' if result.get('gate_passed') else '[X]'} score={result.get('gate_score', 'N/A')}")
     for k in ["md", "docx"]:
         if result.get(k):
             print(f"  {k.upper()}: {result[k]}")
