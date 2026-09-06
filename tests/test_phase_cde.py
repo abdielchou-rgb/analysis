@@ -181,3 +181,23 @@ class TestKGLite:
         with_kg = kg.industry_baseline("白酒")
         # 种子数据板块名不一定含"白酒"（SW 分类），容错：找到或 None 均可
         assert with_kg is None or "meta" in with_kg
+
+
+class TestPeerInjector:
+    """Phase E：同业名单注入器——竞争维度写作弹药（真实 peer_valuation 数据）。"""
+
+    def test_returns_peers_for_maotai(self):
+        from pipeline.prompt_injectors import _inj_kg_peers_str
+
+        out = _inj_kg_peers_str({"asset": "贵州茅台", "asset_code": "600519"})
+        assert out and "600519" not in out.replace("600519", "")  # 自查无本标的
+        # 白酒同业应包含至少 3 家可识别成员
+        known = ["酒鬼酒", "五粮液", "舍得酒业", "洋河股份", "泸州老窖", "今世缘", "古井贡酒", "水井坊", "山西汾酒"]
+        assert sum(1 for k in known if k in out) >= 3
+
+    def test_empty_for_unknown_code(self):
+        from pipeline.prompt_injectors import _inj_kg_peers_str
+
+        assert _inj_kg_peers_str({"asset": "X", "asset_code": "000000"}) == ""
+        assert _inj_kg_peers_str({"asset": "X", "asset_code": ""}) == ""
+        assert _inj_kg_peers_str({}) == ""

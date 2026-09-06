@@ -79,31 +79,54 @@ def _inj_ac_str(ctx):
 
 
 def _inj_kg_peers_str(ctx):
-    """Phase E（2026-09-06）：KG-lite 同业图查询——竞争维度写作弹药。
+    """Phase E（2026-09-06）：同业名单——竞争维度写作弹药。
 
-    数据源: core/kg_lite.py（SQLite 图谱，5556 公司 + 335 行业种子）。
-    BELONGS_TO 边由 data 节点在采集后写入（同业成员按行业归属），
-    此处做 2-hop 查询给竞争格局段落供同业名单。
+    主数据源: data/peer_valuation.json——现成同业映射（1300 家 A 股全覆盖，
+    akshare 行业板块成分实时抓取产物，600519→15 家白酒同业含 PE/PB/市值）。
+    KG-lite 图谱为 fallback（行业名归一较脆，覆盖率有限）。
     """
     try:
-        from core.kg_lite import KG
+        import json as _json
+        from pathlib import Path as _Path
 
         code = "".join(c for c in str(ctx.get("asset_code") or ctx.get("asset", "")) if c.isdigit())[:6]
         if len(code) != 6:
             return ""
-        kg = KG()
-        if not kg._has_data():
-            kg.seed_from_data_assets()
-        peers = kg.same_industry_peers(code, limit=8)
-        if not peers:
+        _ROOT = _Path(__file__).resolve().parent.parent
+        _pv_path = _ROOT / "data" / "peer_valuation.json"
+        if not _pv_path.exists():
             return ""
-        peer_names = [p.get("name", "") for p in peers if p.get("name")][:8]
-        peer_codes = [p.get("id", "").replace("company:", "") for p in peers][:8]
-        lines = ["【同业名单（知识图谱 2-hop 查询）】"]
+        _pv = _json.loads(_pv_path.read_text(encoding="utf-8"))
+        _entry = _pv.get(code)
+        if not (isinstance(_entry, dict) and _entry.get("peers")):
+            # fallback: KG-lite 图谱 2-hop
+            from core.kg_lite import KG
+
+            kg = KG()
+            if not kg._has_data():
+                kg.seed_from_data_assets()
+            peers = kg.same_industry_peers(code, limit=8)
+            if not peers:
+                return ""
+            peer_names = [p.get("name", "") for p in peers if p.get("name")][:8]
+            peer_codes = [p.get("id", "").replace("company:", "") for p in peers][:8]
+            lines = ["【同业名单（知识图谱 2-hop 查询）】"]
+            lines.append("以下公司与本标的同属一个行业板块，竞争格局/可比估值分析应至少覆盖其中 3 家：")
+            for n, c in zip(peer_names, peer_codes):
+                if n:
+                    lines.append(f"- {n}（{c}）")
+            return "\n".join(lines)
+
+        peers = _entry.get("peers", [])[:8]
+        _ind = _entry.get("industry", "")
+        lines = [f"【同业名单（行业={_ind}，peer_valuation 实时板块成分）】"]
         lines.append("以下公司与本标的同属一个行业板块，竞争格局/可比估值分析应至少覆盖其中 3 家：")
-        for n, c in zip(peer_names, peer_codes):
-            if n:
-                lines.append(f"- {n}（{c}）")
+        for p in peers:
+            if not (isinstance(p, dict) and p.get("name")):
+                continue
+            _pe = p.get("pe_ttm")
+            _pe_s = f"，PE {_pe:.0f}x" if isinstance(_pe, (int, float)) else ""
+            lines.append(f"- {p.get('name')}（{p.get('code', '')}）{_pe_s}")
         lines.append("若上述名单与正文行业分类冲突，以正文采集数据为准并注明差异。")
         return "\n".join(lines)
     except Exception as _e:
