@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "description": "固定报告评测集（mini-GEPA 双版本对照载体）。只收录当前管线世代交付的报告——即含证据账本+认知边界附录的 Phase A-E 产物。每次交付新报告后追加；旧世代快照不入集（否则确定性断言 Q2/Q3 恒 fail，失去回归意义）。",
+  "pipeline_contract": ["evidence_ledger", "cognitive_boundary", "engine_ib_locked"],
+  "reports": [
+    {"file": "output/贵州茅台_cicc.md", "asset": "贵州茅台", "report_type": "listed_company"}
+  ]
+}

@@ -203,4 +203,5 @@ output/*.db
 # Eval runtime artifacts (Phase B3) — rubric history + calibration are generated, not source
 eval/history/
 eval/calibration.json
+eval/runs/
 service/*.db-journal
