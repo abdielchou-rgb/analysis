@@ -50,14 +50,32 @@ class Asset:
 
 
 def _load_name_map() -> dict:
-    """加载名称→代码映射（带缓存）。"""
+    """加载 A 股名称↔代码映射，统一为 code→name 规范形态（带缓存）。
+
+    2026-09-06 修复：data/a_stock_name_map.json 实际是 name→code
+    （"贵州茅台": "600519"），但历史代码假设 code→name。此处做方向探测并
+    归一化：返回 {code: name}，下游正查（code→name）/反查（name→code）
+    无需再关心文件原始方向。
+    """
     global _NAME_MAP_CACHE
     if _NAME_MAP_CACHE is not None:
         return _NAME_MAP_CACHE
     path = _ROOT / "data" / "a_stock_name_map.json"
     try:
         if path.exists():
-            _NAME_MAP_CACHE = json.loads(path.read_text(encoding="utf-8"))
+            raw = json.loads(path.read_text(encoding="utf-8"))
+            if not isinstance(raw, dict):
+                raw = {}
+            # 方向探测：若键是中文名、值 6 位数字 → name→code，反转为 code→name
+            sample_key = next(iter(raw), "")
+            sample_val = raw.get(sample_key, "")
+            if isinstance(sample_key, str) and re.fullmatch(r"\d{6}", sample_key) and isinstance(sample_val, str):
+                canon = {sample_key: sample_val for sample_key, sample_val in raw.items()}
+            elif isinstance(sample_val, str) and re.fullmatch(r"\d{6}", sample_val):
+                canon = {str(v): str(k) for k, v in raw.items()}
+            else:
+                canon = {str(k): str(v) for k, v in raw.items() if isinstance(v, str) and isinstance(k, str)}
+            _NAME_MAP_CACHE = canon
         else:
             _NAME_MAP_CACHE = {}
     except Exception:

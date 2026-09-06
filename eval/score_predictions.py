@@ -36,14 +36,18 @@ def _find_records() -> list[dict]:
         _ANALYST_ROOT / "track_record.json",
         _ANALYST_ROOT / "output" / "track_record.json",
         _ANALYST_ROOT / "data" / "track_record.json",
+        # Phase B3 集成修复（2026-09-06）：forward_picks 是预测记录真实落盘位置
+        _ANALYST_ROOT / "core" / "data" / "forward_picks" / "track_record.json",
+        _ANALYST_ROOT / "core" / "data" / "forward_picks" / "track_record_clean.json",
     ]
     for p in candidates:
         if p.exists():
             try:
                 data = json.loads(p.read_text(encoding="utf-8"))
-                # 兼容 {"records": [...]} 或裸 list
+                # 兼容 {"records": [...]} / {"predictions": [...]} / 裸 list
                 if isinstance(data, dict):
                     data = data.get("records") or data.get("predictions") or []
+                # 兼容 {"analyst_name", "predictions"} + id 形态
                 return [r for r in data if isinstance(r, dict)]
             except (json.JSONDecodeError, UnicodeDecodeError) as e:
                 logger.warning("record 文件损坏 %s: %s", p, e)
@@ -56,7 +60,22 @@ def _parse_date(s) -> datetime | None:
     try:
         return datetime.fromisoformat(str(s)[:19])
     except ValueError:
-        return None
+        # 兼容纯日期 "2026-07-31"
+        try:
+            return datetime.fromisoformat(str(s)[:10] + "T00:00:00")
+        except ValueError:
+            return None
+
+
+def _asset_to_code(name: str) -> str:
+    """中文资产名 → A 股 6 位代码（复用统一解析层）。失败返回原名。"""
+    try:
+        from core.asset_resolver import resolve_asset
+
+        r = resolve_asset(name)
+        return r.code if getattr(r, "has_code", False) and r.code else name
+    except Exception:
+        return name
 
 
 def _fetch_price_history(ticker: str, start: str, end: str) -> list[tuple[str, float]] | None:
@@ -90,9 +109,17 @@ def score_predictions(horizon_days: int = 30) -> dict:
     checked, direction_hits, direction_total, errors = [], 0, 0, []
 
     for rec in records:
-        made_at = _parse_date(rec.get("timestamp") or rec.get("date") or rec.get("created_at"))
-        ticker = str(rec.get("ticker") or rec.get("asset") or rec.get("code") or "")
-        target_price = rec.get("target_price") or rec.get("prediction_price")
+        made_at = _parse_date(rec.get("timestamp") or rec.get("date") or rec.get("created_at") or rec.get("made_date"))
+        ticker = str(rec.get("ticker") or rec.get("asset") or rec.get("code") or rec.get("stock_code") or "")
+        # 兼容 track_record 形态：target_price 可能是空串/含逗号字符串
+        _tp = rec.get("target_price") or rec.get("prediction_price")
+        try:
+            target_price = float(str(_tp).replace(",", "")) if _tp not in (None, "") else None
+        except (ValueError, TypeError):
+            target_price = None
+        # A 股资产名 → 代码解析（track_record 存中文名，akshare 需 6 位代码）
+        if ticker and not (ticker.isdigit() and len(ticker) == 6):
+            ticker = _asset_to_code(ticker)
         if not (made_at and ticker and isinstance(target_price, (int, float)) and target_price > 0):
             continue
         if now < made_at + timedelta(days=horizon_days):

@@ -199,3 +199,8 @@ core/data/forward_picks/track_record_clean.json
 service/research_tasks.db
 data/kg_lite.db
 output/*.db
+
+# Eval runtime artifacts (Phase B3) — rubric history + calibration are generated, not source
+eval/history/
+eval/calibration.json
+service/*.db-journal
