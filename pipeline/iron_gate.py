@@ -768,13 +768,15 @@ class IronGate(
 
             # Add V2 results as checks
             for layer_result in result.layers:
+                # T3 (2026-09-07) 门禁分层: v2 是 advisor 非 gate——
+                # severity 恒为 warning，永不参与 error-mean 门禁判定。
                 self.checks.append(
                     GateCheckResult(
                         name=f"v2_{layer_result.layer}",
                         passed=layer_result.passed,
                         score=layer_result.score,
                         details="; ".join(layer_result.issues[:3]),
-                        severity="error" if layer_result.score < 0.5 else "warning",
+                        severity="warning",
                     )
                 )
 
@@ -789,7 +791,7 @@ class IronGate(
                     passed=False,
                     score=0.0,
                     details=f"V2 import failed: {e}",
-                    severity="error",
+                    severity="warning",  # T3: advisor 缺位不阻断门禁
                 )
             )
         except Exception as e:
@@ -802,7 +804,7 @@ class IronGate(
                     passed=False,
                     score=0.0,
                     details=f"V2 execution failed: {e}",
-                    severity="error",
+                    severity="warning",  # T3: advisor 异常不阻断门禁
                 )
             )
 

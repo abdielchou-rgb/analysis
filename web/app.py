@@ -642,7 +642,7 @@ async def track_record(request: Request):
         tm = TrackRecordManager()
         summary = tm.get_public_summary()
     except Exception as e:
-        summary = {"error": str(e), "total_calls": 0, "directional_accuracy": 0, "avg_pnl_pct": 0, "calls": []}
+        summary = {"error": str(e), "total_calls": 0, "directional_accuracy": 0, "avg_pnl_pct": None, "calls": []}
 
     return templates.TemplateResponse("track_record.html", {"request": request, "summary": summary})
 
@@ -700,6 +700,7 @@ async def metrics():
 # S7-1: 工作台路由
 # ═══════════════════════════════════════════════
 
+
 @app.get("/workbench", response_class=HTMLResponse)
 async def workbench(request: Request):
     """工作台首页：任务管理、状态总览、快速操作。"""
@@ -709,6 +710,7 @@ async def workbench(request: Request):
 # ═══════════════════════════════════════════════
 # S7-2: 批次状态 API
 # ═══════════════════════════════════════════════
+
 
 @app.get("/api/batches")
 async def list_batches():
@@ -740,17 +742,24 @@ async def get_batch(batch_id: str):
 # S7-4: 人工审核路由（Human-in-the-Loop）
 # ═══════════════════════════════════════════════
 
+
 @app.post("/api/review/{job_id}/approve")
 async def approve_job(job_id: str):
     """人工批准：允许报告继续导出。"""
     review_dir = Path(__file__).resolve().parent.parent / "data" / "reviews"
     review_dir.mkdir(parents=True, exist_ok=True)
     fp = review_dir / f"{job_id}.json"
-    fp.write_text(json.dumps({
-        "job_id": job_id,
-        "decision": "approved",
-        "timestamp": datetime.now().isoformat(),
-    }, ensure_ascii=False), encoding="utf-8")
+    fp.write_text(
+        json.dumps(
+            {
+                "job_id": job_id,
+                "decision": "approved",
+                "timestamp": datetime.now().isoformat(),
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
     return {"status": "approved", "job_id": job_id}
 
 
@@ -760,12 +769,18 @@ async def reject_job(job_id: str, reason: str = Form(...)):
     review_dir = Path(__file__).resolve().parent.parent / "data" / "reviews"
     review_dir.mkdir(parents=True, exist_ok=True)
     fp = review_dir / f"{job_id}.json"
-    fp.write_text(json.dumps({
-        "job_id": job_id,
-        "decision": "rejected",
-        "reason": reason,
-        "timestamp": datetime.now().isoformat(),
-    }, ensure_ascii=False), encoding="utf-8")
+    fp.write_text(
+        json.dumps(
+            {
+                "job_id": job_id,
+                "decision": "rejected",
+                "reason": reason,
+                "timestamp": datetime.now().isoformat(),
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
     return {"status": "rejected", "job_id": job_id}
 
 

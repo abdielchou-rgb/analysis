@@ -97,6 +97,9 @@ IRON_GATE_CONTRACT = {
         "multi_model",
         "data_fidelity",
     ],
-    "min_score": 0.55,
+    # 2026-09-07 R4: min_score 仅为历史快照/索引用，非事实源。
+    # 事实源 = pipeline/iron_gate.py 的 PASS_THRESHOLD(=0.78)。
+    # harness/generate_docs.py 已改为从 iron_gate.py 读阈值；此处保留供旧引用兼容。
+    "min_score": 0.78,
     "hard_fail": [],
 }

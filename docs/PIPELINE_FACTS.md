@@ -7,7 +7,9 @@
 - 注册检查方法数（checks/）：103
 - run_all 引用检查数：103
 - 迁移完整性：OK
-- 合约 min_score：0.55
+- 门禁阈值 PASS_THRESHOLD（iron_gate.py 单一事实源）：0.78
+- 判据版本 JUDGE_VERSION（iron_gate.py 单一事实源）：v2-error-mean-0.78
+- 合约快照 min_score（harness 历史字段，仅索引用）：0.78
 
 ## SAC
 - decision_memo: 12 维

@@ -1,13 +1,17 @@
-"""C1+C2: Calibration panel + posterior recalibration.
+"""C1+C2: Calibration metrics — ECE, Brier, Brier Skill Score, posterior recalibration.
 
-Computes ECE, Brier score, Brier Skill Score for prediction calibration.
-Fits logistic regression to recalibrate confidence scores.
+Migrated from the shadowed dead module ``core/calibration.py`` (2026-09-06 deep-audit P0-1:
+the file ``core/calibration.py`` could never be imported because ``core/calibration/``
+package shadows it under Python import rules). The metrics here were orphaned; the only
+reachable calibration code was ``core/calibration/dashboard.py`` (prediction backtest).
+This module preserves the pure metric functions so ECE/Brier/BSS have a live home.
 """
+
+from __future__ import annotations
 
 import json
 import math
 from pathlib import Path
-from typing import Any
 
 # Default calibration config
 CALIBRATION_BINS = 10
@@ -47,9 +51,7 @@ def compute_brier(confidences: list[float], outcomes: list[int]) -> float:
     return round(sum((confidences[i] - outcomes[i]) ** 2 for i in range(n)) / n, 4)
 
 
-def compute_brier_skill_score(
-    confidences: list[float], outcomes: list[int], baseline_rate: float = 0.5
-) -> float:
+def compute_brier_skill_score(confidences: list[float], outcomes: list[int], baseline_rate: float = 0.5) -> float:
     """Compute Brier Skill Score vs base-rate baseline.
 
     BSS = 1 - (Brier_system / Brier_baseline)
@@ -63,9 +65,7 @@ def compute_brier_skill_score(
     return round(1 - brier_system / brier_baseline, 4)
 
 
-def fit_logistic_recalibration(
-    confidences: list[float], outcomes: list[int]
-) -> dict:
+def fit_logistic_recalibration(confidences: list[float], outcomes: list[int]) -> dict:
     """Fit logistic regression for posterior recalibration.
 
     Returns: {a, b} where calibrated_prob = sigmoid(a * logit(confidence) + b)
@@ -93,8 +93,7 @@ def fit_logistic_recalibration(
                 nll -= o * math.log(cp) + (1 - o) * math.log(1 - cp)
             return nll
 
-        from scipy.optimize import minimize as _minimize
-        result = _minimize(objective, [1.0, 0.0], method="Nelder-Mead")
+        result = minimize(objective, [1.0, 0.0], method="Nelder-Mead")
         a, b = result.x
         return {"method": "logistic", "a": round(a, 4), "b": round(b, 4)}
     except ImportError:
@@ -117,7 +116,7 @@ def recalibrate_confidence(confidence: float, params: dict) -> float:
 def generate_calibration_report(
     confidences: list[float],
     outcomes: list[int],
-    asset_names: list[str] = None,
+    asset_names: list[str] | None = None,
 ) -> dict:
     """Generate full calibration report with ECE, Brier, BSS, and recalibration params."""
     ece = compute_ece(confidences, outcomes)
@@ -135,13 +134,15 @@ def generate_calibration_report(
         if in_bin:
             avg_conf = sum(confidences[j] for j in in_bin) / len(in_bin)
             avg_out = sum(outcomes[j] for j in in_bin) / len(in_bin)
-            bins.append({
-                "range": f"[{lo:.1f}, {hi:.1f})",
-                "count": len(in_bin),
-                "avg_confidence": round(avg_conf, 3),
-                "avg_outcome": round(avg_out, 3),
-                "gap": round(abs(avg_out - avg_conf), 3),
-            })
+            bins.append(
+                {
+                    "range": f"[{lo:.1f}, {hi:.1f})",
+                    "count": len(in_bin),
+                    "avg_confidence": round(avg_conf, 3),
+                    "avg_outcome": round(avg_out, 3),
+                    "gap": round(abs(avg_out - avg_conf), 3),
+                }
+            )
 
     return {
         "ece": ece,
@@ -163,9 +164,7 @@ def save_calibration_report(report: dict, output_dir: str = "output") -> str:
     return str(path)
 
 
-def load_and_recalibrate(
-    track_record_path: str, recal_params: dict = None
-) -> list[dict]:
+def load_and_recalibrate(track_record_path: str, recal_params: dict | None = None) -> list[dict]:
     """Load track_record.json and apply recalibration to confidence scores.
 
     Returns updated predictions with calibrated_confidence field.
@@ -195,6 +194,6 @@ def load_and_recalibrate(
     # Apply recalibration
     for p in predictions:
         conf = p.get("confidence_at_make", 0.5)
-        p["calibrated_confidence"] = recal_confidence(conf, recal_params)
+        p["calibrated_confidence"] = recalibrate_confidence(conf, recal_params)
 
     return predictions

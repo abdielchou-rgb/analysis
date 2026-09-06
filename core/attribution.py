@@ -12,8 +12,8 @@ import json
 import logging
 import math
 from collections import defaultdict
+from datetime import datetime
 from pathlib import Path
-from typing import Any
 
 logger = logging.getLogger("2hao.attribution")
 
@@ -58,7 +58,7 @@ def compute_ic(
 
     # Approximate p-value (t-test for Spearman IC)
     if abs(ic) > 0 and abs(ic) < 1:
-        t_stat = ic * math.sqrt((n - 2) / (1 - ic ** 2))
+        t_stat = ic * math.sqrt((n - 2) / (1 - ic**2))
         # Rough approximation: |t| > 2 ≈ p < 0.05
         p_approx = max(0.001, min(1.0, 2 * (1 - min(abs(t_stat) / 3, 1.0))))
     elif abs(ic) >= 1:
@@ -87,17 +87,24 @@ def attribute_by_dimension(
     Returns: {dimension: {hit_rate, ic, count, ...}}
     """
     # M2-A2: Filter out mock predictions
-    predictions = [
-        p for p in predictions
-        if p.get("source") != "mock" and not str(p.get("id", "")).startswith("mock_")
-    ]
-    
+    predictions = [p for p in predictions if p.get("source") != "mock" and not str(p.get("id", "")).startswith("mock_")]
+
     if not dimensions:
         dimensions = [
-            "decision_gate", "core_disagreement", "business_model",
-            "financial_verification", "competition", "growth",
-            "governance_esg", "valuation", "catalyst", "falsification",
-            "parent_subsidiary", "capital_flow", "bold_call", "risk",
+            "decision_gate",
+            "core_disagreement",
+            "business_model",
+            "financial_verification",
+            "competition",
+            "growth",
+            "governance_esg",
+            "valuation",
+            "catalyst",
+            "falsification",
+            "parent_subsidiary",
+            "capital_flow",
+            "bold_call",
+            "risk",
         ]
 
     dim_stats = defaultdict(lambda: {"hits": 0, "total": 0, "scores": [], "outcomes": []})
@@ -147,16 +154,22 @@ def attribute_by_framework(
     Returns: {framework: {hit_rate, ic, count, ...}}
     """
     # M2-A2: Filter out mock predictions
-    predictions = [
-        p for p in predictions
-        if p.get("source") != "mock" and not str(p.get("id", "")).startswith("mock_")
-    ]
-    
+    predictions = [p for p in predictions if p.get("source") != "mock" and not str(p.get("id", "")).startswith("mock_")]
+
     if not frameworks:
         frameworks = [
-            "porter_five_forces", "swot", "pestel", "value_chain",
-            "blue_ocean", "disruption", "moat", "financial_model",
-            "dcf", "comparable", "scenario", "sotp",
+            "porter_five_forces",
+            "swot",
+            "pestel",
+            "value_chain",
+            "blue_ocean",
+            "disruption",
+            "moat",
+            "financial_model",
+            "dcf",
+            "comparable",
+            "scenario",
+            "sotp",
         ]
 
     fw_stats = defaultdict(lambda: {"hits": 0, "total": 0, "scores": [], "outcomes": []})
@@ -212,7 +225,7 @@ def generate_attribution_report(
     worst_dims = sorted_dims[-3:] if sorted_dims else []
 
     report = {
-        "generated_at": datetime.now().isoformat() if hasattr(datetime, 'now') else "",
+        "generated_at": datetime.now().isoformat() if hasattr(datetime, "now") else "",
         "overall_hit_rate": round(overall_hit, 4),
         "total_predictions": len(resolved),
         "dimension_attribution": dim_attribution,
@@ -220,8 +233,12 @@ def generate_attribution_report(
         "best_dimensions": [{"dim": d, **s} for d, s in best_dims],
         "worst_dimensions": [{"dim": d, **s} for d, s in worst_dims],
         "interpretation": {
-            "best_framework": max(fw_attribution.items(), key=lambda x: x[1]["hit_rate"])[0] if fw_attribution else "N/A",
-            "worst_framework": min(fw_attribution.items(), key=lambda x: x[1]["hit_rate"])[0] if fw_attribution else "N/A",
+            "best_framework": max(fw_attribution.items(), key=lambda x: x[1]["hit_rate"])[0]
+            if fw_attribution
+            else "N/A",
+            "worst_framework": min(fw_attribution.items(), key=lambda x: x[1]["hit_rate"])[0]
+            if fw_attribution
+            else "N/A",
         },
     }
 
@@ -231,7 +248,8 @@ def generate_attribution_report(
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(report, f, ensure_ascii=False, indent=2)
 
-    logger.info("[ATTRIBUTION] Report saved: %s (dims=%d, frameworks=%d)",
-                out_path, len(dim_attribution), len(fw_attribution))
+    logger.info(
+        "[ATTRIBUTION] Report saved: %s (dims=%d, frameworks=%d)", out_path, len(dim_attribution), len(fw_attribution)
+    )
 
     return report

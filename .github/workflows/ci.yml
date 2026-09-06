@@ -30,11 +30,21 @@ jobs:
         run: |
           python -m pytest tests/ -v --tb=short
 
-      - name: Run lint (ruff)
+      - name: Run lint (ruff) — correctness gate (FAIL-CLOSED)
+        # P1-3 (2026-09-06 audit): F821/F601/E9 是会放行的真实缺陷码；此步不 continue-on-error。
+        # 排除 vendored scripts/last30days (PEP701 3.12 语法) 与 legacy。
+        run: |
+          pip install ruff
+          ruff check core pipeline web export scripts harness \
+            --exclude "scripts/last30days,legacy" \
+            --select=F821,F601,E9
+
+      - name: Run lint (ruff) — full style (informational)
+        # 全量 lint 仍可因存量 E/F401 报警；不阻断合并，但真实缺陷码已由上一步硬拦。
         continue-on-error: true
         run: |
           pip install ruff
-          ruff check . --ignore=E501,W503,F601
+          ruff check core pipeline web export scripts --exclude "scripts/last30days,legacy" --ignore=E501,W503,F601
 
       - name: Import check
         run: |

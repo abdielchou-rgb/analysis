@@ -10,6 +10,6 @@ scheduler.py (唯一入口)
        ├→ section_writer — SAC 驱动三段写作
        ├→ iron_gate — 24 项质量检查
        ├→ export — 导出 DOCX + 门禁检查
-  └→ IronGate (24 项检查, min_score=0.55)
+  └→ IronGate (JUDGE_VERSION=v2-error-mean-0.78, PASS_THRESHOLD=0.78)
   └→ export (DOCX / PDF / PPTX)
 ```

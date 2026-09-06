@@ -79,7 +79,7 @@ class TestCallContract:
 
 
 class TestDirectionWhitelist:
-    def test_illegal_direction_normalized(self):
+    def test_illegal_direction_normalized(self, tmp_path):
         """非 bullish/bearish/neutral 的方向值应清洗为 neutral。"""
         from core.bold_call_extractor import BoldCallExtractor
 
@@ -88,9 +88,10 @@ class TestDirectionWhitelist:
         e.extract = lambda *a, **kw: [
             {"direction": "长期看多", "bold_call": "x", "confidence": 0.5, "time_horizon": "12m"}
         ]
-        tm = TrackRecordManager()
+        tm = TrackRecordManager(storage_path=str(tmp_path / "tr_direction.json"))
         calls = e.extract_and_register("报告", "测试", "listed_company", "测试", tm=tm)
         # 验证入库的 prediction direction 是 neutral（白名单内）
+        assert len(tm.record.predictions) == 1
         last = tm.record.predictions[-1]
         assert last.direction == "neutral"
 
@@ -102,9 +103,9 @@ class TestPredictionDataContract:
         assert hasattr(p, "falsification")
         assert p.falsification == ""
 
-    def test_register_carries_falsification(self):
+    def test_register_carries_falsification(self, tmp_path):
         """register_prediction 能携带 falsification 入库。"""
-        tm = TrackRecordManager()
+        tm = TrackRecordManager(storage_path=str(tmp_path / "tr_falsification.json"))
         n0 = len(tm.record.predictions)
         tm.register_prediction(
             asset="测试",

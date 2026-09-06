@@ -12,12 +12,17 @@
             <div class="metric-label">方向准确率</div>
         </div>
         <div class="metric-card">
+            {% if summary.avg_pnl_pct is none %}
+            <div class="metric-value">—</div>
+            <div class="metric-label">平均收益(需真实价格结算)</div>
+            {% else %}
             <div class="metric-value">{{ "%.2f%%"|format(summary.avg_pnl_pct) }}</div>
-            <div class="metric-label">平均超额收益</div>
+            <div class="metric-label">平均收益(真实价格)</div>
+            {% endif %}
         </div>
         <div class="metric-card">
-            <div class="metric-value">{{ summary.kelly_sizing or '1.3x' }}</div>
-            <div class="metric-label">Kelly 仓位倍数</div>
+            <div class="metric-value">—</div>
+            <div class="metric-label">Kelly 仓位(待真实PnL序列)</div>
         </div>
     </div>
 
@@ -50,7 +55,7 @@
                         <td>{{ call.trigger[:50] }}...</td>
                         <td>{{ call.falsification[:50] }}...</td>
                         <td><span class="outcome-{{ call.outcome }}">{{ call.outcome }}</span></td>
-                        <td class="pnl-{{ 'pos' if (call.pnl_pct or 0) > 0 else 'neg' }}">{{ "%.2f%%"|format(call.pnl_pct or 0) }}</td>
+                        <td>{% if call.pnl_pct is none %}<span class="pnl-na">N/A</span>{% else %}<span class="pnl-{{ 'pos' if call.pnl_pct > 0 else 'neg' }}">{{ "%.2f%%"|format(call.pnl_pct) }}</span>{% endif %}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

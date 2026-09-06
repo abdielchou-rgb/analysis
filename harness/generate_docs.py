@@ -16,6 +16,29 @@ import re
 import sys
 from pathlib import Path
 
+# 单一事实源: IronGate 门禁阈值/判据版本只读 pipeline/iron_gate.py 源码常量，
+# 不依赖 harness 侧手写快照(2026-09-07 R4: 消除 0.55/0.78 双事实漂移)。
+_IG_RE = re.compile(r"^(PASS_THRESHOLD|JUDGE_VERSION)\s*=\s*([^\s#]+)", re.M)
+
+
+def _ig_constants() -> dict:
+    ig = Path(__file__).resolve().parent.parent / "pipeline" / "iron_gate.py"
+    txt = ig.read_text(encoding="utf-8")
+    return {m.group(1): m.group(2).strip("\"'") for m in _IG_RE.finditer(txt)}
+
+
+def _gate_pass_threshold() -> float:
+    v = _ig_constants().get("PASS_THRESHOLD")
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _gate_judge_version() -> str:
+    return _ig_constants().get("JUDGE_VERSION", "unknown")
+
+
 from harness.pipeline_contract import IRON_GATE_CONTRACT
 
 _ROOT = Path(__file__).resolve().parent.parent
@@ -59,7 +82,9 @@ def generate_pipeline_facts() -> str:
         f"- 注册检查方法数（checks/）：{len(defined)}",
         f"- run_all 引用检查数：{len(executed)}",
         f"- 迁移完整性：{'OK' if defined == executed else 'DRIFT! defined-executed=' + str(sorted(defined - executed))}",
-        f"- 合约 min_score：{IRON_GATE_CONTRACT.get('min_score')}",
+        f"- 门禁阈值 PASS_THRESHOLD（iron_gate.py 单一事实源）：{_gate_pass_threshold()}",
+        f"- 判据版本 JUDGE_VERSION（iron_gate.py 单一事实源）：{_gate_judge_version()}",
+        f"- 合约快照 min_score（harness 历史字段，仅索引用）：{IRON_GATE_CONTRACT.get('min_score')}",
         "",
     ]
 
@@ -162,9 +187,7 @@ def generate_pipeline_overview() -> str:
     for step, desc in E2E_ORCHESTRATOR_CONTRACT["steps"]:
         lines.append(f"       ├→ {step} — {desc}")
     lines.append(
-        "  └→ IronGate (24 项检查, min_score={:.2f})".format(
-            IRON_GATE_CONTRACT["min_score"] if "IRON_GATE_CONTRACT" in dir() else 0.55
-        )
+        "  └→ IronGate (JUDGE_VERSION={}, PASS_THRESHOLD={:.2f})".format(_gate_judge_version(), _gate_pass_threshold())
     )
     lines.append("  └→ export (DOCX / PDF / PPTX)")
     lines.append("```")

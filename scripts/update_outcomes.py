@@ -7,16 +7,15 @@ their time horizon.
 
 import json
 import logging
-import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 logger = logging.getLogger("2hao.outcome_update")
 
 
 def load_track_record(path: str = "core/data/forward_picks/track_record.json") -> dict:
-    """Load track record from disk."""
+    """Load track record from disk (read-only; 写入一律走 TrackRecordManager.apply_resolved)."""
     p = Path(path)
     if not p.exists():
         return {"predictions": []}
@@ -24,30 +23,33 @@ def load_track_record(path: str = "core/data/forward_picks/track_record.json") -
         return json.load(f)
 
 
-def save_track_record(data: dict, path: str = "core/data/forward_picks/track_record.json"):
-    """Save track record to disk."""
-    p = Path(path)
-    p.parent.mkdir(parents=True, exist_ok=True)
-    with open(p, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+def parse_horizon(horizon: str) -> Optional[int]:
+    """Parse time horizon string to days, or None when unparseable.
 
-
-def parse_horizon(horizon: str) -> int:
-    """Parse time horizon string to days.
-
-    '6m' → 180, '12m' → 360, '1y' → 365
+    '6m' → 180, '12m' → 360, '1y' → 365, '5y' → 1825,
+    range '6-12m' → 360 (取上界: 未到最长期限不提前结算, fail-closed)。
+    'unknown'/空/无法解析 → None (不猜测到期日; 由人工或回填修复)。
     """
-    if horizon.endswith("m"):
-        return int(horizon[:-1]) * 30
-    elif horizon.endswith("y"):
-        return int(horizon[:-1]) * 365
-    return 180  # default 6m
+    h = (horizon or "").strip().lower()
+    if not h or h in {"unknown", "na", "n/a", "null", "none", "-"}:
+        return None
+    if "-" in h:
+        parts = h.split("-")
+        if len(parts) == 2 and parts[1]:
+            h = parts[1].strip()
+        else:
+            return None
+    if h.endswith("m") and h[:-1].isdigit():
+        return int(h[:-1]) * 30
+    if h.endswith("y") and h[:-1].isdigit():
+        return int(h[:-1]) * 365
+    return None
 
 
 def check_expired(
     predictions: list[dict],
     as_of_date: str = None,
-) -> list[dict]:
+) -> tuple[list[dict], list[str]]:
     """Find predictions that have expired but are still pending.
 
     Args:
@@ -55,12 +57,15 @@ def check_expired(
         as_of_date: ISO date to check against (default: today)
 
     Returns:
-        List of expired predictions with computed expiry_date
+        (expired_list, warnings). expired_list 带计算出的 expiry_date；
+        warnings 是"无法判定到期、被跳过"的记录说明——不静默吞掉，
+        避免 unknown/坏 horizon 记录永远不被发现。
     """
     if as_of_date is None:
         as_of_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
     expired = []
+    warnings = []
     for p in predictions:
         if p.get("outcome") != "pending":
             continue
@@ -69,21 +74,31 @@ def check_expired(
         horizon = p.get("time_horizon", "6m")
 
         if not made_date:
+            warnings.append(f"made_date missing, skip id={p.get('id', '?')} asset={p.get('asset', '?')}")
             continue
 
         try:
             made_dt = datetime.fromisoformat(made_date.replace("Z", "+00:00"))
-            days = parse_horizon(horizon)
-            expiry_dt = made_dt + __import__("datetime").timedelta(days=days)
-            expiry_date = expiry_dt.strftime("%Y-%m-%d")
         except (ValueError, TypeError):
+            warnings.append(
+                f"made_date unparseable={made_date!r}, skip id={p.get('id', '?')} asset={p.get('asset', '?')}"
+            )
             continue
 
+        days = parse_horizon(horizon)
+        if days is None:
+            warnings.append(
+                f"time_horizon unparseable={horizon!r}, skip id={p.get('id', '?')} "
+                f"asset={p.get('asset', '?')} — 该记录永不自动到期，需人工修复 horizon"
+            )
+            continue
+
+        expiry_date = (made_dt + timedelta(days=days)).strftime("%Y-%m-%d")
         if expiry_date <= as_of_date:
             p["expiry_date"] = expiry_date
             expired.append(p)
 
-    return expired
+    return expired, warnings
 
 
 def resolve_outcome(
@@ -104,8 +119,11 @@ def resolve_outcome(
         Updated prediction with outcome set.
         If price unavailable → outcome="unverifiable", never fabricates.
     """
-    from core.price_feeder import get_price_or_unverifiable
     from core.prediction_judge import judge_outcome
+    from core.price_feeder import get_price_or_unverifiable
+
+    def _default_price_func(a, d):
+        return get_price_or_unverifiable(a, d, backend=backend).get("price")
 
     asset = prediction.get("asset", "")
     direction = prediction.get("direction", "")
@@ -113,7 +131,7 @@ def resolve_outcome(
     expiry_date = prediction.get("expiry_date", "")
 
     if not get_price_func:
-        get_price_func = lambda a, d: get_price_or_unverifiable(a, d, backend=backend).get("price")
+        get_price_func = _default_price_func
 
     try:
         price_at_make = get_price_func(asset, made_date)
@@ -179,8 +197,12 @@ def run_outcome_update(
     track_record_path: str = "core/data/forward_picks/track_record.json",
     get_price_func=None,
     dry_run: bool = False,
+    as_of_date: str = None,
 ) -> dict:
     """Run outcome update on all expired predictions.
+
+    SSOT (2026-09-07 T1): resolve 结果经 TrackRecordManager.apply_resolved 写回
+    (唯一写路径 = dataclass 门面)，禁止在此裸 json.dump track_record。
 
     Args:
         track_record_path: Path to track record JSON
@@ -193,34 +215,47 @@ def run_outcome_update(
     data = load_track_record(track_record_path)
     predictions = data.get("predictions", [])
 
-    expired = check_expired(predictions)
+    expired, expiry_warnings = check_expired(predictions, as_of_date=as_of_date)
     stats = {
         "total": len(predictions),
         "expired": len(expired),
+        "expiry_warnings": len(expiry_warnings),
         "updated": 0,
         "pending_review": 0,
         "already_resolved": 0,
         "errors": 0,
     }
 
+    for w in expiry_warnings:
+        logger.warning("[OUTCOME] %s", w)
+
+    resolved_items = []
     for p in expired:
         try:
             p = resolve_outcome(p, get_price_func)
             if p.get("outcome") == "hit" or p.get("outcome") == "miss":
                 stats["updated"] += 1
+                resolved_items.append(p)
             elif p.get("outcome") == "pending_review":
                 stats["pending_review"] += 1
+            elif p.get("outcome") == "unverifiable":
+                # 无真实价 → 诚实标注不可验证，同样需要持久化
+                stats["updated"] += 1
+                resolved_items.append(p)
         except Exception as e:
             stats["errors"] += 1
             logger.error("[OUTCOME] Error resolving %s: %s", p.get("asset", "?"), str(e))
 
-    if not dry_run and (stats["updated"] > 0 or stats["pending_review"] > 0):
-        save_track_record(data, track_record_path)
-        logger.info("[OUTCOME] Track record updated: %d resolved, %d pending review",
-                     stats["updated"], stats["pending_review"])
+    if not dry_run and resolved_items:
+        from core.tools.track_record import TrackRecordManager
+
+        mgr = TrackRecordManager(storage_path=track_record_path)
+        n = mgr.apply_resolved(resolved_items)
+        logger.info("[OUTCOME] Track record updated via SSOT façade: %d resolved", n)
     else:
-        logger.info("[OUTCOME] Dry run: %d would be updated, %d pending review",
-                     stats["updated"], stats["pending_review"])
+        logger.info(
+            "[OUTCOME] Dry run: %d would be updated, %d pending review", stats["updated"], stats["pending_review"]
+        )
 
     return stats
 
@@ -239,6 +274,7 @@ if __name__ == "__main__":
     stats = run_outcome_update(
         track_record_path=args.track_record,
         dry_run=args.dry_run,
+        as_of_date=args.as_of,
     )
 
     print(json.dumps(stats, indent=2))
