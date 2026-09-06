@@ -1,0 +1,20 @@
+{
+  "baijiu": {
+    "fair_value": 1950.27,
+    "upside_pct": 30.02,
+    "tv_pct": 79.72,
+    "scenario_weighted": 1883.09,
+    "mc_median": 1963.31,
+    "implied_growth_pct": 4.06,
+    "ev_to_fcf": 23.8
+  },
+  "bank": {
+    "fair_value": 85.1,
+    "upside_pct": 112.76,
+    "tv_pct": 74.24,
+    "scenario_weighted": 83.27,
+    "mc_median": 85.69,
+    "implied_growth_pct": -4.53,
+    "ev_to_fcf": 7.36
+  }
+}

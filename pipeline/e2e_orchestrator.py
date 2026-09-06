@@ -1080,6 +1080,28 @@ class E2ENodes:
         except Exception as _e_claim:
             logger.debug("[P3-2] claim citation 注入失败: %s", str(_e_claim)[:100])
 
+        # Phase A3（2026-09-06）：证据账本审计附录——全文数值声明 vs 计算引擎
+        # 核对结果附文末（幂等）。覆盖率/冲突清单/计算引擎基准值一体呈现，
+        # 机构客户可按附录直接审计报告数字。
+        try:
+            if "附录：数值证据账本" not in final:
+                from pipeline.evidence_enforcer import format_audit_appendix, run_evidence_check
+
+                _cr_a3 = (context.get("compute_results") or {}) or (
+                    (context.get("collected_data") or {}).get("compute_results") or {}
+                )
+                if isinstance(_cr_a3, dict) and (_cr_a3.get("engine_ib") or {}).get("status") == "ok":
+                    _ledger = run_evidence_check(final, _cr_a3)
+                    final = final.rstrip() + "\n\n---\n\n" + format_audit_appendix(_ledger, _cr_a3)
+                    logger.info(
+                        "[A3] 证据附录已注入: coverage=%.0f%% (%d/%d)",
+                        _ledger.coverage * 100,
+                        len(_ledger.verified),
+                        len(_ledger.claims),
+                    )
+        except Exception as _e_a3:
+            logger.debug("[A3] 证据附录注入失败: %s", str(_e_a3)[:100])
+
         # S6-3: 合规条款自动附加（替代 LLM 生成的免责——R42 已删 AI 免责）
         try:
             from core.compliance_clauses import get_clause
@@ -2582,6 +2604,12 @@ def _revision_targets_from_gate(gate_feedback: str) -> list:
         ("stray_leading_period", "修正段首孤立句号"),
         ("duplicate_source_appendix", "去掉重复的来源附录"),
         ("missing_section_structure", "建立章节标题结构"),
+        # Phase A2（2026-09-06）：证据账本违规 → 靶向修订
+        (
+            "证据账本",
+            "修正与计算引擎不符的数值声明：直接采用【本机构计算引擎审计数字】区块中的值，不要自行推导或改写数值",
+        ),
+        ("evidence_coverage", "数值声明必须与计算引擎输出一致（±2%），冲突项按账本反馈替换"),
     ]
     # R12（2026-08-01 全量优化）：把缺失的 SAC 维度名解析成逐条修订目标，
     # 让写循环精确知道要补哪几个维度，而不是笼统的"补齐缺失维度"。

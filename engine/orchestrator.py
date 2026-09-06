@@ -265,10 +265,12 @@ class IBGradeOrchestrator:
         # MC 参数与 DCF 同源: margin/g/da/capex/wc 全部从主假设传递，避免口径漂移
         _gr = a.get("revenue_growth_rates", [0.10])
         _base_margin = a.get("base_ebit_margin", 0.20)
+        _seed = a.get("mc_seed")
         mc_a = MonteCarloAssumptions(
             ticker=a.get("ticker", ""),
             company_name=a.get("company_name", ""),
             n_simulations=min(a.get("mc_simulations", 10000), 50000),
+            seed=int(_seed) if _seed is not None else None,
             base_revenue=a.get("base_revenue", 100),
             shares_outstanding=a.get("shares_outstanding", 10),
             revenue_growth_mean=sum(_gr) / len(_gr) if _gr else 0.10,

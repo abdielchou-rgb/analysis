@@ -643,6 +643,7 @@ def _inj_tm_str(ctx):
 # ── 注册表 ──────────────────────────────────────────────────
 # (变量名, 注入器)。section_writer 侧按变量名取回，下游 prompt 组装零改动。
 
+
 def _inj_sentiment_str(ctx):
     """S2-4：last30days 舆情信号注入（近30天动态 + 情绪摘要）。"""
     try:
@@ -659,7 +660,9 @@ def _inj_sentiment_str(ctx):
             if clusters:
                 lines.append(f"**新闻簇**（共{len(clusters)}条，按信号强度排序）：")
                 for i, cl in enumerate(clusters[:5], 1):
-                    lines.append(f"{i}. {cl.get('title', '')} — 来源: {cl.get('sources', '')}, 信号强度: {cl.get('score', 0)}")
+                    lines.append(
+                        f"{i}. {cl.get('title', '')} — 来源: {cl.get('sources', '')}, 信号强度: {cl.get('score', 0)}"
+                    )
             if evidence:
                 lines.append("")
                 lines.append(f"**证据摘要**: {evidence[:500]}")
@@ -696,9 +699,70 @@ from pipeline.prompt_injectors_p3b import (  # noqa: E402
     _inj_valuation_kb_str,
 )
 
+# ── Phase A0（2026-09-06）：Engine IB-Grade 计算结果注入 ──────────────
+
+
+def _inj_engine_ib_str(ctx):
+    """engine_ib 注入器：把 16-step Decimal 精度管线的审计数字写进 brief。
+
+    数据源: data_context["compute_results"]["engine_ib"]（ComputeEngine 产出）。
+    注入 fair_value / upside / 三情景 / MC 区间 / tornado / 期望差。
+    写作指令：引用这些数字，不得自造估值数字。
+    """
+    try:
+        cr = ctx.get("data_context") or {}
+        ib = (cr.get("compute_results") or {}).get("engine_ib") or {}
+        if ib.get("status") != "ok":
+            return ""
+        r = ib.get("result") or {}
+        if not r.get("fair_value"):
+            return ""
+
+        def _pct(x):
+            return f"{x * 100:.1f}%" if isinstance(x, (int, float)) else "--"
+
+        def _num(x, dec=1):
+            return f"{x:,.{dec}f}" if isinstance(x, (int, float)) else "--"
+
+        lines = ["【本机构计算引擎审计数字（引用时不得改动数值）】"]
+        lines.append(f"- DCF 目标价: {_num(r.get('fair_value'), 2)} 元/股")
+        if r.get("upside_pct") is not None:
+            lines.append(f"- 对应上行空间: {_pct(r['upside_pct'] / 100)}")
+        lines.append(f"- 终值占比 TV%: {_pct(r.get('tv_pct'))}（>75% 提示结论对永续假设敏感）")
+        if r.get("scenario_weighted_target"):
+            lines.append(f"- 情景加权目标价: {_num(r.get('scenario_weighted_target'), 2)} 元/股")
+        if r.get("mc_ci95"):
+            lo, hi = r["mc_ci95"]
+            lines.append(
+                f"- Monte Carlo 95% 置信区间: [{_num(lo, 0)}, {_num(hi, 0)}] 元/股（中位 {_num(r.get('mc_median'), 0)}）"
+            )
+        exp = r.get("expectations") or {}
+        if exp.get("implied_growth") is not None:
+            lines.append(
+                f"- 市场隐含增长率: {_pct(exp.get('implied_growth'))} vs 本报告假设增长率: {_pct(exp.get('our_growth'))}"
+                f"（期望差 {'+' if (exp.get('our_growth') or 0) - (exp.get('implied_growth') or 0) >= 0 else ''}"
+                f"{((exp.get('our_growth') or 0) - (exp.get('implied_growth') or 0)) * 100:.1f}pp）"
+            )
+        tor = r.get("tornado_ranking") or []
+        if tor:
+            top = " > ".join(f"{b.get('param')}(±{_num(b.get('swing'), 0)})" for b in tor[:3])
+            lines.append(f"- 目标价敏感性排序: {top}")
+        assump = r.get("assumptions") or {}
+        if assump.get("growth_rates"):
+            g = ", ".join(f"{x * 100:.1f}%" for x in assump["growth_rates"])
+            lines.append(f"- 收入增长率假设(5年): {g}")
+        lines.append(f"- WACC: {_pct(r.get('wacc'))}")
+        lines.append("写作要求: 估值相关数字以上述计算引擎输出为准；如需其他数字，标注来源；不得自造目标价。")
+        return "\n".join(lines)
+    except Exception as e:
+        logger.warning("[INJECTOR] engine_ib 失败: %s", str(e)[:60])
+        return ""
+
+
 INJECTORS = [
     ("fc_str", _inj_fc_str),
     ("ac_str", _inj_ac_str),
+    ("engine_ib_str", _inj_engine_ib_str),
     ("mr_str", _inj_mr_str),
     ("ts_str", _inj_ts_str),
     ("hf_str", _inj_hf_str),

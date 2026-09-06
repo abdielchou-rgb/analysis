@@ -1428,3 +1428,54 @@ class DataQualityChecksMixin:
         from pipeline.checks.numerical_tier import check_numerical_tier_classification
 
         return check_numerical_tier_classification(self.report_text or "")
+
+    def _check_evidence_coverage(self) -> GateCheckResult:
+        """Phase A2（2026-09-06）：证据账本覆盖率。
+
+        全文数值声明 vs 计算引擎产出（engine_ib 等）做 ±2% 容差核对。
+        - coverage ≥ 0.70 → PASS
+        - 0.40 ≤ coverage < 0.70 → WARNING（拿基线一个版本，暂不阻断）
+        - coverage < 0.40 或存在 contradicted → 本版本先 WARNING（记录基线后收紧）
+        无 compute_results（数据稀缺）→ skip 放行，与 R77 降级语义一致。
+        """
+        try:
+            from pipeline.evidence_enforcer import run_evidence_check
+
+            cd = getattr(self, "collected_data", {}) or {}
+            cr = cd.get("compute_results") or {}
+            if not isinstance(cr, dict) or not any(
+                (cr.get(k) or {}).get("status") == "ok"
+                for k in ("engine_ib", "dcf_valuation", "scenario_analysis", "comparable_valuation", "sotp_valuation")
+            ):
+                return GateCheckResult(
+                    "evidence_coverage", True, 1.0, "无计算引擎产出，跳过（数据稀缺降级）", severity="info"
+                )
+
+            ledger = run_evidence_check(self.report_text or "", cr)
+            s = ledger.summary()
+            # 暂存账本供导出附录/修订循环复用（避免重复计算）
+            self._claim_ledger = ledger
+
+            if s["total_claims"] < 5:
+                return GateCheckResult(
+                    "evidence_coverage", True, 0.7, f"数值声明仅 {s['total_claims']} 处，样本不足", severity="warning"
+                )
+
+            cov = s["coverage"]
+            detail = (
+                f"证据覆盖率 {cov:.0%}（{s['verified']}/{s['total_claims']} 核对通过，"
+                f"{s['contradicted']} 冲突，{s['unverifiable']} 不可核验）"
+            )
+            # 本版本全 WARNING 拿基线；contradicted>0 记入 details 供修订循环消费
+            if ledger.contradicted:
+                from pipeline.evidence_enforcer import format_gate_feedback
+
+                detail += "; " + format_gate_feedback(ledger)[:200]
+            if cov >= 0.70 and not ledger.contradicted:
+                return GateCheckResult("evidence_coverage", True, cov, detail)
+            # 低于阈值暂不阻断（基线收集期），severity=warning
+            return GateCheckResult("evidence_coverage", True, max(cov, 0.3), detail, severity="warning")
+        except Exception as e:
+            return GateCheckResult(
+                "evidence_coverage", True, 0.5, f"账本引擎异常（降级放行）: {str(e)[:80]}", severity="warning"
+            )

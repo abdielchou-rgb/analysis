@@ -165,7 +165,12 @@ def extract_engine_params(financial_data: dict) -> dict | None:
     ebit_margin = max(0.02, min(0.60, ebit_margin))
 
     # ── 5. 净债务: 资产负债率 + ROE 反推 (粗估, 无现金数据) ──────────
+    # 金融业豁免（2026-09-06 golden 抓住）：银行/保险的"负债"是储户存款/
+    # 保单准备金，不是债务资本——ALR 框架完全不适用（招行 ALR 91% 会推出
+    # 10 万亿"净债务"→负目标价）。金融股 DCF 本身不是主估值法（PB/DDL
+    # 才是），engine_ib 让位 net_debt=0 并在 assumptions 标注。
     net_debt = 0.0
+    net_debt_note = ""
     roe = _clean_num(latest_info.get("roe", latest_info.get("净资产收益率", 0))) or _clean_num(val.get("roe", 0))
     alr_raw = latest_info.get("asset_liability_ratio", latest_info.get("资产负债率", ""))
     alr = _clean_num(alr_raw) if alr_raw else 0.0
@@ -173,7 +178,10 @@ def extract_engine_params(financial_data: dict) -> dict | None:
         alr = alr / 100
     if roe > 1:
         roe = roe / 100
-    if roe > 0.01 and np_annual > 0:
+    _is_financial = alr >= 0.85  # 银行/保险典型 ALR 88-95%；制造业罕见 >80%
+    if _is_financial:
+        net_debt_note = "financial_institution_alr_exempt"
+    elif roe > 0.01 and np_annual > 0:
         equity = np_annual / roe
         if 0.05 < alr < 0.95:
             total_debt = equity * alr / (1 - alr)
@@ -199,6 +207,8 @@ def extract_engine_params(financial_data: dict) -> dict | None:
         "capex_pct_revenue": 0.04,
         "wc_pct_revenue": 0.02,
         "mc_simulations": 5000,
+        "mc_seed": 20260906,  # 固定 seed——golden 回归 + 生产可复现
+        "net_debt_note": net_debt_note,
     }
     return params
 
@@ -208,6 +218,21 @@ def run_engine_ib(financial_data: dict) -> dict:
     params = extract_engine_params(financial_data)
     if not params:
         return {"status": "skip", "reason": "insufficient data (need >=2y revenue + EPS/price)"}
+
+    # ── 经济物理前置：FCF 基数必须为正 ─────────────────────────────
+    # 微利/亏损高增长公司（净利率<2%、capex 重）FCF DCF 无意义——
+    # TV 负值、目标价失真。机构口径此类标的走 PS/EV-EBITDA，
+    # 由 comparable 路径承担，engine_ib 明确让位（诚实留白优于硬编数字）。
+    fcf_base = base_fcf_estimate(params)
+    if fcf_base <= 0:
+        return {
+            "status": "skip",
+            "reason": (
+                f"FCF 基数非正（margin={params['base_ebit_margin']:.1%}, "
+                f"再投资率={params['da_pct_revenue'] + params['capex_pct_revenue'] + params['wc_pct_revenue']:.0%}）"
+                "——微利/重投资标的不适用 FCF DCF，建议 PS/EV-EBITDA 可比法"
+            ),
+        }
 
     # ── IronGateV2 前置校验 (L1 Hard Stop / L2 经济物理 / L3 文本契约) ──
     try:
@@ -264,6 +289,7 @@ def run_engine_ib(financial_data: dict) -> dict:
                 "growth_rates": [round(g, 4) for g in params["revenue_growth_rates"]],
                 "ebit_margin": params["base_ebit_margin"],
                 "net_debt_est": params["net_debt"],
+                "net_debt_note": params.get("net_debt_note", ""),
             },
             "steps_completed": sorted(pipeline.steps.keys()),
             "duration_ms": round(pipeline.total_duration_ms, 1),
@@ -300,12 +326,16 @@ def run_engine_ib(financial_data: dict) -> dict:
 
 
 def base_fcf_estimate(params: dict) -> float:
-    """FCF 基数粗估: 收入 × EBIT margin × (1-tax) × (1 - 再投资率)。"""
+    """FCF 基数粗估: NOPAT + D&A - CapEx - ΔWC（比率按收入口径）。
+
+    修复（2026-09-06）：原实现 `nopat * (1 - reinvest_ratio)` 把收入口径的
+    再投资率错当 NOPAT 占比——微利公司被误判为 FCF 为正。正确算法：
+    FCF = Revenue × [margin×(1-tax) + da% - capex% - wc%]。
+    """
     rev = params.get("base_revenue", 0)
     margin = params.get("base_ebit_margin", 0)
     tax = params.get("tax_rate", 0.15)
-    reinvest = (
-        params.get("da_pct_revenue", 0.03) + params.get("capex_pct_revenue", 0.04) + params.get("wc_pct_revenue", 0.02)
-    )
-    nopat = rev * margin * (1 - tax)
-    return nopat * (1 - reinvest)
+    da = params.get("da_pct_revenue", 0.03)
+    capex = params.get("capex_pct_revenue", 0.04)
+    wc = params.get("wc_pct_revenue", 0.02)
+    return rev * (margin * (1 - tax) + da - capex - wc)

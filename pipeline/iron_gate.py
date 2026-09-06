@@ -414,6 +414,8 @@ class IronGate(
             self._check_anti_patterns,  # M6: 伪框架黑名单  # S2: 风格距离（warning）  # P3-B: [E#] 证据标注密度（warning）  # R87: 数据源可信度（enrich 幻觉修正值校验）
             # B2: Tier 数值分级——Tier-1 数字必须有 canonical 来源或 [注N] 标注
             self._check_numerical_tier,
+            # Phase A2（2026-09-06）：证据账本覆盖率——全文数值声明 vs 计算引擎核对
+            self._check_evidence_coverage,
         ]
         checks = []
         # R15（2026-08-01 提速）：把 LLM 检查（ai_tone/human_impossible/数据验证，各 60s+）
