@@ -213,7 +213,7 @@ class ComputeEngine:
         result["_summary"] = {"ok": len(ok_modules), "error": len(error_modules), "modules_ok": ok_modules}
 
         # W3.1: 聚合 primary_target_price — 单一目标价供锚卡/Gate 使用
-        # 优先级：DCF fair_value > SOTP target_price > scenario weighted_target > comparable implied_pe_price
+        # 优先级：Engine-IB > DCF fair_value > SOTP > scenario > comparable
         _prices = []
         _dcf = result.get("dcf_valuation", {})
         if isinstance(_dcf, dict) and _dcf.get("status") == "ok":
@@ -240,13 +240,31 @@ class ComputeEngine:
             if _ip and isinstance(_ip, (int, float)) and _ip > 0:
                 _prices.append(("Comparable", float(_ip)))
 
+        # === Engine IB-Grade (V3.0 16-step, Decimal 精度) ===
+        # 最高优先级目标价来源；skip/error 不影响既有路径。
+        try:
+            from pipeline.engine_bridge import run_engine_ib
+
+            _ib = run_engine_ib(financial_data)
+            result["engine_ib"] = _ib
+            if _ib.get("status") == "ok":
+                _fv = (_ib.get("result", {}) or {}).get("fair_value")
+                if _fv and isinstance(_fv, (int, float)) and _fv > 0:
+                    _prices.insert(0, ("Engine-IB", float(_fv)))
+        except Exception as _ibe:
+            logger.debug("[ENGINE-IB] bridge skip: %s", _ibe)
+
         if _prices:
             _primary = _prices[0]
             result["primary_target_price"] = _primary[1]
             result["primary_target_source"] = _primary[0]
             result["all_target_prices"] = {src: val for src, val in _prices}
-            logger.info("[COMPUTE] primary_target_price=%.2f (from %s), all=%s",
-                        _primary[1], _primary[0], {s: v for s, v in _prices})
+            logger.info(
+                "[COMPUTE] primary_target_price=%.2f (from %s), all=%s",
+                _primary[1],
+                _primary[0],
+                {s: v for s, v in _prices},
+            )
 
         if ok_modules and not error_modules:
             result["status"] = "complete"

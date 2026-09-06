@@ -208,23 +208,38 @@ class IBGradeOrchestrator:
         shares = a.get("shares_outstanding", 10)
         base_margin = a.get("base_ebit_margin", 0.20)
 
+        # 单调性安全: bull = min(base+5pp, 95%·base+5%相对), bear = max(base-5pp, 5%·base)
+        # 保证 bull ≥ base ≥ bear 恒成立（高低利润率公司都适用）
+        bull_margin = min(base_margin + 0.05, base_margin * 1.10 + 0.02, 0.95)
+        bear_margin = max(base_margin - 0.05, base_margin * 0.90 - 0.02, 0.02)
+        if bull_margin < base_margin:
+            bull_margin = min(base_margin * 1.05, 0.95)
+        if bear_margin > base_margin:
+            bear_margin = base_margin * 0.95
+
+        base_growth = a.get("revenue_growth_rates", [0.10, 0.08, 0.06])[:3]
+        while len(base_growth) < 3:
+            base_growth.append(base_growth[-1] if base_growth else 0.06)
+        bull_growth = [min(g + 0.03, 0.35) for g in base_growth]
+        bear_growth = [max(g - 0.03, -0.10) for g in base_growth]
+
         scenario_a = ScenarioAssumptions(
             ticker=a.get("ticker", ""),
             company_name=a.get("company_name", ""),
             base_price=a.get("current_price", 100),
             bull=ScenarioDetail(
-                revenue_growth_rates=[0.15, 0.12, 0.10],
-                operating_margin=min(base_margin + 0.05, 0.50),
+                revenue_growth_rates=bull_growth,
+                operating_margin=bull_margin,
                 probability=0.30,
             ),
             base=ScenarioDetail(
-                revenue_growth_rates=a.get("revenue_growth_rates", [0.10, 0.08, 0.06])[:3],
+                revenue_growth_rates=base_growth,
                 operating_margin=base_margin,
                 probability=0.50,
             ),
             bear=ScenarioDetail(
-                revenue_growth_rates=[0.05, 0.03, 0.02],
-                operating_margin=max(base_margin - 0.05, 0.05),
+                revenue_growth_rates=bear_growth,
+                operating_margin=bear_margin,
                 probability=0.20,
             ),
             wacc=a.get("wacc", 0.09),
@@ -247,14 +262,20 @@ class IBGradeOrchestrator:
     def _step_monte_carlo(self, a: Dict) -> Dict:
         from engine.monte_carlo import MonteCarloAssumptions, MonteCarloEngine
 
+        # MC 参数与 DCF 同源: margin/g/da/capex/wc 全部从主假设传递，避免口径漂移
+        _gr = a.get("revenue_growth_rates", [0.10])
+        _base_margin = a.get("base_ebit_margin", 0.20)
         mc_a = MonteCarloAssumptions(
             ticker=a.get("ticker", ""),
             company_name=a.get("company_name", ""),
             n_simulations=min(a.get("mc_simulations", 10000), 50000),
             base_revenue=a.get("base_revenue", 100),
             shares_outstanding=a.get("shares_outstanding", 10),
-            revenue_growth_mean=a.get("revenue_growth_rates", [0.10])[0] if a.get("revenue_growth_rates") else 0.10,
+            revenue_growth_mean=sum(_gr) / len(_gr) if _gr else 0.10,
+            ebit_margin_mean=_base_margin,
+            ebit_margin_std=max(0.01, _base_margin * 0.10),
             wacc_mean=a.get("wacc", 0.09),
+            terminal_growth_mean=a.get("terminal_growth_rate", 0.025),
             tax_rate=a.get("tax_rate", 0.25),
             net_debt=a.get("net_debt", 0),
             current_price=a.get("current_price"),

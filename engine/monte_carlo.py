@@ -111,18 +111,35 @@ class CorrelationEngine:
         independent_samples: List[List[float]],
         corr_matrix: List[List[float]],
     ) -> List[List[float]]:
-        """对独立样本施加相关性"""
+        """对独立样本施加相关性。
+
+        正确流程: 标准化 → Cholesky 混合 → 恢复均值/方差。
+        原实现直接 L @ z（z 含均值），会破坏均值且 std≠0 时方差错误。
+        """
         n_vars = len(independent_samples)
         n_samples = len(independent_samples[0]) if independent_samples else 0
+        if n_vars == 0 or n_samples == 0:
+            return independent_samples
 
         L = CorrelationEngine.cholesky(corr_matrix)
 
+        # 1. 标准化 (跳过零方差维度, 保持常数)
+        means = [sum(row) / n_samples for row in independent_samples]
+        stds = []
+        for v in range(n_vars):
+            var = sum((x - means[v]) ** 2 for x in independent_samples[v]) / n_samples
+            stds.append(math.sqrt(var) if var > 1e-15 else 0.0)
+
         correlated = [[0.0] * n_samples for _ in range(n_vars)]
         for s in range(n_samples):
-            z = [independent_samples[v][s] for v in range(n_vars)]
+            # 2. L @ z_std (零方差维度 z_std=0, 混合后仍是 0)
+            z_std = [(independent_samples[v][s] - means[v]) / stds[v] if stds[v] > 0 else 0.0 for v in range(n_vars)]
             for i in range(n_vars):
+                mixed = 0.0
                 for j in range(i + 1):
-                    correlated[i][s] += L[i][j] * z[j]
+                    mixed += L[i][j] * z_std[j]
+                # 3. 恢复均值/方差
+                correlated[i][s] = means[i] + stds[i] * mixed
 
         return correlated
 

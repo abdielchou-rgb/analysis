@@ -1,0 +1,178 @@
+"""
+Engine Bridge 集成测试 — engine/ 16-step 管线接入生产 compute。
+用真实 akshare 数据形态（中文字符串单位）验证端到端。
+"""
+
+import pytest
+
+# 真实茅台形态数据（akshare 返回的中文字符串单位）
+MOUTAI_LIKE = {
+    "asset": "600519 贵州茅台",
+    "report_type": "listed_company",
+    "chart_data": {
+        "fig_revenue_trend": {
+            "2021": {
+                "revenue": "1094.64亿",
+                "net_profit": "524.60亿",
+                "gross_margin": "91.54%",
+                "roe": "29.90%",
+                "eps": "41.76",
+                "asset_liability_ratio": "26.31%",
+            },
+            "2022": {
+                "revenue": "1275.55亿",
+                "net_profit": "627.16亿",
+                "gross_margin": "91.87%",
+                "roe": "30.26%",
+                "eps": "49.93",
+                "asset_liability_ratio": "25.28%",
+            },
+            "2023": {
+                "revenue": "1505.60亿",
+                "net_profit": "747.34亿",
+                "gross_margin": "91.96%",
+                "roe": "34.19%",
+                "eps": "59.49",
+                "asset_liability_ratio": "21.36%",
+            },
+            "2024": {
+                "revenue": "1741.44亿",
+                "net_profit": "862.28亿",
+                "gross_margin": "91.93%",
+                "roe": "36.24%",
+                "eps": "68.64",
+                "asset_liability_ratio": "18.71%",
+            },
+        },
+        "fig_valuation": {
+            "price": 1500.0,
+            "market_cap": 18800,
+            "pe": 22.0,
+            "source": "akshare",
+        },
+        "fig_profitability": {},
+    },
+}
+
+# 缺数据形态
+THIN_DATA = {
+    "asset": "000000",
+    "chart_data": {"fig_revenue_trend": {"2024": 100.0}},  # 只有 1 年
+}
+
+
+class TestExtractEngineParams:
+    def test_extract_moutai_like(self):
+        from pipeline.engine_bridge import extract_engine_params
+
+        p = extract_engine_params(MOUTAI_LIKE)
+        assert p is not None
+        # 收入单位: 元
+        assert p["base_revenue"] == pytest.approx(1741.44e8, rel=1e-6)
+        # 5 年增长率（3 个历史增长率 + padding）
+        assert len(p["revenue_growth_rates"]) == 5
+        # 股本 = 净利/EPS = 862.28e8/68.64 ≈ 12.56e8 股
+        assert p["shares_outstanding"] == pytest.approx(862.28e8 / 68.64, rel=1e-4)
+        # EBIT margin = 净利率/(1-tax)，受毛利率上限约束
+        assert 0.02 <= p["base_ebit_margin"] <= 0.60
+        # WACC 来自 ERP 模块 (0.07~0.13 区间)
+        assert 0.05 < p["wacc"] < 0.15
+        assert p["current_price"] == 1500.0
+
+    def test_growth_rates_from_history(self):
+        from pipeline.engine_bridge import extract_engine_params
+
+        p = extract_engine_params(MOUTAI_LIKE)
+        g = p["revenue_growth_rates"]
+        # 2022 增长率 ≈ 16.5%，2023 ≈ 18.0%，2024 ≈ 15.7%
+        assert g[0] == pytest.approx(1275.55 / 1094.64 - 1, rel=1e-3)
+        assert g[2] == pytest.approx(1741.44 / 1505.60 - 1, rel=1e-3)
+
+    def test_thin_data_returns_none(self):
+        from pipeline.engine_bridge import extract_engine_params
+
+        assert extract_engine_params(THIN_DATA) is None
+
+    def test_net_debt_from_alr_roe(self):
+        from pipeline.engine_bridge import extract_engine_params
+
+        p = extract_engine_params(MOUTAI_LIKE)
+        # 茅台低负债，net_debt 应很小但 >= 0
+        assert p["net_debt"] >= 0
+        # equity = 862.28/0.3624 ≈ 2378亿; debt = 2378*0.1871/0.8129 ≈ 547亿; net ≈ 438亿
+        assert p["net_debt"] == pytest.approx(547e8 * 0.8, rel=0.2)
+
+
+class TestRunEngineIB:
+    def test_full_bridge_run(self):
+        from pipeline.engine_bridge import run_engine_ib
+
+        r = run_engine_ib(MOUTAI_LIKE)
+        assert r["status"] == "ok", r.get("reason", r.get("error"))
+        res = r["result"]
+
+        # 16 步核心输出
+        assert res["fair_value"] and res["fair_value"] > 0
+        assert 0 < res["tv_pct"] < 1
+        assert res["enterprise_value"] > 0
+        assert res["scenario_weighted_target"] > 0
+        assert res["mc_median"] > 0
+        assert len(res["sensitivity_matrix"]) == 5
+        assert res["upside_pct"] is not None
+
+        # 期望分析
+        exp = res["expectations"]
+        assert exp["implied_growth"] >= -0.05
+        assert exp["ev_to_fcf"] > 0
+
+        # 步骤完整性
+        assert "09_dcf" in res["steps_completed"]
+        assert "10_scenarios" in res["steps_completed"]
+        assert "11_monte_carlo" in res["steps_completed"]
+        assert "13_tornado" in res["steps_completed"]
+
+    def test_thin_data_skips(self):
+        from pipeline.engine_bridge import run_engine_ib
+
+        r = run_engine_ib(THIN_DATA)
+        assert r["status"] == "skip"
+        assert "insufficient" in r["reason"]
+
+    def test_fair_value_sane_vs_price(self):
+        """DCF fair_value 不应偏离现价 100 倍（数量级检查）"""
+        from pipeline.engine_bridge import run_engine_ib
+
+        r = run_engine_ib(MOUTAI_LIKE)
+        if r["status"] == "ok":
+            fv = r["result"]["fair_value"]
+            price = MOUTAI_LIKE["chart_data"]["fig_valuation"]["price"]
+            assert 0.05 < fv / price < 20
+
+
+class TestComputeEngineIntegration:
+    def test_compute_engine_calls_bridge(self):
+        """生产 ComputeEngine.compute 应产出 engine_ib 键"""
+        from pipeline.compute_engine import ComputeEngine
+
+        r = ComputeEngine().compute(MOUTAI_LIKE, report_type="listed_company")
+        assert "engine_ib" in r
+        assert r["engine_ib"]["status"] in ("ok", "skip", "error")
+        if r["engine_ib"]["status"] == "ok":
+            # engine-IB ok 时应为 primary_target_price 首选
+            assert r.get("primary_target_source") == "Engine-IB"
+            assert r.get("primary_target_price") == r["engine_ib"]["result"]["fair_value"]
+
+
+class TestIronGateV2Precheck:
+    def test_l1_blocks_extreme_wacc(self):
+        """WACC <= g 时 L1 应拦截"""
+        from pipeline.engine_bridge import extract_engine_params
+
+        p = extract_engine_params(MOUTAI_LIKE)
+        if p:
+            p["wacc"] = 0.02  # < terminal_growth 0.025
+            from engine.irongate_v2 import IronGateV2
+
+            gate = IronGateV2()
+            report = gate.validate(p)
+            assert report.blocked
