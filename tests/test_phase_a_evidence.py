@@ -130,6 +130,62 @@ class TestEvidenceEnforcer:
         assert "1,950.27" in appendix
 
 
+class TestAssembleAppendixGlue:
+    """Phase A3/E glue：assemble 节点把证据附录 + 认知边界附录注入 final_text。
+
+    直接调用生产节点 E2ENodes.assemble，验证两条附录注入路径在真实 assemble
+    上下文（report_text + compute_results.engine_ib ok + collected_data）下生效。
+    """
+
+    def test_both_appendixes_injected(self):
+        from pipeline.e2e_orchestrator import E2ENodes
+
+        report_text = (
+            "# 贵州茅台深度研究\n\n"
+            "## 估值\n"
+            "目标价 1950.27 元，相对当前价上行 30.0%。情景加权目标 1883.1 元。\n\n"
+            "## 财务\n"
+            "WACC 8.43%，隐含增长 4.19%。\n"
+        )
+        ctx = {
+            "asset": "贵州茅台",
+            "asset_code": "600519",
+            "report_type": "listed_company",
+            "style": "cicc",
+            "report_text": report_text,
+            "chart_paths": {},
+            "compute_results": _ib_results(),
+            "collected_data": {"compute_results": _ib_results()},
+        }
+        out = E2ENodes.assemble("assemble", ctx)
+        final = out["final_text"]
+        assert "附录：数值证据账本" in final, "证据附录应被注入"
+        assert "认知边界（未验证假设" in final, "认知边界附录应被注入"
+
+    def test_appendixes_idempotent(self):
+        """重复 assemble（write-revise 迭代）不应重复注入附录。"""
+        from pipeline.e2e_orchestrator import E2ENodes
+
+        report_text = "# 标题\n\n目标价 1950.27 元，上行 30.0%。"
+        ctx = {
+            "asset": "贵州茅台",
+            "asset_code": "600519",
+            "report_type": "listed_company",
+            "style": "cicc",
+            "report_text": report_text,
+            "chart_paths": {},
+            "compute_results": _ib_results(),
+            "collected_data": {"compute_results": _ib_results()},
+        }
+        E2ENodes.assemble("assemble", ctx)
+        final1 = ctx["final_text"]
+        # 模拟二次 assemble（ctx 已含 final_text，report_text 不变 → 幂等检查触发）
+        out2 = E2ENodes.assemble("assemble", ctx)
+        final2 = out2["final_text"]
+        assert final1.count("附录：数值证据账本") == final2.count("附录：数值证据账本") == 1
+        assert final1.count("认知边界（未验证假设") == final2.count("认知边界（未验证假设") == 1
+
+
 class TestGateEvidenceCoverage:
     def _make_gate(self, report_text, collected_data):
         import tempfile

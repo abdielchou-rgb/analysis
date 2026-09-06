@@ -523,6 +523,8 @@ class E2ENodes:
                             "coverage": _hp.get("coverage"),
                             "unverifiable_n": len(_hp.get("unverifiable", [])),
                         }
+                        # full plan 一并入 collected_data → assemble 直接取用，无需重建
+                        _cd_h["_hypothesis_plan_full"] = _hp
                         logger.info(
                             "[HYPOTHESIS] 覆盖率 %s（未验证 %d 项假设）",
                             _hp.get("coverage"),
