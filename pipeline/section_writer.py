@@ -3469,31 +3469,41 @@ class SectionWriter:
                 insert_pos = m.end()
                 text = text[:insert_pos] + "（数据支撑：见上文财务数据表）" + text[insert_pos:]
 
-        # 6. 数值百分比上下文——每个 % 后接业务含义（避免模板重复）
-        # 策略：对每个唯一 % 值只添加一次上下文，使用多样化语句
-        # 2026-09-04：仅 patch_chain=True（首跑）执行——二跑幂等保护
+        # 6. 数值百分比上下文——仅对"孤立裸 %"补业务含义
+        # 2026-09-06 修复（茅台 E2E 实测 57 处污染）：旧逻辑对评级定义表等任何
+        # 未被 30 字内业务词跟随的 % 都插注解，把"涨幅15%以上"插成
+        # "涨幅15%（此水平较同业中位数明显领先，验证成本优势传导）以上"，
+        # 把区间"5%-15%"拆成"5%（…注解）15%"——污染正文 + 拆烂数值区间
+        # （触发 indicator_consistency 误报 + template_phrases 模板污染）。
+        # 新策略三重防护：① 表格行（| 开头）不处理（评级/假设表是 boilerplate）；
+        # ② % 后 40 字内已有业务含义/区间延续词不处理；
+        # ③ % 后已有括注注解不重复补。仍命中才补短注解（不带结论套话）。
         if patch_chain:
-            pct_pattern = r"(\d+\.?\d*%)(?![^。]{0,30}(增速|占比|毛利率|净利率|ROE|ROIC|市占率|份额|渗透率|增长|下降|提升|承压|波动|变化))"
-            contexts = [
-                # 2026-09-04 修复：模板句禁含具体数字——旧模板的"约15%"等硬编码数字
-                # 被 Gate RATIO_PATTERN 聚簇判冲突（cross_section_consistency 0.10）。
-                "（该指标处同期行业/历史中上位，对应盈利与估值边际改善空间）",
-                "（此水平较同业中位数明显领先，验证成本优势传导）",
-                "（处于近三年较高分位，确认结构性利好而非周期波动）",
-                "（超预期幅度符合成本曲线优化预期，非一次性红利）",
-                "（对应盈利能力持续改善，支撑估值中枢上移逻辑）",
-            ]
-            used_pcts = set()
+            _ann = "（该指标处同期行业/历史中上位）"
+            _follow_biz = re.compile(
+                r"^[^。；\n]{0,40}(增速|占比|毛利率|净利率|ROE|ROIC|市占率|份额|渗透率|增长|下降|提升|承压|波动|变化|以上|区间|中枢)"
+            )
 
-            def _add_pct_context(m):
-                val = m.group(1)
-                if val in used_pcts:
-                    return val  # 已处理过，不再添加
-                used_pcts.add(val)
-                ctx = contexts[len(used_pcts) % len(contexts)]
-                return f"{val}{ctx}"
+            def _add_pct_context(_line, m):
+                _after = _line[m.end() : m.end() + 45]
+                if _follow_biz.match(_after):
+                    return m.group(0)  # 后接业务词/区间延续 → 不动
+                if "（" in _after:
+                    return m.group(0)  # 后随括注 → 不动
+                _before = _line[max(0, m.start() - 20) : m.start()]
+                if re.search(
+                    r"(增速|占比|毛利率|净利率|ROE|ROIC|市占率|份额|渗透率|增长|涨幅|降幅|中枢|区间|率)", _before
+                ):
+                    return m.group(0)  # 前文已给业务含义 → 不动（如"增速转负至-5%"）
+                return m.group(0) + _ann
 
-            text = re.sub(pct_pattern, _add_pct_context, text)
+            _lines_out = []
+            for _ln in text.split("\n"):
+                if _ln.lstrip().startswith("|"):
+                    _lines_out.append(_ln)  # 表格行不处理
+                    continue
+                _lines_out.append(re.sub(r"\d+\.?\d*%", lambda m: _add_pct_context(_ln, m), _ln))
+            text = "\n".join(_lines_out)
 
         return text
 

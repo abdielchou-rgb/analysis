@@ -808,6 +808,34 @@ def _inj_engine_ib_str(ctx):
             g = ", ".join(f"{x * 100:.1f}%" for x in assump["growth_rates"])
             lines.append(f"- 收入增长率假设(5年): {g}")
         lines.append(f"- WACC: {_pct(r.get('wacc'))}")
+        # Phase E（2026-09-06）：DCF 敏感性矩阵（WACC 行 × 永续增长 g 列）——
+        # 引擎确定性计算，写入 prompt 供 LLM 原文引用到估值章节。
+        # 修复 dcf_sensitivity gate 0 分：此前矩阵只在引擎 result，LLM 不知存在
+        # → 正文写不出 WACC×g 敏感性 → gate 恒 0。现在注入矩阵文本。
+        _mat = r.get("sensitivity_matrix") or []
+        _wr = r.get("sensitivity_wacc_range") or []
+        _gr = r.get("sensitivity_g_range") or []
+        if _mat and _wr and _gr:
+            try:
+                _cells = []
+                for row in _mat:
+                    _cells.append(
+                        "| "
+                        + " | ".join("--" if (not isinstance(c, (int, float))) else f"{c:,.0f}" for c in row)
+                        + " |"
+                    )
+                _header = "| WACC \\ g | " + " | ".join(f"{g * 100:.1f}%" for g in _gr) + " |"
+                _sep = "|---|" + "---|" * len(_gr)
+                lines.append("")
+                lines.append("DCF 敏感性矩阵（WACC 行 × 永续增长 g 列，目标价 元/股，引擎计算）：")
+                lines.append(_header)
+                lines.append(_sep)
+                lines.extend(_cells)
+                lines.append(
+                    "写作要求: 估值章节应引用本矩阵说明目标价对 WACC/永续增长的敏感性（如对角最大差异），不得自造敏感性数字。"
+                )
+            except Exception:
+                pass
         lines.append("写作要求: 估值相关数字以上述计算引擎输出为准；如需其他数字，标注来源；不得自造目标价。")
         return "\n".join(lines)
     except Exception as e:

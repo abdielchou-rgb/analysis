@@ -277,6 +277,8 @@ def run_engine_ib(financial_data: dict) -> dict:
             "tv_pct": dcf.get("tv_pct"),
             "confidence": dcf.get("confidence"),
             "sensitivity_matrix": dcf.get("sensitivity"),
+            "sensitivity_wacc_range": dcf.get("sensitivity_wacc_range"),
+            "sensitivity_g_range": dcf.get("sensitivity_g_range"),
             "scenario_weighted_target": scen.get("weighted_target"),
             "scenario_risk_reward": scen.get("risk_reward"),
             "mc_median": mc.get("median"),

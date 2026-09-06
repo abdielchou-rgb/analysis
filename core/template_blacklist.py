@@ -42,6 +42,18 @@ TEMPLATE_VARIANTS = [
     r"经营质量变化",
 ]
 
+# 数字论证注解复读（2026-09-06 茅台 E2E 实测新增）——LLM 从机构语料学到的
+# "数值后注"句式，机械复读 10 次/种达 57 处。注解本身是合法分析判断，但同句
+# 式高频复读=模板污染，且把数值区间（82.23%(A)-87.79%）拆烂触发 indicator 误报。
+# 命中≥2 warning、≥4 error（与主黑名单同阈值，scan 已合并计数）。
+ANNOTATION_REPEAT = [
+    "此水平较同业中位数明显领先，验证成本优势传导",
+    "处于近三年较高分位，确认结构性利好而非周期波动",
+    "超预期幅度符合成本曲线优化预期，非一次性红利",
+    "对应盈利能力持续改善，支撑估值中枢上移逻辑",
+    "该指标处同期行业/历史中上位，对应盈利与估值边际改善空间",
+]
+
 
 def scan(text: str) -> list[dict]:
     """扫描文本，返回命中模板句列表 [{phrase, count, positions}]。"""
@@ -50,6 +62,12 @@ def scan(text: str) -> list[dict]:
         count = text.count(phrase)
         if count > 0:
             hits.append({"phrase": phrase, "count": count})
+    # 注解复读：同一注解句在正文机械复读≥2 视为污染（LLM 套话），计一次命中防
+    # 10 次同句把 count 顶爆——污染度按"复读的注解种类数"而非总次数度量。
+    for phrase in ANNOTATION_REPEAT:
+        count = text.count(phrase)
+        if count >= 2:
+            hits.append({"phrase": phrase, "count": 1, "repeat": count})
     # 变体检测（宽松匹配，用于提示改写）
     variants_found = {}
     for pat in TEMPLATE_VARIANTS:

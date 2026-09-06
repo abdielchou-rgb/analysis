@@ -31,6 +31,16 @@ def _ib_results(fv=1950.27, upside=30.0, mc=(1207.6, 3449.9), mc_med=1960.6):
                     {"param": "revenue_growth_rates", "swing": 1049.7},
                 ],
                 "assumptions": {"growth_rates": [0.165, 0.180, 0.157, 0.157, 0.157], "ebit_margin": 0.58},
+                # WACC×g 敏感性矩阵：5×5，中心≈fair_value，角差驱动 gate matrix_pattern
+                "sensitivity_wacc_range": [0.0643, 0.0743, 0.0843, 0.0943, 0.1043],
+                "sensitivity_g_range": [0.015, 0.025, 0.035, 0.045, 0.055],
+                "sensitivity_matrix": [
+                    [1738.0, 1805.0, 1880.0, 1965.0, 2062.0],
+                    [1670.0, 1730.0, 1796.0, 1870.0, 1954.0],
+                    [1610.0, 1665.0, 1724.0, 1790.0, 1863.0],
+                    [1556.0, 1605.0, 1659.0, 1718.0, 1783.0],
+                    [1506.0, 1551.0, 1600.0, 1654.0, 1712.0],
+                ],
             },
         },
         "scenario_analysis": {
@@ -51,6 +61,19 @@ class TestInjectorEngineIB:
         assert "30.0%" in s
         assert "79.7%" in s
         assert "不得自造" in s
+
+    def test_injector_renders_sensitivity_matrix(self):
+        """engine_ib 注入器应输出 WACC×g 敏感性矩阵（dcf_sensitivity gate 需正文含矩阵）。"""
+        from pipeline.prompt_injectors import build_injections
+
+        dc = {"compute_results": _ib_results()}
+        out = build_injections("600519", "listed_company", data_context=dc)
+        s = out.get("engine_ib_str", "")
+        assert "DCF 敏感性矩阵" in s
+        assert "WACC \\ g" in s
+        # 三连 % 数字（矩阵表头 5 个 %）——满足 gate 的 matrix_pattern
+        assert s.count("%") >= 5
+        assert "1,950" not in s or "对角" in s or "不得自造敏感性" in s
 
     def test_injector_skips_when_not_ok(self):
         from pipeline.prompt_injectors import build_injections

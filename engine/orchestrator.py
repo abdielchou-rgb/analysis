@@ -196,6 +196,8 @@ class IBGradeOrchestrator:
             "tv_pct": result.tv_pct,
             "confidence": result.confidence,
             "sensitivity": result.sensitivity_matrix,
+            "sensitivity_wacc_range": result.sensitivity_wacc_range,
+            "sensitivity_g_range": result.sensitivity_g_range,
         }
 
     # ── Step 10: Scenarios ─────────────────────────────────────────────
