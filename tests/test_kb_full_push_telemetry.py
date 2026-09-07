@@ -198,6 +198,7 @@ def test_record_kb_injection_metrics_writes_context_keys():
     assert ctx["kb_injection_metrics"] == {
         "kb_injected": 7,
         "mkb_injected": 4,
+        "kb_retrieved": 0,
         "mkb_retrieved": 0,
         "kb_ids": [1, 3, 5],
         "mkb_ids": [2],

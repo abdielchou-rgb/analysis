@@ -93,32 +93,42 @@ class KbCitationChecksMixin:
         text = getattr(self, "report_text", "") or ""
         kb_n = int(getattr(self, "_kb_injected_count", 0) or 0)
         mkb_n = int(getattr(self, "_mkb_injected_count", 0) or 0)
-        retrieved = int(getattr(self, "_mkb_retrieved_count", 0) or 0)
+        mkb_retrieved = int(getattr(self, "_mkb_retrieved_count", 0) or 0)
+        kb_retrieved = int(getattr(self, "_kb_retrieved_count", 0) or 0)
         result = check_kb_citation_coverage(text, injected_kb_count=kb_n, injected_mkb_count=mkb_n)
         # P1: 附加 retrieved→injected 诊断（截断丢条目时预警）
         # 只在实际跑了强检查（非 early-return）且 retrieved > injected 时附加
-        if (
-            retrieved > 0
-            and mkb_n > 0
-            and retrieved > mkb_n
-            and result.name == "kb_citation_coverage"
-            and "text too short" not in result.details
-        ):
+        if result.name != "kb_citation_coverage" or "text too short" in result.details:
+            return result
+        truncations = []
+        if kb_retrieved > 0 and kb_n > 0 and kb_retrieved > kb_n:
+            truncations.append(f"KB: retrieved={kb_retrieved}>injected={kb_n} 截断丢{kb_retrieved - kb_n}条")
+        if mkb_retrieved > 0 and mkb_n > 0 and mkb_retrieved > mkb_n:
+            truncations.append(f"MKB: retrieved={mkb_retrieved}>injected={mkb_n} 截断丢{mkb_retrieved - mkb_n}条")
+        if truncations:
             result = GateCheckResult(
                 result.name,
                 result.passed,
                 result.score,
-                result.details + f" [retrieved={retrieved}>injected={mkb_n}: 截断丢{retrieved - mkb_n}条]",
+                result.details + " [" + "; ".join(truncations) + "]",
                 severity=result.severity,
             )
         return result
 
-    def set_kb_injection_counts(self, kb_count: int = 0, mkb_count: int = 0, retrieved_count: int = 0) -> None:
+    def set_kb_injection_counts(
+        self,
+        kb_count: int = 0,
+        mkb_count: int = 0,
+        retrieved_count: int = 0,
+        kb_retrieved_count: int = 0,
+    ) -> None:
         """供 e2e/写作器在 Gate 前注入本报告实际使用的 KB/MKB 条数。
 
         P1（2026-09-07）：retrieved_count = MKB 检索命中总数（截断前），
+        kb_retrieved_count = KB 检索命中总数（截断前），
         供三段漏斗 retrieved→injected→cited 诊断。
         """
         self._kb_injected_count = int(kb_count or 0)
         self._mkb_injected_count = int(mkb_count or 0)
         self._mkb_retrieved_count = int(retrieved_count or 0)
+        self._kb_retrieved_count = int(kb_retrieved_count or 0)

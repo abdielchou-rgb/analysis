@@ -145,6 +145,9 @@ def _inj_kb_str(ctx):
         query_parts.append("估值")
 
         results = search_balanced(" ".join(query_parts), per_category=1)
+        # P1（2026-09-07）：记录 KB 检索命中数（截断前），供三段漏斗诊断
+        if results:
+            ctx["kb_retrieved_count"] = len(results)
         if not results:
             return ""
         lines = [

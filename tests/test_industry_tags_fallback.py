@@ -117,9 +117,9 @@ class TestCitedDedup:
 
 
 class TestRetrievedFunnel:
-    """retrieved > injected 时在 Gate detail 中预警截断丢条目。"""
+    """retrieved > injected 时在 Gate details 中预警截断丢条目。"""
 
-    def test_retrieved预警在details中(self):
+    def test_MKB_retrieved预警在details中(self):
         from pipeline.checks.kb_citation_mixin import KbCitationChecksMixin
 
         mixin = KbCitationChecksMixin()
@@ -127,15 +127,26 @@ class TestRetrievedFunnel:
         mixin.report_text = "分析" * 200 + " [KB1] 合理 [KB2] 验证。"
         mixin.set_kb_injection_counts(kb_count=2, mkb_count=3, retrieved_count=8)
         result = mixin._check_kb_citation_coverage()
-        # retrieved=8 > mkb_injected=3 → 截断丢 5 条 → details 含预警
+        # mkb_retrieved=8 > mkb_injected=3 → 截断丢 5 条 → details 含预警
         assert "retrieved=8" in result.details
         assert "截断丢5条" in result.details
+
+    def test_KB_retrieved预警在details中(self):
+        from pipeline.checks.kb_citation_mixin import KbCitationChecksMixin
+
+        mixin = KbCitationChecksMixin()
+        mixin.report_text = "分析" * 200 + " [KB1] 合理 [KB2] 验证。"
+        mixin.set_kb_injection_counts(kb_count=2, mkb_count=0, kb_retrieved_count=10)
+        result = mixin._check_kb_citation_coverage()
+        # kb_retrieved=10 > kb_injected=2 → 截断丢 8 条
+        assert "KB: retrieved=10>injected=2" in result.details
+        assert "截断丢8条" in result.details
 
     def test_retrieved不大于injected时无预警(self):
         from pipeline.checks.kb_citation_mixin import KbCitationChecksMixin
 
         mixin = KbCitationChecksMixin()
-        # 文本需 >300 字；retrieved ≤ mkb_injected → 不应有截断预警
+        # 文本需 >300 字；retrieved ≤ injected → 不应有截断预警
         mixin.report_text = "分析" * 200 + " [KB1] 合理。"
         mixin.set_kb_injection_counts(kb_count=1, mkb_count=4, retrieved_count=3)
         result = mixin._check_kb_citation_coverage()

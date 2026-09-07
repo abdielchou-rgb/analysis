@@ -32,19 +32,23 @@ def _record_kb_injection_metrics(context: dict, sw) -> None:
     必须只在实际写成功的路径调用（在 try/except RuntimeError 之后），
     否则会落进 except 内 raise 之后的死代码区。
 
-    P1（2026-09-07）：额外写入 mkb_retrieved（注入前检索命中数），
+    P1（2026-09-07）：额外写入 mkb_retrieved/kb_retrieved（注入前检索命中数），
     供三段漏斗 retrieved→injected→cited 诊断。
     """
     try:
         _kb_m = getattr(sw, "_kb_injection_metrics", None) or {"kb_count": 0, "mkb_count": 0}
         _kb_ids = getattr(sw, "_kb_injection_last_ids", None) or {"kb": [], "mkb": []}
-        # P1: 从写作器或 context 读取 MKB 检索命中数（注入前）
+        # P1: 从写作器或 context 读取 KB/MKB 检索命中数（注入前）
         _mkb_retrieved = getattr(sw, "_mkb_retrieved_count", None)
         if _mkb_retrieved is None:
             _mkb_retrieved = context.get("mkb_retrieved_count", 0)
+        _kb_retrieved = getattr(sw, "_kb_retrieved_count", None)
+        if _kb_retrieved is None:
+            _kb_retrieved = context.get("kb_retrieved_count", 0)
         context["kb_injection_metrics"] = {
             "kb_injected": int(_kb_m.get("kb_count", 0) or 0),
             "mkb_injected": int(_kb_m.get("mkb_count", 0) or 0),
+            "kb_retrieved": int(_kb_retrieved or 0),
             "mkb_retrieved": int(_mkb_retrieved or 0),
             "kb_ids": list(_kb_ids.get("kb", []) or []),
             "mkb_ids": list(_kb_ids.get("mkb", []) or []),
@@ -1300,11 +1304,13 @@ class E2ENodes:
                 kb_count=int(_kb_m.get("kb_injected", 0) or 0),
                 mkb_count=int(_kb_m.get("mkb_injected", 0) or 0),
                 retrieved_count=int(_kb_m.get("mkb_retrieved", 0) or 0),
+                kb_retrieved_count=int(_kb_m.get("kb_retrieved", 0) or 0),
             )
             if _kb_m.get("kb_injected") or _kb_m.get("mkb_injected"):
                 logger.info(
-                    "[KB-CITATION] Gate 强检查生效: KB注入=%d MKB注入=%d retrieved=%d",
+                    "[KB-CITATION] Gate 强检查生效: KB注入=%d retrieved=%d MKB注入=%d retrieved=%d",
                     _kb_m.get("kb_injected", 0),
+                    _kb_m.get("kb_retrieved", 0),
                     _kb_m.get("mkb_injected", 0),
                     _kb_m.get("mkb_retrieved", 0),
                 )
