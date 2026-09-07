@@ -748,9 +748,17 @@ class E2ENodes:
                 # R83: 委托方必答问题清单注入 data_context（section_writer 消费）
                 if context.get("client_questions"):
                     _cd["client_questions"] = context["client_questions"]
+            # 2026-09-07 根因修复（知识保留率审计）：compute 节点把结果写进
+            # context["compute_results"]（顶层），但此处只传 collected_data 给
+            # section_writer → engine_ib_str/rdcf_str/mc_str 等读 data_context
+            # ["compute_results"] 恒得 {} → 24 个引擎方法论注入器真实管线 100%
+            # 空转（引擎算了但报告从未引用）。现把顶层 compute_results 并入。
+            _write_dc = dict(context.get("collected_data", {}) or {})
+            if context.get("compute_results") and not _write_dc.get("compute_results"):
+                _write_dc["compute_results"] = context["compute_results"]
             text = sw.write(
                 asset=context.get("asset", ""),
-                data_context=context.get("collected_data", {}),
+                data_context=_write_dc,
                 chart_paths=context.get("chart_paths", {}),
                 chart_template_flags=context.get("chart_template_flags", {}),
                 gate_feedback=context.get("gate_feedback", ""),

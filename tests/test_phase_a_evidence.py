@@ -253,3 +253,40 @@ class TestGateEvidenceCoverage:
         r = gate._check_evidence_coverage()
         assert r.passed  # 基线期不阻断
         assert r.severity in ("warning",)  # 但要警告
+
+
+class TestComputeResultsWiring:
+    """2026-09-07 知识保留率审计根因：compute_results 传参断链。
+
+    compute 节点写 context["compute_results"]（顶层），但 write_sections 调
+    sw.write(data_context=context["collected_data"]) 只传子集 → section_writer 内
+    _last_data_context["compute_results"] 恒 {} → engine_ib_str/rdcf_str 等 24 个
+    引擎方法论注入器真实管线 100% 空转（引擎算了但报告从未引用）。
+    修复：write_sections 把顶层 compute_results 并入传入的 data_context。
+    """
+
+    def test_write_sections_merges_compute_results(self):
+        """e2e write_sections 源码应把顶层 compute_results 并入 data_context。"""
+        import sys
+        from pathlib import Path
+
+        _root = Path(__file__).resolve().parent.parent
+        if str(_root) not in sys.path:
+            sys.path.insert(0, str(_root))
+        src = (_root / "pipeline" / "e2e_orchestrator.py").read_text(encoding="utf-8")
+        # 必须存在：把顶层 compute_results 并入 _write_dc 的接线
+        assert '_write_dc = dict(context.get("collected_data", {}) or {})' in src
+        assert 'context.get("compute_results") and not _write_dc.get("compute_results")' in src
+        assert '_write_dc["compute_results"] = context["compute_results"]' in src
+        # data_context 参数必须用合并后的 _write_dc（而非裸 collected_data）
+        assert "data_context=_write_dc" in src
+
+    def test_engine_injector_emits_when_compute_present(self):
+        """compute_results 在 data_context 时 engine_ib 注入器必须产出（修复目标态）。"""
+        from pipeline.prompt_injectors import build_injections
+
+        dc = {"chart_data": {}, "compute_results": _ib_results()}
+        out = build_injections("贵州茅台", "listed_company", data_context=dc, asset_code="600519")
+        s = out.get("engine_ib_str", "") or ""
+        assert len(s) > 0, "engine_ib_str 应产出（compute_results 已传入）"
+        assert "1,950.27" in s or "1,950" in s
