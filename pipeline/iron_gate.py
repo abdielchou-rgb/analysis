@@ -416,6 +416,8 @@ class IronGate(
             self._check_numerical_tier,
             # Phase A2（2026-09-06）：证据账本覆盖率——全文数值声明 vs 计算引擎核对
             self._check_evidence_coverage,
+            # 2026-09-07（茅台 E2E 事故）：跨行业内容污染——白酒报告被注入锂电池论证
+            self._check_cross_industry_contamination,
         ]
         checks = []
         # R15（2026-08-01 提速）：把 LLM 检查（ai_tone/human_impossible/数据验证，各 60s+）

@@ -1479,3 +1479,95 @@ class DataQualityChecksMixin:
             return GateCheckResult(
                 "evidence_coverage", True, 0.5, f"账本引擎异常（降级放行）: {str(e)[:80]}", severity="warning"
             )
+
+    def _check_cross_industry_contamination(self) -> GateCheckResult:
+        """2026-09-07（茅台 E2E 事故）：跨行业内容污染检测。
+
+        事故：白酒公司报告被注入"碳酸锂价格压缩单Wh利润/长协锁定60%成本"的锂电池
+        论证（宁德时代模板）。根因=确定性代码+prompt 示例用单行业内容污染所有标的。
+        本检查：确定性词表——检测报告正文是否出现"非本资产行业"的高特异性术语/机构名。
+
+        机制：
+          1. 由 asset 解析代码 → peer_valuation 查行业归属（茅台=白酒）
+          2. 词表 data/cross_industry_markers.json：行业族 → 高特异性术语
+          3. 报告命中 ≥2 个"非本行业"词族的术语（且非本行业豁免语境）→ 标记污染
+
+        豁免：行业词天然会出现在"可比公司/产业链上下游/全球对标"语境（茅台报告谈
+        光伏储能 vs 帝亚吉欧不相关，但谈五粮液/泸州老窖是白酒本行业）。因此命中
+        非本行业词仅当**数量≥2 且出现为分析主语**才告警；单次提及降为 info。
+        本检查 severity=warning（先观测不阻断，避免误伤合法的跨行业对标讨论）。
+        """
+        text = getattr(self, "report_text", "") or ""
+        if not text or len(text) < 500:
+            return GateCheckResult("cross_industry_contamination", True, 1.0, "无文本")
+        try:
+            import json as _json
+            from pathlib import Path
+
+            _root = Path(getattr(self, "_root", _ROOT))
+            _mk = _root / "data" / "cross_industry_markers.json"
+            if not _mk.exists():
+                return GateCheckResult("cross_industry_contamination", True, 1.0, "词表缺失，跳过")
+            markers = _json.loads(_mk.read_text(encoding="utf-8"))
+            ind_map = markers.get("industry_markers", {})
+            foreign_agency = markers.get("foreign_agency_markers", [])
+
+            # 1. 确定资产所属行业族
+            asset = getattr(self, "asset", "") or ""
+            asset_industry_family = None
+            try:
+                from core.asset_resolver import resolve_asset
+
+                code = resolve_asset(asset).code
+                if code:
+                    import json as _pvj
+
+                    _pv = _root / "data" / "peer_valuation.json"
+                    if _pv.exists():
+                        _entry = _pvj.loads(_pv.read_text(encoding="utf-8")).get(code) or {}
+                        _ind = str(_entry.get("industry") or "")
+                        # 匹配词表的行业族（白酒Ⅱ → 白酒；电池 精确）
+                        for fam, _terms in ind_map.items():
+                            if fam in _ind or _ind in fam:
+                                asset_industry_family = fam
+                                break
+            except Exception:
+                pass
+
+            # 2. 统计非本行业词的命中
+            hits = []
+            for fam, terms in ind_map.items():
+                if fam == asset_industry_family:
+                    continue  # 本行业词不算污染
+                for term in terms:
+                    if len(term) <= 1:
+                        continue
+                    _c = text.count(term)
+                    if _c > 0:
+                        hits.append({"industry": fam, "term": term, "count": _c})
+
+            # 机构名/假引用标记（任何行业都不该出现 SNE/SMM 锂价 unless 电池）
+            for agency in foreign_agency:
+                _c = text.count(agency)
+                if _c > 0:
+                    hits.append({"industry": "foreign_agency", "term": agency, "count": _c})
+
+            if not hits:
+                return GateCheckResult("cross_industry_contamination", True, 1.0, "无跨行业词命中")
+
+            # 3. 判定：非本行业词 ≥2 种行业族命中 → warning 污染
+            fams_hit = {h["industry"] for h in hits}
+            top = ", ".join(f"{h['term']}(×{h['count']})" for h in hits[:5])
+            if len(fams_hit) >= 1 and asset_industry_family:
+                _detail = f"疑似跨行业内容污染: 资产行业={asset_industry_family}，命中非本行业词: {top}"
+                return GateCheckResult("cross_industry_contamination", False, 0.2, _detail, severity="warning")
+            # 无法判定资产行业 → 只对"假机构引用"这类明确污染告警
+            if "foreign_agency" in fams_hit:
+                return GateCheckResult(
+                    "cross_industry_contamination", False, 0.3, f"疑似伪造引用: {top}", severity="warning"
+                )
+            return GateCheckResult("cross_industry_contamination", True, 0.8, f"命中(行业未定): {top}")
+        except Exception as e:
+            return GateCheckResult(
+                "cross_industry_contamination", True, 0.8, f"检查异常(降级): {str(e)[:80]}", severity="warning"
+            )
