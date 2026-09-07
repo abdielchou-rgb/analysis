@@ -278,7 +278,10 @@ def extract_engine_params(financial_data: dict) -> dict | None:
         "terminal_growth_rate": 0.025,
         "shares_outstanding": shares,
         "net_debt": net_debt,
-        "current_price": price,
+        # 2026-09-07：price 缺失时传 None（schema current_price: Optional[gt=0]），
+        # 而非 0.0——pydantic gt=0 会拒绝 0 → DCF step9 校验失败。DCF fair_value
+        # 不需要 price（upside_pct 留 None），price=0 不应阻断估值计算。
+        "current_price": price if price and price > 0 else None,
         "tax_rate": tax_rate,
         "da_pct_revenue": 0.03,
         "capex_pct_revenue": 0.04,

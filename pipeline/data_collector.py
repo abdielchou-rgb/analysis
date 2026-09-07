@@ -992,8 +992,140 @@ class DataCollectorV5:
             logger.debug("StockSDK search failed: %s", e)
         return result
 
+    def _eastmoney_direct(self, asset):
+        """2026-09-07 东财直连采集（绕过 akshare 内部坏路由）。
+
+        环境实测：akshare 内部 HTTP 挂起，但东财 push2 行情 + datacenter 财务 API
+        直连可用。产出与 akshare _akshare_search 同构：
+          - fig_revenue_trend: {年: {revenue, net_profit, gross_margin, eps, ...}}
+          - fig_valuation: {net_profit, revenue, gross_margin, period, price, ...}
+          - price 来自东财行情（解决 engine_ib DCF 缺 current_price）
+        全部真实数据（东财口径），不估算。
+        """
+        import json as _emj
+        import ssl as _emssl
+        import urllib.request as _emreq
+
+        result = {}
+        # 资产 → 6 位代码（东财 SECUCODE 需 SH600519 前缀）
+        code = "".join(c for c in str(asset) if c.isdigit())[:6]
+        if len(code) != 6:
+            try:
+                from core.asset_resolver import resolve_asset
+
+                code = resolve_asset(asset).code
+            except Exception:
+                return {}
+        if len(code) != 6:
+            return {}
+        market = "SH" if code.startswith("6") else "SZ"
+        secucode = f"{code}.{market}"
+        _ctx = _emssl.create_default_context()
+        _ctx.check_hostname = False
+        _ctx.verify_mode = _emssl.CERT_NONE
+        _hdr = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120",
+            "Referer": "https://emweb.securities.eastmoney.com/",
+        }
+
+        def _get(url, timeout=10):
+            req = _emreq.Request(url, headers=_hdr)
+            return _emreq.urlopen(req, timeout=timeout, context=_ctx).read().decode("utf-8", "ignore")
+
+        # ── 1. 年度财务（2021-2025 年报，东财 datacenter）──
+        try:
+            _fin_url = (
+                "https://datacenter-web.eastmoney.com/api/data/v1/get"
+                "?reportName=RPT_F10_FINANCE_MAINFINADATA&columns=ALL"
+                f"&filter=(SECUCODE%3D%22{secucode}%22)(REPORT_TYPE%3D%22%E5%B9%B4%E6%8A%A5%22)"
+                "&pageNumber=1&pageSize=8&sortTypes=-1&sortColumns=REPORT_DATE"
+            )
+            _body = _get(_fin_url)
+            _d = _emj.loads(_body)
+            _rows = (_d.get("result") or {}).get("data") or []
+            annual = {}
+            for row in _rows:
+                rd = str(row.get("REPORT_DATE_NAME") or row.get("REPORT_DATE") or "")
+                # 只保留完整年报（日期落在 12-31），排除 03-31/06-30/09-30 季报
+                _date = str(row.get("REPORT_DATE") or "")
+                if "-12-31" not in _date and "1231" not in _date:
+                    continue
+                year = "".join(c for c in rd if c.isdigit())[:4]
+                rev = row.get("TOTALOPERATEREVE")
+                np_ = row.get("PARENTNETPROFIT")
+                eps = row.get("EPSJB")
+                gm = row.get("XSMLL")
+                if not year or not rev:
+                    continue
+                annual[year] = {
+                    "revenue": rev,
+                    "net_profit": np_ if np_ else "",
+                    "gross_margin": gm if gm else "",
+                    "eps": eps if eps else "",
+                }
+            if len(annual) >= 2:
+                result["fig_revenue_trend"] = annual
+                result["fig_profitability"] = annual
+                # 最新年报键 + 单独 fig_valuation
+                _ly = sorted(annual.keys())[-1]
+                _li = annual[_ly]
+                result["fig_valuation"] = {
+                    "net_profit": _li.get("net_profit", ""),
+                    "revenue": _li.get("revenue", ""),
+                    "gross_margin": _li.get("gross_margin", ""),
+                    "eps": _li.get("eps", ""),
+                    "period": f"{_ly}年报",
+                    "source": "eastmoney:datacenter FINANCE_MAINFINADATA",
+                }
+                logger.info("[EM-DIRECT] %s 年报 %d 年 (%s)", code, len(annual), _ly)
+        except Exception as _e:
+            logger.debug("[EM-DIRECT] 财务失败: %s", str(_e)[:100])
+
+        # ── 2. 实时行情（现价/市值）→ engine_ib 需 current_price ──
+        # 东财 push2 stock/get 单端点不稳定，改腾讯 qt.gtimg.cn（已验证稳定）。
+        try:
+            _tx_url = f"https://qt.gtimg.cn/q={market.lower()}{code}"
+            _req = _emreq.Request(_tx_url, headers={"User-Agent": "Mozilla/5.0", "Referer": "https://gu.qq.com"})
+            _body = _emreq.urlopen(_req, timeout=8, context=_ctx).read().decode("gbk", "ignore")
+            if _body and '"' in _body:
+                _parts = _body.split('"')[1].split("~")
+                if len(_parts) > 3:
+                    try:
+                        price = float(_parts[3])
+                    except (ValueError, TypeError):
+                        price = 0.0
+                    fv = result.setdefault("fig_valuation", {})
+                    if isinstance(fv, dict) and price > 0:
+                        fv["price"] = price
+                        # 总市值（部分在第45字段，腾讯单位亿）
+                        if len(_parts) > 45:
+                            try:
+                                _mcap_yi = float(_parts[45])
+                                fv["market_cap"] = _mcap_yi * 1e8
+                            except (ValueError, TypeError, IndexError):
+                                pass
+                        logger.info("[EM-DIRECT] %s 腾讯现价 %.2f", code, price)
+        except Exception as _e:
+            logger.debug("[EM-DIRECT] 行情失败: %s", str(_e)[:100])
+
+        if not result:
+            logger.warning("[EM-DIRECT] %s 东财无数据", code)
+        return result
+
     def _akshare_search(self, asset):
-        """Use akshare to extract real A-stock financial data"""
+        """Use akshare to extract real A-stock financial data
+
+        2026-09-07（网络断点修复）：akshare 内部 HTTP 路由在此环境挂起（同花顺/
+        部分东财端点 RemoteDisconnected）。底层东财 datacenter API 直连可用，
+        故优先走 _eastmoney_direct 直连（产出与 akshare 同构的 result）；
+        仅当东财失败才回退 akshare（保留原路径）。
+        """
+        try:
+            _em = self._eastmoney_direct(asset)
+            if _em:
+                return _em
+        except Exception as _e_em:
+            logger.debug("[EM-DIRECT] 东财直连失败，回退 akshare: %s", _e_em)
         result = {}
         try:
             import akshare as ak

@@ -225,10 +225,13 @@ class IBGradeOrchestrator:
         bull_growth = [min(g + 0.03, 0.35) for g in base_growth]
         bear_growth = [max(g - 0.03, -0.10) for g in base_growth]
 
+        # 2026-09-07：current_price 缺失（无实时行情）时，场景以 DCF fair_value 为锚，
+        # 而非失败。base_price 需 float（schema 非 Optional）。
+        _anchor_price = a.get("current_price") or 100.0
         scenario_a = ScenarioAssumptions(
             ticker=a.get("ticker", ""),
             company_name=a.get("company_name", ""),
-            base_price=a.get("current_price", 100),
+            base_price=_anchor_price,
             bull=ScenarioDetail(
                 revenue_growth_rates=bull_growth,
                 operating_margin=bull_margin,

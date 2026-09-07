@@ -215,6 +215,35 @@ class TestComputeEngineIntegration:
             assert r.get("primary_target_price") == r["engine_ib"]["result"]["fair_value"]
 
 
+class TestEastmoneyDirect:
+    """2026-09-07 网络断点修复：东财直连采集（绕过 akshare 内部挂起）。
+
+    网络相关——失败时 skip（不阻断离线 CI），成功时验证产出真实茅台财务。
+    """
+
+    def test_eastmoney_direct_moutai(self):
+        import pytest
+
+        from pipeline.data_collector import DataCollectorV5
+
+        try:
+            r = DataCollectorV5()._eastmoney_direct("贵州茅台")
+        except Exception as e:
+            pytest.skip(f"网络不可用: {e}")
+        if not r:
+            pytest.skip("东财直连无数据（网络受限）")
+        frt = r.get("fig_revenue_trend", {})
+        assert len(frt) >= 2, "应取到 ≥2 年真实年报"
+        # 2024 年报真实值：营收1741.44亿 净利862.28亿 EPS68.64（与 MOUTAI_LIKE 一致）
+        if "2024" in frt:
+            e24 = frt["2024"]
+            assert abs(float(e24["revenue"]) / 1e8 - 1741.44) < 5, "2024营收应≈1741亿"
+            assert abs(float(e24["net_profit"]) / 1e8 - 862.28) < 5, "2024净利应≈862亿"
+        fv = r.get("fig_valuation", {})
+        assert fv.get("price", 0) > 0, "东财直连应带现价（engine_ib 需 current_price）"
+        assert fv.get("net_profit"), "fig_valuation 应带 net_profit"
+
+
 class TestIronGateV2Precheck:
     def test_l1_blocks_extreme_wacc(self):
         """WACC <= g 时 L1 应拦截"""
