@@ -175,6 +175,31 @@ class TestRunEngineIB:
             price = MOUTAI_LIKE["chart_data"]["fig_valuation"]["price"]
             assert 0.05 < fv / price < 20
 
+    def test_repo_fallback_full_chain_computes(self):
+        """2026-09-07 断点2+3 完整链路：采集缺营收序列但 repo segment_revenue +
+        consensus EPS + 现价齐备时，engine_ib 应算出 fair_value + 隐含增长。
+
+        这是"引擎顶级方法论真正进报告"的最小闭环验证（茅台真实财务形态）。
+        """
+        from pipeline.engine_bridge import run_engine_ib
+
+        fd = {
+            "asset": "贵州茅台",
+            "stock_name": "贵州茅台",
+            "chart_data": {
+                "fig_valuation": {"net_profit": "862.28亿", "eps": "68.64", "price": 1500.0},
+            },
+        }
+        r = run_engine_ib(fd)
+        assert r["status"] == "ok", f"repo 兜底应能完成 DCF: {r.get('reason')}"
+        fv = r["result"]["fair_value"]
+        # 茅台现价 ~1500，DCF 值应在合理区间
+        assert 500 < fv < 2500, f"fair_value 超出合理区间: {fv}"
+        # 期望分析含隐含增长
+        exp = r["result"].get("expectations", {})
+        assert "implied_growth" in exp
+        assert "09_dcf" in r["result"].get("steps_completed", [])
+
 
 class TestComputeEngineIntegration:
     def test_compute_engine_calls_bridge(self):

@@ -88,6 +88,7 @@ class DataCollectorV5:
         """Enrich collected data with historical context from exemplar bank."""
         try:
             import sys
+
             sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
             from context_enrichment import ContextEnricher
 
@@ -108,6 +109,7 @@ class DataCollectorV5:
 
         except ImportError as e:
             import logging
+
             logging.error("[CONTEXT_ENRICHMENT] Enrichment unavailable: %s", e)
             logging.error("[CONTEXT_ENRICHMENT] Running in DEGRADED mode - no context enrichment")
             collected["_enrichment_context"] = {
@@ -116,6 +118,7 @@ class DataCollectorV5:
             }
         except Exception as e:
             import logging
+
             logging.error("[CONTEXT_ENRICHMENT] Enrichment failed: %s", e)
             collected["_enrichment_context"] = {
                 "status": "error",
@@ -585,7 +588,7 @@ class DataCollectorV5:
                 "Extract structured financial data from the following text about %s. "
                 "Return ONLY valid JSON with double-quoted keys. Use null for missing data.\n\n"
                 "Text:\n%s\n\n"
-                'Return format:\n'
+                "Return format:\n"
                 '{"revenue":{"2023":val,"2024":val,"2025":val},'
                 '"gross_margin":{"2023":val,"2024":val,"2025":val},'
                 '"segments":{"name":pct}}'
@@ -661,7 +664,8 @@ class DataCollectorV5:
             verified = sum(1 for n in n_sources_map.values() if n >= 2)
             logger.info(
                 "[CROSS-VALIDATE] %d fig keys checked, %d multi-source verified",
-                len(n_sources_map), verified,
+                len(n_sources_map),
+                verified,
             )
         return chart_data
 
@@ -1142,6 +1146,18 @@ class DataCollectorV5:
             try:
                 peers = self._akshare_peers(ak, stock_code)
                 if peers:
+                    # 2026-09-07 断点3：本股实时行情从 peers 剥离 → fig_valuation 补 price
+                    _self_q = peers.pop("_self_quote", None) if isinstance(peers, dict) else None
+                    if _self_q and _self_q.get("price"):
+                        _fv = result.get("fig_valuation", {})
+                        if isinstance(_fv, dict):
+                            _fv["price"] = _self_q["price"]
+                            if _self_q.get("mcap") and not _fv.get("market_cap"):
+                                _fv["market_cap"] = _self_q["mcap"]
+                            result["fig_valuation"] = _fv
+                        else:
+                            result["fig_valuation"] = {"price": _self_q["price"]}
+                        logger.info("akshare self quote: price=%.2f for %s", _self_q["price"], stock_code)
                     result["fig_peer_comparison"] = peers
                     logger.info("akshare peers: %d companies", len(peers))
             except Exception as e:
@@ -1191,13 +1207,15 @@ class DataCollectorV5:
             if df_spot is None or df_spot.empty:
                 return {}
 
-            # 建立 代码→行情 映射
+            # 建立 代码→行情 映射（含现价——2026-09-07 断点3：此前只存 pe/pb/mcap，
+            # 丢弃 price。StockSDK 不可用时 engine_ib 因缺 current_price 而 DCF step9 失败）
             spot_map = {}
             for _, srow in df_spot.iterrows():
                 code = str(srow.get("代码", "")).zfill(6)
                 try:
                     spot_map[code] = {
                         "name": str(srow.get("名称", "")),
+                        "price": srow.get("最新价", None),
                         "pe": srow.get("市盈率-动态", None),
                         "pb": srow.get("市净率", None),
                         "mcap": srow.get("总市值", None),
@@ -1240,6 +1258,17 @@ class DataCollectorV5:
             )
             for c, name, pe_f, pb_f, mcap_f in candidates[:8]:
                 peers[name] = {"pe": pe_f, "pb": pb_f, "mcap": round(mcap_f / 1e8, 1)}
+            # 2026-09-07 断点3：附带本股实时行情（现价/市值），供 fig_valuation 取 price。
+            # StockSDK 不可用时 engine_ib 依赖此 price 完成 DCF（current_price=0 → step9 失败）。
+            # 用非标准键 _self_quote 携带，由调用方决定是否 merge（不污染 peers 本身）。
+            if stock_code in spot_map:
+                _sq = spot_map[stock_code]
+                if _sq.get("price"):
+                    peers["_self_quote"] = {
+                        "price": float(_sq["price"]),
+                        "pe": _sq.get("pe"),
+                        "mcap": _sq.get("mcap"),
+                    }
             return peers
         except Exception as e:
             logger.warning("_akshare_peers failed: %s", e)
