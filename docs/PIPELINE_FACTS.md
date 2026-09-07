@@ -4,8 +4,8 @@
 > 手改无效——事实变更请改代码本身。生成时间见文件尾。
 
 ## IronGate
-- 注册检查方法数（checks/）：104
-- run_all 引用检查数：104
+- 注册检查方法数（checks/）：105
+- run_all 引用检查数：105
 - 迁移完整性：OK
 - 门禁阈值 PASS_THRESHOLD（iron_gate.py 单一事实源）：0.78
 - 判据版本 JUDGE_VERSION（iron_gate.py 单一事实源）：v2-error-mean-0.78

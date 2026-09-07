@@ -125,6 +125,26 @@ def llm_cache_ttl() -> int:
     return max(60, _int("LLM_CACHE_TTL", 86_400))
 
 
+# ── 节点墙钟预算（P0-3，2026-09-07）────────────────────────────
+# 确定性节点（data/validate/record_results）的重尾 p90/max 通常不是 LLM，
+# 而是内部重试/共享锁/IO 放大。超过预算即熔断，不等挂死整条管线。
+
+
+def data_node_budget_s() -> float:
+    """data 节点墙钟预算秒数（采集+fallback+provenance）。超预算降级。"""
+    return max(30.0, _float("DATA_NODE_BUDGET_S", 120.0))
+
+
+def validate_node_budget_s() -> float:
+    """validate 节点墙钟预算秒数（Gate 101 项检查）。超预算降级。"""
+    return max(30.0, _float("VALIDATE_NODE_BUDGET_S", 90.0))
+
+
+def record_node_budget_s() -> float:
+    """record_results 节点墙钟预算秒数。超预算跳过记录，不阻断导出。"""
+    return max(10.0, _float("RECORD_NODE_BUDGET_S", 60.0))
+
+
 # ── 图表 ──────────────────────────────────────────────────────
 
 

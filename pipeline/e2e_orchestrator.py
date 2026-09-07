@@ -247,6 +247,8 @@ class E2ENodes:
         修复（2026-08-01 审计）：写改循环 MAX_ATTEMPTS 内每轮重建图重跑网络采集。
         若 orchestrator 已注入缓存数据（_data_cached=True），直接复用，不重采。
         """
+        _d_t0 = time.perf_counter()
+        _d_sub = {}  # P0-2a: 子步骤耗时
         asset = context.get("asset", "")
         rt = context.get("report_type", "industry_deep")
         data = None
@@ -258,6 +260,7 @@ class E2ENodes:
             return {"collected_data": cached, "_data_cached": True}
 
         # Primary: DataCollectorV5 (Tavily+yfinance+akshare multi-phase)
+        _d_primary_t0 = time.perf_counter()
         try:
             from pipeline.data_collector import DataCollectorV5
 
@@ -272,9 +275,11 @@ class E2ENodes:
                 logger.info("[DATA] DataCollectorV5: %d keys", len(data))
         except Exception as e:
             logger.warning("[DATA] DataCollectorV5 failed: %s", e)
+        _d_sub["primary"] = round(time.perf_counter() - _d_primary_t0, 1)
 
         # Fallback: DataPipeline
         if not data or len(data) < 2:
+            _d_fallback_t0 = time.perf_counter()
             try:
                 from pipeline.data_pipeline import DataPipeline
 
@@ -285,6 +290,7 @@ class E2ENodes:
                     logger.info("[DATA] DataPipeline fallback: merged %d keys", len(data_fb))
             except Exception as e2:
                 logger.warning("[DATA] DataPipeline fallback: %s", e2)
+            _d_sub["fallback"] = round(time.perf_counter() - _d_fallback_t0, 1)
 
         if not data:
             context["degradation_level"] = max(context.get("degradation_level", 0), 2)
@@ -303,6 +309,9 @@ class E2ENodes:
             context["provenance"] = dp2
         except Exception as e:
             logger.debug("Provenance: %s", e)
+        # P0-2a: data 节点内分段耗时——primary/fallback 各花多久一目了然
+        _d_total = round(time.perf_counter() - _d_t0, 1)
+        logger.info("[DATA][PROFILE] %.1fs breakdown: %s", _d_total, _d_sub)
         return {"collected_data": data}
 
     @staticmethod
@@ -1220,6 +1229,8 @@ class E2ENodes:
 
     @staticmethod
     def validate(node_id, context):
+        _v_t0 = time.perf_counter()
+        _v_sub = {}  # P0-2a: 子步骤耗时
         text = context.get("final_text", "") or context.get("report_text", "")
         # 2026-09-04（0.95 冲刺）：双声部分离前置到 Gate 前。
         # 根因：main.py 的 separate_voices 在管线返回后才跑——但 Gate 在此之前
@@ -1255,6 +1266,7 @@ class E2ENodes:
         tmp_path = os.path.join(context.get("output_dir", str(_ROOT / "output")), "_gate_check.md")
         with open(tmp_path, "w", encoding="utf-8") as f:
             f.write(text)
+        _v_sub["pre_gate"] = round(time.perf_counter() - _v_t0, 1)
 
         # D1: 节点完成契约——校验必需节点是否产出 evidence
         _node_evidence = {
@@ -1329,7 +1341,9 @@ class E2ENodes:
             context["gate_result"] = {"passed": False, "score": 0.0, "failures": ["L3: Core LLM unavailable"]}
             return {"gate_result": context["gate_result"]}
 
+        _ig_t0 = time.perf_counter()
         result = ig.run_all()
+        _v_sub["iron_gate"] = round(time.perf_counter() - _ig_t0, 1)
         context["gate_result"] = result
         context["ig_report"] = result.to_dict()
 
@@ -1399,6 +1413,10 @@ class E2ENodes:
                 _obs.log_quality_trend("failure_count", float(_n_fail), sample_size=1)
         except Exception as _qt_e:
             logger.debug("[QUALITY-TREND] 写入失败: %s", str(_qt_e)[:60])
+
+        # P0-2a: validate 节点内分段耗时——gate 101 项里哪段慢一目了然
+        _v_total = round(time.perf_counter() - _v_t0, 1)
+        logger.info("[VALIDATE][PROFILE] %.1fs breakdown: %s", _v_total, _v_sub)
 
         return {"gate_result": result.to_dict() if hasattr(result, "to_dict") else {}}
 
@@ -1527,6 +1545,8 @@ class E2ENodes:
 
     @staticmethod
     def record_results(node_id, context):
+        _r_t0 = time.perf_counter()
+        _r_sub = {}  # P0-2a: 子步骤耗时
         try:
             from pipeline.learning_loop import LearningLoop
 
@@ -1534,6 +1554,7 @@ class E2ENodes:
             # 非 score——此前用 gate.get("score",0) 恒得 0，导致 report_scores 62% 假 0 分。
             gate = context.get("gate_result", {})
             ll = LearningLoop()
+            _r_sub["import"] = round(time.perf_counter() - _r_t0, 1)
             _score = gate.get("overall_score", gate.get("score", 0))
             ll.after_report(
                 context.get("asset", ""),
@@ -1601,6 +1622,7 @@ class E2ENodes:
                 logger.warning("[REFLECT] e2e 出口反思记录失败: %s", str(_refl_e)[:80])
 
             # Extract and register bold calls
+            _r_bold_t0 = time.perf_counter()
             text = context.get("final_text", "") or context.get("report_text", "")
             if text:
                 from core.bold_call_extractor import BoldCallExtractor
@@ -1649,6 +1671,7 @@ class E2ENodes:
                         logger.info("[FORWARDPICKS] %d predictions recorded", len(calls))
                     except Exception as e:
                         logger.debug("[FORWARDPICKS] failed: %s", e)
+            _r_sub["bold_calls"] = round(time.perf_counter() - _r_bold_t0, 1)
 
             # FP5: Validate expired predictions against market data
             try:
@@ -1699,6 +1722,9 @@ class E2ENodes:
 
         except Exception as e:
             logger.debug("[RECORD] failed: %s", e)
+        # P0-2a: record_results 节点内分段耗时
+        _r_total = round(time.perf_counter() - _r_t0, 1)
+        logger.info("[RECORD][PROFILE] %.1fs breakdown: %s", _r_total, _r_sub)
         return {"_recorded": True}
 
     @staticmethod
@@ -2172,7 +2198,9 @@ class E2EOrchestratorV2:
                 desc="RSS/PDF/patent feeds (merged into collected_data)",
             )
             g.add_node("hypothesis", E2ENodes.hypothesis_check, deps=[], desc="hypothesis T0.5")
-            g.add_node("data", E2ENodes.data, deps=[], desc="data + provenance")
+            g.add_node(
+                "data", E2ENodes.data, deps=[], desc="data + provenance", timeout_s=int(settings.data_node_budget_s())
+            )
             g.add_node(
                 "universe_build",
                 E2ENodes.universe_build,
@@ -2228,7 +2256,13 @@ class E2EOrchestratorV2:
                 desc="template enforcer (after assemble, checks final_text)",
             )
             g.add_node("assemble", E2ENodes.assemble, deps=["style", "charts"], desc="assemble")
-            g.add_node("validate", E2ENodes.validate, deps=["assemble"], desc="gate")
+            g.add_node(
+                "validate",
+                E2ENodes.validate,
+                deps=["assemble"],
+                desc="gate",
+                timeout_s=int(settings.validate_node_budget_s()),
+            )
             # P2 双模型对抗：Gate 失败后 DeepSeek 审稿 → 免费模型重写
             g.add_node(
                 "review_sections",
@@ -2247,7 +2281,13 @@ class E2EOrchestratorV2:
             g.add_node("critic", E2ENodes.critic_review, deps=["validate"], desc="multi-critic panel")
             g.add_node("compliance", E2ENodes.compliance_check, deps=["validate", "critic"], desc="compliance")
             g.add_node("export_docx", E2ENodes.export_docx, deps=["compliance"], desc="export")
-            g.add_node("record_results", E2ENodes.record_results, deps=["validate"], desc="record + bold calls")
+            g.add_node(
+                "record_results",
+                E2ENodes.record_results,
+                deps=["validate"],
+                desc="record + bold calls",
+                timeout_s=int(settings.record_node_budget_s()),
+            )
 
             # 注入输出契约
             contracts = _build_output_contracts()

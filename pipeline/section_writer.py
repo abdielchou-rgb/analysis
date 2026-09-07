@@ -2903,6 +2903,9 @@ class SectionWriter:
 
         # P1 (2026-09-02): 维度级自愈——空组自动重写（换 provider + 简化 prompt）
         _failed_groups = [g for g in _target_groups if g["group_name"] not in group_texts]
+        _self_heal_t0 = _perf_counter()
+        _self_heal_recovered = 0
+        _self_heal_failed = 0
         if _failed_groups:
             logger.info("[SELF-HEAL] %d groups failed, retrying with fallback provider...", len(_failed_groups))
             for g in _failed_groups:
@@ -2923,11 +2926,24 @@ class SectionWriter:
                     )
                     if retry_text and len(retry_text.strip()) >= 100:
                         group_texts[gname] = retry_text
+                        _self_heal_recovered += 1
                         logger.info("[SELF-HEAL] group %s recovered (%d chars)", gname, len(retry_text))
                     else:
+                        _self_heal_failed += 1
                         logger.warning("[SELF-HEAL] group %s still empty after retry", gname)
                 except Exception as _re:
+                    _self_heal_failed += 1
                     logger.warning("[SELF-HEAL] group %s retry failed: %s", gname, str(_re)[:200])
+        _self_heal_s = round(_perf_counter() - _self_heal_t0, 1)
+        if _failed_groups:
+            # P0-2a：自愈段级耗时 + 失败组清单——"下一刀"的最小数据前提
+            logger.info(
+                "[SELF-HEAL][PROFILE] %.1fs, recovered=%d, failed=%d, groups=%s",
+                _self_heal_s,
+                _self_heal_recovered,
+                _self_heal_failed,
+                [g["group_name"] for g in _failed_groups],
+            )
 
         # 非目标组：尝试从 prev_report_text 提取复用（按组名标题定位）
         for g in _keep_groups:

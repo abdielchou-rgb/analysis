@@ -116,6 +116,7 @@ def _llm_generate_questions(
             # 修复（2026-09-04）：此前缺省 provider="opencode_go"（未注册）→
             # 全量回退打 zhipu 加剧 429。research_planner 节点按路由策略走。
             provider="deepseek",
+            timeout=30.0,  # P0-1a（2026-09-07）：单次调用 30s 独立超时，不靠共享预算兜底
         )
         content = r["choices"][0]["message"]["content"].strip()
         lines = [l.strip().lstrip("0123456789.、） ") for l in content.split("\n") if l.strip() and len(l.strip()) > 10]
@@ -219,9 +220,14 @@ def question_tree_v2(
 
     # 补齐未完成维度（cancel 掉的 future 不会出现在 tree）
     _done_dims = {n.get("dim") for n in tree if isinstance(n, dict)}
+    _fallback_count = 0
     for d in dims:
         if d not in _done_dims:
             tree.append(_template_for(d))
+            _fallback_count += 1
+    if _fallback_count:
+        # P0-1a 观测指标：回落数量决定 30s 超时是否过紧
+        logger.warning("[RQ] fallback_count=%d/%d（30s 超时+%.1fs 总预算）", _fallback_count, len(dims), llm_budget_s)
 
     # 保持原 dims 顺序（树结构确定性，便于测试/Gate）
     _by_dim = {n.get("dim"): n for n in tree if isinstance(n, dict)}

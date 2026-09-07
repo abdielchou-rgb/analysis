@@ -517,6 +517,7 @@ def call_llm(
     max_tokens: int = 8192,
     stream: bool = False,
     provider: str = "auto",
+    timeout: float | None = None,
 ) -> dict:
     """统一LLM调用接口（多provider自动切换）
 
@@ -730,7 +731,7 @@ def call_llm(
                         f"{pv.base_url}/chat/completions",
                         headers=headers,
                         json=_stream_payload,
-                        timeout=max(_settings.llm_http_timeout(), 300),
+                        timeout=max(timeout or _settings.llm_http_timeout(), 300),
                         stream=True,
                     ) as _sresp:
                         _sresp.raise_for_status()
@@ -779,7 +780,7 @@ def call_llm(
                     f"{pv.base_url}/chat/completions",
                     headers=headers,
                     json=payload,
-                    timeout=_settings.llm_http_timeout(),
+                    timeout=timeout or _settings.llm_http_timeout(),
                 )
                 # R99: 捕获响应体用于调试 400 错误
                 if resp.status_code >= 400:
@@ -898,6 +899,7 @@ def call_deepseek(
     api_key: str = "",
     stream: bool = False,
     provider: str = "auto",
+    timeout: float | None = None,
 ) -> dict:
     """兼容旧接口。
 
@@ -907,7 +909,13 @@ def call_deepseek(
     健康度选可用 provider。
     """
     return call_llm(
-        messages, model=model, temperature=temperature, max_tokens=max_tokens, stream=stream, provider=provider
+        messages,
+        model=model,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        stream=stream,
+        provider=provider,
+        timeout=timeout,
     )
 
 
