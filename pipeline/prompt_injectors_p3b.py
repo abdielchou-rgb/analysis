@@ -9,8 +9,52 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+from typing import Tuple
 
 logger = logging.getLogger("2hao.injectors.p3b")
+
+
+# ── P0（2026-09-07）：行业标签统一回退链 ──────────────────────────────
+# 上游多个节点产出行业信号（biz_model / chart_data / universe_summary），
+# 但此前 5 个注入器各自只读 biz_model.industry_tags，其余字段未送达。
+# 统一成一个回退链，避免各注入器重复实现、遗漏字段或回退逻辑不一致。
+
+
+def _industry_tags_for(ctx: dict) -> Tuple[list, bool]:
+    """从 ctx 提取行业标签回退链。
+
+    优先级：biz_model.industry_tags → chart_data.industry_tags
+            → universe_summary.industry（字符串包列表）→ 空列表。
+
+    Returns:
+        (tags, has_real_tags): has_real_tags=True 表示至少从上游字段拿到了
+        标签（非兜底）；False 表示全空，调用方可自行加兜底词。
+    """
+    dc = ctx.get("data_context") or {}
+
+    # 1. biz_model.industry_tags（最高优先级，多注入器原先只读此字段）
+    biz = dc.get("biz_model")
+    if isinstance(biz, dict):
+        tags = biz.get("industry_tags") or []
+        if tags:
+            return [str(t) for t in tags[:5]], True
+
+    # 2. chart_data.industry_tags（data_enrichment 可能填充）
+    cd = dc.get("chart_data") or {}
+    if isinstance(cd, dict):
+        tags = cd.get("industry_tags") or []
+        if tags:
+            return [str(t) for t in tags[:5]], True
+
+    # 3. universe_summary.industry（字符串，universe_build 产出）
+    us = dc.get("universe_summary") or {}
+    if isinstance(us, dict):
+        ind = us.get("industry") or ""
+        if ind and len(str(ind)) >= 2:
+            return [str(ind)], True
+
+    # 4. 全空 → 返回空列表，调用方可加兜底词
+    return [], False
 
 
 def _inj_mc_str(ctx):
@@ -71,11 +115,16 @@ def _inj_rp_str(ctx):
 def _inj_kb_str(ctx):
     """K-07：知识库 RAG 注入器——按资产名+报告类型检索相关知识段落。
 
-    零 LLM：纯 FTS5 全文匹配，按 BM25 相关度排序取 top-5。
+    零 LLM：类别均衡检索（knowledge_base.search_balanced）：
+    - 按 allowlist 每个方法论/研究目录取 top-1，08-四大审计方法论、
+      09-国际投行方法论 等小体量目录不被 03/04（合计 9 万+ chunk）淹没；
+    - 08/09/01 方法论目录在结果中置前，且 snippet 收紧到 150 字，保证整块
+      KB 在写作侧 kb_str[:1500] 截断前完整到达模型（不出现"检索到了但正文
+      用不上"）。
     无索引时自动构建；无命中时返回空串。
     """
     try:
-        from core.knowledge_base import ensure_index, search
+        from core.knowledge_base import ensure_index, search_balanced
 
         ensure_index()
         asset = ctx.get("asset", "")
@@ -95,14 +144,18 @@ def _inj_kb_str(ctx):
         # 加一个通用方法论词提高召回
         query_parts.append("估值")
 
-        results = search(" ".join(query_parts), top_k=5)
+        results = search_balanced(" ".join(query_parts), per_category=1)
         if not results:
             return ""
-        lines = ["## [知识库参考] 以下段落来自内部知识库（券商研报/方法论），供分析框架参考："]
+        lines = [
+            "## [知识库参考] 以下段落来自内部知识库分目录精选（宏观/行业/估值/回测基线/"
+            "审计/投行方法论），各目录独立取相关段落，供对应章节引用："
+        ]
         for i, r in enumerate(results, 1):
             src = r["source"].replace("\\", "/").split("/")[-1].replace(".md", "")
-            snippet = r["snippet"][:200]
-            lines.append(f"\n[KB{i}] 来源: {src}\n{snippet}")
+            snippet = r["snippet"][:150]
+            cat = (r["category"] or "").split("-", 1)[-1]
+            lines.append(f"\n[KB{i}] 来源: {cat}/{src}\n{snippet}")
         return "\n".join(lines)
     except Exception as e:
         logger.debug("[KB] %s", e)
@@ -112,22 +165,60 @@ def _inj_kb_str(ctx):
 def _inj_mkb_str(ctx):
     """K-08：methodology_knowledge_base 知识金矿注入器。
 
-    从 2524 条结构化知识条目中按资产名+报告类型选择最相关的 6 条，
-    格式化为方法论参考块注入写作 prompt。
+    从 2524 条结构化知识条目中按资产名+报告类型+行业标签选择最相关的
+    top-N 条，格式化为方法论参考块注入写作 prompt。块级预算 max_chars=2000
+    与写作侧 mkb_str[:2000] 对齐：整块在截断前完整到达模型，不出现
+    "检索到了但块尾被写作侧切掉"。
+
+    行业标签缺失时（如真实库中大量资产无 industry_tags），关键词只剩资产名+
+    report_type 的英文键（listed_company）——对中文报告标题/topic 几乎零命中，
+    整块为空。兜底：追加 report_type 结构化的通用方法论词（估值/盈利/风险等），
+    并对宏观/固收类噪声标题整体过滤（backtest_gold 里"债券估值/基金持仓"类
+    不是个股/行业分析的方法论弹药）。
     """
     try:
         from core.methodology_kb import build_block
 
         keywords = [ctx.get("asset", ""), ctx.get("report_type", "")]
-        # 从行业标签补充关键词
-        biz = (ctx.get("data_context") or {}).get("biz_model")
-        if isinstance(biz, dict):
-            tags = biz.get("industry_tags") or []
-            keywords.extend(str(t) for t in tags[:3])
+
+        # P0（2026-09-07）：统一回退链，不再只读 biz_model.industry_tags
+        tags, has_industry_tags = _industry_tags_for(ctx)
+        keywords.extend(tags[:3])
         keywords = [k for k in keywords if k and len(k) >= 2]
         if not keywords:
             return ""
-        return build_block(keywords, report_type=ctx.get("report_type", ""))
+
+        # 行业标签缺失 → 通用兜底词（结构化、克制，避免把 backtest_gold 的
+        # 宏观/固收报告整块扫进来）。默认 8 条上限会混入弱相关条目：通用兜底
+        # 收敛到 5 条，宁缺毋滥。
+        _rt = ctx.get("report_type", "")
+        _fallback_added = False
+        if not has_industry_tags:
+            from core.methodology_kb import _TYPE_FALLBACK_TERMS
+
+            _fb = _TYPE_FALLBACK_TERMS.get(_rt) or _TYPE_FALLBACK_TERMS.get("listed_company", [])
+            keywords = list(dict.fromkeys([k for k in keywords] + _fb))
+            _fallback_added = True
+        _max_items = 5 if _fallback_added else 8
+        result = build_block(
+            keywords,
+            report_type=_rt,
+            max_chars=2000,
+            max_items=_max_items,
+            filter_noise=_fallback_added,
+        )
+        # P1（2026-09-07）：记录 retrieved 数（注入前选中条数，截断前）
+        # 供三段漏斗 retrieved→injected→cited 诊断。select_entries 返回的
+        # 条目数 = 打分排序后进入 build_block 的候选数（max_items 上限前）。
+        if result:
+            try:
+                from core.methodology_kb import select_entries
+
+                _entries = select_entries(keywords, _rt, _max_items, filter_noise=_fallback_added)
+                ctx.setdefault("mkb_retrieved_count", len(_entries))
+            except Exception:
+                pass
+        return result
     except Exception as e:
         logger.debug("[MKB] %s", e)
     return ""
@@ -170,9 +261,8 @@ def _inj_policy_str(ctx):
     try:
         import json
 
-        dc = ctx.get("data_context") or {}
-        biz = dc.get("biz_model") or {}
-        tags = [str(t) for t in (biz.get("industry_tags") or [])] if isinstance(biz, dict) else []
+        # P0: 统一回退链
+        tags, _ = _industry_tags_for(ctx)
         fp = Path(__file__).resolve().parent.parent / "data" / "policy_library.json"
         d = json.loads(fp.read_text(encoding="utf-8"))
         policies = d.get("policies", []) if isinstance(d, dict) else []
@@ -199,9 +289,8 @@ def _inj_esg_data_str(ctx):
     try:
         import json
 
-        dc = ctx.get("data_context") or {}
-        biz = dc.get("biz_model") or {}
-        tags = [str(t) for t in (biz.get("industry_tags") or [])] if isinstance(biz, dict) else []
+        # P0: 统一回退链
+        tags, _ = _industry_tags_for(ctx)
         fp = Path(__file__).resolve().parent.parent / "data" / "industry_esg.json"
         d = json.loads(fp.read_text(encoding="utf-8"))
         matched = None
@@ -231,9 +320,8 @@ def _inj_ma_cases_str(ctx):
         ev_fp = base / "m_and_a_ev_ebitda.json"
         cases = json.loads(cases_fp.read_text(encoding="utf-8")) if cases_fp.exists() else []
         ev = json.loads(ev_fp.read_text(encoding="utf-8")) if ev_fp.exists() else {}
-        dc = ctx.get("data_context") or {}
-        biz = dc.get("biz_model") or {}
-        tags = [str(t) for t in (biz.get("industry_tags") or [])] if isinstance(biz, dict) else []
+        # P0: 统一回退链
+        tags, _ = _industry_tags_for(ctx)
         relevant = [
             c
             for c in (cases if isinstance(cases, list) else [])
@@ -328,15 +416,12 @@ def _inj_analogy_str(ctx):
     try:
         from core.cross_industry import build_block
 
-        dc = ctx.get("data_context") or {}
-        biz = dc.get("biz_model") or {}
-        industry = ""
-        if isinstance(biz, dict):
-            tags = biz.get("industry_tags") or []
-            if tags:
-                industry = str(tags[0])
+        # P0: 统一回退链
+        tags, _ = _industry_tags_for(ctx)
+        industry = str(tags[0]) if tags else ""
         if not industry:
             industry = ctx.get("asset", "")
+        dc = ctx.get("data_context") or {}
         growth = dc.get("industry_growth")
         cr3 = dc.get("cr3")
         return build_block(

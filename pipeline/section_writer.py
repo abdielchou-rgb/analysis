@@ -113,6 +113,75 @@ def _re_has_h2(text: str) -> bool:
     return bool(_re.search(r"(?m)^#{1,2}\s+\S", text))
 
 
+def _assemble_data_injection_tail(
+    tm_str,
+    ev_str,
+    mc_str,
+    rp_str,
+    macro_str,
+    valuation_kb_str,
+    policy_str,
+    esg_data_str,
+    ma_cases_str,
+    segment_rev_str,
+    consulting_str,
+    market_seg_str,
+    analogy_str,
+    kb_str,
+    mkb_str,
+) -> str:
+    """P0-1（2026-09-07）：工具模块/KB/MKB 数据注入尾部，各块总开关互相独立。
+
+    审计发现：整段此前被包在 `if _tm_str:` 内——当 tool_modules 为空/全 skip 时，
+    证据清单、方法论知识库等 14 个注入块整体丢失。现在每块只由自身非空条件
+    控制：`_tm_str` 只管工具模块块，KB/MKB 等独立展开。
+    """
+    return (
+        (
+            f"## 工具模块数据（弹性/信号链/护城河/生命周期/多模型，引用到对应分析章节）\n{tm_str[:1200]}\n\n"
+            if tm_str
+            else ""
+        )
+        + (f"{ev_str[:1600]}\n\n" if ev_str else "")
+        + (f"{mc_str[:600]}\n\n" if mc_str else "")
+        + (f"{rp_str[:1200]}\n\n" if rp_str else "")
+        + (f"{macro_str[:400]}\n\n" if macro_str else "")
+        + (f"{valuation_kb_str[:800]}\n\n" if valuation_kb_str else "")
+        + (f"{policy_str[:800]}\n\n" if policy_str else "")
+        + (f"{esg_data_str[:800]}\n\n" if esg_data_str else "")
+        + (f"{ma_cases_str[:800]}\n\n" if ma_cases_str else "")
+        + (f"{segment_rev_str[:800]}\n\n" if segment_rev_str else "")
+        + (f"{consulting_str[:800]}\n\n" if consulting_str else "")
+        + (f"{market_seg_str[:800]}\n\n" if market_seg_str else "")
+        + (f"{analogy_str[:1000]}\n\n" if analogy_str else "")
+        + (f"{kb_str[:1500]}\n\n" if kb_str else "")
+        + (f"{mkb_str[:2000]}\n\n" if mkb_str else "")
+    )
+
+
+_KB_MARK_RE = re.compile(r"\[KB(\d+)\]")
+_MKB_MARK_RE = re.compile(r"\[MKB(\d+)\]")
+
+
+def _count_injection_blocks(kb_str: str, mkb_str: str) -> dict:
+    """统计写作 prompt 中实际注入的 KB/MKB 条目数（观测漏斗 retrieved→injected）。
+
+    与写作侧截断同口径：先按 kb_str[:1500] / mkb_str[:2000] 截断，再数
+    [KBn]/[MKBn] 编号——统计的是"模型真实收到的条目数"，不是"检索命中的
+    条目数"，避免注入预算把块尾切掉时虚报计数。
+    """
+    kb_block = kb_str[:1500] if kb_str else ""
+    mkb_block = mkb_str[:2000] if mkb_str else ""
+    kb_ids = [int(x) for x in _KB_MARK_RE.findall(kb_block)]
+    mkb_ids = [int(x) for x in _MKB_MARK_RE.findall(mkb_block)]
+    return {
+        "kb_count": len(kb_ids),
+        "mkb_count": len(mkb_ids),
+        "kb_ids": kb_ids,
+        "mkb_ids": mkb_ids,
+    }
+
+
 class SectionWriter:
     def __init__(self, report_type="industry_deep", style="cicc", time_anchor=None, attempt_num=0):
         self.report_type = report_type
@@ -137,6 +206,10 @@ class SectionWriter:
         self._last_data_context = {}
         self._prompt_compute_results = {}
         self._enrichment_context = {}
+        # P1-3（2026-09-07）：KB/MKB 实际注入观测漏斗——记录"检索命中→写入
+        # prompt"的条目计数，供 e2e validate 节点传给 IronGate 做强检查。
+        self._kb_injection_metrics = {"kb_count": 0, "mkb_count": 0}
+        self._kb_injection_last_ids = {"kb": [], "mkb": []}
         # P3-B：骨架档 → 注入器走 SKELETON_SKIP 精简集
         from core import settings as _settings
 
@@ -150,6 +223,49 @@ class SectionWriter:
             return route_injector_skip(asset, getattr(self, "_last_data_context", None) or {})
         except Exception:
             return set()
+
+    def _kb_mkb_for(self, asset: str) -> tuple[str, str]:
+        """P0-2（2026-09-07）：串行写作路径的 KB/MKB 注入，返回 (kb_str, mkb_str)。
+
+        与维度并行路径（_write_dimension_parallel → build_injections）共用
+        _inj_kb_str/_inj_mkb_str 同一对检索函数，杜绝"两套实现"漂移；已按并行
+        路径同等上限截断（kb 1500 / mkb 2000），保证两路产出长度一致。
+        """
+        try:
+            from pipeline.prompt_injectors_p3b import _inj_kb_str, _inj_mkb_str
+
+            _skip = self._route_skip_for(asset)
+            _ctx = {
+                "asset": asset,
+                "report_type": self.report_type,
+                "data_context": getattr(self, "_last_data_context", None) or {},
+                "asset_code": getattr(self, "_asset_code", ""),
+                "data_dict": getattr(self, "_data_dict", None) or {},
+            }
+            _kb = "" if "kb_str" in _skip else (_inj_kb_str(_ctx) or "")
+            _mkb = "" if "mkb_str" in _skip else (_inj_mkb_str(_ctx) or "")
+            kb_out, mkb_out = _kb[:1500], _mkb[:2000]
+            # P1-3：记录实际注入条数（与截断同口径）。
+            try:
+                _m = _count_injection_blocks(kb_out, mkb_out)
+                if _m["kb_count"] >= self._kb_injection_metrics["kb_count"]:
+                    self._kb_injection_metrics["kb_count"] = _m["kb_count"]
+                    self._kb_injection_last_ids["kb"] = _m["kb_ids"]
+                if _m["mkb_count"] >= self._kb_injection_metrics["mkb_count"]:
+                    self._kb_injection_metrics["mkb_count"] = _m["mkb_count"]
+                    self._kb_injection_last_ids["mkb"] = _m["mkb_ids"]
+            except Exception as _me:
+                logger.debug("[KB-METRICS] %s", _me)
+            return kb_out, mkb_out
+        except Exception as _e:
+            logger.debug("[KB-MKB] %s", _e)
+            return "", ""
+
+    def _kb_mkb_prompt_tail(self, asset: str) -> str:
+        """把 KB/MKB 两块拼成一段可追加的 prompt 尾部（空则返回空串）。"""
+        kb, mkb = self._kb_mkb_for(asset)
+        blocks = [b for b in (kb, mkb) if b]
+        return "\n\n".join(blocks)
 
     def _build_segments(self):
         chain = self.logic_chain
@@ -1216,6 +1332,9 @@ class SectionWriter:
         后续深化阶段把骨架作为 prev_summary 注入完整 prompt，让 DeepSeek 按骨架扩写。
         治乱序/重复（AgentCPM 范式）。
         """
+        # P0-2（2026-09-07）：骨架 prompt 同步注入 KB/MKB——维度并行路径在
+        # skeleton_mode 下本就注入（SKELETON_SKIP 不含 kb/mkb），串行骨架档曾长期缺失。
+        _kb_tail = self._kb_mkb_prompt_tail(asset)
         return (
             f"你是资深分析师，为《{asset}深度研究报告》第{seg_idx + 1}部分「{seg['label']}」生成章节骨架。\n\n"
             f"## 分析维度（必须全部出现在骨架中）\n{dim_defs[:1500]}\n\n"
@@ -1228,6 +1347,7 @@ class SectionWriter:
             f"不要展开成正文。格式：\n"
             f"## 章节标题\n### 小节1标题\n- 要点（计划引用: 数据点）\n### 小节2标题\n- 要点...\n\n"
             f"要求：覆盖全部维度、结构清晰、含 Bold Call 位置、数据引用标注来源。直接输出骨架。"
+            + (f"\n\n{_kb_tail}" if _kb_tail else "")
         )
 
     def _build_prompt_v4(
@@ -1621,6 +1741,13 @@ class SectionWriter:
         # EXEMPLAR 注入（2026-09-04 修复）：原补丁在 parts 字面量内部调用
         # _build_exemplar_injection(parts,…)——list 定义中引用未构造完的自身
         # → UnboundLocalError → Seg 1/2 写作全炸。移到构造完成后就地 append。
+        # P0-2（2026-09-07）：串行写作路径补齐 KB/MKB（K-07/K-08）。
+        # 此前 KB/MKB 只在维度并行路径（build_injections）注入；SEG_PARALLEL=0
+        # 串行或骨架深化走本方法时完全缺失，与并行产出不一致。
+        _kb_tail = self._kb_mkb_prompt_tail(asset)
+        if _kb_tail:
+            parts.append(_kb_tail)
+            parts.append("")
         self._build_exemplar_injection(parts, seg, asset)
         return "\n".join(parts)
 
@@ -2355,6 +2482,13 @@ class SectionWriter:
         # Phase E（2026-09-06）：KG-lite 同业图谱，竞争格局段落弹药
         kg_peers_str = _inj.get("kg_peers_str", "")
         sentiment_str = _inj.get("sentiment_str", "")
+        # P1-3（2026-09-07）：维度并行只注入一轮 → 直接按注入块统计实际条数。
+        try:
+            _m = _count_injection_blocks(kb_str, mkb_str)
+            self._kb_injection_metrics = {"kb_count": _m["kb_count"], "mkb_count": _m["mkb_count"]}
+            self._kb_injection_last_ids = {"kb": _m["kb_ids"], "mkb": _m["mkb_ids"]}
+        except Exception as _me:
+            logger.debug("[KB-METRICS] %s", _me)
 
         # 2. 各组并行写
         _grp_t0 = _perf_counter()
@@ -2573,24 +2707,25 @@ class SectionWriter:
                 + (f"## 可比对标矩阵（引用到竞争章节，行业基准对比）\n{pm_str[:900]}\n\n" if pm_str else "")
                 + (f"## 目标价追踪（引用到估值章节，分析师历史准确率档案）\n{tt_str[:900]}\n\n" if tt_str else "")
                 + (f"## 基准对标（引用到竞争/判断章节，个股 vs 指数/行业基准）\n{bm_str[:900]}\n\n" if bm_str else "")
-                + (
-                    f"## 工具模块数据（弹性/信号链/护城河/生命周期/多模型，引用到对应分析章节）\n{_tm_str[:1200]}\n\n"
-                    + (f"{ev_str[:1600]}\n\n" if ev_str else "")
-                    + (f"{mc_str[:600]}\n\n" if mc_str else "")
-                    + (f"{rp_str[:1200]}\n\n" if rp_str else "")
-                    + (f"{macro_str[:400]}\n\n" if macro_str else "")
-                    + (f"{valuation_kb_str[:800]}\n\n" if valuation_kb_str else "")
-                    + (f"{policy_str[:800]}\n\n" if policy_str else "")
-                    + (f"{esg_data_str[:800]}\n\n" if esg_data_str else "")
-                    + (f"{ma_cases_str[:800]}\n\n" if ma_cases_str else "")
-                    + (f"{segment_rev_str[:800]}\n\n" if segment_rev_str else "")
-                    + (f"{consulting_str[:800]}\n\n" if consulting_str else "")
-                    + (f"{market_seg_str[:800]}\n\n" if market_seg_str else "")
-                    + (f"{analogy_str[:1000]}\n\n" if analogy_str else "")
-                    + (f"{kb_str[:1500]}\n\n" if kb_str else "")
-                    + (f"{mkb_str[:2000]}\n\n" if mkb_str else "")
-                    if _tm_str
-                    else ""
+                # P0-1（2026-09-07）：KB/MKB 等注入与 _tm_str 总开关解耦。
+                # 此前整段被 `if _tm_str:` 包裹，tool_modules 为空时知识库方法论
+                # 全部丢失（"升级了但方法论体现不到报告"的核心根因之一）。
+                + _assemble_data_injection_tail(
+                    _tm_str,
+                    ev_str,
+                    mc_str,
+                    rp_str,
+                    macro_str,
+                    valuation_kb_str,
+                    policy_str,
+                    esg_data_str,
+                    ma_cases_str,
+                    segment_rev_str,
+                    consulting_str,
+                    market_seg_str,
+                    analogy_str,
+                    kb_str,
+                    mkb_str,
                 )
                 + (fw_str[:1500] + "\n\n" if fw_str else "")
                 + _conclusion_req

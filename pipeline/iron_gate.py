@@ -136,11 +136,17 @@ from pipeline.checks.base import GateCheckResult, GateReport
 from pipeline.checks.content_format_mixin import ContentFormatChecksMixin
 from pipeline.checks.coverage_mixin import CoverageChecksMixin
 from pipeline.checks.data_quality_mixin import DataQualityChecksMixin
+from pipeline.checks.kb_citation_mixin import KbCitationChecksMixin
 from pipeline.checks.llm_checks_mixin import LlmChecksMixin
 
 
 class IronGate(
-    ContentFormatChecksMixin, DataQualityChecksMixin, AnalysisChecksMixin, LlmChecksMixin, CoverageChecksMixin
+    ContentFormatChecksMixin,
+    DataQualityChecksMixin,
+    AnalysisChecksMixin,
+    LlmChecksMixin,
+    CoverageChecksMixin,
+    KbCitationChecksMixin,
 ):
     def __init__(
         self,
@@ -418,6 +424,8 @@ class IronGate(
             self._check_evidence_coverage,
             # 2026-09-07（茅台 E2E 事故）：跨行业内容污染——白酒报告被注入锂电池论证
             self._check_cross_industry_contamination,
+            # P1-2（2026-09-07）：KB/MKB 消费端引用覆盖——注入非空 → 正文回指
+            self._check_kb_citation_coverage,
         ]
         checks = []
         # R15（2026-08-01 提速）：把 LLM 检查（ai_tone/human_impossible/数据验证，各 60s+）

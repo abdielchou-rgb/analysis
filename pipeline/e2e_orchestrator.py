@@ -22,6 +22,37 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 logger = logging.getLogger("2hao.e2e")
+
+
+def _record_kb_injection_metrics(context: dict, sw) -> None:
+    """P1-3（2026-09-07）：把写作节点实测注入的 KB/MKB 条数写进 context。
+
+    供 validate 节点在构造 IronGate 后 set_kb_injection_counts 做强检查
+    （注入 N 条 → 正文至少引用 N×0.5）。提取为模块级小函数便于单测；
+    必须只在实际写成功的路径调用（在 try/except RuntimeError 之后），
+    否则会落进 except 内 raise 之后的死代码区。
+
+    P1（2026-09-07）：额外写入 mkb_retrieved（注入前检索命中数），
+    供三段漏斗 retrieved→injected→cited 诊断。
+    """
+    try:
+        _kb_m = getattr(sw, "_kb_injection_metrics", None) or {"kb_count": 0, "mkb_count": 0}
+        _kb_ids = getattr(sw, "_kb_injection_last_ids", None) or {"kb": [], "mkb": []}
+        # P1: 从写作器或 context 读取 MKB 检索命中数（注入前）
+        _mkb_retrieved = getattr(sw, "_mkb_retrieved_count", None)
+        if _mkb_retrieved is None:
+            _mkb_retrieved = context.get("mkb_retrieved_count", 0)
+        context["kb_injection_metrics"] = {
+            "kb_injected": int(_kb_m.get("kb_count", 0) or 0),
+            "mkb_injected": int(_kb_m.get("mkb_count", 0) or 0),
+            "mkb_retrieved": int(_mkb_retrieved or 0),
+            "kb_ids": list(_kb_ids.get("kb", []) or []),
+            "mkb_ids": list(_kb_ids.get("mkb", []) or []),
+        }
+    except Exception as _kme:  # pragma: no cover - 观测失败不应影响写报告
+        logger.debug("[KB-METRICS] 写入 context 失败: %s", _kme)
+
+
 # === V51 merge: analysis modules (optional, with fallback) ===
 try:
     from core.argument import ArgumentEngine
@@ -782,6 +813,9 @@ class E2ENodes:
                 raise
             raise
         context["report_text"] = text
+        # P1-3（2026-09-07）：成功路径才记录注入观测——此前误插进 except 内
+        # raise 之后成为死代码，kb_injection_metrics 永远为空 → Gate 只跑弱检查。
+        _record_kb_injection_metrics(context, sw)
         # R85+（2026-08-26）：Gate 后处理二次保底——强制修复高频失败项
         try:
             from pipeline.section_writer import SectionWriter
@@ -1257,6 +1291,25 @@ class E2ENodes:
             client_questions=context.get("client_questions", None),
             collected_data=context.get("collected_data", {}),
         )  # R84
+        # P1-2/P1-3（2026-09-07 全量推进）：把写作节点实测注入的 KB/MKB 条数
+        # 传给 IronGate——无注入计数时 kb_citation_coverage 只跑弱检查（有痕迹
+        # 即放行）；传入后升级为强不变式"注入 N 条 → 正文至少消费 N×0.5"。
+        try:
+            _kb_m = context.get("kb_injection_metrics") or {}
+            ig.set_kb_injection_counts(
+                kb_count=int(_kb_m.get("kb_injected", 0) or 0),
+                mkb_count=int(_kb_m.get("mkb_injected", 0) or 0),
+                retrieved_count=int(_kb_m.get("mkb_retrieved", 0) or 0),
+            )
+            if _kb_m.get("kb_injected") or _kb_m.get("mkb_injected"):
+                logger.info(
+                    "[KB-CITATION] Gate 强检查生效: KB注入=%d MKB注入=%d retrieved=%d",
+                    _kb_m.get("kb_injected", 0),
+                    _kb_m.get("mkb_injected", 0),
+                    _kb_m.get("mkb_retrieved", 0),
+                )
+        except Exception as _kbe:
+            logger.debug("[KB-CITATION] set_kb_injection_counts 失败: %s", _kbe)
 
         # FP7b: Degradation-aware handling（P2-I 2026-07-31 审计修复）
         # 不再全局降低 min_score —— 数据质量越差，门禁不应越松。
