@@ -19,6 +19,7 @@ Engine Bridge — 把 engine/ 16-step IB-Grade 管线接入生产 compute。
 from __future__ import annotations
 
 import logging
+import re
 
 logger = logging.getLogger("2hao.engine_bridge")
 
@@ -89,14 +90,38 @@ def extract_engine_params(financial_data: dict) -> dict | None:
 
     关键自洽性: shares = 年报净利润 / 年报EPS —— 两者取自 fig_revenue_trend
     同一年份, 避免季度/年报口径打架（P0-5 同源教训）。
+
+    2026-09-07 兜底（知识保留率审计断点2）：当次采集若 akshare 网络失败只留下
+    margin 序列（无 fig_revenue_trend/fig_valuation），engine_ib 会静默 skip →
+    引擎算了但报告从未引用顶级方法论。现增加 repo 资产兜底：从
+    data/segment_revenue.json（300 标的当年营收）+ data/consensus_prices.json
+    （EPS）构造单年锚 + 保守增长率，来源标注 repo_fallback（诚实，非编造）。
     """
+    import json as _json
+    from pathlib import Path as _Path
+
+    _root = _Path(__file__).resolve().parent.parent
     cd = financial_data.get("chart_data", {}) or {}
     if not isinstance(cd, dict):
-        return None
+        cd = {}
     val = cd.get("fig_valuation", {}) or {}
     rev_trend = cd.get("fig_revenue_trend", cd.get("revenue_history", {})) or {}
     if not isinstance(rev_trend, dict) or not isinstance(val, dict):
-        return None
+        rev_trend, val = {}, {}
+
+    # 资产代码解析（茅台 → 600519）
+    asset_raw = str(financial_data.get("asset", financial_data.get("stock_name", "")))
+    asset_code = ""
+    _m_code = re.search(r"(\d{6})", asset_raw)
+    if _m_code:
+        asset_code = _m_code.group(1)
+    else:
+        try:
+            from core.asset_resolver import resolve_asset
+
+            asset_code = resolve_asset(asset_raw).code
+        except Exception:
+            pass
 
     # ── 1. 历史收入序列 (→ 增长率, 单位无关) ─────────────────────────
     hist: list[tuple[int, float]] = []
@@ -108,6 +133,50 @@ def extract_engine_params(financial_data: dict) -> dict | None:
         if rev > 0:
             hist.append((y, rev))
     hist.sort(key=lambda t: t[0])
+
+    # ── 1b. repo 资产兜底（segment_revenue + consensus）────────────
+    _repo_fallback = False
+    if len(hist) < 2 and asset_code:
+        try:
+            _sr_path = _root / "data" / "segment_revenue.json"
+            _cp_path = _root / "data" / "consensus_prices.json"
+            if _sr_path.exists() and _cp_path.exists():
+                _sr = _json.loads(_sr_path.read_text(encoding="utf-8"))
+                _cp = _json.loads(_cp_path.read_text(encoding="utf-8"))
+                _sentry = _sr.get(asset_code) or {}
+                _centry = _cp.get(asset_code) or {}
+                _segs = _sentry.get("segments") if isinstance(_sentry, dict) else None
+                _period = (_sentry.get("period") or "") if isinstance(_sentry, dict) else ""
+                _py = int(_period[:4]) if _period[:4].isdigit() else 0
+                _rev_total = 0.0
+                if isinstance(_segs, list):
+                    for _s in _segs:
+                        if isinstance(_s, dict) and _s.get("revenue"):
+                            _rev_total += float(_s["revenue"])
+                _eps = 0.0
+                for _k in ("eps_2026e", "eps_2027e", "eps_2028e"):
+                    if isinstance(_centry, dict) and _centry.get(_k):
+                        _eps = float(_centry[_k])
+                        break
+                if _py >= 2015 and _rev_total > 0:
+                    # 单年锚：当年 + 上一年按保守 8% 回溯（机构默认），增长率用默认
+                    hist = [(_py - 1, _rev_total / 1.08), (_py, _rev_total)]
+                    _repo_fallback = True
+                    # 供股本反推：consensus EPS 优先；净利润无法从 repo 单年确定时
+                    # 用净利率反推（net_margin 由 fig_profitability/数据给定或默认 0.15），
+                    # 但茅台等净利率~50% 的高利润标的若拿不到净利会用默认低估——
+                    # 故宁可让下游走"诊断性 skip"，也不硬编错误净利率。
+                    val.setdefault("repo_eps", _eps)
+                    val.setdefault("_repo_fallback", True)
+                    logger.info(
+                        "[ENGINE-IB][REPO-FALLBACK] %s 用 segment_revenue %d 营收 %.2f亿 + consensus EPS %.2f",
+                        asset_code,
+                        _py,
+                        _rev_total / 1e8,
+                        _eps,
+                    )
+        except Exception as _fe:
+            logger.debug("[ENGINE-IB][REPO-FALLBACK] failed: %s", _fe)
     if len(hist) < 2:
         return None
 
@@ -141,6 +210,14 @@ def extract_engine_params(financial_data: dict) -> dict | None:
     if np_annual <= 0:
         la = val.get("latest_annual", {}) or {}
         np_annual = _clean_num(la.get("net_profit", 0)) or _clean_num(val.get("net_profit", 0))
+    # 2026-09-07（断点2 repo 兜底）：营收来自 segment_revenue 时 latest_info 为空，
+    # EPS 需从 fig_valuation.net_profit/EPS 或 repo_eps 取。
+    if eps_annual <= 0:
+        _val_eps = _clean_num(val.get("eps", 0))
+        if _val_eps > 0:
+            eps_annual = _val_eps
+        elif val.get("repo_eps"):
+            eps_annual = _clean_num(val["repo_eps"])
 
     # ── 3. 股本反推: 年报净利 / 年报EPS ─────────────────────────────
     shares = np_annual / eps_annual if (np_annual > 0 and eps_annual > 0) else 0.0
@@ -213,11 +290,50 @@ def extract_engine_params(financial_data: dict) -> dict | None:
     return params
 
 
+def _diagnose_missing(financial_data: dict) -> str:
+    """诊断 engine_ib 参数缺失的具体输入层（2026-09-07 断点2 可视化）。
+
+    返回人类可读的缺失清单，使数据采集侧的缺口可见可修（而非静默 skip）。
+    """
+    from pathlib import Path as _P
+
+    _root = _P(__file__).resolve().parent.parent
+    cd = (financial_data.get("chart_data") or {}) if isinstance(financial_data, dict) else {}
+    if not isinstance(cd, dict):
+        cd = {}
+    missing = []
+    rev_trend = cd.get("fig_revenue_trend", cd.get("revenue_history", {}))
+    if not isinstance(rev_trend, dict) or len(rev_trend) < 2:
+        # repo 兜底是否可用？
+        asset_raw = str(financial_data.get("asset", ""))
+        code = ""
+        _m = re.search(r"(\d{6})", asset_raw)
+        if _m:
+            code = _m.group(1)
+        sr_ok = (_root / "data" / "segment_revenue.json").exists()
+        if sr_ok and code:
+            missing.append(f"营收序列(≥2y)缺失；已尝试 repo segment_revenue[{code}] 兜底但仍需净利润")
+        else:
+            missing.append(
+                f"营收序列(≥2y)缺失（chart_data.fig_revenue_trend 仅 {len(rev_trend) if isinstance(rev_trend, dict) else 0} 年）"
+            )
+    val = cd.get("fig_valuation", {})
+    np_ok = False
+    if isinstance(val, dict):
+        np_ok = bool(val.get("net_profit") or val.get("price") or val.get("market_cap"))
+    if not np_ok:
+        missing.append("fig_valuation 缺 net_profit/price/market_cap（无法反推股本/价格）")
+    if not missing:
+        missing.append("参数提取失败但未定位到明确缺失键（数据形态异常）")
+    return "engine_ib 参数不足: " + "; ".join(missing)
+
+
 def run_engine_ib(financial_data: dict) -> dict:
     """Engine IB-Grade 管线生产入口。被 ComputeEngine.compute 调用。"""
     params = extract_engine_params(financial_data)
     if not params:
-        return {"status": "skip", "reason": "insufficient data (need >=2y revenue + EPS/price)"}
+        # 2026-09-07（断点2 诊断化）：静默 skip → 明确报缺哪些输入，供数据采集侧对症。
+        return {"status": "skip", "reason": _diagnose_missing(financial_data)}
 
     # ── 经济物理前置：FCF 基数必须为正 ─────────────────────────────
     # 微利/亏损高增长公司（净利率<2%、capex 重）FCF DCF 无意义——

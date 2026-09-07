@@ -93,6 +93,32 @@ class TestExtractEngineParams:
 
         assert extract_engine_params(THIN_DATA) is None
 
+    def test_repo_fallback_extracts_moutai_params(self):
+        """2026-09-07 断点2：当次采集缺 fig_revenue_trend 时，用 repo segment_revenue
+        + consensus_prices 兜底（茅台 1687.7亿营收 + EPS），engine 参数应能提取。"""
+        from pipeline.engine_bridge import extract_engine_params
+
+        # 模拟当次采集只有 fig_valuation（净利/EPS/价），无营收序列
+        fd = {
+            "asset": "600519 贵州茅台",
+            "chart_data": {
+                "fig_valuation": {"net_profit": 862.28e8, "eps": 68.64, "price": 1500.0},
+            },
+        }
+        p = extract_engine_params(fd)
+        assert p is not None, "repo 兜底应能提取参数"
+        # segment_revenue 茅台 2025 ≈ 1688 亿（兜底营收）
+        assert p["base_revenue"] > 1500e8, f"营收应来自 repo segment_revenue: {p['base_revenue']}"
+        # 股本 = 862.28e8 / 68.64
+        assert p["shares_outstanding"] == pytest.approx(862.28e8 / 68.64, rel=0.15)
+
+    def test_repo_fallback_thin_asset_still_none(self):
+        """无 repo 覆盖的标的（000000）即便有部分数据，缺营收仍返回 None。"""
+        from pipeline.engine_bridge import extract_engine_params
+
+        fd = {"asset": "000000", "chart_data": {"fig_valuation": {"net_profit": 1e8, "eps": 1.0}}}
+        assert extract_engine_params(fd) is None
+
     def test_net_debt_from_alr_roe(self):
         from pipeline.engine_bridge import extract_engine_params
 
@@ -136,7 +162,8 @@ class TestRunEngineIB:
 
         r = run_engine_ib(THIN_DATA)
         assert r["status"] == "skip"
-        assert "insufficient" in r["reason"]
+        # 2026-09-07 诊断化：reason 从 "insufficient data" 改为中文诊断（缺营收/估值键）
+        assert "参数不足" in r["reason"] or "insufficient" in r["reason"]
 
     def test_fair_value_sane_vs_price(self):
         """DCF fair_value 不应偏离现价 100 倍（数量级检查）"""
