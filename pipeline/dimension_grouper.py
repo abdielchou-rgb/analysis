@@ -110,6 +110,15 @@ GROUP_DEFS = {
         "D 财务测算与风险": ["financial_projection", "worst_case_loss"],
         "E 路线图": ["roadmap"],
     },
+    # P0（2026-09-08）：earnings_notes 维度分组。SAC required_dimensions 5 个维度，
+    # 此前无 earnings_notes 分组 → 回退 industry_deep → 5 维全落入"其他维度"
+    # → 单组 prompt 膨胀、关键词覆盖不全 → sac_dims Gate 失败。
+    # 写作节奏：核心数字 -> 超预期归因 -> 分部穿透 -> 现金流信号 -> 展望影响
+    "earnings_notes": {
+        "A 核心数字与超预期": ["headline", "key_surprise"],
+        "B 分部与现金流": ["segment_analysis", "balance_cashflow"],
+        "C 展望与影响": ["outlook_implication"],
+    },
 }
 
 # ── 兜底：任何维度未出现在组定义时归入的默认组 ──

@@ -93,6 +93,14 @@ CHART_TEMPLATES = {
         {"id": "fig_production_path", "type": "flow", "title": "生产主体三选决策图", "min": 1},
         {"id": "fig_roadmap", "type": "timeline", "title": "执行路线图", "min": 1},
     ],
+    # P0（2026-09-08）：earnings_notes 图表模板（对齐 sac_earnings_notes.yaml chart_config）
+    # id 直接使用 SAC 的 fig_* 键，避免输出后需映射
+    "earnings_notes": [
+        {"id": "fig_financial_trends", "type": "dual_axis", "title": "营收与净利趋势", "min": 1},
+        {"id": "fig_segment_analysis", "type": "bar", "title": "分部业绩变化", "min": 1},
+        {"id": "fig_cash_flow", "type": "bar", "title": "现金流结构", "min": 1},
+        {"id": "fig_profit_margin", "type": "bar_line", "title": "利润率分析", "min": 1},
+    ],
 }
 
 # data_pipeline 返回的 chart_data 键 → chart_pipeline chart_id 映射
