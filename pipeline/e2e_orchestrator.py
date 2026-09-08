@@ -127,6 +127,111 @@ except ImportError:
     logger.warning("V51 import failed: _HAS_FORWARDPICKS=False, module unavailable")
 
 
+# ── Evidence-Grounded Delta-Only Rewrite helpers ────────────────────
+
+# 维度 ID → 中文关键词（用于从 gate_feedback/review_comments 匹配失败维度）
+_DIM_KEYWORDS: dict[str, list[str]] = {
+    "business_model": ["商业模式", "护城河", "竞争壁垒", "盈利模式"],
+    "financial_analysis": ["财务", "盈利", "毛利率", "ROE", "营收", "利润"],
+    "competitive_position": ["竞争", "市场份额", "行业地位", "竞争格局"],
+    "growth_drivers": ["增长", "驱动力", "市场规模", "CAGR", "扩容"],
+    "governance_esg": ["治理", "ESG", "合规", "信息披露"],
+    "valuation_assessment": ["估值", "DCF", "PE", "目标价", "可比"],
+    "catalyst": ["催化剂", "事件驱动", "时间窗口"],
+    "falsification": ["证伪", "风险因子", "反方"],
+    "capital_flow": ["资金", "融资", "股东", "增减持"],
+    "core_disagreement": ["分歧", "预期差", "一致预期"],
+    "decision_gate": ["决策", "投资建议", "评级"],
+    "bold_call": ["Bold Call", "核心判断", "观点"],
+    "risk": ["风险", "威胁", "不确定性", "下行"],
+    "market_sizing": ["市场规模", "TAM", "SAM", "市场空间"],
+    "supply_chain": ["供应链", "产业链", "上游", "下游"],
+    "policy": ["政策", "监管", "法规", "产业政策"],
+    "trend": ["趋势", "技术路线", "演变方向"],
+    "headline": ["业绩概览", "营收", "利润", " headline"],
+    "key_surprise": ["超预期", "低于预期", " surprise", "miss"],
+    "segment_analysis": ["分部", "业务拆分", "分业务"],
+    "balance_cashflow": ["资产负债", "现金流", "负债率"],
+    "outlook_implication": ["展望", "指引", "业绩指引"],
+}
+
+
+def _locate_failed_dims(
+    gate_feedback: str,
+    review_comments: str,
+    context: dict,
+) -> list[str]:
+    """从 gate_feedback + review_comments 提取失败维度 ID 列表。
+
+    三重匹配：
+    1. gate_feedback 中的 [DIM:xxx] 标记
+    2. review_comments 中的维度中文关键词
+    3. context["failed_dims"]（上游显式标注）
+    """
+    failed: set[str] = set()
+
+    # 来源 1：context 显式标注
+    for d in context.get("failed_dims", []):
+        if isinstance(d, str):
+            failed.add(d)
+
+    # 来源 2：gate_feedback 中的 [DIM:xxx] 标记
+    for m in re.finditer(r"\[DIM:([a-z_]+)\]", gate_feedback):
+        failed.add(m.group(1))
+
+    # 来源 3：中文关键词匹配
+    text = gate_feedback + "\n" + review_comments
+    for dim_id, keywords in _DIM_KEYWORDS.items():
+        for kw in keywords:
+            if kw in text:
+                failed.add(dim_id)
+                break
+
+    return sorted(failed)
+
+
+def _build_dim_kb_hints(
+    failed_dims: list[str],
+    context: dict,
+) -> str:
+    """为失败维度构建精准 KB 证据提示（Evidence-Grounded Rewrite）。
+
+    从 context["collected_data"]["_dim_kb_map"] 查对应 MKB 条目，
+    格式化为 rewrite prompt 可直接消费的证据块。
+    """
+    if not failed_dims:
+        return ""
+
+    _cd = context.get("collected_data") or {}
+    _dkm = _cd.get("_dim_kb_map") or {}
+    if not _dkm:
+        return ""
+
+    try:
+        from core.methodology_kb import _format_entry
+
+        parts: list[str] = []
+        for dim in failed_dims:
+            entries = _dkm.get(dim, [])
+            if not entries:
+                continue
+            parts.append(f"### 维度: {dim}")
+            for i, e in enumerate(entries, 1):
+                parts.append(_format_entry(e, i))
+            parts.append("")
+
+        if not parts:
+            return ""
+
+        header = (
+            "以下知识库条目按失败维度精准匹配。修改时必须引用其中的框架/数据，"
+            "不得编造不在这些条目中的方法论名称或数据。"
+        )
+        return header + "\n\n" + "\n".join(parts)
+    except Exception:
+        return ""
+
+
 class E2ENodes:
     @staticmethod
     def preflight_check(node_id, context):
@@ -586,8 +691,12 @@ class E2ENodes:
                 if _rq or r.get("followup_queries"):
                     _cd["_research_questions"] = _rq[:20]
                     _cd["_followup_queries"] = r.get("followup_queries", [])[:5]
-                    out["collected_data"] = _cd
-                    context["collected_data"] = _cd
+                # Evidence-Grounded Writing：维度→MKB 映射入 collected_data
+                _dkm = r.get("dim_kb_map")
+                if _dkm:
+                    _cd["_dim_kb_map"] = _dkm
+                out["collected_data"] = _cd
+                context["collected_data"] = _cd
             if r.get("n_conflicts"):
                 import logging
 
@@ -920,10 +1029,11 @@ class E2ENodes:
 
     @staticmethod
     def rewrite_sections(node_id, context):
-        """P2 双模型对抗：免费模型重写节点。
+        """P2 双模型对抗 + Evidence-Grounded Delta-Only Rewrite。
 
         只在 attempt > 0 且有 review_comments 时执行。
         opencode_zen/zhipu 按 DeepSeek 审稿意见定向重写失败段。
+        维度级 KB 证据随失败维度精准注入（不发全文 KB）。
         """
         if context.get("attempt", 0) == 0:
             logger.info("[REWRITE] attempt 0 — skip rewrite (first draft)")
@@ -969,7 +1079,16 @@ class E2ENodes:
             # 直接把 gate_feedback 作为重写 prompt
             instructions = [{"section": "全局", "fix": gate_feedback[:2000]}]
 
-        # 重写 prompt：将审稿意见注入写作 prompt
+        # Evidence-Grounded Delta-Only Rewrite：
+        # 1. 从 gate_feedback + review_comments 提取失败维度
+        # 2. 从 dim_kb_map 查对应 KB 条目
+        # 3. 构建维度级重写提示（不是全文 KB）
+        _failed_dims = _locate_failed_dims(gate_feedback, review_comments, context)
+        _dim_kb_hints = ""
+        if _failed_dims:
+            _dim_kb_hints = _build_dim_kb_hints(_failed_dims, context)
+
+        # 重写 prompt：将审稿意见 + 维度级 KB 证据注入
         _review_text = "\n".join(f"### {inst['section']}\n{inst['fix']}" for inst in instructions[:8])
 
         rewrite_prompt = f"""你是资深投资研究报告撰写人。请根据审稿意见定向修改报告。
@@ -987,6 +1106,10 @@ class E2ENodes:
 4. 输出完整修改后的报告（不是 diff）
 5. 确保输出长度不低于原报告的80%
 """
+        # Evidence-Grounded：维度级 KB 证据注入（只发失败维度的 KB 条目）
+        if _dim_kb_hints:
+            rewrite_prompt += f"\n## 失败维度的参考证据（精准匹配，必须引用到修改后段落中）\n{_dim_kb_hints}\n"
+
         try:
             from core.deepseek_client import call_llm
 
@@ -1019,11 +1142,12 @@ class E2ENodes:
                 return {}
 
             logger.info(
-                "[REWRITE] %s 重写完成: %d → %d chars (provider=%s)",
+                "[REWRITE] %s 重写完成: %d → %d chars (provider=%s, failed_dims=%s)",
                 asset,
                 len(report_text),
                 len(rewritten_text),
                 rewrite_provider,
+                _failed_dims[:5] if _failed_dims else [],
             )
             return {"report_text": rewritten_text}
         except Exception as e:

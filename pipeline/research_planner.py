@@ -234,6 +234,60 @@ def question_tree_v2(
     return [_by_dim[d] for d in dims if d in _by_dim]
 
 
+# ── 维度→MKB 条目映射（Evidence-Grounded Writing） ─────────────
+
+# 每个维度 → 对 MKB 类别关键词（用于 select_entries 精准召回）
+_DIM_MKB_KEYWORDS: dict[str, list[str]] = {
+    "business_model": ["商业模式", "护城河", "竞争壁垒"],
+    "financial_analysis": ["财务分析", "估值", "盈利", "毛利率", "ROE"],
+    "competitive_position": ["竞争格局", "市场份额", "行业地位"],
+    "growth_drivers": ["增长", "驱动力", "市场规模", "CAGR"],
+    "governance_esg": ["治理", "ESG", "合规", "风险"],
+    "valuation_assessment": ["估值", "DCF", "PE", "可比"],
+    "catalyst": ["催化剂", "事件", "时间窗口"],
+    "falsification": ["证伪", "风险", "反方"],
+    "capital_flow": ["资金", "融资", "股东"],
+    "core_disagreement": ["分歧", "预期差", "共识"],
+    "decision_gate": ["决策", "投资", "建议"],
+    "bold_call": ["预测", "判断", "观点"],
+    "risk": ["风险", "威胁", "不确定性"],
+    "market_sizing": ["市场规模", "TAM", "SAM"],
+    "supply_chain": ["供应链", "产业链", "上游", "下游"],
+    "policy": ["政策", "监管", "法规"],
+    "trend": ["趋势", "技术路线", "演变"],
+    "headline": ["业绩", "营收", "利润"],
+    "key_surprise": ["超预期", "低于预期", " surprise"],
+    "segment_analysis": ["分部", "业务拆分", "分业务"],
+    "balance_cashflow": ["资产负债", "现金流", "负债率"],
+    "outlook_implication": ["展望", "指引", "预期"],
+}
+
+
+def _build_dim_kb_map(
+    dims: list[str],
+    asset: str,
+    report_type: str,
+) -> dict[str, list[dict]]:
+    """为每个维度预检索 MKB 条目，返回 {dim_id: [entry, ...]}。
+
+    Evidence-Grounded Writing 基础设施：writer 按维度过滤注入，
+    而不是全量盲注。select_entries 是纯打分排序（无 LLM），延迟可忽略。
+    """
+    try:
+        from core.methodology_kb import select_entries
+
+        dim_map: dict[str, list[dict]] = {}
+        for dim in dims:
+            kw = _DIM_MKB_KEYWORDS.get(dim, [dim])
+            keywords = [asset] + kw
+            entries = select_entries(keywords, report_type, max_items=3)
+            if entries:
+                dim_map[dim] = entries
+        return dim_map
+    except Exception:
+        return {}
+
+
 # ── 冲突检测（不变） ─────────────────────────────────────────
 
 
@@ -278,10 +332,13 @@ def plan(
     """研究规划主入口。use_llm=True 时尝试 LLM 生成问题（成本可控）。"""
     conflicts = detect_conflicts(collected_data)
     qt = question_tree_v2(dims, asset, report_type, collected_data, use_llm)
+    # Evidence-Grounded Writing：为每个维度预检索 MKB 条目
+    dim_kb_map = _build_dim_kb_map(dims, asset, report_type)
     return {
         "question_tree": qt,
         "conflicts": conflicts,
         "followup_queries": followup_queries(conflicts, asset),
         "n_conflicts": len(conflicts),
         "llm_generated": any(n.get("source") == "llm" for n in qt),
+        "dim_kb_map": dim_kb_map,
     }

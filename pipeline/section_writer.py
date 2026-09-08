@@ -267,6 +267,35 @@ class SectionWriter:
         blocks = [b for b in (kb, mkb) if b]
         return "\n\n".join(blocks)
 
+    def _mkb_for_group(self, dims: list[str]) -> str:
+        """Evidence-Grounded Writing：按组维度过滤 MKB 条目，返回格式化字符串。
+
+        dim_kb_map 非空时，只取该组维度对应的 MKB 条目（去重），
+        用 select_entries 的 _format_entry 格式化。
+        dim_kb_map 为空时返回空串（回退到全局 mkb_str）。
+        """
+        if not self._dim_kb_map or not dims:
+            return ""
+        try:
+            from core.methodology_kb import _format_entry
+
+            seen_ids = set()
+            entries = []
+            for dim in dims:
+                for e in self._dim_kb_map.get(dim, []):
+                    eid = id(e)
+                    if eid not in seen_ids:
+                        seen_ids.add(eid)
+                        entries.append(e)
+            if not entries:
+                return ""
+            parts = ["## [方法论知识库·维度精选] 以下条目按本组维度精准匹配，各条引用到对应分析章节："]
+            for i, e in enumerate(entries, 1):
+                parts.append(_format_entry(e, i))
+            return "\n".join(parts)[:2000]
+        except Exception:
+            return ""
+
     def _build_segments(self):
         chain = self.logic_chain
         if not chain:
@@ -1029,6 +1058,15 @@ class SectionWriter:
         # 模板数据（数据不足）。图表要求注入时标注"示意/数据不足，待补真实数据"，
         # 防止模板图冒充真实证据（保护图表质量）。
         self._chart_template_flags = chart_template_flags or {}
+        # Evidence-Grounded Writing：维度→MKB 映射（来自 research_planner.plan()）
+        _dkm = None
+        try:
+            _cd = data_context or {}
+            _rp = _cd.get("_research_plan") or {}
+            _dkm = _rp.get("dim_kb_map") or _cd.get("_dim_kb_map")
+        except Exception:
+            _dkm = None
+        self._dim_kb_map: dict[str, list[dict]] = _dkm or {}
         # R32（2026-08-02）：统一资产解析——asset 可能是中文名/代码/混合形态。
         # orchestrator 已规范化为中文名，但估值/勾稽/预期差/对标模块需要 6 位代码。
         # 统一在此解析一次，避免各模块各自正则提取失败导致静默跳过。
@@ -2499,6 +2537,8 @@ class SectionWriter:
             dims = g["dimensions"]
             _t0 = _perf_counter()
             logger.info("[DIM-PARALLEL] 写组 %s (%d维)", gname, len(dims))
+            # Evidence-Grounded Writing：按组维度过滤 MKB（替代全局 mkb_str）
+            _group_mkb = self._mkb_for_group(dims)
             # 取该组维度定义（从 SAC）
             dim_defs = self._build_dimension_defs_for(g["dimensions"])
             # S4：章节级节奏指令（决策门短句/财务数字链/竞争点名制…）
@@ -2725,7 +2765,7 @@ class SectionWriter:
                     market_seg_str,
                     analogy_str,
                     kb_str,
-                    mkb_str,
+                    _group_mkb if _group_mkb else mkb_str,
                 )
                 + (fw_str[:1500] + "\n\n" if fw_str else "")
                 + _conclusion_req
