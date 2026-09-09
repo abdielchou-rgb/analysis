@@ -97,34 +97,61 @@ def detect_value_conflicts(report_text: str, data_dict: dict) -> list:
         for k, v in data_dict.items():
             if isinstance(k, str) and v is not None:
                 # 形如 margin_2024 / net_profit_2024 / roe_2024
-                m = re.match(r"^(?:margin|net_profit|roe)_(\d{4})$", k)
+                # 2026-09-09 修复：键前缀取自 regex 匹配（net_profit 完整前缀），
+                # 此前 k.split("_")[0] 把 net_profit_2024 截成 'net' → 净利率
+                # 永远无法与同名键比对（旧版跨指标误报的共因）。
+                m = re.match(r"^(margin|net_profit|roe)_(\d{4})$", k)
                 if m:
                     try:
-                        known.setdefault(m.group(1), {})[k.split("_")[0]] = float(v)
+                        known.setdefault(m.group(2), {})[m.group(1)] = float(v)
                     except (TypeError, ValueError):
                         pass
         if not known:
             return conflicts
         # 报告正文找"YYYY年XX Y%"模式，与 data_dict 对比
-        generic = r"(?:毛利率|净利率|ROE)"
+        # 2026-09-09（Gate 0.95 提分）：指标精确匹配修复——
+        # 此前 generic 混用 毛利率/净利率/ROE 三指标，正文值与该年份
+        # 全部已知键挨个比（for key, known_val in vals.items()），
+        # "2022年净利率低点约43.70%"被拿去和 margin_2022=20.25 比对 →
+        # 误报"写44 vs 库20"；"2025年净利率下滑至12%" vs margin_2025=26.27
+        # 同理误报。跨指标比较没有意义——净利率≠毛利率。
+        # 修复：捕获匹配到的指标词（命名组仅定义一次，两分支复用），
+        # 只与同名键比对。注意 alternation 两侧不能重复定义同名组，
+        # 否则 re.error 被 except 静默吞掉 → 检查恒空转（2026-09-09 实测踩坑）。
+        _IND_MAP = {"毛利率": "margin", "净利率": "net_profit", "ROE": "roe"}
         for year, vals in known.items():
             expected_unit = "%"
             pat = re.compile(
-                rf"(?:{year}年?(?:[^\n。]{{0,12}})?(?:{generic})|(?:{generic})[^\n。]{{0,12}}?{year}年?)"
-                rf"[^\n。]{{0,20}}?(?<![\d.])(\d+(?:\.\d{{1,3}})?)\s*({expected_unit})"
+                rf"(?P<ctx>{year}年?[^\n。]{{0,12}}|)(?P<ind>毛利率|净利率|ROE)"
+                rf"(?P<mid>[^\n。]{{0,12}}?{year}年?|)"
+                rf"[^\n。]{{0,20}}?(?<![\d.])(?P<val>\d+(?:\.\d{{1,3}})?)\s*(?P<unit>{expected_unit})"
             )
+            _reported = False
             for m in pat.finditer(report_text):
+                # 年份必须在指标前后 12 字内（ctx 或 mid 至少其一非空）
+                if not (m.group("ctx") or m.group("mid")):
+                    continue
                 try:
-                    body_val = float(m.group(1).replace(",", ""))
+                    body_val = float(m.group("val").replace(",", ""))
                 except ValueError:
                     continue
-                unit = m.group(2)
-                for key, known_val in vals.items():
-                    if abs(body_val - known_val) / max(abs(known_val), 1e-9) < 0.10:
-                        break
-                else:
-                    conflicts.append(f"{year}年 正文写{body_val:.0f}{unit} vs 数据层{list(vals.values())[0]:.0f}")
-                    break  # 每年报一处
+                # 2026-09-09：预测/情景语境豁免——"净利率下滑至12%以下的悲观预测"
+                # 是情景推演（悲观假设），非事实陈述，与数据层实际值不构成矛盾。
+                _win = report_text[max(0, m.start() - 25) : m.end() + 15]
+                if re.search(r"悲观|乐观|预测|预计|假设|预期|若|下滑至|上修|下修|情景|隐含", _win):
+                    continue
+                unit = m.group("unit")
+                ind_word = m.group("ind")
+                known_val = vals.get(_IND_MAP.get(ind_word))
+                if known_val is None:
+                    continue  # data_dict 无该指标该年值，无从比对
+                if abs(body_val - known_val) / max(abs(known_val), 1e-9) >= 0.10:
+                    conflicts.append(f"{year}年 {ind_word} 正文{body_val:.0f}{unit} vs 数据层{known_val:.0f}")
+                    if not _reported:
+                        _reported = True
+            # 每年最多报一处（保持原行为粒度）
+            if _reported and len(conflicts) >= 5:
+                break
     except Exception:
         pass
     return conflicts[:5]

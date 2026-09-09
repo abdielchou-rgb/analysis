@@ -288,6 +288,13 @@ class ConsistencyEngine:
                     scenario = re.search(r"(基准|悲观|乐观|中性|保守|激进|核心|下修|上调|下调|回撤|情景)", _scen_win)
                     if scenario:
                         actual_label = f"目标价金额_{scenario.group(1)}"
+                    # 2026-09-09（Gate 0.95 提分）：现价/当前价分流——
+                    # "现价若为260元"和"目标价300元"是两个不同指标（当前市价 vs
+                    # 12月目标价），实测宁德报告现价260(E)×3处与目标价300(F)被聚到
+                    # 同簇误判"目标价冲突"（偏离13%）。现价前置词命中即分簇。
+                    _px = re.search(r"(现价|当前价|最新价|收盘价|现股价)", _scen_win)
+                    if _px:
+                        actual_label = "当前价金额"
                 start = max(0, m.start() - 20)
                 end = min(len(_cleaned), m.end() + 20)
                 ctx = _cleaned[start:end].replace("\n", " ")

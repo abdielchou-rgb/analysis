@@ -21,16 +21,39 @@ def patterns() -> list[dict]:
 
 
 def scan(text: str) -> list[dict]:
-    """返回命中 [{pattern, count}]。仅统计无量化支撑的裸表述。"""
+    """返回命中 [{pattern, count}]。仅统计无量化支撑的裸表述。
+
+    2026-09-09（Gate 0.95 提分）：豁免框架应用句——"用【XX框架】分析…护城河…"
+    是 Evidence-Grounded Writing 的合法产出，量化常在下一小句（"具体结论1：…"），
+    80 字窗口被句号截断导致误报（实测 3 处误伤全部是带量化结论的合格句）。
+    规则：匹配点前 30 字内出现"【"框架标记，或后 12 字内出现"：+数字开头结论"，
+    一律跳过。
+    """
+    import re
+
     hits = []
     for p in patterns():
         raw = p.get("regex")
         if not raw:
             continue
         try:
-            n = len(re_findall(raw, text))
+            matches = list(re.finditer(raw, text))
         except Exception:
             continue
+        n = 0
+        for m in matches:
+            before = text[max(0, m.start() - 30) : m.start()]
+            after = text[m.end() : m.end() + 12]
+            # 豁免 1：框架应用标记（"用【经济护城河分析框架】分析"）
+            if "【" in before:
+                continue
+            # 豁免 2：结论句式紧随其后（"：具体结论…" / "——…" 破折号量化）
+            if re.match(r"^[：:—-]", after):
+                continue
+            # 豁免 3：计数型量化前缀（"三重护城河""四大壁垒"——枚举即量化）
+            if re.search(r"(?:三重|双重|多重|四大|五大|六大|三大|单一)$", before[-8:]):
+                continue
+            n += 1
         if n:
             hits.append({"pattern": p.get("name", "?"), "count": n})
     return hits

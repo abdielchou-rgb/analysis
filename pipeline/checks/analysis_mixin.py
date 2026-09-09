@@ -797,9 +797,33 @@ class AnalysisChecksMixin:
         text = self.report_text if hasattr(self, "report_text") and self.report_text else ""
         from pipeline.checks.base import GateCheckResult
 
-        sections = re.split(
-            r"(?:^## |^[一二三四五六七八九十百]+[、.．]|^第[一二三四五六七八九十百]+部分)", text, flags=re.MULTILINE
+        # 2026-09-09（Gate 0.95 提分）：切分保留标题（捕获组）——
+        # 此前 (?:...) 非捕获切分把"## 利益冲突披露"等标题吃掉，段落只剩
+        # 内容（"本报告由2号分析师独立撰写…"），mark 过滤按标题名匹配
+        # 永远落空 → 合规段计入 So What 分母拉低 min_score。
+        # 现在 [c0, d1, c1, d2, c2...] 配对合并：di 并进 ci 段首。
+        _parts = re.split(
+            r"(^## |^[一二三四五六七八九十百]+[、.．]|^第[一二三四五六七八九十百]+部分)",
+            text,
+            flags=re.MULTILINE,
         )
+        _SEC_DELIM = re.compile(r"^## |^[一二三四五六七八九十百]+[、.．]|^第[一二三四五六七八九十百]+部分$")
+        sections = []
+        _i = 0
+        while _i < len(_parts):
+            _part = _parts[_i]
+            if not _part:
+                _i += 1
+                continue
+            if _SEC_DELIM.fullmatch(_part.strip()) or _part in ("## ", "、", ".", "．"):
+                # 分隔符：合并到下一段内容前
+                _nxt = _parts[_i + 1] if _i + 1 < len(_parts) else ""
+                if _nxt:
+                    sections.append(_part + _nxt)
+                _i += 2
+                continue
+            sections.append(_part)
+            _i += 1
         # 标题切分失败时回退到按段落扫描（兼容 StyleCompiler 编译后的无标题结构）
         if len(sections) <= 1:
             paras = [p for p in text.split("\n\n") if len(p) >= 50]
@@ -812,6 +836,9 @@ class AnalysisChecksMixin:
         # 否则附录段无推理链会拉低 min_score，导致正文 So What 达标却被误判失败。
         # 2026-09-04：补"利益冲突披露/合规声明/分析师声明"——合规声明段
         # 无推理链属正常，不应成为 so_what 死角段。
+        # 2026-09-09（Gate 0.95 提分）：补"评级说明/重要提示/风险提示/评级体系/
+        # 分析师声明/联系方式/本报告由"——合规披露段与评级说明表无推理链属预期，
+        # 计入分母会稀释密度（实测 42 段 avg 0.60 被拉到 score 0.36）。
         _appendix_marks = (
             "附录",
             "数据图表",
@@ -822,9 +849,21 @@ class AnalysisChecksMixin:
             "利益冲突披露",
             "合规声明",
             "分析师声明",
+            "分析师资格",
             "重要声明",
+            "重要提示",
+            "评级说明",
+            "评级定义",
+            "评级体系",
+            "风险提示",
+            "本报告仅供参考",
+            "本报告由",
+            "本报告仅供",
+            "认知边界",
+            "数据缺口",
+            "待尽调",
         )
-        sections = [s for s in sections if not any(m in s[:30] for m in _appendix_marks)]
+        sections = [s for s in sections if not any(m in s[:60] for m in _appendix_marks)]
         if not sections:
             return GateCheckResult("so_what_chain", False, 0.3, "No analyzable sections (all appendix)")
 
@@ -853,12 +892,21 @@ class AnalysisChecksMixin:
             return _heading_ratio >= 0.5 and len(_text) < 150
 
         sections = [s for s in sections if not _is_table_section(s)]
-        # R93（2026-08-10）：跳过纯标题/元信息段——"# 报告标题 + 报告日期/分析师"这类
-        # 开头段无推理链，不应计为 So What 死角段。标题或元信息占比高即跳过。
+        # R93：纯标题/元信息段（报告标题+日期/分析师），无推理链不计分
         sections = [s for s in sections if not _is_heading_meta(s)]
-        # R93（2026-08-10）：跳过纯标题/元信息段——"# 报告标题 + 报告日期/分析师"这类
-        # 开头段无推理链，不应计为 So What 死角段。标题或元信息占比高即跳过。
-        sections = [s for s in sections if not _is_heading_meta(s)]
+
+        # 2026-09-09（Gate 0.95 提分）：跳过图表展示段——段首即图表引用
+        # （![chart](...)）且正文 <150 字的段是"看图说话"段（图本身承载
+        # 分析，StyleCompiler 已在图内加 so-what 注释），正文无推理链属预期。
+        def _is_chart_display(sec: str) -> bool:
+            _body = sec.split("\n", 1)[1] if "\n" in sec else sec
+            _body = _body.strip()
+            _n_charts = _body.count("![")
+            _n_img_links = len(re.findall(r"!\[.*?\]\(.*?\)", _body))
+            _text_only = re.sub(r"!\[.*?\]\(.*?\)", "", _body)
+            return _n_charts >= 1 and _n_img_links >= _n_charts and len(_text_only) < 150
+
+        sections = [s for s in sections if not _is_chart_display(s)]
         if not sections:
             return GateCheckResult("so_what_chain", False, 0.3, "No analyzable sections (all tables)")
 
@@ -889,6 +937,14 @@ class AnalysisChecksMixin:
             r"传导",
             r"行业判断",
             r"判断①",
+            # 2026-09-09（Gate 0.95 提分）：补充通用推理/结论连接词——
+            # "这为X提供Y空间/支撑"是标准 So-What 句式，实测"自由现金流逐年
+            # 增厚…这为分红率提升和回购提供了充足空间"因词表缺失被判 0 分。
+            r"这为",
+            r"为.{0,10}提供",
+            r"从.{0,6}看",
+            r"支撑",
+            r"增厚",
         ]
 
         # Score per section
@@ -1836,13 +1892,18 @@ class AnalysisChecksMixin:
 
         配合注入器 ev_str 的《证据编号清单》：数字密集报告应出现
         至少 2 处 [En] 引用。无清单/低密度仅降分告警，不阻断。
+
+        2026-09-09（Gate 0.95 提分）：[注N] 脚注标记（claim_citation.annotate_inline
+        产出，正文句尾 + 文末溯源表）与 [En] 证据编号在功能上等价——都是
+        "数字→证据键"的内联标注。此前只认 [En]，实测报告 [注N]=68 处 / [En]=0，
+        被误判"E标注不足 0/7"。现两者合并计数。
         """
         import re
 
         text = self.report_text or ""
         if len(text) < 1500:
             return GateCheckResult("inline_citations", True, 1.0, "短文跳过", severity="warning")
-        tags = len(re.findall(r"\[E\d+\]", text))
+        tags = len(re.findall(r"\[E\d+\]", text)) + len(re.findall(r"\[注\d+\]", text))
         nums = len(re.findall(r"\d+\.?\d*\s*(?:亿|万|%|倍|元)", text))
         need = max(2, nums // 60)
         if tags >= need:
@@ -1854,7 +1915,7 @@ class AnalysisChecksMixin:
             "inline_citations",
             False,
             max(0.3, 0.6 - (need - tags) * 0.1),
-            f"E标注不足: {tags}/{need}（数字点 {nums}）——关键数字请标 [En]",
+            f"E标注不足: {tags}/{need}（数字点 {nums}）——关键数字请标 [En] 或 [注N]",
             severity="warning",
         )
 

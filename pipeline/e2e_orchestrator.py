@@ -232,6 +232,56 @@ def _build_dim_kb_hints(
         return ""
 
 
+def _build_numeric_anchor_summary(context: dict) -> str:
+    """2026-09-09（Gate 0.95 提分）：从 data_dict / 锚卡提取关键指标口径。
+
+    rewrite 节点的数值锚卡——write 有"全文数值一致"强制而 rewrite 没有，
+    导致重写后目标价两值并存（260 vs 300）、毛利率与 data_dict 冲突。
+    此处把 data_dict 的关键指标渲染为锚卡摘要，注入 rewrite prompt。
+    纯确定性提取，无 LLM。
+    """
+    try:
+        lines: list[str] = []
+        cd = context.get("collected_data") or {}
+        # 来源 1：data_dict（section_writer 写入时构建的共享数据字典）
+        dd = cd.get("data_dict") or {}
+        if isinstance(dd, dict):
+            _KEY_ANCHORS = [
+                ("target_price", "目标价"),
+                ("rating", "评级"),
+                ("gross_margin", "毛利率"),
+                ("revenue", "营收"),
+                ("net_profit", "净利润"),
+                ("market_share", "市场份额"),
+                ("pe", "PE"),
+                ("roe", "ROE"),
+            ]
+            for key, label in _KEY_ANCHORS:
+                if key in dd and dd[key] is not None:
+                    lines.append(f"- {label}: {dd[key]}")
+        # 来源 2：chart_data 锚定值（write 节点锚卡同源）
+        cdata = cd.get("chart_data") or {}
+        if isinstance(cdata, dict):
+            for k in ("fig_target_price", "fig_valuation_summary"):
+                v = cdata.get(k)
+                if isinstance(v, dict) and v:
+                    for kk, vv in list(v.items())[:5]:
+                        if isinstance(vv, (int, float, str)):
+                            lines.append(f"- {k}.{kk}: {vv}")
+        # 来源 3：报告正文已有的目标价（cross_section_consistency 的 canonical）
+        # ——锚定到 state_anchor / 上轮 Gate 认可值，防止 drift
+        sa = context.get("state_anchor") or {}
+        if isinstance(sa, dict):
+            tp = sa.get("target_price")
+            if tp:
+                lines.append(f"- target_price(state_anchor): {tp}")
+        if not lines:
+            return ""
+        return "\n".join(lines[:20])
+    except Exception:
+        return ""
+
+
 class E2ENodes:
     @staticmethod
     def preflight_check(node_id, context):
@@ -1088,6 +1138,23 @@ class E2ENodes:
         if _failed_dims:
             _dim_kb_hints = _build_dim_kb_hints(_failed_dims, context)
 
+        # ── 2026-09-09（Gate 0.95 提分）：数值锚卡约束注入 ──
+        # write 节点有"全文数值以锚卡为准"强制，rewrite 此前没有 →
+        # 审稿重写后目标价 260(锚卡) vs 300(旧叙事) 并存、毛利率写串，
+        # cross_section_consistency + data_dict_refs 双失分（实测 0.9 分）。
+        # 修复：从 data_dict / 锚卡提取关键指标口径，作为重写的硬约束。
+        _anchor_summary = _build_numeric_anchor_summary(context)
+        _anchor_block = ""
+        if _anchor_summary:
+            _anchor_block = (
+                "\n## 数值锚卡（最高优先级——与以下口径冲突的旧数字一律以锚卡为准修正）\n"
+                f"{_anchor_summary}\n"
+                "## [数值一致性强制]\n"
+                "1. 同一指标（目标价/评级/毛利率/营收/净利）全文只允许一个值；\n"
+                "2. 报告中任何数字与锚卡冲突时，以锚卡为准，禁止保留旧叙事数字；\n"
+                "3. 修改后自查一遍：目标价、评级、核心财务指标是否与锚卡完全一致。\n"
+            )
+
         # 重写 prompt：将审稿意见 + 维度级 KB 证据注入
         _review_text = "\n".join(f"### {inst['section']}\n{inst['fix']}" for inst in instructions[:8])
 
@@ -1098,13 +1165,14 @@ class E2ENodes:
 
 ## 当前报告（前20000字）
 {report_text[:20000]}
-
+{_anchor_block}
 ## 修改要求
 1. 只修改审稿意见中明确指出的问题
 2. 保持报告其他部分不变
 3. 保留所有数据标注 (A)/(E)/(F)、图表引用 ![](chart:xxx)
 4. 输出完整修改后的报告（不是 diff）
 5. 确保输出长度不低于原报告的80%
+6. 严格遵守上方数值锚卡——禁止同指标出现两个不同值
 """
         # Evidence-Grounded：维度级 KB 证据注入（只发失败维度的 KB 条目）
         if _dim_kb_hints:

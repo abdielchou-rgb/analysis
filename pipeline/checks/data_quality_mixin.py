@@ -1511,6 +1511,8 @@ class DataQualityChecksMixin:
             markers = _json.loads(_mk.read_text(encoding="utf-8"))
             ind_map = markers.get("industry_markers", {})
             foreign_agency = markers.get("foreign_agency_markers", [])
+            # 2026-09-09（Gate 0.95 提分）：行业→合法机构白名单（见下方 asset 解析后应用）
+            _agency_exempt_map = markers.get("agency_exemptions", {})
 
             # 1. 确定资产所属行业族
             asset = getattr(self, "asset", "") or ""
@@ -1533,6 +1535,12 @@ class DataQualityChecksMixin:
                                 break
             except Exception:
                 pass
+
+            # 2026-09-09（Gate 0.95 提分）：应用行业机构豁免——
+            # SNE Research 对电池行业是权威装机量数据源（宁德时代报告引用
+            # 4 次全合法），无豁免时电池报告被误判污染（warn 0.20）。
+            _agency_exempt = set(_agency_exempt_map.get(asset_industry_family or "", []))
+            foreign_agency = [a for a in foreign_agency if a not in _agency_exempt]
 
             # 2. 统计非本行业词的命中
             hits = []

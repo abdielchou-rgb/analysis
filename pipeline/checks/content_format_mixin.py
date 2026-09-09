@@ -735,15 +735,37 @@ class ContentFormatChecksMixin:
             "这一迹象提示，市场当前定价可能尚未充分反映上述逻辑的潜在弹性",
             "该信号与基本面相互印证，增强了我们对此前观点落地的信心",
             "因此，这意味着",
-            "综合判断：",
             "在此背景下，竞争壁垒的强化将构成公司中长期价值的核心支撑",
             "这意味着读者可据此交叉验证核心判断与估值区间",
         ]
+        # 2026-09-09（Gate 0.95 提分）："综合判断："是 4 字通用结论引导词，
+        # 3 个维度组各有一段结论属正常结构（判断内容本身互不相同），
+        # 按字面计数≥2 误伤（实测 ×3 扣分）。改为"引导词后接内容重复"才计：
+        # 提取每处"综合判断："后 30 字做集合，出现重复内容才算模板复制。
+        _lead = "综合判断："
         repeats = []
         for t in templates:
             cnt = text.count(t)
             if cnt >= 2:
                 repeats.append(f"{t}(x{cnt})")
+        _lead_positions = [m.end() for m in __import__("re").finditer(__import__("re").escape(_lead), text)]
+        if len(_lead_positions) >= 2:
+            # 规范化：去空白/井号后取前 12 字比较（后接 12 字足以区分
+            # "同结构不同结论"与"整段复制"；末处 40 字窗可能含下段标题，
+            # 截 20 字会因尾部段名不同而漏检，实测踩坑）。
+            _follows = [
+                __import__("re").sub(r"[\s#]", "", text[p : p + 40])[:12]
+                for p in _lead_positions
+                if text[p : p + 40].strip()
+            ]
+            _seen, _dup = set(), False
+            for f in _follows:
+                if f in _seen:
+                    _dup = True
+                    break
+                _seen.add(f)
+            if _dup:
+                repeats.append(f"{_lead}(内容重复x{len(_lead_positions)})")
         # 概念错位词（模板残留，跨行业污染）
         mismatch_words = ["端侧变现", "AI芯片", "消费电子叙事", "to C 变现"]
         mism = [w for w in mismatch_words if w in text]
