@@ -221,14 +221,31 @@ class IronGate(
             self.report_text = ""
 
     @classmethod
-    def from_text(cls, report_text, report_type="industry_deep", style="cicc", asset: str = ""):
+    def from_text(
+        cls,
+        report_text,
+        report_type="industry_deep",
+        style="cicc",
+        asset: str = "",
+        collected_data: dict | None = None,
+    ):
+        """从文本构造门禁。
+
+        2026-09-15 审计修复：新增 `collected_data` 入参。此前该参数缺失，
+        凡是用 from_text 构造的门禁，`_check_data_point_provenance` 都必然
+        走空集分支（并旧版本还会在空集上报"all fields present"满分）。
+        测试与临时校验大量使用 from_text，等于系统性绕过了出处校验。
+
+        注意：本方法以 delete=False 建临时文件且从不清理（既有行为，
+        未改动——有调用方依赖 gate.report_path 指向真实文件）。
+        """
         import tempfile
 
         tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False, encoding="utf-8")
         tmp.write(report_text)
         tmp_path = tmp.name
         tmp.close()
-        gate = cls(tmp_path, report_type, style, asset=asset)
+        gate = cls(tmp_path, report_type, style, asset=asset, collected_data=collected_data)
         gate.report_text = report_text
         return gate
 
@@ -888,23 +905,66 @@ class IronGate(
     # ============================================================
 
     def _check_data_point_provenance(self):
-        """每个 DataPoint 必须有 source/access_ts/excerpt_sha256/confidence/unit"""
+        """每个 DataPoint 必须有 source/access_ts/excerpt_sha256/confidence/unit。
+
+        2026-09-15 审计修复（空集假通过，三宗罪）：
+
+        1. `data_points` 为空时 `missing=[]`，走到最后一行返回
+           **"all fields present"** —— 这是一个肯定句：它声称"所有字段齐全"，
+           而事实是"一个字段都没检查过"。无数据被伪装成数据合规。
+        2. 该返回是 warning 级（满分分支未显式指定 severity），
+           **永远不可能阻断**，因此它的状态从不出现在任何决策里。
+        3. `IronGate.from_text()` 的签名根本不收 `collected_data`，
+           所以凡是用 from_text 构造的门禁，这项必定走空集分支。
+
+        后果：provenance（来源 / 抓取时间 / 摘要 sha256 / 单位）是研报里
+        **唯一**满足"客观真值 + 可快速规模化验证"的资产，而它被接在一根
+        不会响的线上——web intel 或私有数据源一旦没跑到，这项满分通过。
+
+        现改为：**无数据 ≠ 数据合规**。空集单独成一类可观测状态，
+        不再冒充"全部齐全"；元素类型不匹配也显式计数（原来是静默跳过）。
+        """
         from core.models import DataPoint
         from pipeline.checks.base import GateCheckResult
 
         cd = getattr(self, "collected_data", {}) or {}
-        dps = cd.get("data_points", [])
+        dps = cd.get("data_points", []) or []
+
+        if not dps:
+            # 不阻断（很多报告类型本就没有 DataPoint），但绝不再声称合规。
+            # 记 0 分 + info 级：不进 error_mean，却能被 metrics/details 观测到。
+            return GateCheckResult(
+                "data_point_provenance",
+                True,
+                0.0,
+                "无可校验 DataPoint（collected_data.data_points 为空）——本次未做任何出处校验",
+                "info",
+            )
+
         missing = []
+        unknown_type = 0
         for dp in dps:
-            if isinstance(dp, DataPoint):
-                for field in ["source", "access_ts", "excerpt_sha256", "confidence", "unit"]:
-                    if not getattr(dp, field, None):
-                        missing.append(f"{dp.name}.{field}")
+            if not isinstance(dp, DataPoint):
+                # 类型不匹配 = 静默放行。原实现直接 continue，与"字段齐全"无法区分。
+                unknown_type += 1
+                continue
+            for field in ["source", "access_ts", "excerpt_sha256", "confidence", "unit"]:
+                if not getattr(dp, field, None):
+                    missing.append(f"{getattr(dp, 'name', '?')}.{field}")
+
         if missing:
             return GateCheckResult(
                 "data_point_provenance", False, 0.0, f"{len(missing)} 字段缺失: {missing[:5]}", "error"
             )
-        return GateCheckResult("data_point_provenance", True, 1.0, "all fields present")
+        if unknown_type:
+            return GateCheckResult(
+                "data_point_provenance",
+                True,
+                0.5,
+                f"{unknown_type}/{len(dps)} 个元素非 DataPoint，未校验（类型不匹配≠合规）",
+                "warning",
+            )
+        return GateCheckResult("data_point_provenance", True, 1.0, f"{len(dps)} 个 DataPoint 出处字段齐全")
 
     # ============================================================
     def _check_semantic_dedup(self):

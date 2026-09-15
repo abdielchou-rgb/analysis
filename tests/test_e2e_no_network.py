@@ -12,11 +12,25 @@
   - monkeypatch call_deepseek 返回固定报告文本（绕过真实 LLM）
   - 跳过 RuntimeGate 全量语法编译（慢）、data_feeds 网络扫描（慢）
   - 验证 21 节点图中的核心 6 节点链路可走通
+
+2026-09-14 审计修复（R4）——本文件的"无网络"此前只是**一句愿望**：
+  - 没有任何机制强制无网络。实测外网不可用时，data 节点挂在 18 个数据源的
+    第 14 个上（ProxyError 重试+退避），而 agent_graph 的超时又因
+    `with ThreadPoolExecutor` 的 shutdown(wait=True) 而形同虚设
+    → 整个 pytest 进程永久挂死，且连 summary 都不打印（这也是本项目
+    长期只能"手挑文件"验证的原因之一）。
+  - 现由 _offline_env 夹具**强制执行**该前提：socket.connect 直接抛错，
+    节点超时压到 30s；数据改用本地夹具，经 data 节点自带的 `_data_cached`
+    复用路径短路网络采集（见 e2e_orchestrator.py:412）。
+  - 于是本测试从"依赖外网碰运气"变成"真的在无网络下跑通"。
 """
 
 import os
+import socket
 import sys
 from pathlib import Path
+
+import pytest
 
 _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
@@ -60,6 +74,62 @@ def _mock_call_deepseek(messages, **kw):
     return {"choices": [{"message": {"role": "assistant", "content": SAMPLE_REPORT}}]}
 
 
+# ── 无网络前提必须被**强制**，而不是假设（2026-09-14 审计修复 R4）────────
+_OFFLINE_NODE_TIMEOUT_S = "30"
+
+# 本地夹具数据：取自 output/思必驰_data_dict.json（招股书口径），
+# 形状对齐 chart_data（compute / enrich 节点消费）。
+# 经 data 节点自带的 `_data_cached` 复用路径注入，从而完全不触碰网络。
+_LOCAL_SEED_DATA = {
+    "chart_data": {
+        "fig_revenue_trend": {"2023": 5.42, "2024": 5.71, "2025": 6.88},
+        "fig_profitability": {"2024": -1.59, "2025": -0.80},
+    },
+    "data_sufficiency": {"sufficient": True},
+}
+
+
+@pytest.fixture(autouse=True)
+def _offline_env(monkeypatch):
+    """强制"无网络"前提 + 短节点超时 + LLM 隔离。
+
+    没有这个夹具，本文件的"无网络"就只是 docstring 里的一句话：
+    测试实际依赖外网，外网不可用时 data 节点会永久挂死（见模块 docstring）。
+    """
+    monkeypatch.setenv("AGENT_GRAPH_NODE_TIMEOUT_S", _OFFLINE_NODE_TIMEOUT_S)
+
+    def _blocked(*_a, **_k):
+        raise OSError("network blocked by _offline_env fixture (no-network e2e)")
+
+    monkeypatch.setattr(socket.socket, "connect", _blocked, raising=False)
+    monkeypatch.setattr(socket.socket, "connect_ex", lambda *_a, **_k: 1, raising=False)
+
+    # ── LLM 隔离（2026-09-14 R4）──
+    # 两点都是实测踩出来的：
+    # 1) pipeline/section_writer.py:26 是 `from core.deepseek_client import call_deepseek`
+    #    —— 拿到的是**引用副本**，只 patch 源模块会漏（本项目自己的注释里就写过这个坑）。
+    #    漏了它，write 节点会走真实 call_deepseek，进而撞上熔断器。
+    # 2) smart_router 的熔断状态是**进程级全局**，会被先前用例的失败污染。
+    #    实测：本模块单独跑 4 passed，放进全量套件则因
+    #    "No available LLM provider (all circuit-broken)" 而失败。
+    #    测试必须与"之前跑过什么"无关。
+    import core.deepseek_client as _dsc
+    import pipeline.section_writer as _sw
+
+    monkeypatch.setattr(_dsc, "call_deepseek", _mock_call_deepseek, raising=False)
+    monkeypatch.setattr(_sw, "call_deepseek", _mock_call_deepseek, raising=False)
+
+    try:
+        from core.smart_router import get_router
+
+        _r = get_router()
+        _r._circuit_broken_until.clear()
+        _r._failures.clear()
+    except Exception:
+        pass
+    yield
+
+
 # ── 测试 1：核心 6 节点链路可走通 ───────────────────────────────
 def test_core_chain_no_network():
     # monkeypatch LLM
@@ -85,6 +155,10 @@ def test_core_chain_no_network():
             "report_type": "unlisted_company",
             "style": "cicc",
             "output_dir": str(_ROOT / "output"),
+            # 2026-09-14（R4）：注入本地夹具，经 data 节点的 `_data_cached`
+            # 复用路径短路网络采集——这才是"无网络"该有的样子。
+            "_data_cached": True,
+            "collected_data": dict(_LOCAL_SEED_DATA),
         }
         r = g.run(ctx)
 
@@ -134,6 +208,10 @@ def test_enrich_file_injection():
             "style": "cicc",
             "output_dir": str(_ROOT / "output"),
             "enrich_file": str(_ROOT / "output" / "思必驰_enrich.json"),
+            # 2026-09-14（R4）：同测试 1——无网络前提由 _offline_env 强制，
+            # data 节点走本地夹具短路，enrich 节点再读 enrich_file 注入。
+            "_data_cached": True,
+            "collected_data": dict(_LOCAL_SEED_DATA),
         }
         r = g.run(ctx)
         assert r.nodes["enrich"].status == "passed", f"enrich failed: {r.nodes['enrich'].error}"

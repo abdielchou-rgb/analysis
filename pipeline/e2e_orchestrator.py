@@ -1690,7 +1690,10 @@ class E2ENodes:
                         "timestamp": _dt.datetime.now().isoformat(),
                         "attempt": context.get("attempt", 0),
                         "gate_score": gate.get("overall_score", gate.get("score", 0)),
-                        "gate_passed": True,
+                        # 2026-09-14 审计修复：不再硬编码 True。本节点上游 1643 行已有
+                        # `if not gate.get("passed", False): return` 守卫，读真值不改变现有行为，
+                        # 但可避免预写点与权威写入点（_write_pipeline_fingerprint）未来分叉。
+                        "gate_passed": bool(gate.get("passed", False)),
                         "via_pipeline": True,
                         "pipeline": "E2EOrchestratorV2",
                         # P0-1: 正文哈希绑定——用当前 text（与 export 一致）
@@ -2099,7 +2102,10 @@ class E2EOrchestratorV2:
             "style": self.style,
             "timestamp": _dt.datetime.now().isoformat(),
             "attempt": ctx.get("attempt", 0),
-            "gate_score": gate.get("score", 0) if isinstance(gate, dict) else 0,
+            # 2026-09-14 审计修复：GateReport.to_dict() 的键是 overall_score，不存在 "score"。
+            # 原写法 gate.get("score", 0) 恒得 0 → 每份指纹的 gate_score 都是 0，
+            # 与真实分数脱钩（同文件 1746/1892 已修过同一 bug，此处漏网）。
+            "gate_score": (gate.get("overall_score", gate.get("score", 0)) if isinstance(gate, dict) else 0),
             "gate_passed": gate.get("passed", False) if isinstance(gate, dict) else False,
             "judge_ver": gate.get("judge_ver", "") if isinstance(gate, dict) else "",
             "gate_config_hash": gate.get("gate_config_hash", "") if isinstance(gate, dict) else "",

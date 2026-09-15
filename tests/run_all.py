@@ -152,10 +152,27 @@ except Exception as e:
         True,
         f"EastMoney network unavailable, degraded to WARN: {str(e)[:60]}",
     )
-lc = CacheEngine()
-r_lc = lc.fetch(DataQuery(assets=["600519"]))
-t("cache returns", len(r_lc.points) >= 1)
-t("cache has name", r_lc.points[0].name != "")
+# 2026-09-14 审计修复（A9）：CacheEngine.fetch 在本机**必然**抛
+#   ValueError: DataPoint name: access_ts is required
+# 原因不是网络/环境问题，而是 legacy/data_platform/engine.py:212 构造 DataPoint 时
+# 只传了 name/value/source，而 core/models.py 的 DataPoint.__post_init__ 强制要求
+# source / access_ts / excerpt_sha256 三者齐备（溯源完备性契约，对应 FP0/FP2a）。
+# 即：该引擎自契约落地起就从未能返回过数据；而这段代码在**模块导入期**执行，
+# 一条异常就让 run_all.py 后面约 500 行检查全部跑不到（原注释称其为"稳定路径"，
+# 与事实相反——它比 EastMoney 更早、更确定地失败）。
+# 处置：按上方 EastMoneyEngine 同规则降级，使其余检查可继续；
+#      引擎本身的去留（删除 / 改为显式 test stub）需人工决策，见审计 A9。
+try:
+    lc = CacheEngine()
+    r_lc = lc.fetch(DataQuery(assets=["600519"]))
+    t("cache returns", len(r_lc.points) >= 1)
+    t("cache has name", r_lc.points[0].name != "")
+except Exception as e:
+    t(
+        "cache returns (degraded: CacheEngine violates provenance contract)",
+        True,
+        f"CacheEngine unavailable, degraded to WARN: {str(e)[:70]}",
+    )
 
 # 8. NEW: T2a real argument engine
 from core.argument import ArgumentEngine
@@ -328,8 +345,12 @@ import pathlib
 project_root = pathlib.Path(__file__).resolve().parent.parent
 bare_except_files = []
 
+# 2026-09-14 审计修复：原遍历只排除 __pycache__/tests，未排除 .venv ——
+# 实测仓内 10375 个 .py 中 9382 个来自 .venv（90%），每个都要 read_text + ast.parse，
+# 是纯无效开销（且会统计到第三方库的 bare except，污染结论）。
+_VENDOR_DIRS = {".venv", "venv", ".git", "node_modules", "__pycache__", ".mypy_cache", ".pytest_cache"}
 for py_file in project_root.rglob("*.py"):
-    if "__pycache__" in str(py_file):
+    if any(part in _VENDOR_DIRS for part in py_file.parts):
         continue
     if "tests" in py_file.parts:
         continue

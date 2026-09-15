@@ -3447,7 +3447,13 @@ def _escape_atx_heading_prefix(line: str) -> str:
         return line
     hashes = match.group(1)
     rest = stripped[len(hashes) :]
-    return f"{leading}{'\\#' * len(hashes)}{rest}"
+    # 2026-09-14 审计修复：原写法 `f"{leading}{'\\#' * len(hashes)}{rest}"`
+    # 属于 PEP 701 语法（f-string 表达式内允许反斜杠），**仅 Python 3.12+ 可解析**。
+    # 本项目 requires-python = ">=3.10"、Dockerfile 为 python:3.11-slim，
+    # 实测 .venv = 3.11.15 → 本模块在本项目自身运行时下直接 SyntaxError 无法导入，
+    # 即这段"防注入"逻辑从未生效过。等价改法：把反斜杠字面量提到 f-string 之外。
+    escaped = "\\#" * len(hashes)
+    return f"{leading}{escaped}{rest}"
 
 
 def _format_untrusted_evidence(

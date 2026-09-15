@@ -38,3 +38,6 @@ pre-commit>=3.0.0
 
 # Env loading (main.py R69)
 python-dotenv>=1.0.0
+
+# Web 应用（web/app.py）——FastAPI 表单端点依赖，缺失会导致导入期 RuntimeError
+python-multipart>=0.0.6

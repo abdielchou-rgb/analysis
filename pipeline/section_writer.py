@@ -206,6 +206,15 @@ class SectionWriter:
         self._last_data_context = {}
         self._prompt_compute_results = {}
         self._enrichment_context = {}
+        # 2026-09-14 审计修复（A10）：_dim_kb_map 属于同一类"write() 里赋值、
+        # 但可能先被读"的属性，却漏在上面这份兜底清单之外。
+        # 实测后果（tests/test_engineering_plan.py::test_dimension_parallel_writes_r30_prompts）：
+        # _mkb_for_group()（第 277 行）抛 AttributeError，而该异常在
+        # _write_dimension_parallel 的 per-group try/except 里被**静默吞掉**
+        # （只留一行 WARNING "group failed"），最终产出**没有方法论知识注入**的
+        # 降级报告——不报错、不失败，只是内容悄悄变差（fail-open）。
+        # 空 dict 即 _mkb_for_group 文档所述的合法回退态（返回 ""，退回全局 mkb_str）。
+        self._dim_kb_map: dict[str, list[dict]] = {}
         # P1-3（2026-09-07）：KB/MKB 实际注入观测漏斗——记录"检索命中→写入
         # prompt"的条目计数，供 e2e validate 节点传给 IronGate 做强检查。
         self._kb_injection_metrics = {"kb_count": 0, "mkb_count": 0}
@@ -3478,11 +3487,19 @@ class SectionWriter:
 
         # 3e-3. 主观评分形态清除（2026-09-04）：FP4 禁"N/10 评分"类主观打分。
         # LLM 偶尔输出"评分10/…"，post-process 改写为合规表述。
+        # 2026-09-14 审计修复：原第一式结尾是 `\s*分?`——"分"可选，导致
+        # "评分85%"中的"85"被当作评分吞掉、留下孤儿 "%"，实测报告出现 3 处
+        # `定性判断（见正文论证）%` 与 `.0` 残骸（该形态无任何门禁检查覆盖）。
+        # 现改为：**必须有明确终止符**（"分" 或 "/10"），并以 (?![%‰]) 排除
+        # 后接单位符号的情形；替换文本去掉自指的"（见正文论证）"——
+        # "见正文论证"被写进正文本身语义自相矛盾。
         try:
             _subj_pats = [
-                # "评分10/10" / "评分8分" / "综合评分：7"
-                (r"(?:综合)?评分[:：]?\s*(\d+(?:\.\d+)?)(?:\s*/\s*\d+)?\s*分?", r"定性判断（见正文论证）"),
-                (r"(\d+(?:\.\d+)?)\s*/\s*10\s*分", r"（该结论以正文论证与证伪条件支撑，非主观打分）"),
+                # "评分10分" / "综合评分：7分" / "评分10/10分"
+                (r"(?:综合)?评分[:：]?\s*\d+(?:\.\d+)?(?:\s*/\s*\d+)?\s*分(?![%‰])", r"定性判断"),
+                # "评分10/10"（无"分"）
+                (r"(?:综合)?评分[:：]?\s*\d+(?:\.\d+)?\s*/\s*10(?![%‰])", r"定性判断"),
+                (r"\d+(?:\.\d+)?\s*/\s*10\s*分(?![%‰])", r"（该结论以正文论证与证伪条件支撑，非主观打分）"),
             ]
             for _pat, _rep in _subj_pats:
                 if re.search(_pat, text):

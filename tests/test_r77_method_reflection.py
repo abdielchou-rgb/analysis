@@ -14,8 +14,21 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 
+def _registry_path() -> Path:
+    """registry 的真实读写路径——取生产模块常量，与 record_reflection 同源。
+
+    2026-09-14 审计修复：原为 `_ROOT / "data" / "framework_registry.json"`，
+    与 core.method_reflection.REGISTRY_PATH 重复硬编码同一路径。一旦测试环境把
+    写路径重定向到沙箱（tests/conftest.py::_hermetic_stores），读路径仍指向生产，
+    用例就会假失败——即"测试自己钉死了一个它无权假设的路径"。
+    """
+    from core.method_reflection import REGISTRY_PATH
+
+    return REGISTRY_PATH
+
+
 def _load_registry():
-    return json.loads((_ROOT / "data" / "framework_registry.json").read_text(encoding="utf-8"))
+    return json.loads(_registry_path().read_text(encoding="utf-8"))
 
 
 def test_estimate_marked_in_registry():
@@ -31,7 +44,7 @@ def test_first_real_record_overrides_estimate():
     """首次实测记录应覆盖估算，不混入滑动平均。"""
     from core.method_reflection import record_reflection
 
-    reg = _ROOT / "data" / "framework_registry.json"
+    reg = _registry_path()
     backup = reg.read_text(encoding="utf-8")
     try:
         record_reflection(
@@ -56,7 +69,7 @@ def test_second_record_sliding_average():
     """后续实测应滑动平均。"""
     from core.method_reflection import record_reflection
 
-    reg = _ROOT / "data" / "framework_registry.json"
+    reg = _registry_path()
     backup = reg.read_text(encoding="utf-8")
     try:
         # 先设实测基线

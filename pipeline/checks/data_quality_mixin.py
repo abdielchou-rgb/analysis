@@ -521,6 +521,15 @@ class DataQualityChecksMixin:
                     # 从"总市值X元、股价Y元"反推股本
                     mcap = _re.search(r"总市值(?:约|为)?(\d+(?:\.\d+)?)\s*亿元", before)
                     price = _re.search(r"(?:股价|现价|当前价)[^\d]{0,6}(\d+(?:\.\d+)?)", before)
+                    if not (mcap and price):
+                        # 2026-09-14 审计修复（幽灵能力）：推导句常出现在声明**之后**，
+                        # 而此前只回看 before——本检查自己的文档示例
+                        #   "318.29万股，占总股本约0.24%（基于总市值131.23亿元、股价46.73元）"
+                        # 正是"总市值…股价…"在后的形态，实测漏检率 100%（score 1.00 全绿放行）。
+                        # 现补上后向窗口，仅在前向未命中时使用（不改变原有判定优先级）。
+                        after = text[m.end() : m.end() + 120]
+                        mcap = mcap or _re.search(r"总市值(?:约|为)?(\d+(?:\.\d+)?)\s*亿元", after)
+                        price = price or _re.search(r"(?:股价|现价|当前价)[^\d]{0,6}(\d+(?:\.\d+)?)", after)
                     if mcap and price:
                         shares = float(mcap.group(1)) * 1e8 / float(price.group(1)) / 1e4  # →万股
                 if shares and shares > 0:

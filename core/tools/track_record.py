@@ -200,17 +200,30 @@ class TrackRecord:
         return "\n".join(lines)
 
 
+def default_storage_path() -> str:
+    """生产 track_record.json 的唯一权威路径（单一事实源）。
+
+    2026-09-14 审计修复（A15）：此前该路径在本模块内联拼接，而
+    core/prediction_validator.py 又自行拼了一份 `_ROOT/"data"/"forward_picks"/...`
+    —— 指向一个**根本不存在**的文件，导致文档中的每日定时校验任务
+    （`python -m core.prediction_validator`）读到空 record、静默什么都不校验。
+    现收口到本函数，所有消费方（TrackRecordManager / prediction_validator）
+    一律引用此处，避免再次分叉。
+    """
+    return os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "data",
+        "forward_picks",
+        "track_record.json",
+    )
+
+
 class TrackRecordManager:
     """Track Record管理器 — 持久化存储"""
 
     def __init__(self, storage_path: str = None):
         if storage_path is None:
-            storage_path = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                "data",
-                "forward_picks",
-                "track_record.json",
-            )
+            storage_path = default_storage_path()
         self.storage_path = storage_path
         self.record = self._load()
 

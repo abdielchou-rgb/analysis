@@ -7,9 +7,8 @@ Asset pool and benchmark cohort are fixed to prevent survivorship bias.
 
 import json
 import logging
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Optional
 
 logger = logging.getLogger("2hao.cohort")
 
@@ -17,7 +16,15 @@ logger = logging.getLogger("2hao.cohort")
 class LiveForwardCohort:
     """Manages live-forward prediction cohorts."""
 
-    def __init__(self, track_record_path: str = "core/data/forward_picks/track_record.json"):
+    def __init__(self, track_record_path: str | None = None):
+        # 2026-09-14 审计修复（A15）：原默认值是**相对路径**
+        # "core/data/forward_picks/track_record.json"，解析结果取决于进程 CWD——
+        # 只有恰好在项目根启动时才指向真实文件；从其它目录调用时
+        # load_predictions() 会静默返回 []（见其 exists() 分支），cohort 统计无声归零。
+        if track_record_path is None:
+            from core.tools.track_record import default_storage_path
+
+            track_record_path = default_storage_path()
         self.track_record_path = Path(track_record_path)
 
     def load_predictions(self) -> list[dict]:
@@ -27,10 +34,7 @@ class LiveForwardCohort:
             data = json.load(f)
         preds = data.get("predictions", [])
         # M2-A2: Filter out mock predictions
-        return [
-            p for p in preds
-            if p.get("source") != "mock" and not str(p.get("id", "")).startswith("mock_")
-        ]
+        return [p for p in preds if p.get("source") != "mock" and not str(p.get("id", "")).startswith("mock_")]
 
     def get_cohort(
         self,
@@ -71,8 +75,13 @@ class LiveForwardCohort:
 
             cohort.append(p)
 
-        logger.info("[COHORT] Filtered %d predictions (made_after=%s, made_before=%s, horizon=%s)",
-                     len(cohort), made_after, made_before, time_horizon)
+        logger.info(
+            "[COHORT] Filtered %d predictions (made_after=%s, made_before=%s, horizon=%s)",
+            len(cohort),
+            made_after,
+            made_before,
+            time_horizon,
+        )
         return cohort
 
     def get_expired_predictions(self, as_of_date: str = None) -> list[dict]:
@@ -194,6 +203,7 @@ class LiveForwardCohort:
 
         # Save report
         from pathlib import Path as _Path
+
         out_path = _Path(output_dir) / "cohort_report.json"
         out_path.parent.mkdir(parents=True, exist_ok=True)
         with open(out_path, "w", encoding="utf-8") as f:

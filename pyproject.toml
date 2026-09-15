@@ -27,6 +27,11 @@ dependencies = [
     "sentence-transformers>=2.2.0",
     "prometheus-client>=0.19.0",
     "fastapi>=0.104.0",
+    # 2026-09-14 审计修复（A12）：web/app.py 使用 Form(...) 接收表单，
+    # FastAPI 在**导入期**即要求 python-multipart，缺失会让 web 应用直接起不来
+    # （tests/test_s7_productization.py::test_web_app_import 因此失败）。
+    # 原依赖清单声明了 fastapi 却漏了它。
+    "python-multipart>=0.0.6",
     "uvicorn>=0.24.0",
     "httpx>=0.25.0",
     "jinja2>=3.1.0",
@@ -65,7 +70,17 @@ ignore = ["E501", "E402", "E701", "E702",
 minversion = "7.0"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-addopts = "-v --tb=short --strict-markers"
+addopts = "-v --tb=short --strict-markers -m 'not golden and not network'"
+# 2026-09-14 审计修复（R4）：默认排除 golden / network。
+# 原 addopts 无任何排除，于是 `pytest tests/`（即 CI 的 "Run tests" 步骤）
+# 会执行 test_golden_regression 的 **30 个参数化样例**，每个都跑**完整管线 +
+# 真实 LLM 调用**。后果：CI 要么烧掉大量 token，要么跑到超时/挂死
+# （实测本机直接挂死，且连 summary 都不打印）。
+# golden 属"黄金样本回归评估"，应**显式**运行：
+#     pytest -m golden          # 覆盖 addopts 的 -m
+# 不应混在默认单元测试里。
+# 注：markers 里早已注册 `network`（"需要真实网络/LLM key 的测试"），
+# 但全仓 0 个用例使用它——属"约定存在、无人遵守"，故一并纳入默认排除。
 # P1-audit 2026-08-24: marker 注册（此前 0 注册、0 timeout、0 coverage）
 markers = [
     "unit: 纯离线单元测试",

@@ -197,19 +197,38 @@ class AgentGraph:
         t0 = time.time()
         try:
             # P2-audit 2026-08-24：timeout_s 此前存入 dict 后从未使用——
-            # 节点挂死即挂死整条管线。现用单发线程池 + future.result(timeout)
-            # 实装。注意：超时后工作线程无法被杀死（Python 线程不可中断），
-            # 但管线可立即按失败处理并 SKIP 下游节点。
+            # 节点挂死即挂死整条管线。现实装超时。
+            #
+            # 2026-09-14 审计修复（R4）：原实现用 `with ThreadPoolExecutor(...)` +
+            # `_fut.result(timeout=)`，**超时形同虚设**。已实测证明：超时在 1.0s
+            # 触发，但 `with` 块直到 8.0s（= 被挂住线程的真实时长）才退出。
+            # 根因是 ThreadPoolExecutor.__exit__ 会执行 shutdown(wait=True)，
+            # 即 join 那个挂死的线程；而 Python 线程不可中断，于是 TimeoutError
+            # 永远无法向上传播 → _run_node 不返回 → _run_level_parallel 的
+            # as_completed(futures) 永久阻塞 → 整轮 run 挂死、且连 summary 都不打印。
+            # 实测受害用例：test_e2e_no_network（2 例）+ test_golden_regression（1 例）。
+            #
+            # 改用 daemon 线程 + join(timeout)：超时立即返回；且 daemon 线程不阻塞
+            # 解释器退出——这点也实测过，ThreadPoolExecutor 的 atexit 钩子会 join
+            # 泄漏线程，若用 shutdown(wait=False) 则挂死节点会让进程永不退出。
             _timeout_s = int(node.get("timeout_s") or 0)
             if _timeout_s > 0:
-                from concurrent.futures import TimeoutError as _FutureTimeout
+                _box: dict = {}
 
-                with ThreadPoolExecutor(max_workers=1, thread_name_prefix=f"ag-{node_id}") as _ex:
-                    _fut = _ex.submit(node["fn"], node_id, context)
+                def _node_target():
                     try:
-                        output = _fut.result(timeout=_timeout_s)
-                    except _FutureTimeout:
-                        raise TimeoutError(f"node '{node_id}' exceeded timeout_s={_timeout_s}s") from None
+                        _box["out"] = node["fn"](node_id, context)
+                    except BaseException as _e:  # noqa: BLE001 — 需原样带回主线程
+                        _box["err"] = _e
+
+                _t = threading.Thread(target=_node_target, name=f"ag-{node_id}", daemon=True)
+                _t.start()
+                _t.join(_timeout_s)
+                if _t.is_alive():
+                    raise TimeoutError(f"node '{node_id}' exceeded timeout_s={_timeout_s}s")
+                if "err" in _box:
+                    raise _box["err"]
+                output = _box.get("out")
             else:
                 output = node["fn"](node_id, context)
             # R78：节点完成 trace
@@ -315,7 +334,11 @@ class AgentGraph:
                         _completed_nodes.add(nid)
                         if nid == _last_node:
                             break
-                    logger.info("[AgentGraph] RESUME from checkpoint %s: skipping %d completed nodes", _cp_id, len(_completed_nodes))
+                    logger.info(
+                        "[AgentGraph] RESUME from checkpoint %s: skipping %d completed nodes",
+                        _cp_id,
+                        len(_completed_nodes),
+                    )
 
         # 选择执行模式
         if self._parallel_mode:

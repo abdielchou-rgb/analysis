@@ -865,7 +865,12 @@ class AnalysisChecksMixin:
         )
         sections = [s for s in sections if not any(m in s[:60] for m in _appendix_marks)]
         if not sections:
-            return GateCheckResult("so_what_chain", False, 0.3, "No analyzable sections (all appendix)")
+            # 2026-09-14 审计修复（A11）：全部段落被上面的豁免规则过滤掉时，
+            # 属"本检查不适用"（vacuous），而非"质量不合格"。
+            # 原实现返回 passed=False / score=0.3，把"无可评段落"记成一次失败：
+            # 既污染 check 通过率，也会拉低任何按 min_score 聚合的口径。
+            # 正确语义：豁免即通过——不适用不应判负。
+            return GateCheckResult("so_what_chain", True, 1.0, "无适用段落（全部为附录类），本检查豁免")
 
         # R34（2026-08-02）：跳过纯表格/短结论段——表格行（|...|）占比高、
         # 无实质论证链的段（如"关键跟踪指标"表、"风险提示"表）不应计入 min_score。
@@ -908,7 +913,15 @@ class AnalysisChecksMixin:
 
         sections = [s for s in sections if not _is_chart_display(s)]
         if not sections:
-            return GateCheckResult("so_what_chain", False, 0.3, "No analyzable sections (all tables)")
+            # 2026-09-14 审计修复（A11）：同上——"全部段落均为表格/图表/标题元信息"
+            # 是"本检查不适用"，不是"so-what 链不合格"。
+            # 触发本分支的实况（tests/test_fact_quality.py::test_so_what_table_sections_exempt）：
+            # 报告由「标题+1 段正文」构成时，_is_heading_meta 的 `_heading_ratio >= 0.5`
+            # 恰好取到 0.5 → 连**带推理链的正文段**也被一并过滤，最终 sections 为空。
+            # 即该 0.3 分既可能来自"真的只有表格"，也可能来自标题过滤误伤，
+            # 把它记成质量失败是错的。（_is_heading_meta 阈值本身偏激进，
+            # 属独立问题，需人工决策，见审计 A11。）
+            return GateCheckResult("so_what_chain", True, 1.0, "无适用段落（全部为表格/图表/标题元信息），本检查豁免")
 
         # Reasoning chain markers (数据→分析→判断→行动)
         chain_patterns = [

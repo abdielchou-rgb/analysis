@@ -31,8 +31,22 @@ CALIBRATION_FILE = _ANALYST_ROOT / "eval" / "calibration.json"
 
 
 def _find_records() -> list[dict]:
-    """定位 track_record 类文件（多路径兼容）。"""
-    candidates = [
+    """定位 track_record 类文件（多路径兼容）。
+
+    2026-09-14 审计修复（A15 补完）：候选表原先把真实落盘位置
+    `core/data/forward_picks/track_record.json` 内联硬编码，与
+    core.tools.track_record.default_storage_path() 重复——A15 只收口了
+    prediction_validator/cohort/dashboard 三处，漏了本模块。现把权威路径
+    置于候选表首位，其余历史位置保留作为兜底（不删，兼容旧部署）。
+    """
+    candidates = []
+    try:
+        from core.tools.track_record import default_storage_path
+
+        candidates.append(Path(default_storage_path()))
+    except Exception:  # noqa: BLE001 — 权威路径不可得时退回历史候选
+        pass
+    candidates += [
         _ANALYST_ROOT / "track_record.json",
         _ANALYST_ROOT / "output" / "track_record.json",
         _ANALYST_ROOT / "data" / "track_record.json",

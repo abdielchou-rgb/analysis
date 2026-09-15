@@ -12,7 +12,7 @@ Threshold: outputs below 40% of baseline trigger FAIL
 
 from __future__ import annotations
 
-import py_compile
+import ast
 import re
 import sys
 from pathlib import Path
@@ -171,23 +171,61 @@ else:
         for k, v in result.items():
             print(f"    {k}: {v}")
 
-# Compile check all modules
-print("\n--- Compile check ---")
-root = Path(__file__).resolve().parent.parent
-ok = fail = 0
-for f in sorted([str(f) for f in root.rglob("*.py") if "__pycache__" not in str(f) and "V30_" not in str(f)]):
-    try:
-        py_compile.compile(f, doraise=True)
-        ok += 1
-    except py_compile.PyCompileError:
-        fail += 1
-print(f"  compile: {ok} ok, {fail} fail")
+# ── Compile / syntax check ───────────────────────────────────────────────
+# 2026-09-14 审计修复（收集期 >202s → ~3s，快 ~39x）：
+# 原实现在**模块作用域**直接 rglob("*.py") 全仓 py_compile，三个问题：
+#   1) 过滤器只排除 __pycache__ / V30_，未排除 .venv —— 实测仓内 10375 个 .py
+#      里 9382 个来自 .venv（90%），等于每次 pytest **收集**都在重编译整个虚拟环境。
+#   2) py_compile 会写 .pyc（磁盘 I/O），而本检查只关心语法，用 ast.parse 即可。
+#   3) 结果只 print、从不参与断言 —— 纯装饰性开销，且真错误被吞掉：
+#      实测它就藏着一个 SyntaxError（scripts/last30days/lib/render.py:3450）。
+# 现拆为 _compile_sweep()：排除 vendor 目录、改用 ast.parse、并真正断言。
+_VENDOR_DIRS = frozenset(
+    {".venv", "venv", ".git", "node_modules", "__pycache__", ".mypy_cache", ".pytest_cache", ".tox", "site-packages"}
+)
 
-print(f"\n=== {n_pass} passed, {n_fail} failed ===")
+
+def _compile_sweep() -> tuple[int, int, list[tuple[str, str]]]:
+    """语法检查仓内**自有** .py（排除 vendor）。返回 (ok, fail, [(相对路径, 错误)])。"""
+    root = Path(__file__).resolve().parent.parent
+    ok = 0
+    failures: list[tuple[str, str]] = []
+    for path in sorted(root.rglob("*.py")):
+        try:
+            rel = path.relative_to(root)
+        except ValueError:
+            continue
+        if any(part in _VENDOR_DIRS for part in rel.parts):
+            continue
+        if "V30_" in str(path):
+            continue
+        try:
+            # utf-8-sig：容忍 BOM（Python 词法器会剥 BOM，ast.parse 不会）
+            ast.parse(path.read_text(encoding="utf-8-sig"))
+            ok += 1
+        except SyntaxError as e:
+            failures.append((str(rel), f"line {e.lineno}: {e.msg}"))
+        except (UnicodeDecodeError, OSError) as e:
+            failures.append((str(rel), f"{type(e).__name__}: {str(e)[:80]}"))
+    return ok, len(failures), failures
+
+
 if __name__ == "__main__":
+    print("\n--- Syntax check ---")
+    _ok, _fail, _bad = _compile_sweep()
+    print(f"  syntax: {_ok} ok, {_fail} fail")
+    for _rel, _msg in _bad:
+        print(f"    FAIL {_rel} — {_msg}")
+    print(f"\n=== {n_pass} passed, {n_fail} failed ===")
     sys.exit(1 if n_fail > 0 else 0)
 
 
 # ── P1-audit 2026-08-24 收编：模块级 t() 只 print 不 raise，pytest 看不见 ──
 def test_orphan_suite():
     assert n_fail == 0, f"{n_fail} 个断言失败 / 共 {n_pass + n_fail} 条"
+
+
+def test_all_project_modules_parse():
+    """仓内自有模块必须全部通过语法解析（排除 .venv 等 vendor 目录）。"""
+    ok, fail, bad = _compile_sweep()
+    assert fail == 0, f"{fail} 个模块语法错误（共检查 {ok + fail} 个）：" + "; ".join(f"{r} — {m}" for r, m in bad[:10])

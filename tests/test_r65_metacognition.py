@@ -16,7 +16,24 @@ _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-_REG = _ROOT / "data" / "framework_registry.json"
+
+def _reg_path() -> Path:
+    """registry 的真实读写路径——取生产模块常量（单一事实源）。
+
+    2026-09-14 审计修复：原为模块级 `_REG = _ROOT / "data" / "framework_registry.json"`，
+    与 core.method_reflection.REGISTRY_PATH 重复硬编码。测试环境把写路径重定向到
+    沙箱后（tests/conftest.py::_hermetic_stores），读路径若仍指向生产即假失败。
+    """
+    from core.method_reflection import REGISTRY_PATH
+
+    return REGISTRY_PATH
+
+
+def _log_path() -> Path:
+    """method_reflection 日志路径——同样取生产常量，避免清理时写错文件。"""
+    from core.method_reflection import REFLECTION_LOG_PATH
+
+    return REFLECTION_LOG_PATH
 
 
 def test_planner_selects_frameworks():
@@ -57,7 +74,7 @@ def test_planner_focus_rationale():
 
 def test_registry_schema():
     """framework_registry.json 结构合法。"""
-    reg = json.loads(_REG.read_text(encoding="utf-8"))
+    reg = json.loads(_reg_path().read_text(encoding="utf-8"))
     assert "frameworks" in reg, "registry 须有 frameworks"
     assert len(reg["frameworks"]) >= 5, "至少 5 个子框架"
     for fw in reg["frameworks"]:
@@ -74,7 +91,7 @@ def test_method_reflection_updates_registry():
     from core.method_reflection import record_reflection
 
     # 备份原值
-    reg = _json.loads(_REG.read_text(encoding="utf-8"))
+    reg = _json.loads(_reg_path().read_text(encoding="utf-8"))
     orig = {}
     for fw in reg["frameworks"]:
         if fw["id"] == "bottleneck_engine":
@@ -84,7 +101,7 @@ def test_method_reflection_updates_registry():
             "回归测试", "industry_deep", ["bottleneck_engine"], 0.99, {"sufficient": True}, "r65 回归测试"
         )
         assert ok, "反思记录应成功"
-        reg2 = _json.loads(_REG.read_text(encoding="utf-8"))
+        reg2 = _json.loads(_reg_path().read_text(encoding="utf-8"))
         for fw in reg2["frameworks"]:
             if fw["id"] == "bottleneck_engine":
                 # R77(2026-08-05 P0-3)：估算基线首次被实测覆盖时重置次数为 1，
@@ -96,13 +113,13 @@ def test_method_reflection_updates_registry():
                 break
     finally:
         # 恢复原值 + 清理日志
-        reg3 = _json.loads(_REG.read_text(encoding="utf-8"))
+        reg3 = _json.loads(_reg_path().read_text(encoding="utf-8"))
         for fw in reg3["frameworks"]:
             if fw["id"] == "bottleneck_engine":
                 fw["效果"] = orig
                 break
-        _REG.write_text(_json.dumps(reg3, ensure_ascii=False, indent=2), encoding="utf-8")
-        log_path = _ROOT / "data" / "method_reflection_log.json"
+        _reg_path().write_text(_json.dumps(reg3, ensure_ascii=False, indent=2), encoding="utf-8")
+        log_path = _log_path()
         if log_path.exists():
             log = _json.loads(log_path.read_text(encoding="utf-8"))
             log["entries"] = [e for e in log["entries"] if e.get("asset") != "回归测试"]

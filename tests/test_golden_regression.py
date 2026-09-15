@@ -70,6 +70,7 @@ CRITICAL_CHECKS = [
 
 
 @pytest.mark.golden
+@pytest.mark.network  # 2026-09-14（R4）：确实需要真实网络 + LLM key，补上标记
 @pytest.mark.parametrize("asset, rtype, style", GOLDEN_SAMPLES)
 def test_golden_regression(asset, rtype, style, tmp_path):
     """Run full pipeline on golden sample, verify gate passes with minimum score."""

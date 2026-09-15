@@ -19,7 +19,16 @@ class PredictionValidator:
 
     def __init__(self, storage_path: str | None = None, industry: str = ""):
         if storage_path is None:
-            storage_path = str(_ROOT / "data" / "forward_picks" / "track_record.json")
+            # 2026-09-14 审计修复（A15）：原为 _ROOT/"data"/"forward_picks"/"track_record.json"，
+            # 实测该文件**不存在**（exists=False）。真实位置是
+            # <root>/core/data/forward_picks/track_record.json。
+            # 后果：本模块——文档中声明的每日定时任务
+            # （`python -m core.prediction_validator`）——读到空 record，
+            # validate_all() 恒返回 total=0，**静默空转且不报任何错**。
+            # 修法：引用 TrackRecordManager 的权威路径，不再自行拼接。
+            from core.tools.track_record import default_storage_path
+
+            storage_path = default_storage_path()
         self.storage_path = storage_path
         self.industry = industry  # for industry-calibrated thresholds
         self._load()

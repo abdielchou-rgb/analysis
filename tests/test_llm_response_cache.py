@@ -41,7 +41,17 @@ def fake_provider(monkeypatch):
             pass
 
         def json(self):
-            return {"choices": [{"message": {"content": f"resp-{counter['post']}"}}], "usage": {}}
+            # 2026-09-14 审计修复：响应体必须 ≥50 字符。
+            # 原因：_response_cache_set（core/deepseek_client.py）有防污染门槛——
+            # 2026-09-04 加入，因为 zhipu 429 限流期间曾把截断/乱码响应写入缓存，
+            # 之后同 prompt 恒命中坏缓存 → 写作修订 3 轮返回同一截断文本 →
+            # Gate 恒 0.658。门槛：content 非空且 ≥50 字符才入缓存。
+            # 本夹具原先返回 "resp-N"（6 字符），被门槛**正当拒绝** → 缓存永不
+            # 命中 → test_cache_hit_saves_second_call 恒失败（本测试写于 08-24，
+            # 早于 09-04 的门槛，属典型"测试未跟随实现演进"）。
+            # 注意：请勿为迁就测试而放宽该门槛——它保护的是线上报告质量。
+            _body = f"resp-{counter['post']}-" + "x" * 60
+            return {"choices": [{"message": {"content": _body}}], "usage": {}}
 
     import requests
 

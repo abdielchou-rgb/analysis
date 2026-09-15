@@ -8,15 +8,23 @@ import json
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
 
 logger = logging.getLogger("2hao.dashboard")
 
 
 def generate_dashboard(
     output_dir: str = "output",
-    track_record_path: str = "core/data/forward_picks/track_record.json",
+    track_record_path: str | None = None,
 ) -> dict:
+    # 2026-09-14 审计修复（A15）：track_record_path 原默认值是相对路径
+    # "core/data/forward_picks/track_record.json"，依赖进程 CWD，跨目录调用会
+    # 静默取不到 track_record（cohort/校准等指标无声为空）。
+    # 现改为 None → 解析到权威路径；显式传参行为不变。
+    # 注：output_dir 同样是相对路径，属同类问题，未一并改动（影响面更大，待决策）。
+    if track_record_path is None:
+        from core.tools.track_record import default_storage_path
+
+        track_record_path = default_storage_path()
     """Generate comprehensive dashboard with all metrics.
 
     Returns:
@@ -41,8 +49,7 @@ def generate_dashboard(
                 raw_preds = data.get("predictions", [])
                 # M2-A2: Filter out mock predictions
                 predictions = [
-                    p for p in raw_preds
-                    if p.get("source") != "mock" and not str(p.get("id", "")).startswith("mock_")
+                    p for p in raw_preds if p.get("source") != "mock" and not str(p.get("id", "")).startswith("mock_")
                 ]
         except Exception as e:
             logger.warning("[DASHBOARD] Failed to load track record: %s", str(e))
@@ -54,6 +61,7 @@ def generate_dashboard(
     if resolved:
         try:
             from core.calibration.dashboard import CalibrationDashboard
+
             cal = CalibrationDashboard()
             dashboard["calibration"] = {
                 "total_predictions": len(predictions),
@@ -69,7 +77,8 @@ def generate_dashboard(
     # === Significance ===
     if len(resolved) >= 10:
         try:
-            from core.significance import monte_carlo_direction_significance, monte_carlo_alpha_significance
+            from core.significance import monte_carlo_alpha_significance, monte_carlo_direction_significance
+
             dir_result = monte_carlo_direction_significance(resolved, n_simulations=1000)
             alpha_result = monte_carlo_alpha_significance(resolved, n_simulations=1000)
             dashboard["significance"] = {
@@ -82,9 +91,7 @@ def generate_dashboard(
                         else "系统方向判断未达统计显著性"
                     ),
                     "alpha": (
-                        "系统alpha显著为正（p<0.05）"
-                        if alpha_result.get("significant")
-                        else "系统alpha未达统计显著性"
+                        "系统alpha显著为正（p<0.05）" if alpha_result.get("significant") else "系统alpha未达统计显著性"
                     ),
                 },
             }
@@ -101,6 +108,7 @@ def generate_dashboard(
     if len(resolved) >= 5:
         try:
             from core.attribution import attribute_by_dimension, attribute_by_framework
+
             dim_attr = attribute_by_dimension(resolved)
             fw_attr = attribute_by_framework(resolved)
             dashboard["attribution"] = {
@@ -121,6 +129,7 @@ def generate_dashboard(
     # === Cohort ===
     try:
         from core.cohort import LiveForwardCohort
+
         cohort = LiveForwardCohort(track_record_path=track_record_path)
         cohort_stats = cohort.cohort_stats(predictions)
         expired = cohort.get_expired_predictions()
@@ -135,6 +144,7 @@ def generate_dashboard(
     # === Pipeline Health ===
     try:
         from pathlib import Path as _Path
+
         gate_reports = list(_Path(output_dir).glob("gate_report_*.json"))
         latest_gate = None
         if gate_reports:
@@ -155,9 +165,7 @@ def generate_dashboard(
         "total_predictions": len(predictions),
         "resolved": len(resolved),
         "pending": len(pending),
-        "hit_rate": round(
-            sum(1 for p in resolved if p["outcome"] == "hit") / len(resolved), 4
-        ) if resolved else 0,
+        "hit_rate": round(sum(1 for p in resolved if p["outcome"] == "hit") / len(resolved), 4) if resolved else 0,
         "significance_achieved": dashboard.get("significance", {}).get("direction_test", {}).get("significant", False),
         "dimensions_tracked": len(dashboard.get("attribution", {}).get("dimension_attribution", {})),
         "frameworks_tracked": len(dashboard.get("attribution", {}).get("framework_attribution", {})),
@@ -169,8 +177,7 @@ def generate_dashboard(
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(dashboard, f, ensure_ascii=False, indent=2)
 
-    logger.info("[DASHBOARD] Generated: %s (predictions=%d, resolved=%d)",
-                out_path, len(predictions), len(resolved))
+    logger.info("[DASHBOARD] Generated: %s (predictions=%d, resolved=%d)", out_path, len(predictions), len(resolved))
 
     return dashboard
 
