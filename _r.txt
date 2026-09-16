@@ -1,0 +1,214 @@
+============================= test session starts =============================
+platform win32 -- Python 3.11.15, pytest-9.1.1, pluggy-1.6.0
+rootdir: D:\Claude\projects\2hao-analyst
+configfile: pyproject.toml
+plugins: anyio-4.14.2, deepeval-4.1.8, asyncio-1.4.0, cov-7.1.0, repeat-0.9.4, rerunfailures-16.6, timeout-2.4.0, xdist-3.8.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+timeout: 300.0s
+timeout method: thread
+timeout func_only: False
+collected 1227 items / 35 deselected / 1192 selected
+
+tests\test_agent_graph_contract.py .......                               [  0%]
+tests\test_argument_node_contract.py .....                               [  1%]
+tests\test_blindspot_modules.py .....                                    [  1%]
+tests\test_calibration.py .......                                        [  2%]
+tests\test_claim_citation.py ................                            [  3%]
+tests\test_claim_inline_wiring.py .......                                [  3%]
+tests\test_completeness_scan.py ......                                   [  4%]
+tests\test_compute_math.py .................                             [  5%]
+tests\test_consistency_engine.py .                                       [  5%]
+tests\test_contamination_guards.py .........                             [  6%]
+tests\test_context_schema.py ....                                        [  7%]
+tests\test_cross_industry.py .....                                       [  7%]
+tests\test_data_collector_backends.py ....                               [  7%]
+tests\test_data_enrichment.py .                                          [  7%]
+tests\test_deep_audit_fixes.py .............                             [  8%]
+tests\test_docx_quality.py .......                                       [  9%]
+tests\test_e2e.py .                                                      [  9%]
+tests\test_e2e_keli.py .....                                             [ 10%]
+tests\test_e2e_no_network.py ....                                        [ 10%]
+tests\test_e2e_v52.py ..                                                 [ 10%]
+tests\test_edge_cases.py ...................................             [ 13%]
+tests\test_enforcer.py ........                                          [ 14%]
+tests\test_engine_bridge.py .............                                [ 15%]
+tests\test_engineering_plan.py .................                         [ 16%]
+tests\test_eval_system.py ............                                   [ 17%]
+tests\test_evidence_grounded.py ...........                              [ 18%]
+tests\test_evolution_modules.py .................................        [ 21%]
+tests\test_exit_quality_gates.py ........                                [ 22%]
+tests\test_export_gate_reuse.py ..                                       [ 22%]
+tests\test_fact_quality.py .......................                       [ 24%]
+tests\test_failure_pattern_fixes.py ........                             [ 24%]
+tests\test_fault_injection.py ..............                             [ 26%]
+tests\test_fingerprint_bypass.py .......                                 [ 26%]
+tests\test_format_sheriff_table_fix.py ....                              [ 26%]
+tests\test_fp_r55_data_wiring.py ......                                  [ 27%]
+tests\test_fp_source_multi_dim.py .....                                  [ 27%]
+tests\test_fp_valuation_gate.py .......                                  [ 28%]
+tests\test_gate_095_fixes.py .................                           [ 29%]
+tests\test_gate_mutation.py .....x........xxxxxxxxxxxxxxxx..s.x.ssss...  [ 33%]
+tests\test_gate_registry_integrity.py ......                             [ 33%]
+tests\test_golden_compute.py ......                                      [ 34%]
+tests\test_golden_eval_gate.py .                                         [ 34%]
+tests\test_golden_numeric.py ........                                    [ 35%]
+tests\test_industry_tags_fallback.py .............                       [ 36%]
+tests\test_integration.py ....................                           [ 38%]
+tests\test_kb_citation_coverage.py .........                             [ 38%]
+tests\test_kb_full_push_telemetry.py .........                           [ 39%]
+tests\test_kb_methodology_wiring.py ................                     [ 40%]
+tests\test_learning_loop_real.py .......                                 [ 41%]
+tests\test_llm_response_cache.py ...                                     [ 41%]
+tests\test_market_anchors.py ...                                         [ 41%]
+tests\test_market_share_contract.py ....                                 [ 42%]
+tests\test_methodology_rules.py ..............                           [ 43%]
+tests\test_mineru.py ...                                                 [ 43%]
+tests\test_module_version.py .....                                       [ 44%]
+tests\test_multi_search.py .............................                 [ 46%]
+tests\test_normalize_indicator.py .........                              [ 47%]
+tests\test_numeric_chain_extract.py .....                                [ 47%]
+tests\test_observability_wiring.py ....                                  [ 48%]
+tests\test_outcome_vocab_unified.py ..................                   [ 49%]
+tests\test_phase1_precision.py .....................                     [ 51%]
+tests\test_phase2_4_integration.py ....................                  [ 53%]
+tests\test_phase_a_evidence.py ..................                        [ 54%]
+tests\test_phase_cde.py .......................                          [ 56%]
+tests\test_placeholder_hard_block.py .......                             [ 57%]
+tests\test_post_process_annotation.py ......                             [ 57%]
+tests\test_prediction_contract.py .....                                  [ 57%]
+tests\test_prediction_judge.py ................                          [ 59%]
+tests\test_prediction_ledger.py ............                             [ 60%]
+tests\test_price_feeder.py ..............                                [ 61%]
+tests\test_prompt_injection_redteam.py ......................            [ 63%]
+tests\test_prompt_injectors.py .....                                     [ 63%]
+tests\test_quality_scorer.py .......                                     [ 64%]
+tests\test_r51_fix_regressions.py ...................                    [ 65%]
+tests\test_r53_audit_p0_2_fix.py .....                                   [ 66%]
+tests\test_r53_data_wiring.py ......                                     [ 66%]
+tests\test_r53_deep_fix.py .........                                     [ 67%]
+tests\test_r55_gate_guardrails.py .........                              [ 68%]
+tests\test_r55_llm_provider_routing.py ...                               [ 68%]
+tests\test_r55_llm_verification.py .....                                 [ 69%]
+tests\test_r56_judgment_density.py .....                                 [ 69%]
+tests\test_r56_knowledge_absorption.py ......                            [ 69%]
+tests\test_r56_valuation_guardrails.py ......                            [ 70%]
+tests\test_r57_institution_upgrade.py .........                          [ 71%]
+tests\test_r57_remaining_wiring.py .....                                 [ 71%]
+tests\test_r58_followup.py .......                                       [ 72%]
+tests\test_r59_wiring.py .......                                         [ 72%]
+tests\test_r60_hygiene_evidence.py ........                              [ 73%]
+tests\test_r61_iron_gate_migration.py .......                            [ 74%]
+tests\test_r62_prediction_loop.py .......                                [ 74%]
+tests\test_r65_metacognition.py ......                                   [ 75%]
+tests\test_r66_keli_fix.py .....                                         [ 75%]
+tests\test_r67_remaining_fixes.py s...                                   [ 75%]
+tests\test_r77_chaos_injection.py ......                                 [ 76%]
+tests\test_r77_marvis_validation.py .........                            [ 77%]
+tests\test_r77_method_reflection.py ....                                 [ 77%]
+tests\test_r77_staleness_detection.py ......                             [ 78%]
+tests\test_r78_checkpoint.py ...                                         [ 78%]
+tests\test_r78_data_contract.py ...............                          [ 79%]
+tests\test_r78_geopolitical.py ......                                    [ 80%]
+tests\test_r78_golden.py ...                                             [ 80%]
+tests\test_r79_consistency.py ....                                       [ 80%]
+tests\test_r79_insight_honest.py ......                                  [ 81%]
+tests\test_r79_template_blacklist.py ....                                [ 81%]
+tests\test_r82_industry_isolation.py .....                               [ 81%]
+tests\test_r83_decision_engine.py .                                      [ 81%]
+tests\test_r83_decision_memo.py .                                        [ 82%]
+tests\test_r83_enrich_roundtrip.py .                                     [ 82%]
+tests\test_r84_entity_anchoring.py .                                     [ 82%]
+tests\test_r85_narrative.py .                                            [ 82%]
+tests\test_r85_p0_govern.py .........                                    [ 83%]
+tests\test_r88_numeric_chain.py ssssss..                                 [ 83%]
+tests\test_r89_fp8_plan_kwarg.py ..                                      [ 83%]
+tests\test_r89_openrouter_stream.py ....                                 [ 84%]
+tests\test_ratio_pattern_variants.py ....                                [ 84%]
+tests\test_regression.py ..                                              [ 84%]
+tests\test_research_planner.py ........                                  [ 85%]
+tests\test_research_planner_budget.py ......                             [ 85%]
+tests\test_s1_prediction.py .......                                      [ 86%]
+tests\test_s3_evidence.py ........                                       [ 87%]
+tests\test_s4_framework.py .......                                       [ 87%]
+tests\test_s5_engineering.py ........                                    [ 88%]
+tests\test_s6_compliance.py .......                                      [ 89%]
+tests\test_s7_productization.py ......                                   [ 89%]
+tests\test_sac_gate.py ......                                            [ 90%]
+tests\test_schema.py .......                                             [ 90%]
+tests\test_semantic_repeat.py ....                                       [ 90%]
+tests\test_significance_guard.py ............                            [ 91%]
+tests\test_source_traceability.py .....                                  [ 92%]
+tests\test_ssot_single_writer.py ...........                             [ 93%]
+tests\test_standards_consistency.py ........                             [ 93%]
+tests\test_style_compiler.py ........                                    [ 94%]
+tests\test_style_fingerprint.py ......                                   [ 95%]
+tests\test_style_s45.py ......                                           [ 95%]
+tests\test_track_registration_dedup.py ..........                        [ 96%]
+tests\test_train_convergence.py .....                                    [ 96%]
+tests\test_v83_audit_fixes.py ......                                     [ 97%]
+tests\test_valuation_integrity.py .....                                  [ 97%]
+tests\test_wiring_to_e2e.py .........                                    [ 98%]
+tests\test_write_sections_profile.py .....                               [ 98%]
+tests\test_yfinance_ticker.py ............                               [100%]Running teardown with pytest sessionfinish...
+
+
+============================== warnings summary ===============================
+tests/test_export_gate_reuse.py::TestExportGateReuse::test_reuses_pipe_result_when_passed
+  D:\Claude\projects\2hao-analyst\pipeline\content_enforcer.py:4: DeprecationWarning: ContentEnforcer deprecated
+    warnings.warn("ContentEnforcer deprecated", DeprecationWarning)
+
+tests/test_s7_productization.py::test_web_app_import
+  D:\Claude\projects\2hao-analyst\web\app.py:587: FastAPIDeprecationWarning: `regex` has been deprecated, please use `pattern` instead
+    format: str = Query("json", regex="^(json|csv)$"),
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+Test tests/test_gate_mutation.py::test_mutant_is_killed was skipped. Reason: 
+('D:\\Claude\\projects\\2hao-analyst\\tests\\test_gate_mutation.py', 73, 
+'Skipped: 基线已封顶（1.00），该方向不可检出 → N/A')
+Test tests/test_gate_mutation.py::test_mutant_is_killed was skipped. Reason: 
+('D:\\Claude\\projects\\2hao-analyst\\tests\\test_gate_mutation.py', 73, 
+'Skipped: 基线已封顶（1.00），该方向不可检出 → N/A')
+Test tests/test_gate_mutation.py::test_mutant_is_killed was skipped. Reason: 
+('D:\\Claude\\projects\\2hao-analyst\\tests\\test_gate_mutation.py', 73, 
+'Skipped: 基线已封顶（1.00），该方向不可检出 → N/A')
+Test tests/test_gate_mutation.py::test_mutant_is_killed was skipped. Reason: 
+('D:\\Claude\\projects\\2hao-analyst\\tests\\test_gate_mutation.py', 73, 
+'Skipped: 基线中不存在该检查项（检查项名拼写错误或已下线）')
+Test tests/test_gate_mutation.py::test_mutant_is_killed was skipped. Reason: 
+('D:\\Claude\\projects\\2hao-analyst\\tests\\test_gate_mutation.py', 73, 
+'Skipped: 基线已触底（0.00），该方向不可检出 → N/A')
+Test tests/test_r67_remaining_fixes.py::test_self_audit_bom_tolerant was 
+skipped. Reason: 
+('D:\\Claude\\projects\\2hao-analyst\\tests\\test_r67_remaining_fixes.py', 31, 
+'Skipped: _self_audit.py 已移除，BOM 容错断言随之退役')
+Test 
+tests/test_r88_numeric_chain.py::TestNumericChainConsistency::test_catches_perc
+entage_magnitude_error was skipped. Reason: 
+('D:\\Claude\\projects\\2hao-analyst\\tests\\test_r88_numeric_chain.py', 62, 
+'Skipped: output/_gate_prev.md 非商业航天旧版样本（守卫跳过）')
+Test 
+tests/test_r88_numeric_chain.py::TestNumericChainConsistency::test_catches_prod
+uct_error was skipped. Reason: 
+('D:\\Claude\\projects\\2hao-analyst\\tests\\test_r88_numeric_chain.py', 75, 
+'Skipped: output/_gate_prev.md 非商业航天旧版样本（守卫跳过）')
+Test 
+tests/test_r88_numeric_chain.py::TestNumericChainConsistency::test_accepts_corr
+ect_product was skipped. Reason: 
+('D:\\Claude\\projects\\2hao-analyst\\tests\\test_r88_numeric_chain.py', 86, 
+'Skipped: output/_gate_prev.md 非商业航天旧版样本（守卫跳过）')
+Test 
+tests/test_r88_numeric_chain.py::TestNumericChainConsistency::test_accepts_legi
+t_direct_ratio was skipped. Reason: 
+('D:\\Claude\\projects\\2hao-analyst\\tests\\test_r88_numeric_chain.py', 102, 
+'Skipped: output/_gate_prev.md 非商业航天旧版样本（守卫跳过）')
+Test 
+tests/test_r88_numeric_chain.py::TestNumericChainConsistency::test_skips_scenar
+io_target_price was skipped. Reason: 
+('D:\\Claude\\projects\\2hao-analyst\\tests\\test_r88_numeric_chain.py', 111, 
+'Skipped: output/_gate_prev.md 非商业航天旧版样本（守卫跳过）')
+Test 
+tests/test_r88_numeric_chain.py::TestNumericChainConsistency::test_multi_anchor
+_exempt was skipped. Reason: 
+('D:\\Claude\\projects\\2hao-analyst\\tests\\test_r88_numeric_chain.py', 120, 
+'Skipped: output/_gate_prev.md 非商业航天旧版样本（守卫跳过）')
+= 1162 passed, 12 skipped, 35 deselected, 18 xfailed, 2 warnings in 86.99s (0:01:26) =

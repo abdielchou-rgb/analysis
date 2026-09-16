@@ -7,16 +7,13 @@
 
 from __future__ import annotations
 
-from __future__ import annotations
-
+import hashlib
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, Dict, List, Tuple, Any, FrozenSet
 from enum import Enum
-import hashlib
-import json
+from typing import Any, Dict, FrozenSet, List, Mapping, Optional, Tuple
 
-from core.principles.types import Value, DataState
+from core.principles.types import DataState
 
 
 class IntentType(Enum):
@@ -28,15 +25,16 @@ class IntentType(Enum):
 
 
 class AnalysisMode(Enum):
-    INTERACTIVE = "interactive"    # Workbench 交互模式
-    BATCH = "batch"                # Pipeline 批量模式
-    FAST = "fast"                  # 快速模式（降级）
-    DEGRADED = "degraded"          # 降级模式
+    INTERACTIVE = "interactive"  # Workbench 交互模式
+    BATCH = "batch"  # Pipeline 批量模式
+    FAST = "fast"  # 快速模式（降级）
+    DEGRADED = "degraded"  # 降级模式
 
 
 @dataclass(frozen=True)
 class Intent:
     """用户意图 - 不可变"""
+
     asset: str
     report_type: IntentType
     style: str = "cicc"
@@ -49,12 +47,13 @@ class Intent:
 @dataclass(frozen=True)
 class EvidenceBundle:
     """证据包 - 不可变，只增不改"""
+
     raw_data: Mapping[str, Any] = field(default_factory=dict)
     chart_data: Mapping[str, Any] = field(default_factory=dict)
     data_dict: Mapping[str, Any] = field(default_factory=dict)
     data_sufficiency: Mapping[str, DataState] = field(default_factory=dict)
     provenance: Mapping[str, str] = field(default_factory=dict)  # key -> source
-    
+
     def with_update(self, **kwargs) -> "EvidenceBundle":
         """返回新的 EvidenceBundle（函数式更新）"""
         return EvidenceBundle(
@@ -69,6 +68,7 @@ class EvidenceBundle:
 @dataclass(frozen=True)
 class MethodSpec:
     """方法规约 - 方法选择的契约"""
+
     id: str
     problem_class: str
     required_evidence: FrozenSet[str]
@@ -83,6 +83,7 @@ class MethodSpec:
 @dataclass(frozen=True)
 class Finding:
     """分析发现 - 结构化、可验证、可溯源"""
+
     claim_id: str
     text: str
     section: str
@@ -98,14 +99,15 @@ class Finding:
 @dataclass(frozen=True)
 class FindingStore:
     """发现仓库 - 单例，只增不改"""
+
     findings: Tuple[Finding, ...] = field(default_factory=tuple)
-    
+
     def add(self, finding: Finding) -> "FindingStore":
         return FindingStore(findings=self.findings + (finding,))
-    
+
     def get_by_section(self, section: str) -> Tuple[Finding, ...]:
         return tuple(f for f in self.findings if f.section == section)
-    
+
     def get_by_method(self, method: str) -> Tuple[Finding, ...]:
         return tuple(f for f in self.findings if f.method == method)
 
@@ -113,6 +115,7 @@ class FindingStore:
 @dataclass(frozen=True)
 class SectionPlan:
     """章节计划"""
+
     section_id: str
     title: str
     required_findings: FrozenSet[str]
@@ -124,8 +127,9 @@ class SectionPlan:
 @dataclass(frozen=True)
 class SectionPlanMap:
     """章节计划图"""
+
     plans: Mapping[str, SectionPlan] = field(default_factory=dict)
-    
+
     def get_downstream(self, section_id: str) -> FrozenSet[str]:
         """获取下游依赖的 section"""
         downstream = set()
@@ -138,6 +142,7 @@ class SectionPlanMap:
 @dataclass(frozen=True)
 class GateReport:
     """Gate 检查报告"""
+
     passed: bool
     score: float
     blocker_failures: Tuple[str, ...]
@@ -149,10 +154,11 @@ class GateReport:
 @dataclass(frozen=True)
 class AnalysisContext:
     """分析上下文 - 不可变，版本化
-    
+
     每次阶段推进产生新版本，保留父版本哈希。
     支持回溢、Diff、Replay、Rollback。
     """
+
     version: int
     parent_hash: str
     intent: Intent
@@ -165,14 +171,14 @@ class AnalysisContext:
     lineage: Mapping[str, Any] = field(default_factory=dict)
     performance: Mapping[str, Any] = field(default_factory=dict)
     created_at: datetime = field(default_factory=datetime.now)
-    
+
     @property
     def context_hash(self) -> str:
         """计算上下文哈希（用于版本标识）"""
         # 简化版：基于关键字段生成短哈希
         content = f"{self.version}:{self.intent.asset}:{self.intent.report_type.value}:{len(self.findings.findings)}"
         return hashlib.sha256(content.encode()).hexdigest()[:16]
-    
+
     def new_version(self, **updates) -> "AnalysisContext":
         """创建新版本（不可变更新）"""
         new_version = self.version + 1
@@ -190,7 +196,7 @@ class AnalysisContext:
             performance=updates.get("performance", self.performance),
         )
         return new_context
-    
+
     def rollback_to(self, target_version: int, history: List["AnalysisContext"]) -> "AnalysisContext":
         """回滚到指定版本"""
         for ctx in reversed(history):
@@ -200,19 +206,21 @@ class AnalysisContext:
 
 
 # 默认 Section 依赖图
-DEFAULT_SECTION_DEPS: FrozenSet[Tuple[str, str]] = frozenset([
-    ("valuation", "financial_analysis"),
-    ("valuation", "competitive_position"),
-    ("catalyst", "financial_analysis"),
-    ("catalyst", "valuation"),
-    ("risk", "financial_analysis"),
-    ("risk", "valuation"),
-    ("risk", "competitive_position"),
-    ("conclusion", "valuation"),
-    ("conclusion", "catalyst"),
-    ("conclusion", "risk"),
-    ("conclusion", "financial_analysis"),
-])
+DEFAULT_SECTION_DEPS: FrozenSet[Tuple[str, str]] = frozenset(
+    [
+        ("valuation", "financial_analysis"),
+        ("valuation", "competitive_position"),
+        ("catalyst", "financial_analysis"),
+        ("catalyst", "valuation"),
+        ("risk", "financial_analysis"),
+        ("risk", "valuation"),
+        ("risk", "competitive_position"),
+        ("conclusion", "valuation"),
+        ("conclusion", "catalyst"),
+        ("conclusion", "risk"),
+        ("conclusion", "financial_analysis"),
+    ]
+)
 
 
 def build_section_plan_map(report_type: str) -> SectionPlanMap:
@@ -221,10 +229,16 @@ def build_section_plan_map(report_type: str) -> SectionPlanMap:
     base_plans = {
         "financial_analysis": SectionPlan("financial_analysis", "财务验证", frozenset(), frozenset()),
         "competitive_position": SectionPlan("competitive_position", "竞争格局", frozenset(), frozenset()),
-        "valuation": SectionPlan("valuation", "估值映射", frozenset(), frozenset({"financial_analysis", "competitive_position"})),
+        "valuation": SectionPlan(
+            "valuation", "估值映射", frozenset(), frozenset({"financial_analysis", "competitive_position"})
+        ),
         "catalyst": SectionPlan("catalyst", "催化剂", frozenset(), frozenset({"financial_analysis", "valuation"})),
-        "risk": SectionPlan("risk", "风险", frozenset(), frozenset({"financial_analysis", "valuation", "competitive_position"})),
-        "conclusion": SectionPlan("conclusion", "投资建议", frozenset(), frozenset({"valuation", "catalyst", "risk", "financial_analysis"})),
+        "risk": SectionPlan(
+            "risk", "风险", frozenset(), frozenset({"financial_analysis", "valuation", "competitive_position"})
+        ),
+        "conclusion": SectionPlan(
+            "conclusion", "投资建议", frozenset(), frozenset({"valuation", "catalyst", "risk", "financial_analysis"})
+        ),
     }
     return SectionPlanMap(plans=base_plans)
 

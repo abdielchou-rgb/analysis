@@ -1,12 +1,12 @@
 """workbench_executor.py — 工作台执行器（FP0/FP8 落地，2026-08-07）
 
-工作台混合模式：2hao 数据层（可靠）+ Claude 直接写（意图）+ 用户审核（判断）。
+工作台混合模式：2hao 数据层（可靠）+ AnalysisEngine 直接写（意图）+ 用户审核（判断）。
 与确定性管线（E2E）互补——管线写标准报告，工作台写个性化/高险决策文档。
 
 六步工作流（人机协作写作工作台方法论）：
   ① 意图对齐：委托方问题清单 → 必答问题 → 报告结构（intent_parser）
   ② 数据准备：enrich/决策引擎/财务模型算好，分级标注
-  ③ AI 直接写：上下文工程（业务命题+分级数据+约束+示例）
+  ③ AI 直接写：上下文工程（业务命题+分级数据+约束+示例）→ AnalysisEngine
   ④ 程序校验：verify_report（算术/实体/一致性/渲染）+ intent_gate（意图符合）
   ⑤ 人类门禁（强制，高险）：进/不进 + 修改意见 → 决策审计
   ⑥ 迭代沉淀：纠偏 → fact_base → 下次少犯
@@ -15,6 +15,8 @@
   python -m core.workbench_executor "柯力传感" --type decision_memo \
       --requirement "评估市场规模/投入产出比" --human-gate
 """
+
+from __future__ import annotations
 
 from __future__ import annotations
 
@@ -29,7 +31,7 @@ _ROOT = Path(__file__).resolve().parent.parent
 
 
 class WorkbenchExecutor:
-    """工作台执行器：数据层复用 + 上下文工程 + 校验 + 人类门禁。"""
+    """工作台执行器：数据层复用 + AnalysisEngine 写作 + 校验 + 人类门禁。"""
 
     def __init__(
         self,
@@ -259,6 +261,7 @@ class WorkbenchExecutor:
                             "exit": data.get("vc_exit", 5),
                             "risk": data.get("vc_risk", 5),
                             "presentation": data.get("vc_presentation", 5),
+                            "presentation": data.get("vc_presentation", 5),
                         }.items()
                         if v is not None
                     }
@@ -270,12 +273,64 @@ class WorkbenchExecutor:
         logger.info("[WORKBENCH] ② 数据准备: %d keys + %d 计算摘要", len(data), len(self.compute_summaries))
         return data
 
-    def step3_write(self) -> str:
-        """③ AI 直接写：上下文工程 → Claude 直接产出正文。
+    def step3_write_with_analysis_engine(self) -> str:
+        """③ AI 直接写：使用 AnalysisEngine 生成报告正文。
 
-        工作台模式核心——不跑 section_writer 的 SAC 模板，用意图+数据+约束直接写。
-        实际执行时由上层（Claude/Marvis）调用 LLM，此处返回上下文 prompt。
+        工作台模式核心——使用 AnalysisEngine 统一引擎生成报告。
         """
+        from core.analysis_engine import AnalysisEngine, ExecutionConfig, ExecutionMode
+        from core.analysis_context import Intent, IntentType, AnalysisMode, EvidenceBundle, FindingStore
+
+        # 创建 Intent
+        intent = Intent(
+            asset=self.asset,
+            report_type=self.report_type,
+            style="cicc",
+            mode=ExecutionMode.INTERACTIVE,
+        )
+
+        # 创建初始 Context
+        context = AnalysisContext(
+            version=1,
+            parent_hash="",
+            intent=Intent(
+                asset=self.asset,
+                report_type=self.report_type,
+                style="cicc",
+                mode=ExecutionMode.INTERACTIVE,
+            ),
+            mode=AnalysisMode.INTERACTIVE,
+            evidence=None,  # 稍后填充
+            methods=(),
+            findings=None,
+            sections=(),
+        )
+
+        # 准备证据包
+        from core.analysis_context import EvidenceBundle
+        evidence = EvidenceBundle()
+        evidence.raw_data = self.data or {}
+        evidence.chart_data = {}
+
+        # 运行 AnalysisEngine
+        engine = AnalysisEngine.get_instance()
+        import asyncio
+        result = asyncio.run(engine.run(
+            asset=self.asset,
+            report_type=self.report_type,
+            style="cicc",
+            mode="interactive",
+            custom_requirements=self.requirement,
+            client_questions=None,
+        ))
+
+        if result.context and result.context.get("report_text"):
+            return result.context["report_text"]
+        else:
+            raise RuntimeError("AnalysisEngine 未生成报告正文")
+
+    def step3_write(self) -> str:
+        """③ AI 直接写：上下文工程 → Claude 直接产出正文（兼容旧版本）。"""
         from core.intent_parser import IntentParser
 
         ip = IntentParser()
@@ -360,7 +415,7 @@ class WorkbenchExecutor:
         """全流程执行。report_text 由上层 LLM 生成后传入。"""
         self.step1_intent()
         self.step2_data()
-        ctx = self.step3_write()
+        ctx = self.step3_write()  # 使用旧版 prompt 方式（兼容）
         # 若没传 report_text，工作台由 Claude 直接写（上层调用 LLM）
         if not report_text:
             return {
@@ -381,6 +436,28 @@ class WorkbenchExecutor:
             "human_gate": self.human_gate,
         }
 
+    def run_with_analysis_engine(self) -> dict:
+        """使用 AnalysisEngine 完整运行工作流（新版本）"""
+        # 1. 意图对齐
+        self.step1_intent()
+        # 2. 数据准备
+        self.step2_data()
+        # 3. 使用 AnalysisEngine 生成报告
+        report_text = self.step3_write_with_analysis_engine()
+        # 4. 校验
+        self.step4_verify(report_text)
+        # 5. 人类门禁
+        self.step5_human_gate(report_text)
+        # 6. 保存
+        out = self.step6_save(report_text)
+        return {
+            "status": "completed",
+            "path": str(out),
+            "intent_coverage": self.verify_result["coverage"],
+            "passed": self.verify_result["passed"],
+            "human_gate": self.human_gate,
+        }
+
 
 def main():
     import argparse
@@ -391,11 +468,16 @@ def main():
     ap.add_argument("--requirement", default="", help="委托方需求")
     ap.add_argument("--human-gate", action="store_true", help="强制人类门禁")
     ap.add_argument("--output", "-o", default="output")
+    ap.add_argument("--use-engine", action="store_true", default=True, help="使用 AnalysisEngine（默认开启）")
     args = ap.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
     wb = WorkbenchExecutor(args.asset, args.type, args.requirement, args.human_gate, args.output)
-    result = wb.run()
+    
+    if args.use_engine:
+        result = wb.run_with_analysis_engine()
+    else:
+        result = wb.run()
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0
 

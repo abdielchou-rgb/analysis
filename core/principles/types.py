@@ -9,16 +9,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional, Any, Tuple
+from typing import Optional, Tuple
 
 
 class DataState(Enum):
     """数值的来源状态"""
-    OBSERVED = "observed"      # 直接观测到的事实（财报、公告、监管数据）
-    DERIVED = "derived"        # 由计算推导得出（DCF、可比法、毛利率拆解等）
+
+    OBSERVED = "observed"  # 直接观测到的事实（财报、公告、监管数据）
+    DERIVED = "derived"  # 由计算推导得出（DCF、可比法、毛利率拆解等）
     ASSUMPTION = "assumption"  # 显式假设（需用户确认或场景设定）
-    SCENARIO = "scenario"      # 情景推演（悲观/基准/乐观情景）
-    MISSING = "missing"        # 真实缺失，无法获取、无法合理假设
+    SCENARIO = "scenario"  # 情景推演（悲观/基准/乐观情景）
+    MISSING = "missing"  # 真实缺失，无法获取、无法合理假设
 
 
 @dataclass(frozen=True)
@@ -28,12 +29,13 @@ class Value:
     所有进入计算系统的数字必须包装为 Value 对象。
     禁止裸数字在计算链中流转。
     """
+
     value: Optional[float]
     state: DataState
-    source: str                    # 来源标识（如 "2025 Annual Report", "DCF_Model_v3"）
-    confidence: float = 1.0        # 置信度 [0, 1]
+    source: str  # 来源标识（如 "2025 Annual Report", "DCF_Model_v3"）
+    confidence: float = 1.0  # 置信度 [0, 1]
     formula: Optional[str] = None  # 推导公式（如 "net_income / revenue"）
-    parents: Tuple = ()            # 父节点 Value 引用（用于溯源）
+    parents: Tuple = ()  # 父节点 Value 引用（用于溯源）
 
     def __post_init__(self):
         if self.value is not None and not isinstance(self.value, (int, float)):
@@ -60,7 +62,7 @@ class Value:
             source=f"{self.source}+{other.source}",
             confidence=min(self.confidence, other.confidence),
             formula=f"({self.formula or self.value}) + ({other.formula or other.value})",
-            parents=(self, other)
+            parents=(self, other),
         )
 
     def __mul__(self, other: "Value") -> "Value":
@@ -72,7 +74,7 @@ class Value:
             source=f"{self.source}*{other.source}",
             confidence=min(self.confidence, other.confidence),
             formula=f"({self.formula or self.value}) * ({other.formula or other.value})",
-            parents=(self, other)
+            parents=(self, other),
         )
 
     def __truediv__(self, other: "Value") -> "Value":
@@ -84,7 +86,7 @@ class Value:
             source=f"{self.source}/{other.source}",
             confidence=min(self.confidence, other.confidence),
             formula=f"({self.formula or self.value}) / ({other.formula or other.value})",
-            parents=(self, other)
+            parents=(self, other),
         )
 
 
@@ -92,54 +94,24 @@ def require_value(data: dict, key: str, source: str) -> Value:
     """强制获取数值，缺失时抛出异常或返回 MISSING Value"""
     if key in data and data[key] is not None:
         try:
-            return Value(
-                value=float(data[key]),
-                state=DataState.OBSERVED,
-                source=source,
-                confidence=1.0
-            )
+            return Value(value=float(data[key]), state=DataState.OBSERVED, source=source, confidence=1.0)
         except (TypeError, ValueError):
             pass
-    return Value(
-        value=None,
-        state=DataState.MISSING,
-        source=f"{source}.{key}"
-    )
+    return Value(value=None, state=DataState.MISSING, source=f"{source}.{key}")
 
 
 def assume_value(value: float, source: str, confidence: float = 0.5) -> Value:
     """显式创建假设值"""
-    return Value(
-        value=value,
-        state=DataState.ASSUMPTION,
-        source=source,
-        confidence=confidence
-    )
+    return Value(value=value, state=DataState.ASSUMPTION, source=source, confidence=confidence)
 
 
 def scenario_value(value: float, scenario_name: str, source: str) -> Value:
     """显式创建情景值"""
-    return Value(
-        value=value,
-        state=DataState.SCENARIO,
-        source=f"{source}.scenario[{scenario_name}]",
-        confidence=0.7
-    )
+    return Value(value=value, state=DataState.SCENARIO, source=f"{source}.scenario[{scenario_name}]", confidence=0.7)
 
 
-def derive_value(
-    value: float,
-    formula: str,
-    parents: Tuple[Value, ...],
-    source: str,
-    confidence: float = 0.9
-) -> Value:
+def derive_value(value: float, formula: str, parents: Tuple[Value, ...], source: str, confidence: float = 0.9) -> Value:
     """从计算推导产生数值"""
     return Value(
-        value=value,
-        state=DataState.DERIVED,
-        source=source,
-        confidence=confidence,
-        formula=formula,
-        parents=parents
+        value=value, state=DataState.DERIVED, source=source, confidence=confidence, formula=formula, parents=parents
     )

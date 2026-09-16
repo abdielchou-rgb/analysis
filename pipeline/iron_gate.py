@@ -18,6 +18,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from core.knowledge_injector import KnowledgeInjector
+from core.verification_engine import GateSeverity
 
 # A1+A2: Gate 版本化——评分公式/阈值变化必须 bump 此版本
 JUDGE_VERSION = "v2-error-mean-0.78"
@@ -48,7 +49,7 @@ class GateMetricsRecord:
     passed: bool
     score: float
     elapsed_sec: float
-    severity: str = "error"
+    severity: GateSeverity = GateSeverity.QUALITY  # 默认 quality
     details: str = ""
 
 
@@ -68,7 +69,7 @@ class GateMetricsTracker:
         passed: bool,
         score: float,
         elapsed_sec: float,
-        severity: str = "error",
+        severity: GateSeverity = GateSeverity.QUALITY,
         details: str = "",
     ):
         self.records.append(
@@ -88,7 +89,7 @@ class GateMetricsTracker:
             return {"error": "no records"}
         total = len(self.records)
         passed = sum(1 for r in self.records if r.passed)
-        hard_blocks = sum(1 for r in self.records if r.severity == "error" and not r.passed)
+        hard_blocks = sum(1 for r in self.records if r.severity == GateSeverity.BLOCKER and not r.passed)
         avg_score = sum(r.score for r in self.records) / max(total, 1)
         total_elapsed = sum(r.elapsed_sec for r in self.records)
         per_check = {}
@@ -300,159 +301,139 @@ class IronGate(
         _metrics = GateMetricsTracker()
 
         _check_funcs = [
-            self._check_content_volume,
-            self._check_content_density,
+            (self._check_content_volume, GateSeverity.BLOCKER),
+            (self._check_content_density, GateSeverity.BLOCKER),
             # R56（2026-08-03）：判断密度/数据密度（对标金牌报告基准）
-            self._check_judgment_density,
+            (self._check_judgment_density, GateSeverity.BLOCKER),
             # R76（2026-08-05 P0）：报告日期检查（DI-001）
-            self._check_report_date,
+            (self._check_report_date, GateSeverity.BLOCKER),
             # R77（2026-08-05 P0）：未替换占位符检查
-            self._check_placeholder_xxx,
-            self._check_aigc_fingerprint,
-            self._check_human_sense,
-            self._check_sac_coverage,
-            self._check_chart_density,
-            self._check_chart_completeness,
-            self._check_data_traceability,
-            self._check_annotation_types,
-            self._check_global_perspective,
-            self._check_geopolitical_depth,  # R78: 中美竞争分析深度
-            self._check_bold_call_consistency,  # R79 P0-2: Bold Call 单一事实源
-            self._check_market_size_consistency,  # R79 P0-3: 市场规模口径统一
-            self._check_indicator_consistency,  # R82 P1: 关键指标单一事实源
-            self._check_source_entity,  # R82 P2: 来源标注实体化
-            self._check_financial_statements_coverage,
-            self._check_format_consistency,
-            self._check_forbidden_patterns,
-            self._check_gbk_encoding,  # P2-4 (2026-09-01): 乱码拦截
-            self._check_placeholder_source,  # P0-2 (2026-09-01): 裸来源锚点拦截
-            self._check_template_phrases,  # R79 P0-1: 模板句拦截
-            self._check_insight_quality,  # R79 P1-1: 洞察质量
-            self._check_persuasion_architecture,
-            self._check_table_density,
-            self._check_moat_analysis,
-            self._check_multi_model,
-            self._check_decision_gate,
-            self._check_dcf_sensitivity,
-            self._check_so_what_chain,
-            self._check_placeholder_charts,
-            self._check_chart_analysis_quality,
-            self._check_ai_tone_by_llm,
-            self._check_human_impossible_dimension,
-            self._check_explicit_conclusion,
-            self._check_template_leak,
-            self._check_evidence_layer,
-            self._check_falsification_conditions,
-            self._check_meta_cognition,
-            self._check_counterargument_strength,  # R75: 反方论证强度DES
-            self._check_so_what_per_judgment,
-            self._check_data_type_annotation,
-            self._check_attribution_depth,
-            self._check_bold_call,
-            self._check_synthesis_consistency,
-            self._check_cross_section_consistency,
-            self._check_data_dict_refs,
+            (self._check_placeholder_xxx, GateSeverity.BLOCKER),
+            (self._check_aigc_fingerprint, GateSeverity.BLOCKER),
+            (self._check_human_sense, GateSeverity.QUALITY),
+            (self._check_sac_coverage, GateSeverity.BLOCKER),
+            (self._check_chart_density, GateSeverity.QUALITY),
+            (self._check_chart_completeness, GateSeverity.QUALITY),
+            (self._check_data_traceability, GateSeverity.BLOCKER),
+            (self._check_annotation_types, GateSeverity.QUALITY),
+            (self._check_global_perspective, GateSeverity.ADVISORY),
+            (self._check_geopolitical_depth, GateSeverity.ADVISORY),  # R78: 中美竞争分析深度
+            (self._check_bold_call_consistency, GateSeverity.QUALITY),  # R79 P0-2: Bold Call 单一事实源
+            (self._check_market_size_consistency, GateSeverity.BLOCKER),  # R79 P0-3: 市场规模口径统一
+            (self._check_indicator_consistency, GateSeverity.BLOCKER),  # R82 P1: 关键指标单一事实源
+            (self._check_source_entity, GateSeverity.BLOCKER),  # R82 P2: 来源标注实体化
+            (self._check_financial_statements_coverage, GateSeverity.BLOCKER),
+            (self._check_format_consistency, GateSeverity.QUALITY),
+            (self._check_forbidden_patterns, GateSeverity.BLOCKER),
+            (self._check_gbk_encoding, GateSeverity.QUALITY),  # P2-4 (2026-09-01): 乱码拦截
+            (self._check_placeholder_source, GateSeverity.BLOCKER),  # P0-2 (2026-09-01): 裸来源锚点拦截
+            (self._check_template_phrases, GateSeverity.ADVISORY),  # R79 P0-1: 模板句拦截
+            (self._check_insight_quality, GateSeverity.QUALITY),  # R79 P1-1: 洞察质量
+            (self._check_persuasion_architecture, GateSeverity.ADVISORY),
+            (self._check_table_density, GateSeverity.QUALITY),
+            (self._check_moat_analysis, GateSeverity.QUALITY),
+            (self._check_multi_model, GateSeverity.ADVISORY),
+            (self._check_decision_gate, GateSeverity.BLOCKER),
+            (self._check_dcf_sensitivity, GateSeverity.QUALITY),
+            (self._check_so_what_chain, GateSeverity.BLOCKER),
+            (self._check_placeholder_charts, GateSeverity.QUALITY),
+            (self._check_chart_analysis_quality, GateSeverity.QUALITY),
+            (self._check_ai_tone_by_llm, GateSeverity.ADVISORY),
+            (self._check_human_impossible_dimension, GateSeverity.ADVISORY),
+            (self._check_explicit_conclusion, GateSeverity.BLOCKER),
+            (self._check_template_leak, GateSeverity.ADVISORY),
+            (self._check_evidence_layer, GateSeverity.BLOCKER),
+            (self._check_falsification_conditions, GateSeverity.QUALITY),
+            (self._check_meta_cognition, GateSeverity.ADVISORY),
+            (self._check_counterargument_strength, GateSeverity.QUALITY),  # R75: 反方论证强度DES
+            (self._check_so_what_per_judgment, GateSeverity.QUALITY),
+            (self._check_data_type_annotation, GateSeverity.QUALITY),
+            (self._check_attribution_depth, GateSeverity.QUALITY),
+            (self._check_bold_call, GateSeverity.QUALITY),
+            (self._check_synthesis_consistency, GateSeverity.QUALITY),
+            (self._check_cross_section_consistency, GateSeverity.BLOCKER),
+            (self._check_data_dict_refs, GateSeverity.BLOCKER),
             # NEW: DataPoint provenance completeness (Phase 1.3)
-            self._check_data_point_provenance,
+            (self._check_data_point_provenance, GateSeverity.BLOCKER),
             # NEW: CSRC/交易所合规门禁 (Phase 2.1)
-            self._check_csrc_compliance,
+            (self._check_csrc_compliance, GateSeverity.BLOCKER),
             # NEW: Semantic deduplication gate (Phase 5.3)
-            self._check_semantic_dedup,
+            (self._check_semantic_dedup, GateSeverity.ADVISORY),
             # R16（2026-08-01 深度补强）：盈利预测表 + 反共识信号存在性校验
-            self._check_forecast_presence,
+            (self._check_forecast_presence, GateSeverity.QUALITY),
             # R20（2026-08-02 王牌模块）：供应链瓶颈分析存在性校验
-            self._check_bottleneck_analysis,
-            self._check_markdown_artifacts,
-            self._check_personal_narrative,
-            self._check_section_continuity,
-            self._check_table_quality_md,
+            (self._check_bottleneck_analysis, GateSeverity.QUALITY),
+            (self._check_markdown_artifacts, GateSeverity.ADVISORY),
+            (self._check_personal_narrative, GateSeverity.ADVISORY),
+            (self._check_section_continuity, GateSeverity.QUALITY),
+            (self._check_table_quality_md, GateSeverity.QUALITY),
             # P2-4（2026-08-01 审计）：风险四层框架
-            self._check_risk_layering,
+            (self._check_risk_layering, GateSeverity.QUALITY),
             # R28（2026-08-02 方向B）：数据口径一致性（多来源冲突 + 单位标注）
-            self._check_data_conflicts,
+            (self._check_data_conflicts, GateSeverity.BLOCKER),
             # 2026-08-07：下行/时间线/假设集中度一致性（油位 v2.3 硬伤落地）
-            self._check_downstream_consistency,
+            (self._check_downstream_consistency, GateSeverity.QUALITY),
             # 2026-08-08：业务逻辑检测（双价格带/口径冲突/声称无量化的价值）
-            self._check_business_logic,
+            (self._check_business_logic, GateSeverity.QUALITY),
             # 2026-08-08：身份关系检测（子公司当外部合作方）
-            self._check_relation_consistency,
-            self._check_rating_target_consistency,
+            (self._check_relation_consistency, GateSeverity.QUALITY),
+            (self._check_rating_target_consistency, GateSeverity.BLOCKER),
             # R31（2026-08-02 排版根治）：文档布局质量（空白页/空段落）
-            self._check_layout_quality,
+            (self._check_layout_quality, GateSeverity.ADVISORY),
             # R53审计（2026-08-03 P1-1）：正文完整性扫描（截断/碎片/未完成句）
-            self._check_completeness_scan,
+            (self._check_completeness_scan, GateSeverity.BLOCKER),
             # R35（2026-08-02 算术校验层）：占比/估值中值/目标价空间/EPS桥反向验算
-            self._check_arithmetic_audit,
+            (self._check_arithmetic_audit, GateSeverity.BLOCKER),
             # R88（2026-08-10）：数值链自洽校验——行业报告分散式数值独立验算
             # （占比数量级/EPS×PE目标价链/目标价空间/细分合计，覆盖商业航天报告硬伤）
-            self._check_numeric_chain_consistency,
+            (self._check_numeric_chain_consistency, GateSeverity.BLOCKER),
             # R46（2026-08-02 不变量断言层）：流通市值/持股勾稽/PE×净利 物理不可能拦截
-            self._check_invariant_audit,
+            (self._check_invariant_audit, GateSeverity.BLOCKER),
             # R53审计（2026-08-03 P0-1 估值闭环）：估值链四方勾稽——EPS×股本=净利、
             # 市值=股价×股本、目标价/PE=EPS，任一环偏差>5% 即 FAIL（持 data_dict 作外部锚）
-            self._check_valuation_integrity,
+            (self._check_valuation_integrity, GateSeverity.BLOCKER),
             # R35（2026-08-02 模板句高重复检测）：模板污染/概念错位
-            self._check_template_repeat,
+            (self._check_template_repeat, GateSeverity.ADVISORY),
             # R53审计（2026-08-03 P1-2）：语义重复检测（跨章节相似度，替代硬编码黑名单）
-            self._check_semantic_repeat,
+            (self._check_semantic_repeat, GateSeverity.ADVISORY),
             # R38（2026-08-02 财务数值一致性）：毛利率/PE 与 data_dict 真实值冲突检测
-            self._check_financial_value_consistency,
-            # R55（2026-08-03 方法论升级）：行业报告质量护栏
-            self._check_stock_pick_chain,  # 选股传导链存在性
-            self._check_unlisted_threat,  # 非上市威胁判断存在性
-            self._check_tam_bottomup,  # TAM/SAM/SOM 自底向上校验
-            self._check_regional_penetration,  # 区域渗透率错位判断
-            # R57（2026-08-03）：行业并购视角 + 假设驱动 + ESG实质性
-            self._check_industry_consolidation,  # 行业整合/并购信号
-            self._check_core_hypothesis,  # MBB假设驱动
-            self._check_esg_materiality,  # ESG实质性
-            # R58（2026-08-03）：四大审计确定性检查（财务造假信号）
-            self._check_financial_fraud_signals,
-            # R60（2026-08-03）：证据链门禁（工具数据进正文验证）
-            self._check_evidence_chain,
-            # R63（2026-08-04 全量修复）：补回 R61 迁移遗漏的 3 项检查。
-            # Marvis 审计（2号分析师R60R61升级深度审计_20260803）发现 67 方法仅 64 执行，
-            # 这三项（数据保真/来源准确/主观评分禁令）是真实防线，非废弃代码。
-            self._check_data_fidelity,  # 数据保真：营收/净利数值合理性
-            self._check_data_source_accuracy,  # 数据来源准确性：营收异常偏大扫描
-            self._check_subjective_scoring,  # FP4 合规：禁止"评分8分"式主观评分
-            # R55（2026-08-03 Phase E）：LLM 数据交叉验证（对侧 provider）
-            self._check_llm_data_verification,
-            # R68（2026-08-04 全量修复）：覆盖完整性与实体验证——解决品牌覆盖代替实体覆盖、
+            (self._check_financial_value_consistency, GateSeverity.BLOCKER),
+            # R68 (2026-08-04 全量修复): 覆盖完整性与实体验证 - 解决品牌覆盖代替实体覆盖、
+            # R68 (2026-08-04 全量修复): 覆盖完整性与实体验证 - 解决品牌覆盖代替实体覆盖、上市公司偏见等系统性问题，数据底座: data/unlisted_players.json + brand_entity_mapping.json
             # 上市公司偏见等系统性问题，数据底座: data/unlisted_players.json + brand_entity_mapping.json
-            self._check_coverage_completeness,  # 三层校验：分类覆盖/品牌映射/集团归属
-            self._check_entity_verification,  # 实体验证：映射缺失/上市状态误判
-            self._check_sub_element_coverage,  # R74: 子要素覆盖（根治Goodhart律——关键词→子要素正则）
-            self._check_industry_baseline_gap,  # R77 P0-2: 行业底座缺口提示（warning级，不阻断）
-            self._check_honest_gap,  # R79 P1-3: 诚实留白机制
-            self._check_client_questions_coverage,  # R83: 委托方必答问题覆盖率（decision_memo 核心）
-            self._check_entity_anchoring,  # R84: 委托方实体锚定（must_contain/forbidden_swap）
-            self._check_decision_engine_citation,  # R84: 决策引擎数值引用（卡位评分/最坏损失/投入）
-            self._check_narrative_consistency,  # R85: 叙事一致性（防"答对问题但答错生意"）
-            self._check_data_point_citation,  # R85: 数据点引用审计（enrich 关键数据进正文）
-            self._check_source_reliability,
-            self._check_methodology_compliance,
-            self._check_inline_citations,
-            self._check_style_distance,
-            self._check_anti_patterns,  # M6: 伪框架黑名单  # S2: 风格距离（warning）  # P3-B: [E#] 证据标注密度（warning）  # R87: 数据源可信度（enrich 幻觉修正值校验）
+            (self._check_coverage_completeness, GateSeverity.QUALITY),  # 三层校验：分类覆盖/品牌映射/集团归属
+            (self._check_entity_verification, GateSeverity.QUALITY),  # 实体验证：映射缺失/上市状态误判
+            (self._check_sub_element_coverage, GateSeverity.QUALITY),  # R74: 子要素覆盖（根治Goodhart律——关键词→子要素正则）
+            (self._check_industry_baseline_gap, GateSeverity.ADVISORY),  # R77 P0-2: 行业底座缺口提示（warning级，不阻断）
+            (self._check_honest_gap, GateSeverity.ADVISORY),  # R79 P1-3: 诚实留白机制
+            (self._check_client_questions_coverage, GateSeverity.BLOCKER),  # R83: 委托方必答问题覆盖率（decision_memo 核心）
+            (self._check_entity_anchoring, GateSeverity.BLOCKER),  # R84: 委托方实体锚定（must_contain/forbidden_swap）
+            (self._check_decision_engine_citation, GateSeverity.QUALITY),  # R84: 决策引擎数值引用（卡位评分/最坏损失/投入）
+            (self._check_narrative_consistency, GateSeverity.QUALITY),  # R85: 叙事一致性（防"答对问题但答错生意"）
+            (self._check_data_point_citation, GateSeverity.BLOCKER),  # R85: 数据点引用审计（enrich 关键数据进正文）
+            (self._check_source_reliability, GateSeverity.QUALITY),
+            (self._check_methodology_compliance, GateSeverity.QUALITY),
+            (self._check_inline_citations, GateSeverity.BLOCKER),
+            (self._check_style_distance, GateSeverity.ADVISORY),
+            (self._check_anti_patterns, GateSeverity.ADVISORY),  # M6: 伪框架黑名单  # S2: 风格距离（warning）  # P3-B: [E#] 证据标注密度（warning）  # R87: 数据源可信度（enrich 幻觉修正值校验）
             # B2: Tier 数值分级——Tier-1 数字必须有 canonical 来源或 [注N] 标注
-            self._check_numerical_tier,
+            (self._check_numerical_tier, GateSeverity.QUALITY),
             # Phase A2（2026-09-06）：证据账本覆盖率——全文数值声明 vs 计算引擎核对
-            self._check_evidence_coverage,
+            (self._check_evidence_coverage, GateSeverity.BLOCKER),
             # 2026-09-07（茅台 E2E 事故）：跨行业内容污染——白酒报告被注入锂电池论证
-            self._check_cross_industry_contamination,
+            (self._check_cross_industry_contamination, GateSeverity.BLOCKER),
             # P1-2（2026-09-07）：KB/MKB 消费端引用覆盖——注入非空 → 正文回指
-            self._check_kb_citation_coverage,
-        ]
+            (self._check_kb_citation_coverage, GateSeverity.BLOCKER),
+]
+        
         checks = []
+
         # R15（2026-08-01 提速）：把 LLM 检查（ai_tone/human_impossible/数据验证，各 60s+）
-        # 与其余确定性检查并行执行。确定性检查走主线程（快），LLM 检查放线程池。
         _llm_check_names = (
             "_check_ai_tone_by_llm",
             "_check_human_impossible_dimension",
             "_check_llm_data_verification",
         )
-        _llm_results = {}
 
         def _run_llm_check(_func):
             try:
@@ -477,13 +458,13 @@ class IronGate(
         _ig_workers = 1 if _os_ig.environ.get("SEG_PARALLEL", "1") == "0" else 2
         _llm_pool = ThreadPoolExecutor(max_workers=_ig_workers)
         _llm_futures = {
-            _llm_pool.submit(_run_llm_check, _func): _func.__name__
+            _llm_pool.submit(_run_llm_check, _func[0]): _func[0].__name__
             for _func in _check_funcs
-            if _func.__name__ in _llm_check_names
+            if _func[0].__name__ in _llm_check_names
         }
 
         # Parallelize deterministic checks (batch into groups of 10)
-        _det_check_funcs = [_func for _func in _check_funcs if _func.__name__ not in _llm_check_names]
+        _det_check_funcs = [_func[0] for _func in _check_funcs if _func[0].__name__ not in _llm_check_names]
         _det_batch_size = 10
 
         def _run_det_check(_func):
@@ -565,33 +546,49 @@ class IronGate(
 
         report = GateReport()
         report.checks = checks
-        # P0 加权评分 v2（2026-09-02）：只计算 error-severity 检查的均值。
-        # 原因：warning 类检查（anti_patterns=0.20, inline_citations=0.30 等）拉低均值，
-        # 即使所有 error 检查通过，overall_score 仍卡在 0.88-0.91。
-        # v1 尝试 error 3x 权重但反而降低分数（error 检查本身也有低分项）。
-        # v2：overall_score = mean(error checks only)，warning 检查仅记录不计入分数。
-        # 这样 error 检查全部通过时分数直接反映核心质量，不受 warning 拖累。
-        _error_scores = [max(0.0, min(1.0, c.score)) for c in checks if c.severity == "error"]
-        _warn_scores = [max(0.0, min(1.0, c.score)) for c in checks if c.severity != "error"]
-        if _error_scores:
-            report.overall_score = sum(_error_scores) / len(_error_scores)
+        # Three-layer gate architecture scoring
+        # BLOCKER (hard fail): any BLOCKER check failed -> immediate fail, score = 0
+        # QUALITY (weighted): average of QUALITY checks
+        # ADVISORY (warning only): only logged, never blocks
+        
+        # 1. BLOCKER: any failure -> immediate fail, score = 0
+        _blocker_scores = [max(0.0, min(1.0, c.score)) for c in checks if c.severity == GateSeverity.BLOCKER]
+        _blocker_passed = all(c.passed for c in checks if c.severity == GateSeverity.BLOCKER)
+        
+        # 2. QUALITY: weighted average
+        _quality_scores = [max(0.0, min(1.0, c.score)) for c in checks if c.severity == GateSeverity.QUALITY]
+        _quality_mean = sum(_quality_scores) / len(_quality_scores) if _quality_scores else 1.0
+        
+        # 3. ADVISORY: warning only, never blocks
+        _advisory_scores = [max(0.0, min(1.0, c.score)) for c in checks if c.severity == GateSeverity.ADVISORY]
+        _advisory_mean = sum(_advisory_scores) / len(_advisory_scores) if _advisory_scores else 1.0
+        
+        # Overall score calculation
+        if not _blocker_passed:
+            # Any BLOCKER failure -> immediate fail
+            report.overall_score = 0.0
+        elif _quality_scores:
+            # QUALITY checks determine the score
+            report.overall_score = sum(_quality_scores) / len(_quality_scores)
         else:
-            # 无 error 检查时回退到全量均值
-            _all = [max(0.0, min(1.0, c.score)) for c in checks]
-            report.overall_score = sum(_all) / max(len(_all), 1)
-        # 记录 warning 均值供诊断
-        if _warn_scores:
-            _warn_mean = sum(_warn_scores) / len(_warn_scores)
-            logger.info(
-                "[P0-WEIGHTED] error_mean=%.3f (%d checks), warn_mean=%.3f (%d checks)",
-                report.overall_score,
-                len(_error_scores),
-                _warn_mean,
-                len(_warn_scores),
-            )
-        # A1: fail-closed——无 error 检查时 block（不是 pass）
-        # 原逻辑：`if _error_scores else True` = fail-open，导致无检查时假通过
-        report.passed = report.overall_score >= PASS_THRESHOLD if _error_scores else False
+            # No quality checks, use advisory as fallback
+            _advisory_scores = [max(0.0, min(1.0, c.score)) for c in checks if c.severity == GateSeverity.ADVISORY]
+            report.overall_score = sum(_advisory_scores) / len(_advisory_scores) if _advisory_scores else 1.0
+        
+        # Advisory scores for diagnostics only
+        _advisory_scores = [max(0.0, min(1.0, c.score)) for c in checks if c.severity == GateSeverity.ADVISORY]
+        if _advisory_scores:
+            logger.info("[P0-WEIGHTED] advisory_mean=%.3f (%d checks)", sum(_advisory_scores)/len(_advisory_scores), len(_advisory_scores))
+        
+        # P0-WEIGHTED logging for diagnostics
+        _blocker_scores = [max(0.0, min(1.0, c.score)) for c in checks if c.severity == GateSeverity.BLOCKER]
+        _quality_scores = [max(0.0, min(1.0, c.score)) for c in checks if c.severity == GateSeverity.QUALITY]
+        _advisory_scores = [max(0.0, min(1.0, c.score)) for c in checks if c.severity == GateSeverity.ADVISORY]
+        if _blocker_scores:
+            logger.info("[P0-WEIGHTED] blocker_mean=%.3f (%d checks), quality_mean=%.3f (%d checks), advisory_mean=%.3f (%d checks)",
+                sum(_blocker_scores)/len(_blocker_scores), len(_blocker_scores),
+                sum(_quality_scores)/len(_quality_scores) if _quality_scores else 0, len(_quality_scores),
+                sum(_advisory_scores)/len(_advisory_scores) if _advisory_scores else 0, len(_advisory_scores))
         # A2: 版本化——gate_config_hash = threshold + 公式签名，写入指纹供跨版本审计
         import hashlib as _hl
 

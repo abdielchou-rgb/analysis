@@ -57928,7 +57928,33 @@
       "bench": "none",
       "return_pct": null,
       "resolved_at": ""
+    },
+    {
+      "id": "20260916_200746_茅台_a7a27f",
+      "asset": "茅台",
+      "report_type": "listed_company",
+      "industry": "茅台",
+      "direction": "bullish",
+      "bold_call": "拐点",
+      "target_price": "1603.112755714573",
+      "falsification": "",
+      "time_horizon": "unknown",
+      "made_date": "2026-09-16",
+      "outcome_date": "",
+      "outcome": "pending",
+      "outcome_detail": "",
+      "confidence_at_make": 0.4,
+      "source": "pipeline",
+      "expiry_date": "",
+      "price_at_make": null,
+      "price_at_expiry": null,
+      "outcome_reason": "",
+      "judge_ver": "",
+      "alpha": null,
+      "bench": "none",
+      "return_pct": null,
+      "resolved_at": ""
     }
   ],
-  "last_updated": "2026-09-15T02:17:38.978219"
+  "last_updated": "2026-09-16T20:07:46.894395"
 }

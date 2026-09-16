@@ -1,258 +1,334 @@
-"""intent_parser.py — 意图解析层（FP0 落地，2026-08-07）
+# -*- coding: utf-8 -*-
+"""Intent Parser - 意图解析器
 
-从"写满 SAC 模板"升级为"回答委托方必答问题"。
-
-核心：委托方问题清单确认 → 必答问题 → 报告结构。
-这是 FP0（意图第一公民）的工程落地——每个任务启动先确认：
-  谁读（委托方身份） / 决策点（要做什么决定） / 必答问题（必须回答什么）
-
-用法：
-  ip = IntentParser()
-  plan = ip.parse(asset="柯力传感", report_type="decision_memo",
-                  requirement="久通要把油位传感器业务给柯力生产，评估市场规模/投入产出比/战略卡位/衍生价值")
-  # plan: {client, decision_point, must_answer_questions, structure, guardrails}
-
-  ip.validate_report(plan, report_text)  # 意图符合性：必答问题是否被回答
+将用户输入解析为结构化的 Intent 对象
 """
 
 from __future__ import annotations
 
-import logging
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any, Dict, FrozenSet, List, Optional, Tuple
+from datetime import datetime
 import re
-from pathlib import Path
 
-logger = logging.getLogger("2hao.intent_parser")
+from core.analysis_context import Intent, IntentType, AnalysisMode
 
-_ROOT = Path(__file__).resolve().parent.parent
+
+class ProblemClass(Enum):
+    """问题分类 - 用于方法选择"""
+    PROFITABILITY_ANALYSIS = "profitability_analysis"
+    GROWTH_ANALYSIS = "growth_analysis"
+    VALUATION = "valuation"
+    COMPETITIVE_POSITION = "competitive_position"
+    RISK_ASSESSMENT = "risk_assessment"
+    CASH_FLOW_ANALYSIS = "cash_flow_analysis"
+    BALANCE_SHEET_QUALITY = "balance_sheet_quality"
+    MARKET_SIZING = "market_sizing"
+    COMPETITIVE_DYNAMICS = "competitive_dynamics"
+    REGULATORY_RISK = "regulatory_risk"
+    TECHNOLOGY_DISRUPTION = "technology_disruption"
+    MANAGEMENT_QUALITY = "management_quality"
+    CAPITAL_ALLOCATION = "capital_allocation"
+    UNSPECIFIED = "unspecified"
+
+
+@dataclass(frozen=True)
+class ParsedIntent:
+    """解析后的意图"""
+    original_text: str
+    asset: str
+    report_type: IntentType
+    problem_classes: FrozenSet[ProblemClass]
+    explicit_questions: Tuple[str, ...]
+    implicit_questions: Tuple[str, ...]
+    constraints: Dict[str, Any]
+    time_horizon: Optional[str] = None
+    focus_areas: FrozenSet[str] = field(default_factory=frozenset)
+    exclude_areas: FrozenSet[str] = field(default_factory=frozenset)
+    confidence: float = 1.0
 
 
 class IntentParser:
-    """委托方意图 → 必答问题 → 报告结构。"""
-
-    # 报告类型 → 默认委托方 + 决策点 + 必答问题模板
-    DEFAULT_INTENT = {
-        "decision_memo": {
-            "client": "委托方（董事长/CEO）",
-            "decision_point": "进/不进/条件性进",
-            "must_answer": [
-                "市场规模多大？空间与节奏？",
-                "投入产出比如何？多久回本？",
-                "战略卡位是否关键？有无替代路径？",
-                "最坏损失多少？能否承受？",
-                "衍生价值/期权价值有多大？",
-            ],
-        },
-        "listed_company": {
-            "client": "二级市场投资者",
-            "decision_point": "买入/持有/卖出",
-            "must_answer": [
-                "公司核心价值驱动是什么？",
-                "当前估值是否合理？",
-                "关键风险与催化剂是什么？",
-            ],
-        },
-        "unlisted_company": {
-            "client": "投资人/尽调方",
-            "decision_point": "投/不投/估值区间",
-            "must_answer": [
-                "公司价值与成长性如何？",
-                "退出路径与概率？",
-                "核心风险（股权/经营/市场）？",
-            ],
-        },
-        "industry_deep": {
-            "client": "机构投资人/行业研究者",
-            "decision_point": "行业景气方向与配置",
-            "must_answer": [
-                "行业规模与增速？",
-                "竞争格局与利润池在哪？",
-                "关键变量与传导逻辑？",
-                "受益标的与风险？",
-            ],
-        },
+    """意图解析器 - 将自然语言/结构化输入解析为结构化 Intent"""
+    
+    # 问题类别关键词映射
+    PROBLEM_CLASS_KEYWORDS = {
+        ProblemClass.PROFITABILITY_ANALYSIS: [
+            "盈利", "毛利", "净利", "利润", "ROE", "ROA", "利润率", "盈利能力",
+            "profitability", "margin", "profit", "earnings"
+        ],
+        ProblemClass.GROWTH_ANALYSIS: [
+            "增长", "增速", "增量", "扩张", "扩产", "新产能", "新产品",
+            "growth", "growth_rate", "expansion"
+        ],
+        ProblemClass.VALUATION: [
+            "估值", "目标价", "PE", "PB", "DCF", "估值模型", "溢价", "折价",
+            "valuation", "target_price", "fair_value"
+        ],
+        ProblemClass.COMPETITIVE_POSITION: [
+            "竞争", "市场份额", "竞争力", "护城河", "竞争优势", "市场地位",
+            "competitive", "market_share", "moat", "positioning"
+        ],
+        ProblemClass.RISK_ASSESSMENT: [
+            "风险", "下行", "隐患", "不确定", "威胁", "下行风险",
+            "risk", "downside", "threat", "uncertainty"
+        ],
+        ProblemClass.CASH_FLOW_ANALYSIS: [
+            "现金流", "FCF", "自由现金流", "经营现金流", "现金流量",
+            "cash_flow", "FCF", "operating_cash_flow"
+        ],
+        ProblemClass.BALANCE_SHEET_QUALITY: [
+            "资产负债表", "负债", "资产质量", "商誉", "存货", "应收账款",
+            "balance_sheet", "leverage", "debt", "asset_quality"
+        ],
+        ProblemClass.MARKET_SIZING: [
+            "市场规模", "TAM", "SAM", "SOM", "市场空间", "渗透率",
+            "market_size", "TAM", "penetration"
+        ],
+        ProblemClass.COMPETITIVE_DYNAMICS: [
+            "竞争格局", "竞争对手", "新进入者", "替代品", "供应商", "客户",
+            "competitive_dynamics", "competitors", "new_entrants"
+        ],
+        ProblemClass.REGULATORY_RISK: [
+            "政策", "监管", "合规", "牌照", "许可", "监管风险",
+            "regulation", "policy", "compliance", "license"
+        ],
+        ProblemClass.TECHNOLOGY_DISRUPTION: [
+            "技术颠覆", "创新", "颠覆性", "新技术", "替代",
+            "disruption", "innovation", "technology"
+        ],
+        ProblemClass.MANAGEMENT_QUALITY: [
+            "管理层", "治理", "激励", "股权结构", "大股东",
+            "management", "governance", "incentive"
+        ],
+        ProblemClass.CAPITAL_ALLOCATION: [
+            "资本配置", "分红", "回购", "并购", "投资", "资本支出",
+            "capital_allocation", "dividend", "buyback", "M&A", "capex"
+        ],
     }
-
-    # 需求关键词 → 追加必答问题（行业/场景定制）
-    REQUIREMENT_QUESTIONS = {
-        "投入产出": "投入产出比具体测算？盈亏平衡点？",
-        "代工": "代工成本/良率爬坡/转移定价？自产vs外包？",
-        "并购": "并购协同/整合风险/估值合理性？",
-        "卡位": "战略卡位的关键性？不做的机会成本？",
-        "衍生": "衍生价值/期权价值/相邻品类机会？",
-        "渠道": "渠道真实性与可持续性？",
-        "竞争": "竞争格局/壁垒/替代威胁？",
-    }
-
-    def parse(self, asset: str, report_type: str = "decision_memo", requirement: str = "", client: str = "") -> dict:
-        """解析委托方意图 → 报告结构计划。
-
-        requirement: 用户口述需求（自由文本），驱动必答问题定制。
+    
+    def __init__(self):
+        self._compile_patterns()
+    
+    def _compile_patterns(self):
+        """预编译正则模式"""
+        self._class_patterns = {}
+        for cls, keywords in self.PROBLEM_CLASS_KEYWORDS.items():
+            pattern = "|".join(re.escape(kw) for kw in keywords)
+            self._class_patterns[cls] = re.compile(pattern, re.IGNORECASE)
+    
+    def parse(
+        self,
+        text: str,
+        asset: str = "",
+        report_type: IntentType = IntentType.INDUSTRY_DEEP,
+        explicit_questions: List[str] = None,
+        context: Dict = None
+    ) -> 'ParsedIntent':
         """
-        # 基础意图（按报告类型默认）
-        base = self.DEFAULT_INTENT.get(report_type, self.DEFAULT_INTENT["decision_memo"])
-        must_answer = list(base.get("must_answer", []))
-        if client:
-            base["client"] = client
-
-        # 需求定制：追加必答问题
-        req_questions = []
-        if requirement:
-            for kw, q in self.REQUIREMENT_QUESTIONS.items():
-                if kw in requirement:
-                    req_questions.append(q)
-
-        # 合并必答问题（基础 + 需求定制，去重）
-        seen = set(must_answer)
-        for q in req_questions:
-            if q not in seen:
-                must_answer.append(q)
-                seen.add(q)
-
-        # 生成报告结构（必答问题 → 章节）
-        structure = self._build_structure(must_answer, report_type)
-
-        return {
-            "asset": asset,
-            "report_type": report_type,
-            "client": base["client"],
-            "decision_point": base["decision_point"],
-            "requirement": requirement,
-            "must_answer_questions": must_answer,
-            "structure": structure,
-            "guardrails": {
-                "禁止": self._guardrails(report_type),
-                "强制": ["执行摘要必须直接回答必答问题，结论先行"],
-            },
-        }
-
-    def validate_report(self, plan: dict, report_text: str) -> dict:
-        """意图符合性检查：必答问题是否被报告回答。
-
-        用关键词命中近似（报告出现问题关键词的语义变体）。返回每问题命中/未命中。
+        解析意图
+        
+        Args:
+            text: 用户输入文本
+            asset: 分析标的
+            report_type: 报告类型
+            explicit_questions: 显式问题清单
+            context: 额外上下文
+            
+        Returns:
+            ParsedIntent: 解析后的意图
         """
-        results = []
-        for q in plan.get("must_answer_questions", []):
-            keywords = self._extract_keywords(q)
-            hit = any(kw in report_text for kw in keywords if len(kw) >= 2)
-            results.append(
-                {
-                    "question": q,
-                    "keywords": keywords,
-                    "answered": hit,
-                }
-            )
-        answered = sum(1 for r in results if r["answered"])
-        total = len(results)
-        return {
-            "total": total,
-            "answered": answered,
-            "coverage": round(answered / total, 2) if total else 0,
-            "results": results,
-            "passed": (answered / total) >= 0.6 if total else True,  # ≥60% 算通过
-        }
-
-    def build_prompt(self, plan: dict) -> str:
-        """生成注入写作 prompt 的意图约束块（FP0 强制）。"""
-        lines = [
-            "=== 委托方意图（FP0 最高优先级，必须回答）===",
-            f"委托方: {plan['client']}",
-            f"决策点: {plan['decision_point']}",
-            "必答问题（必须全部在报告中回答）:",
+        text = text or ""
+        explicit_questions = explicit_questions or []
+        context = context or {}
+        
+        # 1. 识别问题类别
+        problem_classes = self._classify_problems(text, context)
+        
+        # 2. 提取显式问题
+        explicit_qs = self._extract_explicit_questions(text, explicit_questions)
+        
+        # 3. 生成隐式问题
+        implicit_qs = self._generate_implicit_questions(problem_classes, context)
+        
+        # 4. 提取约束条件
+        constraints = self._extract_constraints(text, context)
+        
+        # 5. 确定时间跨度和关注领域
+        time_horizon = self._extract_time_horizon(text, context)
+        focus_areas = self._extract_focus_areas(text, context)
+        exclude_areas = self._extract_exclude_areas(text, context)
+        
+        return ParsedIntent(
+            original_text=text,
+            asset=asset,
+            report_type=report_type,
+            problem_classes=frozenset(problem_classes),
+            explicit_questions=tuple(explicit_qs),
+            implicit_questions=tuple(implicit_qs),
+            constraints=constraints,
+            time_horizon=time_horizon,
+            focus_areas=frozenset(focus_areas),
+            exclude_areas=frozenset(exclude_areas),
+            confidence=0.8  # TODO: 基于匹配度计算
+        )
+    
+    def _classify_problems(self, text: str, context: Dict) -> List[ProblemClass]:
+        """识别问题类别"""
+        problem_classes = []
+        text_lower = text.lower()
+        context_text = " ".join(str(v) for v in context.values()).lower()
+        full_text = text_lower + " " + context_text
+        
+        for cls, pattern in self._class_patterns.items():
+            if pattern.search(full_text):
+                problem_classes.append(cls)
+        
+        if not problem_classes:
+            problem_classes = [ProblemClass.UNSPECIFIED]
+        
+        return problem_classes
+    
+    def _extract_explicit_questions(self, text: str, explicit_questions: List[str]) -> List[str]:
+        """提取显式问题"""
+        questions = list(explicit_questions)
+        
+        # 从文本中提取问句
+        question_patterns = [
+            r'[？?]',
+            r'如何[^。]*',
+            r'为什么[^。]*',
+            r'是否[^。]*',
+            r'能否[^。]*',
         ]
-        for i, q in enumerate(plan.get("must_answer_questions", []), 1):
-            lines.append(f"  {i}. {q}")
-        lines.append("报告结构必须围绕必答问题组织，禁止只填模板不回答问题。")
-        lines.append("=== 意图约束结束 ===")
-        return "\n".join(lines)
-
-    # ── 内部 ─────────────────────────────────────────
-
-    def _build_structure(self, questions: list, report_type: str) -> list:
-        """必答问题 → 章节结构（决策备忘录直接映射）。"""
-        sections = [{"title": "执行摘要", "answers": questions[:1]}]
-        if report_type == "decision_memo":
-            sections.append({"title": "决策建议与依据", "answers": questions})
-            sections.append(
-                {"title": "行业真相与市场空间", "answers": [q for q in questions if "规模" in q or "空间" in q]}
-            )
-            sections.append(
-                {
-                    "title": "投入产出与财务测算",
-                    "answers": [q for q in questions if "投入" in q or "产出" in q or "回本" in q],
-                }
-            )
-            sections.append(
-                {"title": "战略卡位与替代路径", "answers": [q for q in questions if "卡位" in q or "战略" in q]}
-            )
-            sections.append(
-                {"title": "最坏损失与风险", "answers": [q for q in questions if "损失" in q or "风险" in q]}
-            )
-            sections.append(
-                {"title": "衍生价值与期权", "answers": [q for q in questions if "衍生" in q or "期权" in q]}
-            )
-            sections.append({"title": "执行路线图", "answers": []})
-        else:
-            for q in questions:
-                sections.append({"title": q[:20], "answers": [q]})
-        return sections
-
-    def _guardrails(self, report_type: str) -> list:
-        if report_type == "decision_memo":
-            return ["禁止投资评级/目标价/EPS", "禁止二级市场用语", "禁止匿名化委托方", "禁止编造数据（须带来源）"]
-        return ["禁止编造数据", "禁止主观评分"]
-
-    @staticmethod
-    def _extract_keywords(question: str) -> list:
-        """从必答问题提取关键词（用于意图符合性近似匹配）。"""
-        # 去除疑问词/标点，取 2-4 字核心词
-        _stop = {
-            "什么",
-            "多少",
-            "怎么",
-            "为什么",
-            "如何",
-            "是否",
-            "多大",
-            "多久",
-            "？",
-            "?",
-            "，",
-            ",",
-            "。",
-            "、",
-            "的",
-            "了",
-            "？",
-        }
-        words = []
-        for ch in re.split(r"[，。？,?!?]", question):
-            ch = ch.strip()
-            if len(ch) >= 2 and ch not in _stop:
-                words.append(ch[:6])
-        # 追加高频业务词（行业关键词）
-        for kw in [
-            "市场",
-            "规模",
-            "投入",
-            "产出",
-            "卡位",
-            "风险",
-            "损失",
-            "估值",
-            "竞争",
-            "渠道",
-            "代工",
-            "衍生",
-            "期权",
-            "技术",
-            "政策",
+        
+        for pattern in question_patterns:
+            matches = re.findall(pattern, text)
+            questions.extend(matches)
+        
+        # 去重
+        seen = set()
+        unique = []
+        for q in questions:
+            q = q.strip()
+            if q and q not in seen:
+                seen.add(q)
+                unique.append(q)
+        
+        return unique[:10]  # 最多 10 个显式问题
+    
+    def _generate_implicit_questions(self, problem_classes: List[ProblemClass], context: Dict) -> List[str]:
+        """基于问题类别生成隐式问题"""
+        implicit = []
+        
+        for cls in problem_classes:
+            if cls == ProblemClass.PROFITABILITY_ANALYSIS:
+                implicit.extend([
+                    "毛利率变化的核心驱动因素是什么？",
+                    "净利率是否可持续？",
+                    "ROE 分解：利润率、周转率、杠杆谁在驱动？"
+                ])
+            elif cls == ProblemClass.GROWTH_ANALYSIS:
+                implicit.extend([
+                    "增长是否可持续？",
+                    "增长来自量还是价？",
+                    "市场空间还能支撑多久？"
+                ])
+            elif cls == ProblemClass.VALUATION:
+                implicit.extend([
+                    "当前估值是否合理？",
+                    "多模型估值是否自洽？",
+                    "关键假设敏感性如何？"
+                ])
+            elif cls == ProblemClass.COMPETITIVE_POSITION:
+                implicit.extend([
+                    "核心竞争优势是什么？",
+                    "护城河是加宽还是收窄？",
+                    "竞争格局是否发生结构性变化？"
+                ])
+            elif cls == ProblemClass.RISK_ASSESSMENT:
+                implicit.extend([
+                    "最大的下行风险是什么？",
+                    "压力测试下的极端情况如何？",
+                    "关键假设失效的概率多大？"
+                ])
+        
+        return list(dict.fromkeys(implicit))[:8]  # 去重，最多 8 个
+    
+    def _extract_constraints(self, text: str, context: Dict) -> Dict[str, Any]:
+        """提取约束条件"""
+        constraints = {}
+        
+        # 时间约束
+        time_matches = re.findall(r'(20\d{2})年?', text)
+        if time_matches:
+            constraints["time_horizon"] = time_matches
+        
+        # 数值约束
+        for pattern, key in [
+            (r'不低于\s*(\d+(?:\.\d+)?)\s*%', "min_margin"),
+            (r'不高于\s*(\d+(?:\.\d+)?)\s*倍', "max_pe"),
+            (r'目标价\s*(\d+(?:\.\d+)?)\s*元', "target_price"),
         ]:
-            if kw in question:
-                words.append(kw)
-        return words
-
-
-def parse_requirement_cli(asset: str, requirement: str, report_type: str = "decision_memo", client: str = "") -> dict:
-    """CLI 便捷入口。"""
-    ip = IntentParser()
-    return ip.parse(asset, report_type, requirement, client)
+            matches = re.findall(pattern, text)
+            if matches:
+                constraints[key] = matches[0]
+        
+        # 排除领域
+        exclude_keywords = ["不关注", "排除", "忽略", "不考虑"]
+        for kw in exclude_keywords:
+            if kw in text:
+                constraints.setdefault("exclude", []).append(kw)
+        
+        return constraints
+    
+    def _extract_time_horizon(self, text: str, context: Dict) -> Optional[str]:
+        """提取时间跨度"""
+        patterns = [
+            r'(未来\s*\d+\s*年?)',
+            (r'未来\s*\d+\s*季度?'),
+            (r'未来\s*\d+\s*月?'),
+            (r'短期|中期|长期'),
+        ]
+        for pattern in patterns:
+            matches = re.findall(pattern, text)
+            if matches:
+                return matches[0]
+        return None
+    
+    def _extract_focus_areas(self, text: str, context: Dict) -> List[str]:
+        """提取关注领域"""
+        focus_map = {
+            "营收": "revenue",
+            "利润": "profit",
+            "毛利": "gross_margin",
+            "净利": "net_profit",
+            "现金流": "cash_flow",
+            "估值": "valuation",
+            "风险": "risk",
+            "竞争": "competition",
+            "增长": "growth",
+            "分红": "dividend",
+        }
+        
+        focus = []
+        for kw, area in focus_map.items():
+            if kw in text:
+                focus.append(area)
+        return list(dict.fromkeys(focus))  # 去重保序
+    
+    def _extract_exclude_areas(self, text: str, context: Dict) -> List[str]:
+        """提取排除领域"""
+        exclude = []
+        exclude_keywords = ["不关注", "排除", "忽略", "不考虑"]
+        for kw in exclude_keywords:
+            if kw in text:
+                # 简单提取后面的词
+                idx = text.find(kw)
+                if idx >= 0:
+                    after = text[idx+len(kw):idx+len(kw)+20]
+                    exclude.append(after.strip().split()[0] if after.strip() else kw)
+        return exclude

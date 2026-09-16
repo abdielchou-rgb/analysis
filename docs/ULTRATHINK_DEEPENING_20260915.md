@@ -1,7 +1,7 @@
 # 二号分析师批判深度复盘与施工方案增强版
 
-**日期**：2026-09-15  
-**性质**：对前序批判（TOBILLY.md）与施工方案（重构施工方案.md）的深度复盘、补全与风险预判  
+**日期**：2026-09-15
+**性质**：对前序批判（TOBILLY.md）与施工方案（重构施工方案.md）的深度复盘、补全与风险预判
 **状态**：自查通过，可直接落地执行
 
 ---
@@ -180,7 +180,7 @@ class ProbabilisticBudget:
         self.p50 = p50
         self.p99 = p99
         self.hard_timeout = hard_timeout
-    
+
     def allocate(self, stage: str, confidence: float = 0.95) -> float:
         # 基于 Weibull/Log-normal 拟合历史延迟分布
         return self._percentile(stage, confidence)
@@ -337,6 +337,6 @@ grep -rn "\.get(.*[0-9])" core/ pipeline/ | grep -v "timeout\|max_tokens\|limit"
 
 ---
 
-*文档版本：v1.0*  
-*生成时间：2026-09-15*  
+*文档版本：v1.0*
+*生成时间：2026-09-15*
 *自查状态：通过*

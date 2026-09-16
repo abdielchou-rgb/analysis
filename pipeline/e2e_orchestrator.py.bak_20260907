@@ -4,8 +4,7 @@ e2e_orchestrator.py V4 - Full integration with all new modules.
 
 from __future__ import annotations
 
-import asyncio
-from datetime import datetime
+import datetime
 import logging
 import os
 import re
@@ -23,41 +22,6 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 logger = logging.getLogger("2hao.e2e")
-
-
-def _record_kb_injection_metrics(context: dict, sw) -> None:
-    """P1-3（2026-09-07）：把写作节点实测注入的 KB/MKB 条数写进 context。
-
-    供 validate 节点在构造 IronGate 后 set_kb_injection_counts 做强检查
-    （注入 N 条 → 正文至少引用 N×0.5）。提取为模块级小函数便于单测；
-    必须只在实际写成功的路径调用（在 try/except RuntimeError 之后），
-    否则会落进 except 内 raise 之后的死代码区。
-
-    P1（2026-09-07）：额外写入 mkb_retrieved/kb_retrieved（注入前检索命中数），
-    供三段漏斗 retrieved→injected→cited 诊断。
-    """
-    try:
-        _kb_m = getattr(sw, "_kb_injection_metrics", None) or {"kb_count": 0, "mkb_count": 0}
-        _kb_ids = getattr(sw, "_kb_injection_last_ids", None) or {"kb": [], "mkb": []}
-        # P1: 从写作器或 context 读取 KB/MKB 检索命中数（注入前）
-        _mkb_retrieved = getattr(sw, "_mkb_retrieved_count", None)
-        if _mkb_retrieved is None:
-            _mkb_retrieved = context.get("mkb_retrieved_count", 0)
-        _kb_retrieved = getattr(sw, "_kb_retrieved_count", None)
-        if _kb_retrieved is None:
-            _kb_retrieved = context.get("kb_retrieved_count", 0)
-        context["kb_injection_metrics"] = {
-            "kb_injected": int(_kb_m.get("kb_count", 0) or 0),
-            "mkb_injected": int(_kb_m.get("mkb_count", 0) or 0),
-            "kb_retrieved": int(_kb_retrieved or 0),
-            "mkb_retrieved": int(_mkb_retrieved or 0),
-            "kb_ids": list(_kb_ids.get("kb", []) or []),
-            "mkb_ids": list(_kb_ids.get("mkb", []) or []),
-        }
-    except Exception as _kme:  # pragma: no cover - 观测失败不应影响写报告
-        logger.debug("[KB-METRICS] 写入 context 失败: %s", _kme)
-
-
 # === V51 merge: analysis modules (optional, with fallback) ===
 try:
     from core.argument import ArgumentEngine
@@ -126,161 +90,6 @@ try:
 except ImportError:
     _HAS_FORWARDPICKS = False
     logger.warning("V51 import failed: _HAS_FORWARDPICKS=False, module unavailable")
-
-
-# ── Evidence-Grounded Delta-Only Rewrite helpers ────────────────────
-
-# 维度 ID → 中文关键词（用于从 gate_feedback/review_comments 匹配失败维度）
-_DIM_KEYWORDS: dict[str, list[str]] = {
-    "business_model": ["商业模式", "护城河", "竞争壁垒", "盈利模式"],
-    "financial_analysis": ["财务", "盈利", "毛利率", "ROE", "营收", "利润"],
-    "competitive_position": ["竞争", "市场份额", "行业地位", "竞争格局"],
-    "growth_drivers": ["增长", "驱动力", "市场规模", "CAGR", "扩容"],
-    "governance_esg": ["治理", "ESG", "合规", "信息披露"],
-    "valuation_assessment": ["估值", "DCF", "PE", "目标价", "可比"],
-    "catalyst": ["催化剂", "事件驱动", "时间窗口"],
-    "falsification": ["证伪", "风险因子", "反方"],
-    "capital_flow": ["资金", "融资", "股东", "增减持"],
-    "core_disagreement": ["分歧", "预期差", "一致预期"],
-    "decision_gate": ["决策", "投资建议", "评级"],
-    "bold_call": ["Bold Call", "核心判断", "观点"],
-    "risk": ["风险", "威胁", "不确定性", "下行"],
-    "market_sizing": ["市场规模", "TAM", "SAM", "市场空间"],
-    "supply_chain": ["供应链", "产业链", "上游", "下游"],
-    "policy": ["政策", "监管", "法规", "产业政策"],
-    "trend": ["趋势", "技术路线", "演变方向"],
-    "headline": ["业绩概览", "营收", "利润", " headline"],
-    "key_surprise": ["超预期", "低于预期", " surprise", "miss"],
-    "segment_analysis": ["分部", "业务拆分", "分业务"],
-    "balance_cashflow": ["资产负债", "现金流", "负债率"],
-    "outlook_implication": ["展望", "指引", "业绩指引"],
-}
-
-
-def _locate_failed_dims(
-    gate_feedback: str,
-    review_comments: str,
-    context: dict,
-) -> list[str]:
-    """从 gate_feedback + review_comments 提取失败维度 ID 列表。
-
-    三重匹配：
-    1. gate_feedback 中的 [DIM:xxx] 标记
-    2. review_comments 中的维度中文关键词
-    3. context["failed_dims"]（上游显式标注）
-    """
-    failed: set[str] = set()
-
-    # 来源 1：context 显式标注
-    for d in context.get("failed_dims", []):
-        if isinstance(d, str):
-            failed.add(d)
-
-    # 来源 2：gate_feedback 中的 [DIM:xxx] 标记
-    for m in re.finditer(r"\[DIM:([a-z_]+)\]", gate_feedback):
-        failed.add(m.group(1))
-
-    # 来源 3：中文关键词匹配
-    text = gate_feedback + "\n" + review_comments
-    for dim_id, keywords in _DIM_KEYWORDS.items():
-        for kw in keywords:
-            if kw in text:
-                failed.add(dim_id)
-                break
-
-    return sorted(failed)
-
-
-def _build_dim_kb_hints(
-    failed_dims: list[str],
-    context: dict,
-) -> str:
-    """为失败维度构建精准 KB 证据提示（Evidence-Grounded Rewrite）。
-
-    从 context["collected_data"]["_dim_kb_map"] 查对应 MKB 条目，
-    格式化为 rewrite prompt 可直接消费的证据块。
-    """
-    if not failed_dims:
-        return ""
-
-    _cd = context.get("collected_data") or {}
-    _dkm = _cd.get("_dim_kb_map") or {}
-    if not _dkm:
-        return ""
-
-    try:
-        from core.methodology_kb import _format_entry
-
-        parts: list[str] = []
-        for dim in failed_dims:
-            entries = _dkm.get(dim, [])
-            if not entries:
-                continue
-            parts.append(f"### 维度: {dim}")
-            for i, e in enumerate(entries, 1):
-                parts.append(_format_entry(e, i))
-            parts.append("")
-
-        if not parts:
-            return ""
-
-        header = (
-            "以下知识库条目按失败维度精准匹配。修改时必须引用其中的框架/数据，"
-            "不得编造不在这些条目中的方法论名称或数据。"
-        )
-        return header + "\n\n" + "\n".join(parts)
-    except Exception:
-        return ""
-
-
-def _build_numeric_anchor_summary(context: dict) -> str:
-    """2026-09-09（Gate 0.95 提分）：从 data_dict / 锚卡提取关键指标口径。
-
-    rewrite 节点的数值锚卡——write 有"全文数值一致"强制而 rewrite 没有，
-    导致重写后目标价两值并存（260 vs 300）、毛利率与 data_dict 冲突。
-    此处把 data_dict 的关键指标渲染为锚卡摘要，注入 rewrite prompt。
-    纯确定性提取，无 LLM。
-    """
-    try:
-        lines: list[str] = []
-        cd = context.get("collected_data") or {}
-        # 来源 1：data_dict（section_writer 写入时构建的共享数据字典）
-        dd = cd.get("data_dict") or {}
-        if isinstance(dd, dict):
-            _KEY_ANCHORS = [
-                ("target_price", "目标价"),
-                ("rating", "评级"),
-                ("gross_margin", "毛利率"),
-                ("revenue", "营收"),
-                ("net_profit", "净利润"),
-                ("market_share", "市场份额"),
-                ("pe", "PE"),
-                ("roe", "ROE"),
-            ]
-            for key, label in _KEY_ANCHORS:
-                if key in dd and dd[key] is not None:
-                    lines.append(f"- {label}: {dd[key]}")
-        # 来源 2：chart_data 锚定值（write 节点锚卡同源）
-        cdata = cd.get("chart_data") or {}
-        if isinstance(cdata, dict):
-            for k in ("fig_target_price", "fig_valuation_summary"):
-                v = cdata.get(k)
-                if isinstance(v, dict) and v:
-                    for kk, vv in list(v.items())[:5]:
-                        if isinstance(vv, (int, float, str)):
-                            lines.append(f"- {k}.{kk}: {vv}")
-        # 来源 3：报告正文已有的目标价（cross_section_consistency 的 canonical）
-        # ——锚定到 state_anchor / 上轮 Gate 认可值，防止 drift
-        sa = context.get("state_anchor") or {}
-        if isinstance(sa, dict):
-            tp = sa.get("target_price")
-            if tp:
-                lines.append(f"- target_price(state_anchor): {tp}")
-        if not lines:
-            return ""
-        return "\n".join(lines[:20])
-    except Exception:
-        return ""
 
 
 class E2ENodes:
@@ -403,8 +212,6 @@ class E2ENodes:
         修复（2026-08-01 审计）：写改循环 MAX_ATTEMPTS 内每轮重建图重跑网络采集。
         若 orchestrator 已注入缓存数据（_data_cached=True），直接复用，不重采。
         """
-        _d_t0 = time.perf_counter()
-        _d_sub = {}  # P0-2a: 子步骤耗时
         asset = context.get("asset", "")
         rt = context.get("report_type", "industry_deep")
         data = None
@@ -416,7 +223,6 @@ class E2ENodes:
             return {"collected_data": cached, "_data_cached": True}
 
         # Primary: DataCollectorV5 (Tavily+yfinance+akshare multi-phase)
-        _d_primary_t0 = time.perf_counter()
         try:
             from pipeline.data_collector import DataCollectorV5
 
@@ -431,11 +237,9 @@ class E2ENodes:
                 logger.info("[DATA] DataCollectorV5: %d keys", len(data))
         except Exception as e:
             logger.warning("[DATA] DataCollectorV5 failed: %s", e)
-        _d_sub["primary"] = round(time.perf_counter() - _d_primary_t0, 1)
 
         # Fallback: DataPipeline
         if not data or len(data) < 2:
-            _d_fallback_t0 = time.perf_counter()
             try:
                 from pipeline.data_pipeline import DataPipeline
 
@@ -446,7 +250,6 @@ class E2ENodes:
                     logger.info("[DATA] DataPipeline fallback: merged %d keys", len(data_fb))
             except Exception as e2:
                 logger.warning("[DATA] DataPipeline fallback: %s", e2)
-            _d_sub["fallback"] = round(time.perf_counter() - _d_fallback_t0, 1)
 
         if not data:
             context["degradation_level"] = max(context.get("degradation_level", 0), 2)
@@ -465,9 +268,6 @@ class E2ENodes:
             context["provenance"] = dp2
         except Exception as e:
             logger.debug("Provenance: %s", e)
-        # P0-2a: data 节点内分段耗时——primary/fallback 各花多久一目了然
-        _d_total = round(time.perf_counter() - _d_t0, 1)
-        logger.info("[DATA][PROFILE] %.1fs breakdown: %s", _d_total, _d_sub)
         return {"collected_data": data}
 
     @staticmethod
@@ -742,12 +542,8 @@ class E2ENodes:
                 if _rq or r.get("followup_queries"):
                     _cd["_research_questions"] = _rq[:20]
                     _cd["_followup_queries"] = r.get("followup_queries", [])[:5]
-                # Evidence-Grounded Writing：维度→MKB 映射入 collected_data
-                _dkm = r.get("dim_kb_map")
-                if _dkm:
-                    _cd["_dim_kb_map"] = _dkm
-                out["collected_data"] = _cd
-                context["collected_data"] = _cd
+                    out["collected_data"] = _cd
+                    context["collected_data"] = _cd
             if r.get("n_conflicts"):
                 import logging
 
@@ -894,115 +690,8 @@ class E2ENodes:
         return {"chart_paths": context.get("chart_paths", {})}
 
     @staticmethod
-    def _write_sections_wrapper(node_id, context):
-        """包装器：根据环境变量决定使用 AnalysisEngine 还是原有实现"""
-        use_analysis_engine = os.environ.get("USE_ANALYSIS_ENGINE_WRITE", "0") == "1"
-
-        if use_analysis_engine:
-            import asyncio
-            return asyncio.run(E2ENodes._write_sections_with_analysis_engine(node_id, context))
-        else:
-            import asyncio
-            return asyncio.run(E2ENodes.write_sections(node_id, context))
-
-    @staticmethod
-    async def _write_sections_with_analysis_engine(node_id, context):
-        """使用 AnalysisEngine 进行写作阶段（新版本）"""
-        from core.analysis_engine import AnalysisEngine, ExecutionConfig, ExecutionMode
-        from core.analysis_context import (
-            AnalysisContext, Intent, IntentType, AnalysisMode,
-            EvidenceBundle, FindingStore
-        )
-
-        # 从 context 获取必要信息
-        asset = context.get("asset", "")
-        report_type = context.get("report_type", "industry_deep")
-        style = context.get("style", "cicc")
-
-        # 创建 Intent
-        intent = Intent(
-            asset=context.get("asset", ""),
-            report_type=IntentType(report_type),
-            style=style,
-            mode=ExecutionMode.BATCH,
-        )
-
-        # 创建初始 Context
-        context_obj = AnalysisContext(
-            version=1,
-            parent_hash="",
-            intent=Intent(
-                asset=context.get("asset", ""),
-                report_type=report_type,
-                style=style,
-            ),
-            mode=AnalysisMode.BATCH,
-            evidence=None,  # 稍后填充
-            methods=(),
-            findings=FindingStore(),
-            sections=(),
-        )
-
-        # 准备证据包
-        from core.analysis_context import EvidenceBundle, FindingStore
-        evidence = EvidenceBundle().with_update(
-            raw_data=context.get("collected_data", {}) or {},
-            chart_data=context.get("chart_data", {}) or {},
-        )
-
-# 运行 AnalysisEngine
-        engine = AnalysisEngine.get_instance()
-        await engine.initialize()
-
-        result = await engine.run(
-            asset=context.get("asset", ""),
-            report_type=report_type,
-            style=style,
-            mode=ExecutionMode.BATCH,
-            custom_requirements=context.get("custom_requirements", ""),
-            client_questions=context.get("client_questions"),
-        )
-
-        # 将结果写回 context (AgentGraph context dict)
-        context_obj = result.context
-        # Generate report text using ReportAssembler
-        from core.report_assembler import ReportAssembler, ReportMetadata
-        from core.finding_store import LineageTracker
-        assembler = ReportAssembler()
-        # Create mock metadata and lineage_tracker for the assembler
-        mock_metadata = ReportMetadata(
-            asset=context.get("asset", ""),
-            report_type=report_type,
-            style=style,
-            generated_at=datetime.now(),
-            pipeline_version="2.0.0",
-            gate_score=0.0,
-            gate_passed=False,
-            attempt=context.get("attempt", 1),
-            total_time_seconds=0.0,
-            llm_calls=0,
-            total_tokens=0,
-            cost_usd=0.0
-        )
-        mock_lineage_tracker = LineageTracker()
-        artifact = assembler.assemble(context_obj, mock_metadata, mock_lineage_tracker, style)
-        report_text = artifact.markdown if artifact else ""
-        context["report_text"] = report_text
-        context["gate_result"] = {"overall_score": 0.0, "passed": False}
-
-        return {"report_text": context["report_text"]}
-
-    @staticmethod
     def write_sections(node_id, context):
 
-        # 检查是否启用 AnalysisEngine 写作模式
-        use_analysis_engine = os.environ.get("USE_ANALYSIS_ENGINE_WRITE", "0") == "1"
-
-        if use_analysis_engine:
-            # 使用 AnalysisEngine 进行写作
-            return E2ENodes._write_sections_with_analysis_engine(node_id, context)
-
-        # 原有实现
         from pipeline.section_writer import SectionWriter
 
         sw = SectionWriter(context.get("report_type", "industry_deep"), context.get("style", "cicc"))
@@ -1093,9 +782,6 @@ class E2ENodes:
                 raise
             raise
         context["report_text"] = text
-        # P1-3（2026-09-07）：成功路径才记录注入观测——此前误插进 except 内
-        # raise 之后成为死代码，kb_injection_metrics 永远为空 → Gate 只跑弱检查。
-        _record_kb_injection_metrics(context, sw)
         # R85+（2026-08-26）：Gate 后处理二次保底——强制修复高频失败项
         try:
             from pipeline.section_writer import SectionWriter
@@ -1187,11 +873,10 @@ class E2ENodes:
 
     @staticmethod
     def rewrite_sections(node_id, context):
-        """P2 双模型对抗 + Evidence-Grounded Delta-Only Rewrite。
+        """P2 双模型对抗：免费模型重写节点。
 
         只在 attempt > 0 且有 review_comments 时执行。
         opencode_zen/zhipu 按 DeepSeek 审稿意见定向重写失败段。
-        维度级 KB 证据随失败维度精准注入（不发全文 KB）。
         """
         if context.get("attempt", 0) == 0:
             logger.info("[REWRITE] attempt 0 — skip rewrite (first draft)")
@@ -1237,33 +922,7 @@ class E2ENodes:
             # 直接把 gate_feedback 作为重写 prompt
             instructions = [{"section": "全局", "fix": gate_feedback[:2000]}]
 
-        # Evidence-Grounded Delta-Only Rewrite：
-        # 1. 从 gate_feedback + review_comments 提取失败维度
-        # 2. 从 dim_kb_map 查对应 KB 条目
-        # 3. 构建维度级重写提示（不是全文 KB）
-        _failed_dims = _locate_failed_dims(gate_feedback, review_comments, context)
-        _dim_kb_hints = ""
-        if _failed_dims:
-            _dim_kb_hints = _build_dim_kb_hints(_failed_dims, context)
-
-        # ── 2026-09-09（Gate 0.95 提分）：数值锚卡约束注入 ──
-        # write 节点有"全文数值以锚卡为准"强制，rewrite 此前没有 →
-        # 审稿重写后目标价 260(锚卡) vs 300(旧叙事) 并存、毛利率写串，
-        # cross_section_consistency + data_dict_refs 双失分（实测 0.9 分）。
-        # 修复：从 data_dict / 锚卡提取关键指标口径，作为重写的硬约束。
-        _anchor_summary = _build_numeric_anchor_summary(context)
-        _anchor_block = ""
-        if _anchor_summary:
-            _anchor_block = (
-                "\n## 数值锚卡（最高优先级——与以下口径冲突的旧数字一律以锚卡为准修正）\n"
-                f"{_anchor_summary}\n"
-                "## [数值一致性强制]\n"
-                "1. 同一指标（目标价/评级/毛利率/营收/净利）全文只允许一个值；\n"
-                "2. 报告中任何数字与锚卡冲突时，以锚卡为准，禁止保留旧叙事数字；\n"
-                "3. 修改后自查一遍：目标价、评级、核心财务指标是否与锚卡完全一致。\n"
-            )
-
-        # 重写 prompt：将审稿意见 + 维度级 KB 证据注入
+        # 重写 prompt：将审稿意见注入写作 prompt
         _review_text = "\n".join(f"### {inst['section']}\n{inst['fix']}" for inst in instructions[:8])
 
         rewrite_prompt = f"""你是资深投资研究报告撰写人。请根据审稿意见定向修改报告。
@@ -1273,19 +932,14 @@ class E2ENodes:
 
 ## 当前报告（前20000字）
 {report_text[:20000]}
-{_anchor_block}
+
 ## 修改要求
 1. 只修改审稿意见中明确指出的问题
 2. 保持报告其他部分不变
 3. 保留所有数据标注 (A)/(E)/(F)、图表引用 ![](chart:xxx)
 4. 输出完整修改后的报告（不是 diff）
 5. 确保输出长度不低于原报告的80%
-6. 严格遵守上方数值锚卡——禁止同指标出现两个不同值
 """
-        # Evidence-Grounded：维度级 KB 证据注入（只发失败维度的 KB 条目）
-        if _dim_kb_hints:
-            rewrite_prompt += f"\n## 失败维度的参考证据（精准匹配，必须引用到修改后段落中）\n{_dim_kb_hints}\n"
-
         try:
             from core.deepseek_client import call_llm
 
@@ -1318,12 +972,11 @@ class E2ENodes:
                 return {}
 
             logger.info(
-                "[REWRITE] %s 重写完成: %d → %d chars (provider=%s, failed_dims=%s)",
+                "[REWRITE] %s 重写完成: %d → %d chars (provider=%s)",
                 asset,
                 len(report_text),
                 len(rewritten_text),
                 rewrite_provider,
-                _failed_dims[:5] if _failed_dims else [],
             )
             return {"report_text": rewritten_text}
         except Exception as e:
@@ -1529,8 +1182,6 @@ class E2ENodes:
 
     @staticmethod
     def validate(node_id, context):
-        _v_t0 = time.perf_counter()
-        _v_sub = {}  # P0-2a: 子步骤耗时
         text = context.get("final_text", "") or context.get("report_text", "")
         # 2026-09-04（0.95 冲刺）：双声部分离前置到 Gate 前。
         # 根因：main.py 的 separate_voices 在管线返回后才跑——但 Gate 在此之前
@@ -1566,7 +1217,6 @@ class E2ENodes:
         tmp_path = os.path.join(context.get("output_dir", str(_ROOT / "output")), "_gate_check.md")
         with open(tmp_path, "w", encoding="utf-8") as f:
             f.write(text)
-        _v_sub["pre_gate"] = round(time.perf_counter() - _v_t0, 1)
 
         # D1: 节点完成契约——校验必需节点是否产出 evidence
         _node_evidence = {
@@ -1607,27 +1257,6 @@ class E2ENodes:
             client_questions=context.get("client_questions", None),
             collected_data=context.get("collected_data", {}),
         )  # R84
-        # P1-2/P1-3（2026-09-07 全量推进）：把写作节点实测注入的 KB/MKB 条数
-        # 传给 IronGate——无注入计数时 kb_citation_coverage 只跑弱检查（有痕迹
-        # 即放行）；传入后升级为强不变式"注入 N 条 → 正文至少消费 N×0.5"。
-        try:
-            _kb_m = context.get("kb_injection_metrics") or {}
-            ig.set_kb_injection_counts(
-                kb_count=int(_kb_m.get("kb_injected", 0) or 0),
-                mkb_count=int(_kb_m.get("mkb_injected", 0) or 0),
-                retrieved_count=int(_kb_m.get("mkb_retrieved", 0) or 0),
-                kb_retrieved_count=int(_kb_m.get("kb_retrieved", 0) or 0),
-            )
-            if _kb_m.get("kb_injected") or _kb_m.get("mkb_injected"):
-                logger.info(
-                    "[KB-CITATION] Gate 强检查生效: KB注入=%d retrieved=%d MKB注入=%d retrieved=%d",
-                    _kb_m.get("kb_injected", 0),
-                    _kb_m.get("kb_retrieved", 0),
-                    _kb_m.get("mkb_injected", 0),
-                    _kb_m.get("mkb_retrieved", 0),
-                )
-        except Exception as _kbe:
-            logger.debug("[KB-CITATION] set_kb_injection_counts 失败: %s", _kbe)
 
         # FP7b: Degradation-aware handling（P2-I 2026-07-31 审计修复）
         # 不再全局降低 min_score —— 数据质量越差，门禁不应越松。
@@ -1641,9 +1270,7 @@ class E2ENodes:
             context["gate_result"] = {"passed": False, "score": 0.0, "failures": ["L3: Core LLM unavailable"]}
             return {"gate_result": context["gate_result"]}
 
-        _ig_t0 = time.perf_counter()
         result = ig.run_all()
-        _v_sub["iron_gate"] = round(time.perf_counter() - _ig_t0, 1)
         context["gate_result"] = result
         context["ig_report"] = result.to_dict()
 
@@ -1713,10 +1340,6 @@ class E2ENodes:
                 _obs.log_quality_trend("failure_count", float(_n_fail), sample_size=1)
         except Exception as _qt_e:
             logger.debug("[QUALITY-TREND] 写入失败: %s", str(_qt_e)[:60])
-
-        # P0-2a: validate 节点内分段耗时——gate 101 项里哪段慢一目了然
-        _v_total = round(time.perf_counter() - _v_t0, 1)
-        logger.info("[VALIDATE][PROFILE] %.1fs breakdown: %s", _v_total, _v_sub)
 
         return {"gate_result": result.to_dict() if hasattr(result, "to_dict") else {}}
 
@@ -1798,10 +1421,7 @@ class E2ENodes:
                         "timestamp": _dt.datetime.now().isoformat(),
                         "attempt": context.get("attempt", 0),
                         "gate_score": gate.get("overall_score", gate.get("score", 0)),
-                        # 2026-09-14 审计修复：不再硬编码 True。本节点上游 1643 行已有
-                        # `if not gate.get("passed", False): return` 守卫，读真值不改变现有行为，
-                        # 但可避免预写点与权威写入点（_write_pipeline_fingerprint）未来分叉。
-                        "gate_passed": bool(gate.get("passed", False)),
+                        "gate_passed": True,
                         "via_pipeline": True,
                         "pipeline": "E2EOrchestratorV2",
                         # P0-1: 正文哈希绑定——用当前 text（与 export 一致）
@@ -1848,8 +1468,6 @@ class E2ENodes:
 
     @staticmethod
     def record_results(node_id, context):
-        _r_t0 = time.perf_counter()
-        _r_sub = {}  # P0-2a: 子步骤耗时
         try:
             from pipeline.learning_loop import LearningLoop
 
@@ -1857,7 +1475,6 @@ class E2ENodes:
             # 非 score——此前用 gate.get("score",0) 恒得 0，导致 report_scores 62% 假 0 分。
             gate = context.get("gate_result", {})
             ll = LearningLoop()
-            _r_sub["import"] = round(time.perf_counter() - _r_t0, 1)
             _score = gate.get("overall_score", gate.get("score", 0))
             ll.after_report(
                 context.get("asset", ""),
@@ -1925,7 +1542,6 @@ class E2ENodes:
                 logger.warning("[REFLECT] e2e 出口反思记录失败: %s", str(_refl_e)[:80])
 
             # Extract and register bold calls
-            _r_bold_t0 = time.perf_counter()
             text = context.get("final_text", "") or context.get("report_text", "")
             if text:
                 from core.bold_call_extractor import BoldCallExtractor
@@ -1974,7 +1590,6 @@ class E2ENodes:
                         logger.info("[FORWARDPICKS] %d predictions recorded", len(calls))
                     except Exception as e:
                         logger.debug("[FORWARDPICKS] failed: %s", e)
-            _r_sub["bold_calls"] = round(time.perf_counter() - _r_bold_t0, 1)
 
             # FP5: Validate expired predictions against market data
             try:
@@ -2025,9 +1640,6 @@ class E2ENodes:
 
         except Exception as e:
             logger.debug("[RECORD] failed: %s", e)
-        # P0-2a: record_results 节点内分段耗时
-        _r_total = round(time.perf_counter() - _r_t0, 1)
-        logger.info("[RECORD][PROFILE] %.1fs breakdown: %s", _r_total, _r_sub)
         return {"_recorded": True}
 
     @staticmethod
@@ -2210,10 +1822,7 @@ class E2EOrchestratorV2:
             "style": self.style,
             "timestamp": _dt.datetime.now().isoformat(),
             "attempt": ctx.get("attempt", 0),
-            # 2026-09-14 审计修复：GateReport.to_dict() 的键是 overall_score，不存在 "score"。
-            # 原写法 gate.get("score", 0) 恒得 0 → 每份指纹的 gate_score 都是 0，
-            # 与真实分数脱钩（同文件 1746/1892 已修过同一 bug，此处漏网）。
-            "gate_score": (gate.get("overall_score", gate.get("score", 0)) if isinstance(gate, dict) else 0),
+            "gate_score": gate.get("score", 0) if isinstance(gate, dict) else 0,
             "gate_passed": gate.get("passed", False) if isinstance(gate, dict) else False,
             "judge_ver": gate.get("judge_ver", "") if isinstance(gate, dict) else "",
             "gate_config_hash": gate.get("gate_config_hash", "") if isinstance(gate, dict) else "",
@@ -2504,9 +2113,7 @@ class E2EOrchestratorV2:
                 desc="RSS/PDF/patent feeds (merged into collected_data)",
             )
             g.add_node("hypothesis", E2ENodes.hypothesis_check, deps=[], desc="hypothesis T0.5")
-            g.add_node(
-                "data", E2ENodes.data, deps=[], desc="data + provenance", timeout_s=int(settings.data_node_budget_s())
-            )
+            g.add_node("data", E2ENodes.data, deps=[], desc="data + provenance")
             g.add_node(
                 "universe_build",
                 E2ENodes.universe_build,
@@ -2537,7 +2144,7 @@ class E2EOrchestratorV2:
             g.add_node("charts", E2ENodes.charts, deps=["enrich"], desc="charts")
             g.add_node(
                 "write_sections",
-                E2ENodes._write_sections_wrapper,
+                E2ENodes.write_sections,
                 deps=[
                     "enrich",
                     "charts",
@@ -2552,7 +2159,7 @@ class E2EOrchestratorV2:
                 # R89（2026-08-25）：串行慢速 provider（免费/stealth 推理模型）下
                 # 一组 3 段写作可达 20+ 分钟，默认 300s 必超时。可用环境变量放宽。
                 timeout_s=int(os.environ.get("WRITE_NODE_TIMEOUT_S", "600")),
-                desc="write (dimension-level parallel or AnalysisEngine)",
+                desc="write (dimension-level parallel)",
             )
             g.add_node("style", E2ENodes.style_compile, deps=["write_sections", "charts"], desc="style compile")
             g.add_node(
@@ -2562,13 +2169,7 @@ class E2EOrchestratorV2:
                 desc="template enforcer (after assemble, checks final_text)",
             )
             g.add_node("assemble", E2ENodes.assemble, deps=["style", "charts"], desc="assemble")
-            g.add_node(
-                "validate",
-                E2ENodes.validate,
-                deps=["assemble"],
-                desc="gate",
-                timeout_s=int(settings.validate_node_budget_s()),
-            )
+            g.add_node("validate", E2ENodes.validate, deps=["assemble"], desc="gate")
             # P2 双模型对抗：Gate 失败后 DeepSeek 审稿 → 免费模型重写
             g.add_node(
                 "review_sections",
@@ -2587,13 +2188,7 @@ class E2EOrchestratorV2:
             g.add_node("critic", E2ENodes.critic_review, deps=["validate"], desc="multi-critic panel")
             g.add_node("compliance", E2ENodes.compliance_check, deps=["validate", "critic"], desc="compliance")
             g.add_node("export_docx", E2ENodes.export_docx, deps=["compliance"], desc="export")
-            g.add_node(
-                "record_results",
-                E2ENodes.record_results,
-                deps=["validate"],
-                desc="record + bold calls",
-                timeout_s=int(settings.record_node_budget_s()),
-            )
+            g.add_node("record_results", E2ENodes.record_results, deps=["validate"], desc="record + bold calls")
 
             # 注入输出契约
             contracts = _build_output_contracts()
