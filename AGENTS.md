@@ -74,3 +74,15 @@ scheduler.py / main.py (入口)
 2. PDF 导出依赖 fpdf2，复杂排版（图表混排、自定义字体）有限
 3. IronGate 101项注册检查中一部分是 heuristic 判定（非 LLM 评估）
 4. 版本管理目前手动，CLAUDE.md 需与 harness/pipeline_contract.py 同步
+
+## 代码精简记录
+
+**2026-09-17 方案 A（可验证安全删除）**
+
+删除 104 个文件 / 14,794 行（-5.9%）：
+- legacy/ 遗留代码 7 文件
+- scripts/ 一次性修复脚本 ~80 文件
+- core/ 孤儿模块 4 文件
+- pipeline/ 孤儿模块 3 文件
+
+验证: 81/81 核心测试全绿，零回归
