@@ -1,0 +1,72 @@
+{
+  "baseline_version": "phase9-20260917",
+  "created_at": "2026-09-17",
+  "report_types": {
+    "industry_deep": {
+      "five_tuple": {
+        "gate_score": "pending_llm_run",
+        "kb_citation_cov": "pending_llm_run",
+        "methodology_application": "pending_llm_run",
+        "report_cost": "pending_llm_run",
+        "report_wallclock": "pending_llm_run"
+      },
+      "test_asset": "半导体",
+      "test_style": "cicc"
+    },
+    "listed_company": {
+      "five_tuple": {
+        "gate_score": "pending_llm_run",
+        "kb_citation_cov": "pending_llm_run",
+        "methodology_application": "pending_llm_run",
+        "report_cost": "pending_llm_run",
+        "report_wallclock": "pending_llm_run"
+      },
+      "test_asset": "贵州茅台",
+      "test_style": "cicc"
+    },
+    "unlisted_company": {
+      "five_tuple": {
+        "gate_score": "pending_llm_run",
+        "kb_citation_cov": "pending_llm_run",
+        "methodology_application": "pending_llm_run",
+        "report_cost": "pending_llm_run",
+        "report_wallclock": "pending_llm_run"
+      },
+      "test_asset": "字节跳动",
+      "test_style": "mck"
+    },
+    "earnings_notes": {
+      "five_tuple": {
+        "gate_score": "pending_llm_run",
+        "kb_citation_cov": "pending_llm_run",
+        "methodology_application": "pending_llm_run",
+        "report_cost": "pending_llm_run",
+        "report_wallclock": "pending_llm_run"
+      },
+      "test_asset": "宁德时代",
+      "test_style": "cicc"
+    },
+    "decision_memo": {
+      "five_tuple": {
+        "gate_score": "pending_llm_run",
+        "kb_citation_cov": "pending_llm_run",
+        "methodology_application": "pending_llm_run",
+        "report_cost": "pending_llm_run",
+        "report_wallclock": "pending_llm_run"
+      },
+      "test_asset": "中芯国际",
+      "test_style": "cicc"
+    }
+  },
+  "pre_phase9_regression": {
+    "test_gate_095_fixes": "17/17 pass",
+    "test_evidence_grounded": "11/11 pass",
+    "test_claim_citation": "16/16 pass",
+    "test_agent_graph_contract": "7/7 pass",
+    "test_argument_node_contract": "5/5 pass",
+    "test_kb_citation_coverage": "9/9 pass",
+    "test_kb_methodology_wiring": "14/14 pass",
+    "total": "79/79 core tests pass"
+  },
+  "notes": "Five-tuple baseline requires LLM API access to populate. Pre-Phase-9 regression shows 79/79 core tests pass. Ghost checks: 13 re-registered. Method contracts: 15 covering all 13 ProblemClasses."
+}

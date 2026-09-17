@@ -439,6 +439,24 @@ class IronGate(
             (self._check_cross_industry_contamination, GateSeverity.BLOCKER),
             # P1-2（2026-09-07）：KB/MKB 消费端引用覆盖——注入非空 → 正文回指
             (self._check_kb_citation_coverage, GateSeverity.BLOCKER),
+            # ── Ghost checks 重新注册（2026-09-17 Phase 9 DRIFT 修复）──
+            # 以下 13 个检查项此前已定义但未注册进 _check_funcs，永远不会执行。
+            # analysis_mixin.py:
+            (self._check_subjective_scoring, GateSeverity.QUALITY),
+            (self._check_stock_pick_chain, GateSeverity.QUALITY),
+            (self._check_unlisted_threat, GateSeverity.QUALITY),
+            (self._check_tam_bottomup, GateSeverity.QUALITY),
+            (self._check_regional_penetration, GateSeverity.QUALITY),
+            (self._check_industry_consolidation, GateSeverity.QUALITY),
+            (self._check_core_hypothesis, GateSeverity.BLOCKER),
+            (self._check_esg_materiality, GateSeverity.QUALITY),
+            (self._check_evidence_chain, GateSeverity.BLOCKER),
+            # data_quality_mixin.py:
+            (self._check_data_fidelity, GateSeverity.BLOCKER),
+            (self._check_data_source_accuracy, GateSeverity.BLOCKER),
+            (self._check_financial_fraud_signals, GateSeverity.BLOCKER),
+            # llm_checks_mixin.py:
+            (self._check_llm_data_verification, GateSeverity.QUALITY),
         ]
 
         checks = []

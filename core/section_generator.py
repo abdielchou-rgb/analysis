@@ -366,14 +366,6 @@ class SectionGenerator:
             result = result.replace(placeholder, str(value))
         return result
 
-    def register_template(self, section_id: str, template: str):
-        """注册 Section 模板"""
-        self._templates[section_id] = template
-
-    def register_hook(self, section_id: str, hook: Callable):
-        """注册 Section 生成钩子"""
-        self._section_hooks[section_id] = hook
-
 
 # 全局实例
 _global_section_deps = SectionDependencyGraph()
