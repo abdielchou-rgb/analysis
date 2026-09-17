@@ -257,9 +257,7 @@ def test_kb_category_filter_deduped_and_single_source():
     """P0-3 源码守卫：过滤逻辑与 _indexed_categories 不再复制粘贴。"""
     src = (Path("core/knowledge_base.py")).read_text(encoding="utf-8")
     tree = ast.parse(src)
-    defs = [
-        n for n in ast.walk(tree) if isinstance(n, (ast.FunctionDef,)) and n.name == "_indexed_categories"
-    ]
+    defs = [n for n in ast.walk(tree) if isinstance(n, (ast.FunctionDef,)) and n.name == "_indexed_categories"]
     assert len(defs) == 1, f"_indexed_categories 仍有 {len(defs)} 份重复定义"
     assert src.count("def _relevant_categories(") == 1
     assert src.count("def _indexed_categories(") == 1
@@ -284,37 +282,27 @@ def _build_full_tmp_kb(tmp_path, monkeypatch):
     docs = {
         "01-宏观分析框架/macro-framework.md": (
             "宏观分析框架：信用周期、库存周期、利率、流动性与 GDP 增速决定估值锚。"
-            "货币信用脉冲领先盈利周期两个季度，宏观流动性宽松阶段估值中枢整体上移。"
-            + filler
+            "货币信用脉冲领先盈利周期两个季度，宏观流动性宽松阶段估值中枢整体上移。" + filler
         ),
         "02-行业与公司研究/industry-company.md": (
             "行业与公司研究：产业链位置、景气度与竞争格局决定增长质量。"
-            "对销售与收款环节的核查要落到行业数据与公司口径。"
-            + filler
+            "对销售与收款环节的核查要落到行业数据与公司口径。" + filler
         ),
         "03-估值与测算/valuation-model.md": (
-            "估值与测算：DCF 折现、敏感性分析与可比模型互为印证，"
-            "盈利预测假设须可回溯。"
-            + filler
+            "估值与测算：DCF 折现、敏感性分析与可比模型互为印证，盈利预测假设须可回溯。" + filler
         ),
         "04-回测基线库/backtest-baseline.md": (
-            "回测基线库：历史估值判断结论与方法的回测基线，供本次预测做校准。"
-            + filler
+            "回测基线库：历史估值判断结论与方法的回测基线，供本次预测做校准。" + filler
         ),
         "07-原始文档提取/raw-extract.md": (
-            "原始文档提取：深度研究原文与公司分析资料的结构化提取，"
-            "保留口径与出处。"
-            + filler
+            "原始文档提取：深度研究原文与公司分析资料的结构化提取，保留口径与出处。" + filler
         ),
         "08-四大审计方法论/audit-methodology.md": (
             "四大审计方法论：审计、勾稽、复核、函证与收入确认的实质性程序。"
-            "三表勾稽关系不一致须出具调整分录并复核底稿。"
-            + filler
+            "三表勾稽关系不一致须出具调整分录并复核底稿。" + filler
         ),
         "09-国际投行方法论/ib-methodology.md": (
-            "国际投行方法论：高盛与摩根士丹利研报结构，"
-            "自下而上盈利模型与估值逻辑闭环。"
-            + filler
+            "国际投行方法论：高盛与摩根士丹利研报结构，自下而上盈利模型与估值逻辑闭环。" + filler
         ),
     }
     for rel, text in docs.items():
@@ -344,8 +332,7 @@ def test_inj_kb_str_block_stays_under_writer_cap(tmp_path, monkeypatch):
     )
     assert out, "7 目录迷你库不应返回空注入块"
     assert len(out) <= 1500, (
-        f"KB 注入块 {len(out)} 字 > 写作侧 1500 上限，块尾会被截断；"
-        "需收紧 snippet 或减少每目录条数"
+        f"KB 注入块 {len(out)} 字 > 写作侧 1500 上限，块尾会被截断；需收紧 snippet 或减少每目录条数"
     )
     sliced = out[:1500]
     for marker in ("四大审计方法论", "国际投行方法论", "宏观分析框架"):

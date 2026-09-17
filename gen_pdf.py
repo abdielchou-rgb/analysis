@@ -1,16 +1,17 @@
 import markdown
-from weasyprint import HTML, CSS
+from weasyprint import CSS, HTML
 from weasyprint.text.fonts import FontConfiguration
 
 # Read the markdown content
-with open('output/浙江觉纤_投资概要.md', 'r', encoding='utf-8') as f:
+with open("output/浙江觉纤_投资概要.md", "r", encoding="utf-8") as f:
     md_content = f.read()
 
 # Convert markdown to HTML
-html_content = markdown.markdown(md_content, extensions=['tables', 'toc', 'fenced_code'])
+html_content = markdown.markdown(md_content, extensions=["tables", "toc", "fenced_code"])
 
 # Add CSS for styling
-css = CSS(string='''
+css = CSS(
+    string="""
 @page { size: A4; margin: 2cm; @bottom-center { content: counter(page); } }
 body { font-family: "Microsoft YaHei", "SimSun", sans-serif; font-size: 11pt; line-height: 1.6; color: #222; }
 h1 { color: #1a3c5e; border-bottom: 2px solid #1a3c5e; padding-bottom: 6px; font-size: 22pt; margin-top: 30px; }
@@ -29,10 +30,12 @@ hr { border: none; border-top: 1px solid #ccc; margin: 20px 0; }
 ul, ol { margin: 8px 0 8px 24px; }
 li { margin: 4px 0; }
 strong { color: #1a3c5e; }
-''')
+"""
+)
 
 font_config = FontConfiguration()
-HTML(string=f'''
+HTML(
+    string=f"""
 <!DOCTYPE html>
 <html>
 <head>
@@ -43,5 +46,6 @@ HTML(string=f'''
 {html_content}
 </body>
 </html>
-''').write_pdf('output/浙江觉纤_投资概要.pdf', stylesheets=[css], font_config=font_config)
-print('PDF generated successfully')
+"""
+).write_pdf("output/浙江觉纤_投资概要.pdf", stylesheets=[css], font_config=font_config)
+print("PDF generated successfully")

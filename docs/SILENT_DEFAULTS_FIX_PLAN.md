@@ -1,8 +1,8 @@
 # Silent Business Defaults - Final Report
 
-**Scan Date**: 2026-09-15  
-**Total Findings**: 347  
-**Core/Pipeline Critical**: 282 findings  
+**Scan Date**: 2026-09-15
+**Total Findings**: 347
+**Core/Pipeline Critical**: 282 findings
 
 ## Summary
 

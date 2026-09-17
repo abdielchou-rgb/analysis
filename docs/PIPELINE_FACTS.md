@@ -5,8 +5,8 @@
 
 ## IronGate
 - 注册检查方法数（checks/）：105
-- run_all 引用检查数：105
-- 迁移完整性：OK
+- run_all 引用检查数：92
+- 迁移完整性：DRIFT! defined-executed=['_check_core_hypothesis', '_check_data_fidelity', '_check_data_source_accuracy', '_check_esg_materiality', '_check_evidence_chain', '_check_financial_fraud_signals', '_check_industry_consolidation', '_check_llm_data_verification', '_check_regional_penetration', '_check_stock_pick_chain', '_check_subjective_scoring', '_check_tam_bottomup', '_check_unlisted_threat']
 - 门禁阈值 PASS_THRESHOLD（iron_gate.py 单一事实源）：0.78
 - 判据版本 JUDGE_VERSION（iron_gate.py 单一事实源）：v2-error-mean-0.78
 - 合约快照 min_score（harness 历史字段，仅索引用）：0.78

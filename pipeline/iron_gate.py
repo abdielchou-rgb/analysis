@@ -403,19 +403,34 @@ class IronGate(
             # 上市公司偏见等系统性问题，数据底座: data/unlisted_players.json + brand_entity_mapping.json
             (self._check_coverage_completeness, GateSeverity.QUALITY),  # 三层校验：分类覆盖/品牌映射/集团归属
             (self._check_entity_verification, GateSeverity.QUALITY),  # 实体验证：映射缺失/上市状态误判
-            (self._check_sub_element_coverage, GateSeverity.QUALITY),  # R74: 子要素覆盖（根治Goodhart律——关键词→子要素正则）
-            (self._check_industry_baseline_gap, GateSeverity.ADVISORY),  # R77 P0-2: 行业底座缺口提示（warning级，不阻断）
+            (
+                self._check_sub_element_coverage,
+                GateSeverity.QUALITY,
+            ),  # R74: 子要素覆盖（根治Goodhart律——关键词→子要素正则）
+            (
+                self._check_industry_baseline_gap,
+                GateSeverity.ADVISORY,
+            ),  # R77 P0-2: 行业底座缺口提示（warning级，不阻断）
             (self._check_honest_gap, GateSeverity.ADVISORY),  # R79 P1-3: 诚实留白机制
-            (self._check_client_questions_coverage, GateSeverity.BLOCKER),  # R83: 委托方必答问题覆盖率（decision_memo 核心）
+            (
+                self._check_client_questions_coverage,
+                GateSeverity.BLOCKER,
+            ),  # R83: 委托方必答问题覆盖率（decision_memo 核心）
             (self._check_entity_anchoring, GateSeverity.BLOCKER),  # R84: 委托方实体锚定（must_contain/forbidden_swap）
-            (self._check_decision_engine_citation, GateSeverity.QUALITY),  # R84: 决策引擎数值引用（卡位评分/最坏损失/投入）
+            (
+                self._check_decision_engine_citation,
+                GateSeverity.QUALITY,
+            ),  # R84: 决策引擎数值引用（卡位评分/最坏损失/投入）
             (self._check_narrative_consistency, GateSeverity.QUALITY),  # R85: 叙事一致性（防"答对问题但答错生意"）
             (self._check_data_point_citation, GateSeverity.BLOCKER),  # R85: 数据点引用审计（enrich 关键数据进正文）
             (self._check_source_reliability, GateSeverity.QUALITY),
             (self._check_methodology_compliance, GateSeverity.QUALITY),
             (self._check_inline_citations, GateSeverity.BLOCKER),
             (self._check_style_distance, GateSeverity.ADVISORY),
-            (self._check_anti_patterns, GateSeverity.ADVISORY),  # M6: 伪框架黑名单  # S2: 风格距离（warning）  # P3-B: [E#] 证据标注密度（warning）  # R87: 数据源可信度（enrich 幻觉修正值校验）
+            (
+                self._check_anti_patterns,
+                GateSeverity.ADVISORY,
+            ),  # M6: 伪框架黑名单  # S2: 风格距离（warning）  # P3-B: [E#] 证据标注密度（warning）  # R87: 数据源可信度（enrich 幻觉修正值校验）
             # B2: Tier 数值分级——Tier-1 数字必须有 canonical 来源或 [注N] 标注
             (self._check_numerical_tier, GateSeverity.QUALITY),
             # Phase A2（2026-09-06）：证据账本覆盖率——全文数值声明 vs 计算引擎核对
@@ -424,8 +439,8 @@ class IronGate(
             (self._check_cross_industry_contamination, GateSeverity.BLOCKER),
             # P1-2（2026-09-07）：KB/MKB 消费端引用覆盖——注入非空 → 正文回指
             (self._check_kb_citation_coverage, GateSeverity.BLOCKER),
-]
-        
+        ]
+
         checks = []
 
         # R15（2026-08-01 提速）：把 LLM 检查（ai_tone/human_impossible/数据验证，各 60s+）
@@ -550,19 +565,19 @@ class IronGate(
         # BLOCKER (hard fail): any BLOCKER check failed -> immediate fail, score = 0
         # QUALITY (weighted): average of QUALITY checks
         # ADVISORY (warning only): only logged, never blocks
-        
+
         # 1. BLOCKER: any failure -> immediate fail, score = 0
         _blocker_scores = [max(0.0, min(1.0, c.score)) for c in checks if c.severity == GateSeverity.BLOCKER]
         _blocker_passed = all(c.passed for c in checks if c.severity == GateSeverity.BLOCKER)
-        
+
         # 2. QUALITY: weighted average
         _quality_scores = [max(0.0, min(1.0, c.score)) for c in checks if c.severity == GateSeverity.QUALITY]
         _quality_mean = sum(_quality_scores) / len(_quality_scores) if _quality_scores else 1.0
-        
+
         # 3. ADVISORY: warning only, never blocks
         _advisory_scores = [max(0.0, min(1.0, c.score)) for c in checks if c.severity == GateSeverity.ADVISORY]
         _advisory_mean = sum(_advisory_scores) / len(_advisory_scores) if _advisory_scores else 1.0
-        
+
         # Overall score calculation
         if not _blocker_passed:
             # Any BLOCKER failure -> immediate fail
@@ -574,21 +589,30 @@ class IronGate(
             # No quality checks, use advisory as fallback
             _advisory_scores = [max(0.0, min(1.0, c.score)) for c in checks if c.severity == GateSeverity.ADVISORY]
             report.overall_score = sum(_advisory_scores) / len(_advisory_scores) if _advisory_scores else 1.0
-        
+
         # Advisory scores for diagnostics only
         _advisory_scores = [max(0.0, min(1.0, c.score)) for c in checks if c.severity == GateSeverity.ADVISORY]
         if _advisory_scores:
-            logger.info("[P0-WEIGHTED] advisory_mean=%.3f (%d checks)", sum(_advisory_scores)/len(_advisory_scores), len(_advisory_scores))
-        
+            logger.info(
+                "[P0-WEIGHTED] advisory_mean=%.3f (%d checks)",
+                sum(_advisory_scores) / len(_advisory_scores),
+                len(_advisory_scores),
+            )
+
         # P0-WEIGHTED logging for diagnostics
         _blocker_scores = [max(0.0, min(1.0, c.score)) for c in checks if c.severity == GateSeverity.BLOCKER]
         _quality_scores = [max(0.0, min(1.0, c.score)) for c in checks if c.severity == GateSeverity.QUALITY]
         _advisory_scores = [max(0.0, min(1.0, c.score)) for c in checks if c.severity == GateSeverity.ADVISORY]
         if _blocker_scores:
-            logger.info("[P0-WEIGHTED] blocker_mean=%.3f (%d checks), quality_mean=%.3f (%d checks), advisory_mean=%.3f (%d checks)",
-                sum(_blocker_scores)/len(_blocker_scores), len(_blocker_scores),
-                sum(_quality_scores)/len(_quality_scores) if _quality_scores else 0, len(_quality_scores),
-                sum(_advisory_scores)/len(_advisory_scores) if _advisory_scores else 0, len(_advisory_scores))
+            logger.info(
+                "[P0-WEIGHTED] blocker_mean=%.3f (%d checks), quality_mean=%.3f (%d checks), advisory_mean=%.3f (%d checks)",
+                sum(_blocker_scores) / len(_blocker_scores),
+                len(_blocker_scores),
+                sum(_quality_scores) / len(_quality_scores) if _quality_scores else 0,
+                len(_quality_scores),
+                sum(_advisory_scores) / len(_advisory_scores) if _advisory_scores else 0,
+                len(_advisory_scores),
+            )
         # A2: 版本化——gate_config_hash = threshold + 公式签名，写入指纹供跨版本审计
         import hashlib as _hl
 

@@ -80,7 +80,11 @@ def test_harness_is_deterministic(baseline):
     """空变异（恒等变换）必须零反应——否则整套差分判据不可信。"""
     text, base_results = baseline
     again = H.run_gate(text)
-    drifted = [k for k in base_results if again[k].score != base_results[k].score or again[k].details != base_results[k].details]
+    drifted = [
+        k
+        for k in base_results
+        if again[k].score != base_results[k].score or again[k].details != base_results[k].details
+    ]
     assert not drifted, f"门禁在同一输入上不稳定（{len(drifted)} 项漂移）：{drifted[:5]}"
 
 
@@ -220,9 +224,7 @@ def test_blind_spots_are_not_stale():
     from datetime import date
 
     today = date.today().isoformat()
-    expired = [
-        (sid, spot) for sid, spot in C.BLIND_SPOT_REGISTRY.items() if spot.days_left(today) < 0
-    ]
+    expired = [(sid, spot) for sid, spot in C.BLIND_SPOT_REGISTRY.items() if spot.days_left(today) < 0]
     if not expired:
         return
     lines = [
@@ -230,17 +232,12 @@ def test_blind_spots_are_not_stale():
         for sid, spot in sorted(expired, key=lambda kv: kv[1].retire)
     ]
     pytest.fail(
-        f"{len(expired)} 条盲区已过期，必须重估（修好就删，没修好就续期并改写 action）：\n  "
-        + "\n  ".join(lines)
+        f"{len(expired)} 条盲区已过期，必须重估（修好就删，没修好就续期并改写 action）：\n  " + "\n  ".join(lines)
     )
 
 
 def test_blind_spot_owners_are_known_domains():
     """owner 必须是已定义的责任域——防止出现 'TODO' / '待定' 这类占位。"""
     known = {C.OWNER_NUMERICS, C.OWNER_STRUCTURE, C.OWNER_ARGUMENT, C.OWNER_STYLE}
-    unknown = {
-        sid: spot.owner
-        for sid, spot in C.BLIND_SPOT_REGISTRY.items()
-        if spot.owner not in known
-    }
+    unknown = {sid: spot.owner for sid, spot in C.BLIND_SPOT_REGISTRY.items() if spot.owner not in known}
     assert not unknown, f"owner 不是已定义的责任域（禁止 TODO/待定占位）：{unknown}"

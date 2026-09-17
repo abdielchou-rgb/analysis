@@ -8,22 +8,20 @@ E2E Pipeline Integration - 将现有管线与 AnalysisEngine 集成
 
 from __future__ import annotations
 
-from __future__ import annotations
-
-from typing import Any, Dict, List, Optional, Callable, Awaitable
-from dataclasses import dataclass, field
-from datetime import datetime
-from enum import Enum
-from pathlib import Path
 import asyncio
 import logging
-import os
-import sys
-from pathlib import Path
+from dataclasses import dataclass, field
+from typing import Any, Dict, List
 
-from core.analysis_engine import AnalysisEngine, ExecutionConfig, ExecutionMode, ExecutionResult, ExecutionStatus
-from core.analysis_context import AnalysisContext, Intent, IntentType, AnalysisMode, EvidenceBundle, FindingStore
-from core.analysis_context import EvidenceBundle, FindingStore, GateReport
+from core.analysis_context import (
+    AnalysisContext,
+    AnalysisMode,
+    EvidenceBundle,
+    FindingStore,
+    Intent,
+    IntentType,
+)
+from core.analysis_engine import ExecutionConfig, ExecutionMode
 
 logger = logging.getLogger("2hao.e2e.integration")
 
@@ -31,47 +29,57 @@ logger = logging.getLogger("2hao.e2e.integration")
 @dataclass
 class PipelineIntegrationConfig:
     """管线集成配置"""
-    use_analysis_engine: bool = True          # 是否使用 AnalysisEngine
-    fallback_to_legacy: bool = True           # 失败时是否回退到旧管线
-    migrate_gradually: bool = True            # 是否逐步迁移
-    legacy_fallback_nodes: List[str] = field(default_factory=lambda: [
-        "preflight_check", "data", "universe_build", "enrich_data", 
-        "compute", "argument_engine", "style_compile"
-    ])
+
+    use_analysis_engine: bool = True  # 是否使用 AnalysisEngine
+    fallback_to_legacy: bool = True  # 失败时是否回退到旧管线
+    migrate_gradually: bool = True  # 是否逐步迁移
+    legacy_fallback_nodes: List[str] = field(
+        default_factory=lambda: [
+            "preflight_check",
+            "data",
+            "universe_build",
+            "enrich_data",
+            "compute",
+            "argument_engine",
+            "style_compile",
+        ]
+    )
 
 
 class E2EIntegration:
     """
     E2E 管线与 AnalysisEngine 集成适配器
-    
+
     提供统一接口，支持：
     1. 完全使用 AnalysisEngine (新架构)
     2. 混合模式：部分节点用新引擎，部分用旧管线
     3. 回退到旧管线 (向后兼容)
     """
-    
-    def __init__(self, config: 'PipelineIntegrationConfig' = None):
+
+    def __init__(self, config: "PipelineIntegrationConfig" = None):
         self.config = config or PipelineIntegrationConfig()
         self._engine = None
         self._legacy_orchestrator = None
-    
+
     @property
     def engine(self):
         """获取 AnalysisEngine 单例"""
         if self._engine is None:
             from core.analysis_engine import AnalysisEngine
+
             self._engine = AnalysisEngine.get_instance()
         return self._engine
-    
+
     @property
     def legacy_orchestrator(self):
         """获取旧版编排器 (懒加载)"""
         if self._legacy_orchestrator is None:
             # 延迟导入避免循环依赖
             from pipeline.e2e_orchestrator import E2EOrchestratorV2
+
             self._legacy_orchestrator = E2EOrchestratorV2()
         return self._legacy_orchestrator
-    
+
     async def run_with_analysis_engine(
         self,
         asset: str,
@@ -81,17 +89,13 @@ class E2EIntegration:
         custom_requirements: str = "",
         client_questions: List[str] = None,
         output_dir: str = "output",
-        config: dict = None
+        config: dict = None,
     ) -> Dict[str, Any]:
         """使用 AnalysisEngine 运行完整流水线"""
-        
-        from core.analysis_engine import AnalysisEngine, ExecutionConfig, ExecutionMode
-        from core.analysis_context import Intent, IntentType, AnalysisMode
-        from core.analysis_context import EvidenceBundle, FindingStore
-        
+
         config = config or {}
         context = config.copy()
-        
+
         # 准备上下文
         context = {
             "asset": asset,
@@ -102,7 +106,7 @@ class E2EIntegration:
             "collected_data": {},
             "output_dir": config.get("output_dir", "output") if isinstance(config, dict) else "output",
         }
-        
+
         # 创建 AnalysisEngine 配置
         mode_map = {
             "batch": ExecutionMode.BATCH,
@@ -110,14 +114,14 @@ class E2EIntegration:
             "fast": ExecutionMode.FAST,
             "degraded": ExecutionMode.DEGRADED,
         }
-        
+
         mode_enum = mode_map.get(mode.lower(), ExecutionMode.BATCH)
-        
+
         config_obj = ExecutionConfig(
             mode=mode_enum,
             max_attempts=3,
         )
-        
+
         # 创建 Intent
         intent = Intent(
             asset=asset,
@@ -125,7 +129,7 @@ class E2EIntegration:
             style=style,
             mode=AnalysisMode.BATCH,
         )
-        
+
         # 创建初始 Context
         context_obj = AnalysisContext(
             version=1,
@@ -141,11 +145,11 @@ class E2EIntegration:
             findings=FindingStore(),
             sections=(),
         )
-        
+
         # 运行 AnalysisEngine
         engine = self.engine
         await engine.initialize()
-        
+
         result = await engine.run(
             asset=asset,
             report_type=report_type,
@@ -154,38 +158,34 @@ class E2EIntegration:
             custom_requirements=config.get("custom_requirements", "") if isinstance(config, dict) else "",
             client_questions=config.get("client_questions") if isinstance(config, dict) else None,
         )
-        
+
         # 构建结果
         context_obj = result.context
         gate_result = context_obj.get("gate_result", {}) if context_obj else {}
-        
+
         return {
             "result": result,
             "context": context_obj,
-            "status": result.status.value if hasattr(result, 'status') else "unknown",
+            "status": result.status.value if hasattr(result, "status") else "unknown",
             "gate_score": gate_result.get("overall_score", 0) if gate_result else 0,
             "gate_passed": gate_result.get("passed", False) if gate_result else False,
         }
-    
+
     async def run_legacy_fallback(
-        self,
-        asset: str,
-        report_type: str = "industry_deep",
-        style: str = "cicc",
-        **kwargs
+        self, asset: str, report_type: str = "industry_deep", style: str = "cicc", **kwargs
     ) -> Dict[str, Any]:
         """回退到旧版管线"""
         logger.warning("回退到旧版管线")
-        
+
         # 使用旧版编排器
         from pipeline.e2e_orchestrator import E2EOrchestratorV2
-        
+
         orchestrator = E2EOrchestratorV2(
             asset=asset,
             report_type=report_type,
             style=style,
         )
-        
+
         context = {
             "asset": asset,
             "report_type": report_type,
@@ -195,11 +195,11 @@ class E2EIntegration:
             "collected_data": {},
             "output_dir": "output",
         }
-        
+
         # 运行旧管线
         result = await orchestrator.run(context)
         return {"result": result, "legacy": True}
-    
+
     async def run(
         self,
         asset: str,
@@ -209,21 +209,16 @@ class E2EIntegration:
         custom_requirements: str = "",
         client_questions: List[str] = None,
         output_dir: str = "output",
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """
         统一运行入口
-        
+
         根据配置决定使用新引擎还是旧管线
         """
         if not self.config.use_analysis_engine:
-            return await self.run_legacy_fallback(
-                asset=asset,
-                report_type=report_type,
-                style=style,
-                **kwargs
-            )
-        
+            return await self.run_legacy_fallback(asset=asset, report_type=report_type, style=style, **kwargs)
+
         try:
             return await self.run_with_analysis_engine(
                 asset=asset,
@@ -238,12 +233,7 @@ class E2EIntegration:
             logger.error(f"AnalysisEngine 执行失败: {e}")
             if self.config.fallback_to_legacy:
                 logger.warning("回退到旧版管线")
-                return await self.run_legacy_fallback(
-                    asset=asset,
-                    report_type=report_type,
-                    style=style,
-                    **kwargs
-                )
+                return await self.run_legacy_fallback(asset=asset, report_type=report_type, style=style, **kwargs)
             raise
 
 
@@ -277,13 +267,15 @@ def run_pipeline(
     output_dir: str = "output",
 ) -> Dict[str, Any]:
     """同步版本入口"""
-    return asyncio.run(run_unified(
-        asset=asset,
-        report_type=report_type,
-        style=style,
-        mode="batch",
-        output_dir=output_dir,
-    ))
+    return asyncio.run(
+        run_unified(
+            asset=asset,
+            report_type=report_type,
+            style=style,
+            mode="batch",
+            output_dir=output_dir,
+        )
+    )
 
 
 def run_workbench(

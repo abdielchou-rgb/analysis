@@ -18,8 +18,6 @@
 
 from __future__ import annotations
 
-from __future__ import annotations
-
 import json
 import logging
 import sys
@@ -278,8 +276,8 @@ class WorkbenchExecutor:
 
         工作台模式核心——使用 AnalysisEngine 统一引擎生成报告。
         """
-        from core.analysis_engine import AnalysisEngine, ExecutionConfig, ExecutionMode
-        from core.analysis_context import Intent, IntentType, AnalysisMode, EvidenceBundle, FindingStore
+        from core.analysis_context import AnalysisMode, EvidenceBundle, Intent
+        from core.analysis_engine import AnalysisEngine, ExecutionMode
 
         # 创建 Intent
         intent = Intent(
@@ -307,7 +305,6 @@ class WorkbenchExecutor:
         )
 
         # 准备证据包
-        from core.analysis_context import EvidenceBundle
         evidence = EvidenceBundle()
         evidence.raw_data = self.data or {}
         evidence.chart_data = {}
@@ -315,14 +312,17 @@ class WorkbenchExecutor:
         # 运行 AnalysisEngine
         engine = AnalysisEngine.get_instance()
         import asyncio
-        result = asyncio.run(engine.run(
-            asset=self.asset,
-            report_type=self.report_type,
-            style="cicc",
-            mode="interactive",
-            custom_requirements=self.requirement,
-            client_questions=None,
-        ))
+
+        result = asyncio.run(
+            engine.run(
+                asset=self.asset,
+                report_type=self.report_type,
+                style="cicc",
+                mode="interactive",
+                custom_requirements=self.requirement,
+                client_questions=None,
+            )
+        )
 
         if result.context and result.context.get("report_text"):
             return result.context["report_text"]
@@ -473,7 +473,7 @@ def main():
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
     wb = WorkbenchExecutor(args.asset, args.type, args.requirement, args.human_gate, args.output)
-    
+
     if args.use_engine:
         result = wb.run_with_analysis_engine()
     else:

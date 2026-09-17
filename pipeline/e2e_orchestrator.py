@@ -4,14 +4,13 @@ e2e_orchestrator.py V4 - Full integration with all new modules.
 
 from __future__ import annotations
 
-import asyncio
-from datetime import datetime
 import logging
 import os
 import re
 import sys
 import time
 import uuid
+from datetime import datetime
 from pathlib import Path
 
 from core import settings
@@ -900,19 +899,25 @@ class E2ENodes:
 
         if use_analysis_engine:
             import asyncio
+
             return asyncio.run(E2ENodes._write_sections_with_analysis_engine(node_id, context))
         else:
             import asyncio
+
             return asyncio.run(E2ENodes.write_sections(node_id, context))
 
     @staticmethod
     async def _write_sections_with_analysis_engine(node_id, context):
         """使用 AnalysisEngine 进行写作阶段（新版本）"""
-        from core.analysis_engine import AnalysisEngine, ExecutionConfig, ExecutionMode
         from core.analysis_context import (
-            AnalysisContext, Intent, IntentType, AnalysisMode,
-            EvidenceBundle, FindingStore
+            AnalysisContext,
+            AnalysisMode,
+            EvidenceBundle,
+            FindingStore,
+            Intent,
+            IntentType,
         )
+        from core.analysis_engine import AnalysisEngine, ExecutionMode
 
         # 从 context 获取必要信息
         asset = context.get("asset", "")
@@ -944,13 +949,14 @@ class E2ENodes:
         )
 
         # 准备证据包
-        from core.analysis_context import EvidenceBundle, FindingStore
+        from core.analysis_context import FindingStore
+
         evidence = EvidenceBundle().with_update(
             raw_data=context.get("collected_data", {}) or {},
             chart_data=context.get("chart_data", {}) or {},
         )
 
-# 运行 AnalysisEngine
+        # 运行 AnalysisEngine
         engine = AnalysisEngine.get_instance()
         await engine.initialize()
 
@@ -966,8 +972,9 @@ class E2ENodes:
         # 将结果写回 context (AgentGraph context dict)
         context_obj = result.context
         # Generate report text using ReportAssembler
-        from core.report_assembler import ReportAssembler, ReportMetadata
         from core.finding_store import LineageTracker
+        from core.report_assembler import ReportAssembler, ReportMetadata
+
         assembler = ReportAssembler()
         # Create mock metadata and lineage_tracker for the assembler
         mock_metadata = ReportMetadata(
@@ -982,7 +989,7 @@ class E2ENodes:
             total_time_seconds=0.0,
             llm_calls=0,
             total_tokens=0,
-            cost_usd=0.0
+            cost_usd=0.0,
         )
         mock_lineage_tracker = LineageTracker()
         artifact = assembler.assemble(context_obj, mock_metadata, mock_lineage_tracker, style)

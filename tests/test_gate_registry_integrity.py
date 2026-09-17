@@ -24,7 +24,6 @@ from __future__ import annotations
 import ast
 import inspect
 import json
-import re
 import sys
 from pathlib import Path
 
@@ -76,9 +75,7 @@ def test_every_defined_check_is_registered():
     assert registered, "未能从 iron_gate.py 解析出 _check_funcs（源码结构变了？）"
 
     orphans = sorted(defined - registered)
-    assert not orphans, (
-        f"{len(orphans)} 个检查项已定义但未注册进 run_all 的 _check_funcs，永远不会执行：{orphans}"
-    )
+    assert not orphans, f"{len(orphans)} 个检查项已定义但未注册进 run_all 的 _check_funcs，永远不会执行：{orphans}"
 
 
 def test_registered_checks_all_exist():
@@ -105,7 +102,7 @@ def _current_metric_fingerprint() -> dict:
 
     src = (_ROOT / "pipeline" / "iron_gate.py").read_text(encoding="utf-8")
     # 评分公式签名：抓 error_mean 那段特征，公式一改这里就变
-    formula = "error_mean" if "c.severity == \"error\"" in src else "unknown"
+    formula = "error_mean" if 'c.severity == "error"' in src else "unknown"
     return {
         "pass_threshold": ig.PASS_THRESHOLD,
         "judge_version": ig.JUDGE_VERSION,
@@ -167,6 +164,4 @@ def test_no_new_check_without_mutation_coverage():
     print(f"\n[变异覆盖率] {len(registered & covered)}/{len(registered)} 项检查有变异体覆盖")
     if uncovered:
         print(f"[未覆盖] {len(uncovered)} 项：{uncovered[:15]}{' ...' if len(uncovered) > 15 else ''}")
-    assert len(registered & covered) >= 20, (
-        f"变异覆盖仅 {len(registered & covered)} 项，语料库需扩充（最低 20）"
-    )
+    assert len(registered & covered) >= 20, f"变异覆盖仅 {len(registered & covered)} 项，语料库需扩充（最低 20）"

@@ -91,7 +91,9 @@ def run_gate(text: str, *, report_type: str = "industry_deep", style: str = "cic
             pass
 
     return {
-        c.name: Outcome(name=c.name, passed=bool(c.passed), score=float(c.score), severity=c.severity, details=str(c.details))
+        c.name: Outcome(
+            name=c.name, passed=bool(c.passed), score=float(c.score), severity=c.severity, details=str(c.details)
+        )
         for c in report.checks
     }
 

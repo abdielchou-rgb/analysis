@@ -162,53 +162,53 @@ tests/test_s7_productization.py::test_web_app_import
     format: str = Query("json", regex="^(json|csv)$"),
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-Test tests/test_gate_mutation.py::test_mutant_is_killed was skipped. Reason: 
-('D:\\Claude\\projects\\2hao-analyst\\tests\\test_gate_mutation.py', 73, 
+Test tests/test_gate_mutation.py::test_mutant_is_killed was skipped. Reason:
+('D:\\Claude\\projects\\2hao-analyst\\tests\\test_gate_mutation.py', 73,
 'Skipped: 基线已封顶（1.00），该方向不可检出 → N/A')
-Test tests/test_gate_mutation.py::test_mutant_is_killed was skipped. Reason: 
-('D:\\Claude\\projects\\2hao-analyst\\tests\\test_gate_mutation.py', 73, 
+Test tests/test_gate_mutation.py::test_mutant_is_killed was skipped. Reason:
+('D:\\Claude\\projects\\2hao-analyst\\tests\\test_gate_mutation.py', 73,
 'Skipped: 基线已封顶（1.00），该方向不可检出 → N/A')
-Test tests/test_gate_mutation.py::test_mutant_is_killed was skipped. Reason: 
-('D:\\Claude\\projects\\2hao-analyst\\tests\\test_gate_mutation.py', 73, 
+Test tests/test_gate_mutation.py::test_mutant_is_killed was skipped. Reason:
+('D:\\Claude\\projects\\2hao-analyst\\tests\\test_gate_mutation.py', 73,
 'Skipped: 基线已封顶（1.00），该方向不可检出 → N/A')
-Test tests/test_gate_mutation.py::test_mutant_is_killed was skipped. Reason: 
-('D:\\Claude\\projects\\2hao-analyst\\tests\\test_gate_mutation.py', 73, 
+Test tests/test_gate_mutation.py::test_mutant_is_killed was skipped. Reason:
+('D:\\Claude\\projects\\2hao-analyst\\tests\\test_gate_mutation.py', 73,
 'Skipped: 基线中不存在该检查项（检查项名拼写错误或已下线）')
-Test tests/test_gate_mutation.py::test_mutant_is_killed was skipped. Reason: 
-('D:\\Claude\\projects\\2hao-analyst\\tests\\test_gate_mutation.py', 73, 
+Test tests/test_gate_mutation.py::test_mutant_is_killed was skipped. Reason:
+('D:\\Claude\\projects\\2hao-analyst\\tests\\test_gate_mutation.py', 73,
 'Skipped: 基线已触底（0.00），该方向不可检出 → N/A')
-Test tests/test_r67_remaining_fixes.py::test_self_audit_bom_tolerant was 
-skipped. Reason: 
-('D:\\Claude\\projects\\2hao-analyst\\tests\\test_r67_remaining_fixes.py', 31, 
+Test tests/test_r67_remaining_fixes.py::test_self_audit_bom_tolerant was
+skipped. Reason:
+('D:\\Claude\\projects\\2hao-analyst\\tests\\test_r67_remaining_fixes.py', 31,
 'Skipped: _self_audit.py 已移除，BOM 容错断言随之退役')
-Test 
+Test
 tests/test_r88_numeric_chain.py::TestNumericChainConsistency::test_catches_perc
-entage_magnitude_error was skipped. Reason: 
-('D:\\Claude\\projects\\2hao-analyst\\tests\\test_r88_numeric_chain.py', 62, 
+entage_magnitude_error was skipped. Reason:
+('D:\\Claude\\projects\\2hao-analyst\\tests\\test_r88_numeric_chain.py', 62,
 'Skipped: output/_gate_prev.md 非商业航天旧版样本（守卫跳过）')
-Test 
+Test
 tests/test_r88_numeric_chain.py::TestNumericChainConsistency::test_catches_prod
-uct_error was skipped. Reason: 
-('D:\\Claude\\projects\\2hao-analyst\\tests\\test_r88_numeric_chain.py', 75, 
+uct_error was skipped. Reason:
+('D:\\Claude\\projects\\2hao-analyst\\tests\\test_r88_numeric_chain.py', 75,
 'Skipped: output/_gate_prev.md 非商业航天旧版样本（守卫跳过）')
-Test 
+Test
 tests/test_r88_numeric_chain.py::TestNumericChainConsistency::test_accepts_corr
-ect_product was skipped. Reason: 
-('D:\\Claude\\projects\\2hao-analyst\\tests\\test_r88_numeric_chain.py', 86, 
+ect_product was skipped. Reason:
+('D:\\Claude\\projects\\2hao-analyst\\tests\\test_r88_numeric_chain.py', 86,
 'Skipped: output/_gate_prev.md 非商业航天旧版样本（守卫跳过）')
-Test 
+Test
 tests/test_r88_numeric_chain.py::TestNumericChainConsistency::test_accepts_legi
-t_direct_ratio was skipped. Reason: 
-('D:\\Claude\\projects\\2hao-analyst\\tests\\test_r88_numeric_chain.py', 102, 
+t_direct_ratio was skipped. Reason:
+('D:\\Claude\\projects\\2hao-analyst\\tests\\test_r88_numeric_chain.py', 102,
 'Skipped: output/_gate_prev.md 非商业航天旧版样本（守卫跳过）')
-Test 
+Test
 tests/test_r88_numeric_chain.py::TestNumericChainConsistency::test_skips_scenar
-io_target_price was skipped. Reason: 
-('D:\\Claude\\projects\\2hao-analyst\\tests\\test_r88_numeric_chain.py', 111, 
+io_target_price was skipped. Reason:
+('D:\\Claude\\projects\\2hao-analyst\\tests\\test_r88_numeric_chain.py', 111,
 'Skipped: output/_gate_prev.md 非商业航天旧版样本（守卫跳过）')
-Test 
+Test
 tests/test_r88_numeric_chain.py::TestNumericChainConsistency::test_multi_anchor
-_exempt was skipped. Reason: 
-('D:\\Claude\\projects\\2hao-analyst\\tests\\test_r88_numeric_chain.py', 120, 
+_exempt was skipped. Reason:
+('D:\\Claude\\projects\\2hao-analyst\\tests\\test_r88_numeric_chain.py', 120,
 'Skipped: output/_gate_prev.md 非商业航天旧版样本（守卫跳过）')
 = 1162 passed, 12 skipped, 35 deselected, 18 xfailed, 2 warnings in 86.99s (0:01:26) =

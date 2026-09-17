@@ -3,9 +3,9 @@ import re
 line = r'capacity_units = float(data.get("capacity_units", 50000) or 50000),'
 pattern = r'\.get\((["\'])([^"\']+)\1\s*,\s*(\d+(?:\.\d+)?)'
 m = re.search(pattern, line)
-print('match:', m)
+print("match:", m)
 if m:
-    print('groups:', m.groups())
+    print("groups:", m.groups())
 
 # Test with various patterns
 test_lines = [
@@ -20,6 +20,6 @@ test_lines = [
 for line in test_lines:
     m = re.search(r'\.get\((["\'])([^"\']+)\1\s*,\s*(\d+(?:\.\d+)?)', line)
     if m:
-        print(f'MATCH: {m.group(2)} = {m.group(3)}')
+        print(f"MATCH: {m.group(2)} = {m.group(3)}")
     else:
-        print(f'NO MATCH: {line[:60]}')
+        print(f"NO MATCH: {line[:60]}")

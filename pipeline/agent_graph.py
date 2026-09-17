@@ -398,14 +398,23 @@ class AgentGraph:
         return GraphResult(passed=passed, nodes=self._results, total_duration_ms=total_time, failed_nodes=failed)
 
     def _run_level_parallel(self, level: list[str], context: dict, node_delay: float = 0):
-        """并行执行同一层的节点
-
+        """并行执行同一层的节点（Staggered Fan-out）
+        
+        Staggered Fan-out 策略：
+        - 同一层节点错开启动，避免同时发起多个 LLM 请求触发 429 rate limit
+        - 每个节点启动间隔 STAGGER_DELAY_S（默认 0.5s）
+        - 减少 provider 端的并发压力，提升缓存命中率
+        
         Args:
             level: 同一层的节点 ID 列表
             context: 管线上下文
             node_delay: 节点间延迟
         """
-        logger.info("  [PARALLEL] Level execution: %d nodes [%s]", len(level), ", ".join(level))
+        stagger_delay = float(os.environ.get("STAGGER_DELAY_S", "0.5"))
+        logger.info(
+            "  [PARALLEL] Level execution: %d nodes [%s] (stagger=%.1fs)",
+            len(level), ", ".join(level), stagger_delay,
+        )
         t0 = time.time()
 
         # 过滤可执行的节点（依赖满足）
@@ -425,9 +434,13 @@ class AgentGraph:
         # 限制并行度
         actual_workers = min(len(executable), self._max_workers)
 
-        # 并行执行
+        # Staggered Fan-out: 错开提交任务，避免同时发起 LLM 请求
         with ThreadPoolExecutor(max_workers=actual_workers, thread_name_prefix="ag-parallel") as executor:
-            futures = {executor.submit(self._run_node, node_id, context): node_id for node_id in executable}
+            futures = {}
+            for i, node_id in enumerate(executable):
+                if i > 0 and stagger_delay > 0:
+                    time.sleep(stagger_delay)
+                futures[executor.submit(self._run_node, node_id, context)] = node_id
 
             for future in as_completed(futures):
                 node_id = futures[future]

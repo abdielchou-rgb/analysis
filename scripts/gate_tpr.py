@@ -62,8 +62,10 @@ def print_table(verdicts: list[H.Verdict], base_results: dict) -> None:
         )
     print("-" * 108)
 
-    print(f"变异体总数 {stats['total_mutants']} | 可判定 {stats['applicable']} | "
-          f"检出 {stats['killed']} | 漏检 {stats['survived']} | N/A(饱和) {stats['na_saturated']}")
+    print(
+        f"变异体总数 {stats['total_mutants']} | 可判定 {stats['applicable']} | "
+        f"检出 {stats['killed']} | 漏检 {stats['survived']} | N/A(饱和) {stats['na_saturated']}"
+    )
     print()
     for tier, label, meaning in (
         (C.PATTERN, "PATTERN 层", "照检查项自己实现的模式构造 → 漏检=检查项坏了"),
@@ -73,13 +75,19 @@ def print_table(verdicts: list[H.Verdict], base_results: dict) -> None:
         s = H.summarise(verdicts, tier)
         if tier == C.BENIGN:
             fpr = s["fpr"]
-            print(f"  {label}: 可判定 {s['applicable']:>2} | 保持安静 {s['quiet']:>2} | "
-                  f"误报 {s['false_alarms']:>2} | N/A {s['na_saturated']:>2}  →  "
-                  f"FPR = {fpr:.1%}" if fpr is not None else f"  {label}: 无可判定样本")
+            print(
+                f"  {label}: 可判定 {s['applicable']:>2} | 保持安静 {s['quiet']:>2} | "
+                f"误报 {s['false_alarms']:>2} | N/A {s['na_saturated']:>2}  →  "
+                f"FPR = {fpr:.1%}"
+                if fpr is not None
+                else f"  {label}: 无可判定样本"
+            )
             print(f"      （{meaning}）")
         else:
-            print(f"  {label}: 可判定 {s['applicable']:>2} | 检出 {s['killed']:>2} | "
-                  f"漏检 {s['survived']:>2} | N/A {s['na_saturated']:>2}  →  TPR = {s['tpr']:.1%}")
+            print(
+                f"  {label}: 可判定 {s['applicable']:>2} | 检出 {s['killed']:>2} | "
+                f"漏检 {s['survived']:>2} | N/A {s['na_saturated']:>2}  →  TPR = {s['tpr']:.1%}"
+            )
             print(f"      （{meaning}）")
     print()
     print(f"总体 TPR = {stats['tpr']:.1%}")
@@ -112,8 +120,8 @@ def _print_prevalence_correction(verdicts: list[H.Verdict], base_results: dict, 
     print()
     print("── 门禁的性格：高特异度、低敏感度 ──")
     print(f"  TPR = {tpr:.1%}（NATURAL 层）   FPR = {fpr:.1%}（BENIGN 层）   TNR = {tnr:.1%}")
-    print(f"  ⟹ 它报的红灯基本都是真的 —— **红灯可信**")
-    print(f"  ⟹ 它放行的绿灯不作数（多数缺陷没被看见）—— **绿灯不可信**")
+    print("  ⟹ 它报的红灯基本都是真的 —— **红灯可信**")
+    print("  ⟹ 它放行的绿灯不作数（多数缺陷没被看见）—— **绿灯不可信**")
     print()
     print("── 观测失败率 → 真实缺陷率（Rogan–Gladen 反校准）──")
     print(f"  本基线样本：error 级 {len(err)} 项中报红 {n_red} 项 → 观测失败率 {observed_fail:.1%}")
@@ -148,8 +156,7 @@ def _print_survivors(verdicts: list[H.Verdict], base_results: dict, stats: dict)
 
     # 按"严重级别"拆解：error 级漏检是硬伤，warning 级只是建议
     err_surv = [
-        v for v in stats["survivors"]
-        if base_results.get(v.target) and base_results[v.target].severity == "error"
+        v for v in stats["survivors"] if base_results.get(v.target) and base_results[v.target].severity == "error"
     ]
     if err_surv:
         print()
